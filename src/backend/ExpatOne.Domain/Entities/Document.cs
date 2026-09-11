@@ -8,6 +8,7 @@ public class Document : BaseEntity
     public Guid UserId { get; set; }
     public Guid DocumentTypeId { get; set; }
     public required string DocumentName { get; set; }
+    public string? OriginalFileName { get; set; }
     public required string S3ObjectKey { get; set; }
     public string? S3BucketName { get; set; }
     public long FileSizeBytes { get; set; }

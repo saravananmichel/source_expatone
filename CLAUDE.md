@@ -4,9 +4,9 @@
 ExpatOne is a mobile app for foreigners/expats living in Malaysia. It's an AI-powered life-admin assistant covering government processes, document management, reminders, translations, and emergency info.
 
 ## Current Phase
-**Phase 2 — Authentication & User Management** (COMPLETE)
+**Phase 3 — Smart Document Wallet + Amazon S3** (COMPLETE)
 
-Next: Phase 3 — Smart Document Wallet + Amazon S3
+Next: Phase 4 — Reminder Center
 
 ## Tech Stack
 - **Mobile**: Flutter 3.47.3 (Android + iOS)
@@ -14,7 +14,7 @@ Next: Phase 3 — Smart Document Wallet + Amazon S3
 - **Database**: PostgreSQL 18 (localhost:5432, user: postgres, db: expatone)
 - **ORM**: Entity Framework Core 8.0 + Npgsql
 - **AI Provider**: Google Gemini (NOT OpenAI) — interface defined, not yet implemented
-- **File Storage**: Amazon S3 — interface defined, not yet implemented
+- **File Storage**: Amazon S3 (implemented Phase 3 — S3StorageService)
 - **Auth**: Firebase Authentication (implemented Phase 2)
 - **Notifications**: Firebase Cloud Messaging — planned for Phase 4
 - **Vector Search**: pgvector — planned for Phase 6
@@ -46,9 +46,11 @@ Tables: users, documents, document_types, reminders, countries, government_knowl
 
 Seed data: Malaysia (country code MY).
 
-Migrations: `InitialCreate`, `AddCompositeExternalIdentityIndex`.
+Migrations: `InitialCreate`, `AddCompositeExternalIdentityIndex`, `AddDocumentOriginalFileNameAndSeedDocumentTypes`.
 
 Key index: `IX_users_ExternalProvider_ExternalId` (unique composite) — ensures one user per provider+ID combination.
+
+Document types seeded: Passport, Visa, Employment Pass, Driving Licence, Insurance, Medical Card, Work Permit, Government Letter, Other.
 
 ```bash
 # Apply migrations
@@ -57,6 +59,22 @@ export DOTNET_ROOT="/opt/homebrew/opt/dotnet@8/libexec"
 cd src/backend
 dotnet ef database update --project ExpatOne.Infrastructure --startup-project ExpatOne.Api
 ```
+
+## Document Storage Architecture
+```
+Flutter → pick file → POST /api/documents/upload-url → presigned PUT URL
+Flutter → PUT file directly to S3 → POST /api/documents/{id}/complete
+Flutter → GET /api/documents/{id}/access-url → presigned GET URL (5 min expiry)
+```
+
+- Files stored in private S3 bucket, metadata in PostgreSQL
+- S3 object key: `users/{userId}/documents/{documentId}/{sanitizedFilename}`
+- All S3 objects are private — access only via short-lived presigned URLs
+- File validation: PDF/JPEG/PNG only, max 10 MB, zero-byte rejected
+- Filename sanitized — path traversal rejected
+- Delete strategy: S3 first, then DB (if S3 fails, metadata remains for retry)
+- Document types seeded in DB (Passport, Visa, Employment Pass, etc.)
+- Future: malware scanning as production hardening
 
 ## Authentication Architecture
 ```
@@ -74,6 +92,13 @@ Flutter → Firebase Auth → ID Token → ASP.NET Core → Token Validation →
 - `GET /api/health` — Returns API status + database connectivity (public)
 - `GET /api/users/me` — Get authenticated user's profile (requires auth)
 - `PUT /api/users/me` — Update authenticated user's profile (requires auth)
+- `GET /api/documents` — List authenticated user's documents (requires auth)
+- `GET /api/documents/{id}` — Get document metadata (requires auth + ownership)
+- `POST /api/documents/upload-url` — Request presigned S3 upload URL (requires auth)
+- `POST /api/documents/{id}/complete` — Mark upload as complete (requires auth + ownership)
+- `GET /api/documents/{id}/access-url` — Get short-lived signed download URL (requires auth + ownership)
+- `DELETE /api/documents/{id}` — Delete document from S3 and DB (requires auth + ownership)
+- `GET /api/document-types` — List available document types (public)
 
 Old endpoints `GET /api/users/{id}` and `POST /api/users` have been removed.
 
@@ -118,7 +143,8 @@ Future phases will add: GEMINI_API_KEY, AWS credentials.
 
 ## Key Abstractions (in Application layer)
 - `IAIService` — AI provider abstraction (Gemini implementation in Phase 5-7)
-- `IStorageService` — File storage abstraction (S3 implementation in Phase 3)
+- `IStorageService` — File storage abstraction (S3StorageService implemented)
+- `IDocumentService` — Document CRUD, upload, access, ownership (DocumentService implemented)
 - `INotificationService` — Push notification abstraction (FCM in Phase 4)
 - `IKnowledgeSearchService` — RAG/vector search abstraction (Phase 6)
 - `IUserService` — User CRUD operations (implemented in Infrastructure)
@@ -144,11 +170,21 @@ Future phases will add: GEMINI_API_KEY, AWS credentials.
 7. Set `Firebase:ProjectId` and `Firebase:CredentialPath` in `appsettings.Development.json`
 8. Do NOT commit service account JSON or `google-services.json` / `GoogleService-Info.plist`
 
+## AWS S3 Setup (for developers)
+1. Create an S3 bucket (e.g. `expatone-documents`) in `ap-southeast-1`
+2. Block all public access on the bucket
+3. Enable server-side encryption (AES-256 or KMS)
+4. Create an IAM user/role with minimum permissions: `s3:PutObject`, `s3:GetObject`, `s3:DeleteObject` on the bucket
+5. Configure credentials via environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`) or IAM role
+6. Set `Aws:Region` and `Aws:S3BucketName` in `appsettings.Development.json`
+7. Do NOT use `AdministratorAccess` — least privilege only
+8. Do NOT commit AWS credentials
+
 ## Phase Roadmap
 - Phase 0: Architecture (DONE)
 - Phase 1: Application Foundation (DONE)
 - Phase 2: Authentication & User Management (DONE)
-- Phase 3: Smart Document Wallet
+- Phase 3: Smart Document Wallet + S3 (DONE)
 - Phase 4: Reminder Center
 - Phase 5: AI Document Reader
 - Phase 6: Government Knowledge Base

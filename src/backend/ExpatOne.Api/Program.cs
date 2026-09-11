@@ -1,3 +1,4 @@
+using Amazon.S3;
 using ExpatOne.Api.Auth;
 using ExpatOne.Api.Middleware;
 using ExpatOne.Application.Interfaces;
@@ -18,6 +19,19 @@ builder.Services.AddDbContext<ExpatOneDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IUserService, UserService>();
+
+var awsRegion = builder.Configuration["Aws:Region"];
+if (!string.IsNullOrEmpty(awsRegion))
+{
+    builder.Services.AddSingleton<IAmazonS3>(sp =>
+    {
+        var config = new AmazonS3Config { RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion) };
+        return new AmazonS3Client(config);
+    });
+    builder.Services.AddScoped<S3StorageService>();
+    builder.Services.AddScoped<IStorageService>(sp => sp.GetRequiredService<S3StorageService>());
+    builder.Services.AddScoped<IDocumentService, DocumentService>();
+}
 
 var firebaseCredentialPath = builder.Configuration["Firebase:CredentialPath"];
 if (!string.IsNullOrEmpty(firebaseCredentialPath) && File.Exists(firebaseCredentialPath))

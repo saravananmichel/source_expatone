@@ -24,5 +24,17 @@ public class DocumentTypeConfiguration : IEntityTypeConfiguration<DocumentType>
 
         builder.HasIndex(dt => dt.Name)
             .IsUnique();
+
+        builder.HasData(
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000001"), Name = "Passport", Description = "International travel document", Category = "Identity", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000002"), Name = "Visa", Description = "Entry/stay permit", Category = "Immigration", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000003"), Name = "Employment Pass", Description = "Work authorization", Category = "Immigration", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000004"), Name = "Driving Licence", Description = "Driving authorization", Category = "Identity", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000005"), Name = "Insurance", Description = "Insurance policy document", Category = "Insurance", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000006"), Name = "Medical Card", Description = "Health/medical card", Category = "Medical", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000007"), Name = "Work Permit", Description = "Work authorization permit", Category = "Immigration", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000008"), Name = "Government Letter", Description = "Official government correspondence", Category = "Government", HasExpiry = false, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000009"), Name = "Other", Description = "Other document type", Category = "General", HasExpiry = false, IsSystem = true }
+        );
     }
 }

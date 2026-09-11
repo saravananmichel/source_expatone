@@ -60,6 +60,22 @@ class ApiClient {
     return _handleResponse(response);
   }
 
+  Future<List<Map<String, dynamic>>> getList(String path,
+      {Map<String, String>? queryParams}) async {
+    final uri = _buildUri(path, queryParams);
+    final headers = await _getHeaders();
+    final response = await _httpClient
+        .get(uri, headers: headers)
+        .timeout(ApiConstants.connectTimeout);
+    _checkStatus(response);
+    if (response.body.isEmpty) return [];
+    final decoded = jsonDecode(response.body);
+    if (decoded is List) {
+      return decoded.cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
   Future<Map<String, dynamic>> delete(String path) async {
     final uri = _buildUri(path);
     final headers = await _getHeaders();
@@ -75,6 +91,18 @@ class ApiClient {
       path: '${baseUri.path}$path',
       queryParameters: queryParams,
     );
+  }
+
+  void _checkStatus(http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) return;
+    if (response.statusCode == 401) throw const AuthException('Authentication required');
+    if (response.statusCode == 403) throw const AuthException('Access denied');
+    String message = 'Request failed';
+    try {
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      message = body['message'] as String? ?? message;
+    } catch (_) {}
+    throw NetworkException(message, statusCode: response.statusCode);
   }
 
   Map<String, dynamic> _handleResponse(http.Response response) {

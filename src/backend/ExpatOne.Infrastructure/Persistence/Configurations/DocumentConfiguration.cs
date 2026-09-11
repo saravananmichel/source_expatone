@@ -16,6 +16,9 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .IsRequired()
             .HasMaxLength(300);
 
+        builder.Property(d => d.OriginalFileName)
+            .HasMaxLength(300);
+
         builder.Property(d => d.S3ObjectKey)
             .IsRequired()
             .HasMaxLength(500);

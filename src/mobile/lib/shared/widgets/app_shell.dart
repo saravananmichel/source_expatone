@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../core/services/auth_service.dart';
+import '../../core/services/document_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/documents/documents_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../services/health_service.dart';
 
@@ -10,6 +12,7 @@ class AppShell extends StatefulWidget {
   final HealthService healthService;
   final IAuthService authService;
   final UserService userService;
+  final DocumentService documentService;
   final VoidCallback onLogout;
   final String? userName;
 
@@ -18,6 +21,7 @@ class AppShell extends StatefulWidget {
     required this.healthService,
     required this.authService,
     required this.userService,
+    required this.documentService,
     required this.onLogout,
     this.userName,
   });
@@ -33,7 +37,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final screens = [
       DashboardScreen(healthService: widget.healthService, userName: widget.userName),
-      const _PlaceholderScreen(title: 'Documents', icon: Icons.folder_outlined),
+      DocumentsScreen(documentService: widget.documentService),
       const _PlaceholderScreen(title: 'Assistant', icon: Icons.account_balance),
       const _PlaceholderScreen(title: 'Reminders', icon: Icons.notifications_outlined),
       ProfileScreen(

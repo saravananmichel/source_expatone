@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/networking/api_client.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/document_service.dart';
 import 'core/services/user_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
@@ -31,11 +32,13 @@ void main() async {
   }
 
   final userService = UserService(apiClient);
+  final documentService = DocumentService(apiClient);
 
   runApp(ExpatOneApp(
     healthService: healthService,
     authService: authService,
     userService: userService,
+    documentService: documentService,
     initError: initError,
   ));
 }
@@ -44,6 +47,7 @@ class ExpatOneApp extends StatefulWidget {
   final HealthService healthService;
   final IAuthService? authService;
   final UserService userService;
+  final DocumentService documentService;
   final String? initError;
 
   const ExpatOneApp({
@@ -51,6 +55,7 @@ class ExpatOneApp extends StatefulWidget {
     required this.healthService,
     this.authService,
     required this.userService,
+    required this.documentService,
     this.initError,
   });
 
@@ -117,6 +122,7 @@ class _ExpatOneAppState extends State<ExpatOneApp> {
           healthService: widget.healthService,
           authService: widget.authService!,
           userService: widget.userService,
+          documentService: widget.documentService,
           onLogout: _onLogout,
           userName: _authState.user?.displayName,
         );
