@@ -1,0 +1,63 @@
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# =========================
+# Secrets / Environment
+# =========================
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+
+# =========================
+# .NET / ASP.NET Core
+# =========================
+bin/
+obj/
+*.csproj.user
+project.lock.json
+*.nupkg
+*.snupkg
+packages/
+TestResults/
+
+# =========================
+# Flutter / Dart
+# =========================
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+.metadata
+pubspec.lock
+
+# =========================
+# Generated
+# =========================
+*.g.dart
+*.freezed.dart
+
+# =========================
+# Logs
+# =========================
+*.log
+logs/
