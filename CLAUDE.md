@@ -4,9 +4,9 @@
 ExpatOne is a mobile app for foreigners/expats living in Malaysia. It's an AI-powered life-admin assistant covering government processes, document management, reminders, translations, and emergency info.
 
 ## Current Phase
-**Phase 1 — Application Foundation** (COMPLETE)
+**Phase 2 — Authentication & User Management** (COMPLETE)
 
-Next: Phase 2 — Authentication & User Management
+Next: Phase 3 — Smart Document Wallet + Amazon S3
 
 ## Tech Stack
 - **Mobile**: Flutter 3.47.3 (Android + iOS)
@@ -15,7 +15,7 @@ Next: Phase 2 — Authentication & User Management
 - **ORM**: Entity Framework Core 8.0 + Npgsql
 - **AI Provider**: Google Gemini (NOT OpenAI) — interface defined, not yet implemented
 - **File Storage**: Amazon S3 — interface defined, not yet implemented
-- **Auth**: Firebase Authentication — planned for Phase 2
+- **Auth**: Firebase Authentication (implemented Phase 2)
 - **Notifications**: Firebase Cloud Messaging — planned for Phase 4
 - **Vector Search**: pgvector — planned for Phase 6
 
@@ -46,6 +46,10 @@ Tables: users, documents, document_types, reminders, countries, government_knowl
 
 Seed data: Malaysia (country code MY).
 
+Migrations: `InitialCreate`, `AddCompositeExternalIdentityIndex`.
+
+Key index: `IX_users_ExternalProvider_ExternalId` (unique composite) — ensures one user per provider+ID combination.
+
 ```bash
 # Apply migrations
 export PATH="/opt/homebrew/opt/dotnet@8/bin:$PATH:/Users/austincelestia/.dotnet/tools"
@@ -54,10 +58,24 @@ cd src/backend
 dotnet ef database update --project ExpatOne.Infrastructure --startup-project ExpatOne.Api
 ```
 
+## Authentication Architecture
+```
+Flutter → Firebase Auth → ID Token → ASP.NET Core → Token Validation → ExternalId+ExternalProvider → PostgreSQL User
+```
+
+- Firebase handles authentication (email/password, Google Sign-In)
+- Backend validates Firebase ID tokens via custom AuthenticationHandler
+- User provisioning is idempotent: find-or-create by (ExternalProvider, ExternalId)
+- All protected endpoints require `Authorization: Bearer <Firebase ID Token>`
+- Identity comes from validated token claims, never from client-provided data
+- Composite unique index on (ExternalProvider, ExternalId) ensures no duplicate users
+
 ## API Endpoints
-- `GET /api/health` — Returns API status + database connectivity
-- `GET /api/users/{id}` — Get user by ID
-- `POST /api/users` — Create user (accepts CreateUserDto)
+- `GET /api/health` — Returns API status + database connectivity (public)
+- `GET /api/users/me` — Get authenticated user's profile (requires auth)
+- `PUT /api/users/me` — Update authenticated user's profile (requires auth)
+
+Old endpoints `GET /api/users/{id}` and `POST /api/users` have been removed.
 
 Backend runs on `http://localhost:5000` (configured in launchSettings.json).
 
@@ -86,7 +104,17 @@ Required in `appsettings.Development.json` (gitignored):
 }
 ```
 
-Future phases will add: GEMINI_API_KEY, AWS credentials, FIREBASE_PROJECT_ID.
+Backend also requires Firebase configuration in `appsettings.Development.json`:
+```json
+{
+  "Firebase": {
+    "ProjectId": "your-firebase-project-id",
+    "CredentialPath": "/path/to/firebase-service-account.json"
+  }
+}
+```
+
+Future phases will add: GEMINI_API_KEY, AWS credentials.
 
 ## Key Abstractions (in Application layer)
 - `IAIService` — AI provider abstraction (Gemini implementation in Phase 5-7)
@@ -106,10 +134,20 @@ Future phases will add: GEMINI_API_KEY, AWS credentials, FIREBASE_PROJECT_ID.
 8. **AI safety** — never present unverified info as fact, show sources/disclaimers
 9. **User identity is provider-agnostic** — ExternalId + ExternalProvider, not FirebaseUid
 
+## Firebase Setup (for developers)
+1. Create a Firebase project at https://console.firebase.google.com
+2. Enable Authentication → Email/Password and Google Sign-In
+3. Add Android app (package: `com.expatone.expatone_app`) → download `google-services.json` to `src/mobile/android/app/`
+4. Add iOS app (bundle ID from Xcode) → download `GoogleService-Info.plist` to `src/mobile/ios/Runner/`
+5. Run `flutterfire configure` (or manually place config files)
+6. Generate a Firebase Admin SDK service account key → save outside repo
+7. Set `Firebase:ProjectId` and `Firebase:CredentialPath` in `appsettings.Development.json`
+8. Do NOT commit service account JSON or `google-services.json` / `GoogleService-Info.plist`
+
 ## Phase Roadmap
 - Phase 0: Architecture (DONE)
 - Phase 1: Application Foundation (DONE)
-- Phase 2: Authentication & User Management
+- Phase 2: Authentication & User Management (DONE)
 - Phase 3: Smart Document Wallet
 - Phase 4: Reminder Center
 - Phase 5: AI Document Reader

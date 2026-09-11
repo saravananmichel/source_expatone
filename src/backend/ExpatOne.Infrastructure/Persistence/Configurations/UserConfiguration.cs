@@ -38,7 +38,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(10);
 
-        builder.HasIndex(u => u.ExternalId)
+        builder.HasIndex(u => new { u.ExternalProvider, u.ExternalId })
             .IsUnique();
 
         builder.HasIndex(u => u.Email)

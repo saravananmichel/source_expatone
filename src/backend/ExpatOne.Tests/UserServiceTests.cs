@@ -16,25 +16,68 @@ public class UserServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_ReturnsUserDto()
+    public async Task FindOrCreate_CreatesNewUser()
     {
         using var context = CreateDbContext();
         var service = new UserService(context);
 
-        var dto = new CreateUserDto
-        {
-            ExternalId = "firebase-123",
-            Email = "user@example.com",
-            DisplayName = "Test User"
-        };
-
-        var result = await service.CreateAsync(dto);
+        var result = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-123", "user@example.com", "Test User");
 
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal("user@example.com", result.Email);
         Assert.Equal("Test User", result.DisplayName);
+        Assert.Equal("firebase", result.ExternalProvider);
         Assert.Equal("MY", result.CountryCode);
         Assert.True(result.IsActive);
+    }
+
+    [Fact]
+    public async Task FindOrCreate_ReturnsExistingUser()
+    {
+        using var context = CreateDbContext();
+        var service = new UserService(context);
+
+        var first = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-456", "first@example.com", "First");
+
+        var second = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-456", "first@example.com", "First");
+
+        Assert.Equal(first.Id, second.Id);
+        Assert.Single(context.Users);
+    }
+
+    [Fact]
+    public async Task FindOrCreate_UpdatesEmailIfChanged()
+    {
+        using var context = CreateDbContext();
+        var service = new UserService(context);
+
+        await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-789", "old@example.com", "User");
+
+        var updated = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-789", "new@example.com", "User");
+
+        Assert.Equal("new@example.com", updated.Email);
+        Assert.Single(context.Users);
+    }
+
+    [Fact]
+    public async Task FindOrCreate_DifferentProvidersDifferentUsers()
+    {
+        using var context = CreateDbContext();
+        var service = new UserService(context);
+
+        var firebase = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-same", "fb@example.com", "FB User");
+
+        var google = await service.FindOrCreateByExternalIdentityAsync(
+            "google", "uid-same", "g@example.com", "Google User");
+
+        Assert.NotEqual(firebase.Id, google.Id);
+        Assert.Equal(2, context.Users.Count());
     }
 
     [Fact]
@@ -43,11 +86,8 @@ public class UserServiceTests
         using var context = CreateDbContext();
         var service = new UserService(context);
 
-        var created = await service.CreateAsync(new CreateUserDto
-        {
-            ExternalId = "fb-456",
-            Email = "find@example.com"
-        });
+        var created = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-get", "get@example.com", "Get User");
 
         var found = await service.GetByIdAsync(created.Id);
 
@@ -72,16 +112,13 @@ public class UserServiceTests
         using var context = CreateDbContext();
         var service = new UserService(context);
 
-        await service.CreateAsync(new CreateUserDto
-        {
-            ExternalId = "external-789",
-            Email = "external@example.com"
-        });
+        await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "ext-lookup", "lookup@example.com", null);
 
-        var found = await service.GetByExternalIdAsync("external-789");
+        var found = await service.GetByExternalIdAsync("firebase", "ext-lookup");
 
         Assert.NotNull(found);
-        Assert.Equal("external@example.com", found.Email);
+        Assert.Equal("lookup@example.com", found.Email);
     }
 
     [Fact]
@@ -90,24 +127,48 @@ public class UserServiceTests
         using var context = CreateDbContext();
         var service = new UserService(context);
 
-        var found = await service.GetByExternalIdAsync("does-not-exist");
+        var found = await service.GetByExternalIdAsync("firebase", "does-not-exist");
 
         Assert.Null(found);
     }
 
     [Fact]
-    public async Task CreateAsync_DoesNotExposeExternalId()
+    public async Task UpdateProfile_UpdatesAllowedFields()
     {
         using var context = CreateDbContext();
         var service = new UserService(context);
 
-        var result = await service.CreateAsync(new CreateUserDto
+        var user = await service.FindOrCreateByExternalIdentityAsync(
+            "firebase", "uid-update", "update@example.com", "Original");
+
+        var updated = await service.UpdateProfileAsync(user.Id, new UpdateUserDto
         {
-            ExternalId = "secret-id",
-            Email = "dto@example.com"
+            DisplayName = "Updated Name",
+            PhoneNumber = "+60123456789",
+            CountryCode = "SG",
+            PreferredLanguage = "ms"
         });
 
-        // UserDto should not contain ExternalId — verify the type
+        Assert.Equal("Updated Name", updated.DisplayName);
+        Assert.Equal("+60123456789", updated.PhoneNumber);
+        Assert.Equal("SG", updated.CountryCode);
+        Assert.Equal("ms", updated.PreferredLanguage);
+        Assert.Equal(user.Email, updated.Email);
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ThrowsForMissingUser()
+    {
+        using var context = CreateDbContext();
+        var service = new UserService(context);
+
+        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
+            service.UpdateProfileAsync(Guid.NewGuid(), new UpdateUserDto { DisplayName = "x" }));
+    }
+
+    [Fact]
+    public void UserDto_DoesNotExposeExternalId()
+    {
         var properties = typeof(UserDto).GetProperties();
         Assert.DoesNotContain(properties, p => p.Name == "ExternalId");
     }

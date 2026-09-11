@@ -2,28 +2,40 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 import '../error/app_exception.dart';
+import '../services/auth_service.dart';
 
 class ApiClient {
   final http.Client _httpClient;
-  String? _authToken;
+  IAuthService? _authService;
 
   ApiClient({http.Client? httpClient})
       : _httpClient = httpClient ?? http.Client();
 
-  void setAuthToken(String? token) {
-    _authToken = token;
+  void setAuthService(IAuthService authService) {
+    _authService = authService;
   }
 
-  Map<String, String> get _headers => {
-        'Content-Type': 'application/json',
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
-      };
+  Future<Map<String, String>> _getHeaders() async {
+    final headers = <String, String>{
+      'Content-Type': 'application/json',
+    };
+
+    if (_authService != null) {
+      final token = await _authService!.getIdToken();
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
+    return headers;
+  }
 
   Future<Map<String, dynamic>> get(String path,
       {Map<String, String>? queryParams}) async {
     final uri = _buildUri(path, queryParams);
+    final headers = await _getHeaders();
     final response = await _httpClient
-        .get(uri, headers: _headers)
+        .get(uri, headers: headers)
         .timeout(ApiConstants.connectTimeout);
     return _handleResponse(response);
   }
@@ -31,8 +43,9 @@ class ApiClient {
   Future<Map<String, dynamic>> post(String path,
       {Map<String, dynamic>? body}) async {
     final uri = _buildUri(path);
+    final headers = await _getHeaders();
     final response = await _httpClient
-        .post(uri, headers: _headers, body: body != null ? jsonEncode(body) : null)
+        .post(uri, headers: headers, body: body != null ? jsonEncode(body) : null)
         .timeout(ApiConstants.connectTimeout);
     return _handleResponse(response);
   }
@@ -40,16 +53,18 @@ class ApiClient {
   Future<Map<String, dynamic>> put(String path,
       {Map<String, dynamic>? body}) async {
     final uri = _buildUri(path);
+    final headers = await _getHeaders();
     final response = await _httpClient
-        .put(uri, headers: _headers, body: body != null ? jsonEncode(body) : null)
+        .put(uri, headers: headers, body: body != null ? jsonEncode(body) : null)
         .timeout(ApiConstants.connectTimeout);
     return _handleResponse(response);
   }
 
   Future<Map<String, dynamic>> delete(String path) async {
     final uri = _buildUri(path);
+    final headers = await _getHeaders();
     final response = await _httpClient
-        .delete(uri, headers: _headers)
+        .delete(uri, headers: headers)
         .timeout(ApiConstants.connectTimeout);
     return _handleResponse(response);
   }

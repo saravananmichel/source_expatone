@@ -3,6 +3,7 @@ using System;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ExpatOne.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ExpatOneDbContext))]
-    partial class ExpatOneDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260911042824_AddCompositeExternalIdentityIndex")]
+    partial class AddCompositeExternalIdentityIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

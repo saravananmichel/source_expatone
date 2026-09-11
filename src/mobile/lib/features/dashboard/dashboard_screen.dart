@@ -5,8 +5,9 @@ import '../../core/error/result.dart';
 
 class DashboardScreen extends StatefulWidget {
   final HealthService healthService;
+  final String? userName;
 
-  const DashboardScreen({super.key, required this.healthService});
+  const DashboardScreen({super.key, required this.healthService, this.userName});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -73,8 +74,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildGreeting() {
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12 ? 'Good morning' : (hour < 17 ? 'Good afternoon' : 'Good evening');
+    final name = widget.userName;
     return Text(
-      'Good morning',
+      name != null && name.isNotEmpty ? '$greeting, ${name.split(' ').first}' : greeting,
       style: Theme.of(context).textTheme.headlineLarge,
     );
   }

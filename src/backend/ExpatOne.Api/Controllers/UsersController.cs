@@ -1,11 +1,14 @@
+using System.Security.Claims;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ExpatOne.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -15,20 +18,29 @@ public class UsersController : ControllerBase
         _userService = userService;
     }
 
-    [HttpGet("{id:guid}")]
-    public async Task<IActionResult> GetById(Guid id)
+    [HttpGet("me")]
+    public async Task<IActionResult> GetMe()
     {
-        var user = await _userService.GetByIdAsync(id);
-        if (user is null)
-            return NotFound();
-
+        var user = await GetAuthenticatedUserAsync();
         return Ok(user);
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateUserDto dto)
+    [HttpPut("me")]
+    public async Task<IActionResult> UpdateMe([FromBody] UpdateUserDto dto)
     {
-        var user = await _userService.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
+        var currentUser = await GetAuthenticatedUserAsync();
+        var updated = await _userService.UpdateProfileAsync(currentUser.Id, dto);
+        return Ok(updated);
+    }
+
+    private async Task<UserDto> GetAuthenticatedUserAsync()
+    {
+        var firebaseUid = User.FindFirstValue("firebase_uid")
+            ?? throw new UnauthorizedAccessException();
+        var email = User.FindFirstValue(ClaimTypes.Email) ?? "";
+        var displayName = User.FindFirstValue(ClaimTypes.Name);
+
+        return await _userService.FindOrCreateByExternalIdentityAsync(
+            "firebase", firebaseUid, email, displayName);
     }
 }

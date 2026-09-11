@@ -1,12 +1,26 @@
 import 'package:flutter/material.dart';
+import '../../core/services/auth_service.dart';
+import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../services/health_service.dart';
 
 class AppShell extends StatefulWidget {
   final HealthService healthService;
+  final IAuthService authService;
+  final UserService userService;
+  final VoidCallback onLogout;
+  final String? userName;
 
-  const AppShell({super.key, required this.healthService});
+  const AppShell({
+    super.key,
+    required this.healthService,
+    required this.authService,
+    required this.userService,
+    required this.onLogout,
+    this.userName,
+  });
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -15,26 +29,24 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  late final List<Widget> _screens;
-
   @override
-  void initState() {
-    super.initState();
-    _screens = [
-      DashboardScreen(healthService: widget.healthService),
+  Widget build(BuildContext context) {
+    final screens = [
+      DashboardScreen(healthService: widget.healthService, userName: widget.userName),
       const _PlaceholderScreen(title: 'Documents', icon: Icons.folder_outlined),
       const _PlaceholderScreen(title: 'Assistant', icon: Icons.account_balance),
       const _PlaceholderScreen(title: 'Reminders', icon: Icons.notifications_outlined),
-      const _PlaceholderScreen(title: 'Profile', icon: Icons.person_outline),
+      ProfileScreen(
+        authService: widget.authService,
+        userService: widget.userService,
+        onLogout: widget.onLogout,
+      ),
     ];
-  }
 
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
