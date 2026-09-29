@@ -46,7 +46,8 @@ public class DocumentServiceTests
             .Returns(Task.CompletedTask);
 
         var logger = new Mock<ILogger<DocumentService>>().Object;
-        var service = new DocumentService(context, mockStorage.Object, logger);
+        var auditService = new DocumentAuditService(context);
+        var service = new DocumentService(context, mockStorage.Object, auditService, logger);
 
         return (context, service);
     }
@@ -69,10 +70,11 @@ public class DocumentServiceTests
 
         Assert.NotEqual(Guid.Empty, result.DocumentId);
         Assert.Contains("upload", result.UploadUrl);
-        Assert.Contains(UserId.ToString(), result.ObjectKey);
 
+        // S3 object key is stored server-side in the document record; not returned to client
         var doc = await ctx.Documents.FindAsync(result.DocumentId);
         Assert.NotNull(doc);
+        Assert.Contains(UserId.ToString(), doc!.S3ObjectKey);
         Assert.Equal(DocumentStatus.PendingUpload, doc.Status);
     }
 

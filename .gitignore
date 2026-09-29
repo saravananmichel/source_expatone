@@ -30,6 +30,7 @@ secrets.json
 # Firebase
 # =========================
 google-services.json
+google-services.json.bak
 GoogleService-Info.plist
 firebase_app_id_file.json
 **/firebase_options.dart

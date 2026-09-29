@@ -23,7 +23,7 @@ class HealthStatus {
     );
   }
 
-  bool get isHealthy => status == 'healthy';
+  bool get isHealthy => status == 'ok' || status == 'healthy';
 }
 
 class HealthService {

@@ -41,13 +41,24 @@ class ApiClient {
   }
 
   Future<Map<String, dynamic>> post(String path,
-      {Map<String, dynamic>? body}) async {
+      {Map<String, dynamic>? body, Duration? timeout}) async {
+    final uri = _buildUri(path);
+    final headers = await _getHeaders();
+    final response = await _httpClient
+        .post(uri, headers: headers, body: body != null ? jsonEncode(body) : null)
+        .timeout(timeout ?? ApiConstants.connectTimeout);
+    return _handleResponse(response);
+  }
+
+  // For POST endpoints that return a JSON array (not an object).
+  // Validates status only; the caller discards or parses the body separately.
+  Future<void> postVoid(String path, {Map<String, dynamic>? body}) async {
     final uri = _buildUri(path);
     final headers = await _getHeaders();
     final response = await _httpClient
         .post(uri, headers: headers, body: body != null ? jsonEncode(body) : null)
         .timeout(ApiConstants.connectTimeout);
-    return _handleResponse(response);
+    _checkStatus(response);
   }
 
   Future<Map<String, dynamic>> put(String path,

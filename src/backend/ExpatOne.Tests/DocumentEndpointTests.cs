@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
 using ExpatOne.Infrastructure.Persistence;
@@ -14,11 +15,12 @@ using Moq;
 
 namespace ExpatOne.Tests;
 
-public class DocumentEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("Integration")]
+public class DocumentEndpointTests
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    public DocumentEndpointTests(WebApplicationFactory<Program> factory)
+    public DocumentEndpointTests(AppFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {
@@ -73,6 +75,16 @@ public class DocumentEndpointTests : IClassFixture<WebApplicationFactory<Program
 
                 services.AddSingleton(mockStorage.Object);
                 services.AddScoped<IDocumentService, DocumentService>();
+
+                var mockAi = new Mock<IAIService>();
+                mockAi.Setup(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()))
+                    .ReturnsAsync(new AIResponse
+                    {
+                        Content = JsonSerializer.Serialize(new { documentCategory = "Passport", summary = "Test passport" }),
+                        StructuredJson = JsonSerializer.Serialize(new { documentCategory = "Passport", summary = "Test passport" }),
+                    });
+                services.AddSingleton(mockAi.Object);
+                services.AddScoped<IDocumentAnalysisService, DocumentAnalysisService>();
             });
         });
     }
@@ -86,9 +98,22 @@ public class DocumentEndpointTests : IClassFixture<WebApplicationFactory<Program
     }
 
     [Fact]
-    public async Task GetDocumentTypes_IsPublic()
+    public async Task GetDocumentTypes_WithoutAuth_Returns200_EndpointIsPublic()
+    {
+        // document-types is intentionally public so unauthenticated clients
+        // (e.g. the upload flow before login completes) can fetch the list.
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync("/api/document-types");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetDocumentTypes_Authenticated_ReturnsTypes()
     {
         var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Test", "uid=doctype-user&email=dt@test.com&name=User");
+
         var response = await client.GetAsync("/api/document-types");
         response.EnsureSuccessStatusCode();
 
@@ -159,5 +184,43 @@ public class DocumentEndpointTests : IClassFixture<WebApplicationFactory<Program
         var client = _factory.CreateClient();
         var response = await client.GetAsync($"/api/documents/{Guid.NewGuid()}/access-url");
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AnalyzeDocument_WithoutAuth_Returns401()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.PostAsJsonAsync($"/api/documents/{Guid.NewGuid()}/analyze", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAnalysis_WithoutAuth_Returns401()
+    {
+        var client = _factory.CreateClient();
+        var response = await client.GetAsync($"/api/documents/{Guid.NewGuid()}/analysis");
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetAnalysis_NoAnalysisExists_Returns404()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Test", "uid=analysis-user-1&email=analysis@test.com&name=Analyst");
+
+        var response = await client.GetAsync($"/api/documents/{Guid.NewGuid()}/analysis");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task AnalyzeDocument_NonExistentDocument_Returns404()
+    {
+        var client = _factory.CreateClient();
+        client.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Test", "uid=analysis-user-2&email=analysis2@test.com&name=Analyst");
+
+        var response = await client.PostAsJsonAsync($"/api/documents/{Guid.NewGuid()}/analyze", new { });
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }

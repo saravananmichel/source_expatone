@@ -49,6 +49,12 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ExpatOne needs your location to share it with emergency services when you request it.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ExpatOne uses the microphone to let you speak text for translation.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>ExpatOne uses speech recognition to convert your spoken words into text for translation.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

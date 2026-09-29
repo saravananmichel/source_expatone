@@ -26,6 +26,9 @@ public class GovernmentSourceConfiguration : IEntityTypeConfiguration<Government
             .IsRequired()
             .HasMaxLength(5);
 
+        builder.Property(gs => gs.ContentHash)
+            .HasMaxLength(64);
+
         builder.HasIndex(gs => gs.CountryCode);
     }
 }

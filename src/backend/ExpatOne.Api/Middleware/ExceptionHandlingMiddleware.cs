@@ -36,7 +36,9 @@ public class ExceptionHandlingMiddleware
         {
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Authentication required."),
             KeyNotFoundException => (HttpStatusCode.NotFound, "The requested resource was not found."),
-            ArgumentException => (HttpStatusCode.BadRequest, "Invalid request."),
+            ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
+            InvalidOperationException => (HttpStatusCode.Conflict, exception.Message),
+            AIProviderUnavailableException => (HttpStatusCode.ServiceUnavailable, exception.Message),
             _ => (HttpStatusCode.InternalServerError, "We couldn't process your request right now. Please try again.")
         };
 

@@ -21,4 +21,6 @@ public class Document : BaseEntity
 
     public User User { get; set; } = null!;
     public DocumentType DocumentType { get; set; } = null!;
+    public ICollection<DocumentVersion> Versions { get; set; } = [];
+    public ICollection<DocumentShare> Shares { get; set; } = [];
 }

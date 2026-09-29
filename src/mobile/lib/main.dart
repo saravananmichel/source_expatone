@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'core/networking/api_client.dart';
+import 'core/services/assistant_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/document_service.dart';
+import 'core/services/emergency_service.dart';
+import 'core/services/reminder_service.dart';
+import 'core/services/translation_service.dart';
 import 'core/services/user_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/login_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'shared/services/health_service.dart';
 import 'shared/widgets/app_shell.dart';
 
@@ -33,12 +38,20 @@ void main() async {
 
   final userService = UserService(apiClient);
   final documentService = DocumentService(apiClient);
+  final reminderService = ReminderService(apiClient);
+  final assistantService = AssistantService(apiClient);
+  final translationService = TranslationService(apiClient);
+  final emergencyService = EmergencyService(apiClient);
 
   runApp(ExpatOneApp(
     healthService: healthService,
     authService: authService,
     userService: userService,
     documentService: documentService,
+    reminderService: reminderService,
+    assistantService: assistantService,
+    translationService: translationService,
+    emergencyService: emergencyService,
     initError: initError,
   ));
 }
@@ -48,6 +61,10 @@ class ExpatOneApp extends StatefulWidget {
   final IAuthService? authService;
   final UserService userService;
   final DocumentService documentService;
+  final ReminderService reminderService;
+  final AssistantService assistantService;
+  final TranslationService translationService;
+  final EmergencyService emergencyService;
   final String? initError;
 
   const ExpatOneApp({
@@ -56,6 +73,10 @@ class ExpatOneApp extends StatefulWidget {
     this.authService,
     required this.userService,
     required this.documentService,
+    required this.reminderService,
+    required this.assistantService,
+    required this.translationService,
+    required this.emergencyService,
     this.initError,
   });
 
@@ -65,14 +86,45 @@ class ExpatOneApp extends StatefulWidget {
 
 class _ExpatOneAppState extends State<ExpatOneApp> {
   AuthState _authState = const AuthState();
+  bool? _onboardingCompleted;
+  bool _isCheckingProfile = false;
 
   @override
   void initState() {
     super.initState();
     if (widget.authService != null) {
       widget.authService!.authStateChanges.listen((state) {
-        if (mounted) setState(() => _authState = state);
+        if (mounted) {
+          final wasAuthenticated = _authState.status == AuthStatus.authenticated;
+          setState(() => _authState = state);
+          if (state.status == AuthStatus.authenticated && !wasAuthenticated) {
+            _checkOnboarding();
+          }
+          if (state.status != AuthStatus.authenticated) {
+            _onboardingCompleted = null;
+          }
+        }
       });
+    }
+  }
+
+  Future<void> _checkOnboarding() async {
+    setState(() => _isCheckingProfile = true);
+    try {
+      final profile = await widget.userService.getMe();
+      if (mounted) {
+        setState(() {
+          _onboardingCompleted = profile.onboardingCompleted;
+          _isCheckingProfile = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _onboardingCompleted = true;
+          _isCheckingProfile = false;
+        });
+      }
     }
   }
 
@@ -82,6 +134,10 @@ class _ExpatOneAppState extends State<ExpatOneApp> {
 
   void _onLogout() {
     // Auth state stream will update the UI automatically
+  }
+
+  void _onOnboardingComplete() {
+    setState(() => _onboardingCompleted = true);
   }
 
   @override
@@ -118,11 +174,28 @@ class _ExpatOneAppState extends State<ExpatOneApp> {
           onLoginSuccess: _onAuthSuccess,
         );
       case AuthStatus.authenticated:
+        if (_isCheckingProfile || _onboardingCompleted == null) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (_onboardingCompleted == false) {
+          return OnboardingScreen(
+            userService: widget.userService,
+            onComplete: _onOnboardingComplete,
+          );
+        }
+
         return AppShell(
           healthService: widget.healthService,
           authService: widget.authService!,
           userService: widget.userService,
           documentService: widget.documentService,
+          reminderService: widget.reminderService,
+          assistantService: widget.assistantService,
+          translationService: widget.translationService,
+          emergencyService: widget.emergencyService,
           onLogout: _onLogout,
           userName: _authState.user?.displayName,
         );

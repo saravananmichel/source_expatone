@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart' as fb;
+import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 enum AuthStatus { unknown, unauthenticated, authenticated, loading, error }
@@ -96,7 +97,20 @@ class FirebaseAuthService implements IAuthService {
 
       final result = await _auth.signInWithCredential(credential);
       return _mapUser(result.user!);
-    } on GoogleSignInException {
+    } on GoogleSignInException catch (e) {
+      // clientConfigurationError means the Firebase project is missing the Web
+      // OAuth client (type 3) in google-services.json — a setup issue, not a
+      // user error. Surface a useful message in debug; generic in release.
+      if (e.code == GoogleSignInExceptionCode.clientConfigurationError ||
+          e.code == GoogleSignInExceptionCode.providerConfigurationError) {
+        final detail = kDebugMode
+            ? 'Google Sign-In is not configured. Add a Web OAuth client to the Firebase project and re-download google-services.json. (${e.description})'
+            : 'Google sign-in is not available. Please sign in with email instead.';
+        throw AuthServiceException(detail);
+      }
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthServiceException('Sign-in was cancelled.');
+      }
       throw const AuthServiceException('Google sign-in failed. Please try again.');
     } on fb.FirebaseAuthException catch (e) {
       throw _mapFirebaseError(e);
@@ -121,10 +135,17 @@ class FirebaseAuthService implements IAuthService {
 
   @override
   Future<void> signOut() async {
-    await Future.wait([
-      _auth.signOut(),
-      GoogleSignIn.instance.signOut(),
-    ]);
+    // Firebase signout is authoritative — always run it first.
+    await _auth.signOut();
+
+    // Google Sign-In cleanup is best-effort: initialize() may not have been
+    // called (email/password sessions never call it), so signOut() can throw.
+    // A failure here must never leave the user authenticated in Firebase.
+    try {
+      await GoogleSignIn.instance.signOut();
+    } catch (_) {
+      // Not signed in via Google, or GoogleSignIn not initialized — ignore.
+    }
   }
 
   @override

@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 
 #nullable disable
 
@@ -20,6 +21,7 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "8.0.31")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("ExpatOne.Domain.Entities.AIConversation", b =>
@@ -127,10 +129,10 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                         {
                             Id = new Guid("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
                             Code = "MY",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(4070),
                             IsActive = true,
                             Name = "Malaysia",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(4070)
                         });
                 });
 
@@ -207,6 +209,90 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.ToTable("documents", (string)null);
                 });
 
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentAuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Metadata")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<Guid?>("TargetShareId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("TargetVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("DocumentId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("document_audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentShare", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Permission")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SharedWithUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OwnerUserId");
+
+                    b.HasIndex("SharedWithUserId");
+
+                    b.HasIndex("DocumentId", "SharedWithUserId", "RevokedAt");
+
+                    b.ToTable("document_shares", (string)null);
+                });
+
             modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentType", b =>
                 {
                     b.Property<Guid>("Id")
@@ -250,101 +336,223 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000001"),
                             Category = "Identity",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8500),
                             Description = "International travel document",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Passport",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8500)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000002"),
                             Category = "Immigration",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8500),
                             Description = "Entry/stay permit",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Visa",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8500)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000003"),
                             Category = "Immigration",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8500),
                             Description = "Work authorization",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Employment Pass",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8500)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000004"),
                             Category = "Identity",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
                             Description = "Driving authorization",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Driving Licence",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000005"),
                             Category = "Insurance",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
                             Description = "Insurance policy document",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Insurance",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000006"),
                             Category = "Medical",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
                             Description = "Health/medical card",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Medical Card",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1800)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000007"),
                             Category = "Immigration",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1810),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
                             Description = "Work authorization permit",
                             HasExpiry = true,
                             IsSystem = true,
                             Name = "Work Permit",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1810)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000008"),
                             Category = "Government",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1810),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
                             Description = "Official government correspondence",
                             HasExpiry = false,
                             IsSystem = true,
                             Name = "Government Letter",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1810)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
                         },
                         new
                         {
                             Id = new Guid("10000000-0000-0000-0000-000000000009"),
                             Category = "General",
-                            CreatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1810),
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
                             Description = "Other document type",
                             HasExpiry = false,
                             IsSystem = true,
                             Name = "Other",
-                            UpdatedAt = new DateTime(2026, 9, 11, 5, 22, 13, 858, DateTimeKind.Utc).AddTicks(1810)
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000010"),
+                            Category = "Immigration",
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
+                            Description = "Immigration-related document",
+                            HasExpiry = true,
+                            IsSystem = true,
+                            Name = "Immigration Document",
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000011"),
+                            Category = "Employment",
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
+                            Description = "Employment agreement or offer letter",
+                            HasExpiry = false,
+                            IsSystem = true,
+                            Name = "Employment Contract",
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000012"),
+                            Category = "Housing",
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510),
+                            Description = "Tenancy or rental agreement",
+                            HasExpiry = true,
+                            IsSystem = true,
+                            Name = "Rental Agreement",
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8510)
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000013"),
+                            Category = "Financial",
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8520),
+                            Description = "Tax assessment, return, or receipt",
+                            HasExpiry = false,
+                            IsSystem = true,
+                            Name = "Tax Document",
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8520)
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000014"),
+                            Category = "Government",
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8520),
+                            Description = "General government correspondence",
+                            HasExpiry = false,
+                            IsSystem = true,
+                            Name = "Government Correspondence",
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8520)
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000015"),
+                            Category = "General",
+                            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8520),
+                            Description = "Non-government correspondence or letter",
+                            HasExpiry = false,
+                            IsSystem = true,
+                            Name = "General Correspondence",
+                            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(8520)
                         });
+                });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentVersion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<string>("S3ObjectKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Sha256Hash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UploadedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("VersionNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.HasIndex("DocumentId", "IsCurrent");
+
+                    b.HasIndex("DocumentId", "VersionNumber")
+                        .IsUnique();
+
+                    b.ToTable("document_versions", (string)null);
                 });
 
             modelBuilder.Entity("ExpatOne.Domain.Entities.EmergencyResource", b =>
@@ -418,9 +626,16 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Content")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
@@ -436,6 +651,12 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
 
                     b.Property<DateTime?>("EffectiveDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("EmbeddedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Vector>("Embedding")
+                        .HasColumnType("vector(768)");
 
                     b.Property<Guid?>("GovernmentSourceId")
                         .HasColumnType("uuid");
@@ -465,6 +686,11 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CountryCode");
 
+                    b.HasIndex("Embedding");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Embedding"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Embedding"), new[] { "vector_cosine_ops" });
+
                     b.HasIndex("GovernmentSourceId");
 
                     b.ToTable("government_knowledge", (string)null);
@@ -475,6 +701,10 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
 
                     b.Property<string>("CountryCode")
                         .IsRequired()
@@ -490,6 +720,9 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastIngestedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("LastScrapedDate")
                         .HasColumnType("timestamp with time zone");
@@ -522,11 +755,14 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("DaysBeforeExpiry")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Description")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 
-                    b.Property<Guid?>("DocumentId")
+                    b.Property<Guid>("DocumentId")
                         .HasColumnType("uuid");
 
                     b.Property<bool>("IsAutoGenerated")
@@ -553,11 +789,12 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("DocumentId");
-
                     b.HasIndex("ReminderDate");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("DocumentId", "DaysBeforeExpiry")
+                        .IsUnique();
 
                     b.ToTable("reminders", (string)null);
                 });
@@ -585,6 +822,10 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
+                    b.Property<string>("EmploymentStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<string>("ExternalId")
                         .IsRequired()
                         .HasMaxLength(256)
@@ -595,7 +836,24 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("FamilyStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<bool?>("HasChildren")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Nationality")
+                        .HasMaxLength(5)
+                        .HasColumnType("character varying(5)");
+
+                    b.Property<int?>("NumberOfChildren")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("OnboardingCompleted")
                         .HasColumnType("boolean");
 
                     b.Property<string>("PhoneNumber")
@@ -607,8 +865,16 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
+                    b.Property<string>("ResidenceLocation")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("VisaPassType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.HasKey("Id");
 
@@ -662,6 +928,71 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentAuditLog", b =>
+                {
+                    b.HasOne("ExpatOne.Domain.Entities.Document", "Document")
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ExpatOne.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentShare", b =>
+                {
+                    b.HasOne("ExpatOne.Domain.Entities.Document", "Document")
+                        .WithMany("Shares")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ExpatOne.Domain.Entities.User", "OwnerUser")
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ExpatOne.Domain.Entities.User", "SharedWithUser")
+                        .WithMany()
+                        .HasForeignKey("SharedWithUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("OwnerUser");
+
+                    b.Navigation("SharedWithUser");
+                });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentVersion", b =>
+                {
+                    b.HasOne("ExpatOne.Domain.Entities.Document", "Document")
+                        .WithMany("Versions")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ExpatOne.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Document");
+
+                    b.Navigation("UploadedByUser");
+                });
+
             modelBuilder.Entity("ExpatOne.Domain.Entities.GovernmentKnowledge", b =>
                 {
                     b.HasOne("ExpatOne.Domain.Entities.GovernmentSource", "GovernmentSource")
@@ -677,7 +1008,8 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.HasOne("ExpatOne.Domain.Entities.Document", "Document")
                         .WithMany()
                         .HasForeignKey("DocumentId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("ExpatOne.Domain.Entities.User", "User")
                         .WithMany()
@@ -693,6 +1025,13 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("ExpatOne.Domain.Entities.AIConversation", b =>
                 {
                     b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.Document", b =>
+                {
+                    b.Navigation("Shares");
+
+                    b.Navigation("Versions");
                 });
 #pragma warning restore 612, 618
         }

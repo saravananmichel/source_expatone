@@ -10,4 +10,6 @@ public class GovernmentSource : BaseEntity
     public string CountryCode { get; set; } = "MY";
     public bool IsActive { get; set; } = true;
     public DateTime? LastScrapedDate { get; set; }
+    public string? ContentHash { get; set; }
+    public DateTime? LastIngestedAt { get; set; }
 }

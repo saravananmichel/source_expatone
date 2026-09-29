@@ -1,3 +1,4 @@
+using Amazon.S3;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
 using ExpatOne.Domain.Entities;
@@ -12,6 +13,7 @@ public class DocumentService : IDocumentService
 {
     private readonly ExpatOneDbContext _dbContext;
     private readonly IStorageService _storageService;
+    private readonly IDocumentAuditService _auditService;
     private readonly ILogger<DocumentService> _logger;
 
     private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -23,10 +25,11 @@ public class DocumentService : IDocumentService
 
     private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
 
-    public DocumentService(ExpatOneDbContext dbContext, IStorageService storageService, ILogger<DocumentService> logger)
+    public DocumentService(ExpatOneDbContext dbContext, IStorageService storageService, IDocumentAuditService auditService, ILogger<DocumentService> logger)
     {
         _dbContext = dbContext;
         _storageService = storageService;
+        _auditService = auditService;
         _logger = logger;
     }
 
@@ -67,7 +70,6 @@ public class DocumentService : IDocumentService
         {
             DocumentId = documentId,
             UploadUrl = uploadUrl,
-            ObjectKey = objectKey,
         };
     }
 
@@ -84,6 +86,8 @@ public class DocumentService : IDocumentService
         document.Status = DocumentStatus.Active;
         await _dbContext.SaveChangesAsync();
 
+        await _auditService.LogAsync(documentId, userId, "document_uploaded");
+
         _logger.LogInformation("Upload completed for document {DocumentId}", documentId);
 
         return MapToDto(document);
@@ -93,6 +97,8 @@ public class DocumentService : IDocumentService
     {
         var documents = await _dbContext.Documents
             .Include(d => d.DocumentType)
+            .Include(d => d.Versions)
+            .Include(d => d.Shares)
             .Where(d => d.UserId == userId && d.Status != DocumentStatus.PendingUpload)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
@@ -104,6 +110,8 @@ public class DocumentService : IDocumentService
     {
         var document = await _dbContext.Documents
             .Include(d => d.DocumentType)
+            .Include(d => d.Versions)
+            .Include(d => d.Shares)
             .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId
                 && d.Status != DocumentStatus.PendingUpload);
 
@@ -121,6 +129,8 @@ public class DocumentService : IDocumentService
         var url = await _storageService.GeneratePresignedUrlAsync(
             document.S3ObjectKey, TimeSpan.FromSeconds(expirySeconds));
 
+        await _auditService.LogAsync(documentId, userId, "document_accessed");
+
         return new AccessUrlResponseDto
         {
             Url = url,
@@ -131,24 +141,40 @@ public class DocumentService : IDocumentService
     public async Task DeleteDocumentAsync(Guid userId, Guid documentId)
     {
         var document = await _dbContext.Documents
+            .Include(d => d.Versions)
             .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId)
             ?? throw new KeyNotFoundException("Document not found.");
 
-        // Delete from S3 first — if this fails, metadata is still intact for retry
-        try
+        var allS3Keys = new List<string> { document.S3ObjectKey };
+        allS3Keys.AddRange(document.Versions.Select(v => v.S3ObjectKey));
+        var distinctKeys = allS3Keys.Distinct().ToList();
+
+        foreach (var key in distinctKeys)
         {
-            await _storageService.DeleteFileAsync(document.S3ObjectKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to delete S3 object {ObjectKey} for document {DocumentId}", document.S3ObjectKey, documentId);
-            throw;
+            try
+            {
+                await _storageService.DeleteFileAsync(key);
+            }
+            catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning("S3 object {ObjectKey} was already absent when deleting document {DocumentId} — continuing",
+                    key, documentId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to delete S3 object {ObjectKey} for document {DocumentId}",
+                    key, documentId);
+                throw;
+            }
         }
 
+        // Stage audit entry and document removal together — one atomic save.
+        _auditService.Stage(documentId, userId, "document_deleted");
         _dbContext.Documents.Remove(document);
         await _dbContext.SaveChangesAsync();
 
-        _logger.LogInformation("Deleted document {DocumentId} for user {UserId}", documentId, userId);
+        _logger.LogInformation("Deleted document {DocumentId} ({VersionCount} versions) for user {UserId}",
+            documentId, document.Versions.Count, userId);
     }
 
     public async Task<List<DocumentTypeDto>> GetDocumentTypesAsync()
@@ -219,5 +245,8 @@ public class DocumentService : IDocumentService
         ExpiryDate = doc.ExpiryDate,
         CreatedAt = doc.CreatedAt,
         UpdatedAt = doc.UpdatedAt,
+        IsAnalyzed = !string.IsNullOrEmpty(doc.ExtractedMetadata),
+        VersionCount = doc.Versions?.Count ?? 0,
+        ActiveShareCount = doc.Shares?.Count(s => s.RevokedAt == null) ?? 0,
     };
 }

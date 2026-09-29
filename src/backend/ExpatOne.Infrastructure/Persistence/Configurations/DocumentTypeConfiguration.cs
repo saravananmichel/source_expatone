@@ -34,7 +34,13 @@ public class DocumentTypeConfiguration : IEntityTypeConfiguration<DocumentType>
             new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000006"), Name = "Medical Card", Description = "Health/medical card", Category = "Medical", HasExpiry = true, IsSystem = true },
             new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000007"), Name = "Work Permit", Description = "Work authorization permit", Category = "Immigration", HasExpiry = true, IsSystem = true },
             new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000008"), Name = "Government Letter", Description = "Official government correspondence", Category = "Government", HasExpiry = false, IsSystem = true },
-            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000009"), Name = "Other", Description = "Other document type", Category = "General", HasExpiry = false, IsSystem = true }
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000009"), Name = "Other", Description = "Other document type", Category = "General", HasExpiry = false, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000010"), Name = "Immigration Document", Description = "Immigration-related document", Category = "Immigration", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000011"), Name = "Employment Contract", Description = "Employment agreement or offer letter", Category = "Employment", HasExpiry = false, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000012"), Name = "Rental Agreement", Description = "Tenancy or rental agreement", Category = "Housing", HasExpiry = true, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000013"), Name = "Tax Document", Description = "Tax assessment, return, or receipt", Category = "Financial", HasExpiry = false, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000014"), Name = "Government Correspondence", Description = "General government correspondence", Category = "Government", HasExpiry = false, IsSystem = true },
+            new DocumentType { Id = Guid.Parse("10000000-0000-0000-0000-000000000015"), Name = "General Correspondence", Description = "Non-government correspondence or letter", Category = "General", HasExpiry = false, IsSystem = true }
         );
     }
 }

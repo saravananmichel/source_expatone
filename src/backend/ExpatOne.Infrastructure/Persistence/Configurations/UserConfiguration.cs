@@ -38,6 +38,21 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
             .IsRequired()
             .HasMaxLength(10);
 
+        builder.Property(u => u.Nationality)
+            .HasMaxLength(5);
+
+        builder.Property(u => u.ResidenceLocation)
+            .HasMaxLength(200);
+
+        builder.Property(u => u.VisaPassType)
+            .HasMaxLength(50);
+
+        builder.Property(u => u.EmploymentStatus)
+            .HasMaxLength(50);
+
+        builder.Property(u => u.FamilyStatus)
+            .HasMaxLength(50);
+
         builder.HasIndex(u => new { u.ExternalProvider, u.ExternalId })
             .IsUnique();
 

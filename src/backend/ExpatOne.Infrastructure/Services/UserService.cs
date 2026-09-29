@@ -1,13 +1,18 @@
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
 using ExpatOne.Domain.Entities;
+using ExpatOne.Domain.Enums;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace ExpatOne.Infrastructure.Services;
 
 public class UserService : IUserService
 {
+    private static readonly HashSet<string> SupportedLanguages =
+        ["en", "ms", "zh", "ta", "hi", "ar", "ja", "ko"];
+
     private readonly ExpatOneDbContext _dbContext;
 
     public UserService(ExpatOneDbContext dbContext)
@@ -63,7 +68,19 @@ public class UserService : IUserService
         };
 
         _dbContext.Users.Add(user);
-        await _dbContext.SaveChangesAsync();
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Concurrent first-login: another request created this user between our read and write.
+            // The unique composite index prevented a duplicate — re-query to return the winner.
+            _dbContext.ChangeTracker.Clear();
+            user = await _dbContext.Users
+                .FirstOrDefaultAsync(u => u.ExternalProvider == externalProvider && u.ExternalId == externalId)
+                ?? throw new InvalidOperationException("Failed to create or retrieve user account.");
+        }
 
         return MapToDto(user);
     }
@@ -79,8 +96,57 @@ public class UserService : IUserService
             user.PhoneNumber = dto.PhoneNumber;
         if (dto.CountryCode is not null)
             user.CountryCode = dto.CountryCode;
+
         if (dto.PreferredLanguage is not null)
+        {
+            if (!SupportedLanguages.Contains(dto.PreferredLanguage))
+                throw new ArgumentException($"Unsupported language: {dto.PreferredLanguage}");
             user.PreferredLanguage = dto.PreferredLanguage;
+        }
+
+        if (dto.Nationality is not null)
+        {
+            if (dto.Nationality.Length < 2 || dto.Nationality.Length > 5)
+                throw new ArgumentException("Nationality must be a 2-5 character country code.");
+            user.Nationality = dto.Nationality;
+        }
+
+        if (dto.ResidenceLocation is not null)
+            user.ResidenceLocation = dto.ResidenceLocation;
+
+        if (dto.VisaPassType is not null)
+        {
+            if (!Enum.TryParse<VisaPassType>(dto.VisaPassType, ignoreCase: true, out _))
+                throw new ArgumentException($"Invalid visa/pass type: {dto.VisaPassType}");
+            user.VisaPassType = dto.VisaPassType;
+        }
+
+        if (dto.EmploymentStatus is not null)
+        {
+            if (!Enum.TryParse<EmploymentStatus>(dto.EmploymentStatus, ignoreCase: true, out _))
+                throw new ArgumentException($"Invalid employment status: {dto.EmploymentStatus}");
+            user.EmploymentStatus = dto.EmploymentStatus;
+        }
+
+        if (dto.FamilyStatus is not null)
+        {
+            if (!Enum.TryParse<FamilyStatus>(dto.FamilyStatus, ignoreCase: true, out _))
+                throw new ArgumentException($"Invalid family status: {dto.FamilyStatus}");
+            user.FamilyStatus = dto.FamilyStatus;
+        }
+
+        if (dto.HasChildren is not null)
+            user.HasChildren = dto.HasChildren;
+
+        if (dto.NumberOfChildren is not null)
+        {
+            if (dto.NumberOfChildren < 0 || dto.NumberOfChildren > 20)
+                throw new ArgumentException("Number of children must be between 0 and 20.");
+            user.NumberOfChildren = dto.NumberOfChildren;
+        }
+
+        if (dto.OnboardingCompleted is not null)
+            user.OnboardingCompleted = dto.OnboardingCompleted.Value;
 
         await _dbContext.SaveChangesAsync();
         return MapToDto(user);
@@ -96,6 +162,14 @@ public class UserService : IUserService
         PreferredLanguage = user.PreferredLanguage,
         ExternalProvider = user.ExternalProvider,
         IsActive = user.IsActive,
-        CreatedAt = user.CreatedAt
+        CreatedAt = user.CreatedAt,
+        Nationality = user.Nationality,
+        ResidenceLocation = user.ResidenceLocation,
+        VisaPassType = user.VisaPassType,
+        EmploymentStatus = user.EmploymentStatus,
+        FamilyStatus = user.FamilyStatus,
+        HasChildren = user.HasChildren,
+        NumberOfChildren = user.NumberOfChildren,
+        OnboardingCompleted = user.OnboardingCompleted
     };
 }

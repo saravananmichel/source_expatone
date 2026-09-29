@@ -20,11 +20,25 @@ public class ExpatOneDbContext : DbContext
     public DbSet<AIConversation> AIConversations => Set<AIConversation>();
     public DbSet<AIConversationMessage> AIConversationMessages => Set<AIConversationMessage>();
     public DbSet<EmergencyResource> EmergencyResources => Set<EmergencyResource>();
+    public DbSet<DocumentVersion> DocumentVersions => Set<DocumentVersion>();
+    public DbSet<DocumentShare> DocumentShares => Set<DocumentShare>();
+    public DbSet<DocumentAuditLog> DocumentAuditLogs => Set<DocumentAuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        if (Database.IsNpgsql())
+        {
+            modelBuilder.HasPostgresExtension("vector");
+        }
+
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ExpatOneDbContext).Assembly);
+
+        if (!Database.IsNpgsql())
+        {
+            modelBuilder.Entity<GovernmentKnowledge>().Ignore(e => e.Embedding);
+        }
     }
 
     public override int SaveChanges()

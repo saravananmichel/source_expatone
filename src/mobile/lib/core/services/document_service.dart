@@ -1,3 +1,4 @@
+import '../constants/api_constants.dart';
 import '../networking/api_client.dart';
 import '../error/app_exception.dart';
 import 'package:http/http.dart' as http;
@@ -37,6 +38,9 @@ class DocumentItem {
   final String status;
   final DateTime? expiryDate;
   final DateTime createdAt;
+  final bool isAnalyzed;
+  final int versionCount;
+  final int activeShareCount;
 
   const DocumentItem({
     required this.id,
@@ -49,6 +53,9 @@ class DocumentItem {
     required this.status,
     this.expiryDate,
     required this.createdAt,
+    this.isAnalyzed = false,
+    this.versionCount = 0,
+    this.activeShareCount = 0,
   });
 
   factory DocumentItem.fromJson(Map<String, dynamic> json) => DocumentItem(
@@ -64,6 +71,53 @@ class DocumentItem {
             ? DateTime.parse(json['expiryDate'] as String)
             : null,
         createdAt: DateTime.parse(json['createdAt'] as String),
+        isAnalyzed: json['isAnalyzed'] as bool? ?? false,
+        versionCount: (json['versionCount'] as num?)?.toInt() ?? 0,
+        activeShareCount: (json['activeShareCount'] as num?)?.toInt() ?? 0,
+      );
+
+  String get fileSizeFormatted {
+    if (fileSizeBytes < 1024) return '$fileSizeBytes B';
+    if (fileSizeBytes < 1024 * 1024) return '${(fileSizeBytes / 1024).toStringAsFixed(1)} KB';
+    return '${(fileSizeBytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  bool get isExpired => expiryDate != null && expiryDate!.isBefore(DateTime.now());
+  bool get isExpiringSoon => expiryDate != null &&
+      !isExpired &&
+      expiryDate!.isBefore(DateTime.now().add(const Duration(days: 30)));
+}
+
+class DocumentVersion {
+  final String id;
+  final String documentId;
+  final int versionNumber;
+  final String? originalFileName;
+  final String? contentType;
+  final int fileSizeBytes;
+  final bool isCurrent;
+  final DateTime createdAt;
+
+  const DocumentVersion({
+    required this.id,
+    required this.documentId,
+    required this.versionNumber,
+    this.originalFileName,
+    this.contentType,
+    required this.fileSizeBytes,
+    required this.isCurrent,
+    required this.createdAt,
+  });
+
+  factory DocumentVersion.fromJson(Map<String, dynamic> json) => DocumentVersion(
+        id: json['id'] as String,
+        documentId: json['documentId'] as String,
+        versionNumber: (json['versionNumber'] as num).toInt(),
+        originalFileName: json['originalFileName'] as String?,
+        contentType: json['contentType'] as String?,
+        fileSizeBytes: (json['fileSizeBytes'] as num?)?.toInt() ?? 0,
+        isCurrent: json['isCurrent'] as bool? ?? false,
+        createdAt: DateTime.parse(json['createdAt'] as String),
       );
 
   String get fileSizeFormatted {
@@ -73,21 +127,160 @@ class DocumentItem {
   }
 }
 
+class DocumentShare {
+  final String id;
+  final String documentId;
+  final String? documentName;
+  final String sharedWithUserId;
+  final String? sharedWithEmail;
+  final String permission;
+  final DateTime createdAt;
+  final DateTime? revokedAt;
+
+  const DocumentShare({
+    required this.id,
+    required this.documentId,
+    this.documentName,
+    required this.sharedWithUserId,
+    this.sharedWithEmail,
+    required this.permission,
+    required this.createdAt,
+    this.revokedAt,
+  });
+
+  factory DocumentShare.fromJson(Map<String, dynamic> json) => DocumentShare(
+        id: json['id'] as String,
+        documentId: json['documentId'] as String,
+        documentName: json['documentName'] as String?,
+        sharedWithUserId: json['sharedWithUserId'] as String,
+        sharedWithEmail: json['sharedWithEmail'] as String?,
+        permission: json['permission'] as String? ?? 'Read',
+        createdAt: DateTime.parse(json['createdAt'] as String),
+        revokedAt: json['revokedAt'] != null
+            ? DateTime.parse(json['revokedAt'] as String)
+            : null,
+      );
+
+  bool get isActive => revokedAt == null;
+}
+
+class SharedDocument {
+  final String shareId;
+  final String documentId;
+  final String documentName;
+  final String documentType;
+  final String? ownerEmail;
+  final String permission;
+  final DateTime? expiryDate;
+  final DateTime sharedAt;
+
+  const SharedDocument({
+    required this.shareId,
+    required this.documentId,
+    required this.documentName,
+    required this.documentType,
+    this.ownerEmail,
+    required this.permission,
+    this.expiryDate,
+    required this.sharedAt,
+  });
+
+  factory SharedDocument.fromJson(Map<String, dynamic> json) => SharedDocument(
+        shareId: json['shareId'] as String,
+        documentId: json['documentId'] as String,
+        documentName: json['documentName'] as String,
+        documentType: json['documentType'] as String,
+        ownerEmail: json['ownerEmail'] as String?,
+        permission: json['permission'] as String? ?? 'Read',
+        expiryDate: json['expiryDate'] != null
+            ? DateTime.parse(json['expiryDate'] as String)
+            : null,
+        sharedAt: DateTime.parse(json['sharedAt'] as String),
+      );
+}
+
+class DocumentAuditLog {
+  final String id;
+  final String documentId;
+  final String action;
+  final String? targetVersionId;
+  final String? targetShareId;
+  final String? metadata;
+  final DateTime createdAt;
+
+  const DocumentAuditLog({
+    required this.id,
+    required this.documentId,
+    required this.action,
+    this.targetVersionId,
+    this.targetShareId,
+    this.metadata,
+    required this.createdAt,
+  });
+
+  factory DocumentAuditLog.fromJson(Map<String, dynamic> json) => DocumentAuditLog(
+        id: json['id'] as String,
+        documentId: json['documentId'] as String,
+        action: json['action'] as String,
+        targetVersionId: json['targetVersionId'] as String?,
+        targetShareId: json['targetShareId'] as String?,
+        metadata: json['metadata'] as String?,
+        createdAt: DateTime.parse(json['createdAt'] as String),
+      );
+
+  String get actionLabel {
+    switch (action) {
+      case 'document_uploaded':
+        return 'Document uploaded';
+      case 'document_accessed':
+        return 'Document viewed';
+      case 'document_deleted':
+        return 'Document deleted';
+      case 'version_uploaded':
+        return 'New version uploaded';
+      case 'version_accessed':
+        return 'Version viewed';
+      case 'version_deleted':
+        return 'Version deleted';
+      case 'share_created':
+        return 'Document shared';
+      case 'share_revoked':
+        return 'Share revoked';
+      case 'shared_document_accessed':
+        return 'Shared document viewed';
+      default:
+        return action;
+    }
+  }
+}
+
+class VersionUploadResponse {
+  final String versionId;
+  final String uploadUrl;
+
+  const VersionUploadResponse({
+    required this.versionId,
+    required this.uploadUrl,
+  });
+
+  factory VersionUploadResponse.fromJson(Map<String, dynamic> json) => VersionUploadResponse(
+        versionId: json['versionId'] as String,
+        uploadUrl: json['uploadUrl'] as String,
+      );
+}
+
 class UploadUrlResponse {
   final String documentId;
   final String uploadUrl;
-  final String objectKey;
 
   const UploadUrlResponse({
     required this.documentId,
     required this.uploadUrl,
-    required this.objectKey,
   });
 
   factory UploadUrlResponse.fromJson(Map<String, dynamic> json) => UploadUrlResponse(
         documentId: json['documentId'] as String,
         uploadUrl: json['uploadUrl'] as String,
-        objectKey: json['objectKey'] as String,
       );
 }
 
@@ -157,4 +350,122 @@ class DocumentService {
   Future<void> deleteDocument(String documentId) async {
     await _apiClient.delete('/documents/$documentId');
   }
+
+  Future<Map<String, dynamic>> analyzeDocument(String documentId, {bool forceReanalyze = false}) async {
+    final response = await _apiClient.post(
+      '/documents/$documentId/analyze',
+      body: {'forceReanalyze': forceReanalyze},
+      timeout: ApiConstants.aiTimeout,
+    );
+    return response;
+  }
+
+  Future<Map<String, dynamic>> getDocumentAnalysis(String documentId) async {
+    final response = await _apiClient.get('/documents/$documentId/analysis');
+    return response;
+  }
+
+  Future<DocumentAnswer> askDocument(String documentId, String question) async {
+    final response = await _apiClient.post(
+      '/documents/$documentId/ask',
+      body: {'question': question},
+      timeout: ApiConstants.aiTimeout,
+    );
+    return DocumentAnswer.fromJson(response);
+  }
+
+  // --- Versioning ---
+
+  Future<VersionUploadResponse> requestVersionUploadUrl({
+    required String documentId,
+    required String fileName,
+    required String contentType,
+    required int fileSizeBytes,
+  }) async {
+    final response = await _apiClient.post(
+      '/documents/$documentId/versions/upload-url',
+      body: {
+        'fileName': fileName,
+        'contentType': contentType,
+        'fileSizeBytes': fileSizeBytes,
+      },
+    );
+    return VersionUploadResponse.fromJson(response);
+  }
+
+  Future<DocumentVersion> completeVersionUpload(String documentId, String versionId) async {
+    final response = await _apiClient.post('/documents/$documentId/versions/$versionId/complete');
+    return DocumentVersion.fromJson(response);
+  }
+
+  Future<List<DocumentVersion>> getVersions(String documentId) async {
+    final response = await _apiClient.getList('/documents/$documentId/versions');
+    return response.map((e) => DocumentVersion.fromJson(e)).toList();
+  }
+
+  Future<String> getVersionAccessUrl(String documentId, String versionId) async {
+    final response = await _apiClient.get('/documents/$documentId/versions/$versionId/access-url');
+    return response['url'] as String;
+  }
+
+  Future<void> deleteVersion(String documentId, String versionId) async {
+    await _apiClient.delete('/documents/$documentId/versions/$versionId');
+  }
+
+  // --- Sharing ---
+
+  Future<DocumentShare> shareDocument(String documentId, String email) async {
+    final response = await _apiClient.post(
+      '/documents/$documentId/shares',
+      body: {'sharedWithEmail': email},
+    );
+    return DocumentShare.fromJson(response);
+  }
+
+  Future<List<DocumentShare>> getShares(String documentId) async {
+    final response = await _apiClient.getList('/documents/$documentId/shares');
+    return response.map((e) => DocumentShare.fromJson(e)).toList();
+  }
+
+  Future<void> revokeShare(String documentId, String shareId) async {
+    await _apiClient.delete('/documents/$documentId/shares/$shareId');
+  }
+
+  Future<List<SharedDocument>> getSharedWithMe() async {
+    final response = await _apiClient.getList('/documents/shared-with-me');
+    return response.map((e) => SharedDocument.fromJson(e)).toList();
+  }
+
+  Future<String> getSharedDocumentAccessUrl(String documentId) async {
+    final response = await _apiClient.get('/documents/$documentId/shared-access-url');
+    return response['url'] as String;
+  }
+
+  // --- Audit logs ---
+
+  Future<List<DocumentAuditLog>> getAuditLogs(String documentId) async {
+    final response = await _apiClient.getList('/documents/$documentId/audit-logs');
+    return response.map((e) => DocumentAuditLog.fromJson(e)).toList();
+  }
+}
+
+class DocumentAnswer {
+  final String documentId;
+  final String answer;
+  final bool grounded;
+  final String? documentName;
+
+  const DocumentAnswer({
+    required this.documentId,
+    required this.answer,
+    required this.grounded,
+    this.documentName,
+  });
+
+  factory DocumentAnswer.fromJson(Map<String, dynamic> json) => DocumentAnswer(
+        documentId: json['documentId'] as String,
+        answer: json['answer'] as String,
+        grounded: json['grounded'] as bool? ?? true,
+        documentName: json['documentName'] as String?,
+      );
 }

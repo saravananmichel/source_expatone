@@ -32,9 +32,10 @@ public class ReminderConfiguration : IEntityTypeConfiguration<Reminder>
         builder.HasOne(r => r.Document)
             .WithMany()
             .HasForeignKey(r => r.DocumentId)
-            .OnDelete(DeleteBehavior.SetNull);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasIndex(r => r.UserId);
         builder.HasIndex(r => r.ReminderDate);
+        builder.HasIndex(r => new { r.DocumentId, r.DaysBeforeExpiry }).IsUnique();
     }
 }

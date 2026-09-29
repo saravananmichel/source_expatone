@@ -12,4 +12,13 @@ public class User : BaseEntity
     public string CountryCode { get; set; } = "MY";
     public string PreferredLanguage { get; set; } = "en";
     public bool IsActive { get; set; } = true;
+
+    public string? Nationality { get; set; }
+    public string? ResidenceLocation { get; set; }
+    public string? VisaPassType { get; set; }
+    public string? EmploymentStatus { get; set; }
+    public string? FamilyStatus { get; set; }
+    public bool? HasChildren { get; set; }
+    public int? NumberOfChildren { get; set; }
+    public bool OnboardingCompleted { get; set; }
 }

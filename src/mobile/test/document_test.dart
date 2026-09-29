@@ -14,6 +14,10 @@ class MockDocumentService extends DocumentService {
   ];
   bool shouldFail = false;
   bool deleteDocumentCalled = false;
+  bool deleteVersionCalled = false;
+  bool deleteVersionShouldFail = false;
+  List<DocumentVersion> mockVersions = [];
+  List<DocumentVersion> versionsAfterDelete = [];
 
   MockDocumentService() : super(ApiClient());
 
@@ -40,6 +44,24 @@ class MockDocumentService extends DocumentService {
     deleteDocumentCalled = true;
     if (shouldFail) throw Exception('Failed');
   }
+
+  @override
+  Future<List<DocumentVersion>> getVersions(String documentId) async {
+    if (deleteVersionCalled) return versionsAfterDelete;
+    return mockVersions;
+  }
+
+  @override
+  Future<void> deleteVersion(String documentId, String versionId) async {
+    deleteVersionCalled = true;
+    if (deleteVersionShouldFail) throw Exception('Delete failed');
+  }
+
+  @override
+  Future<List<DocumentShare>> getShares(String documentId) async => [];
+
+  @override
+  Future<List<DocumentAuditLog>> getAuditLogs(String documentId) async => [];
 }
 
 void main() {
@@ -198,6 +220,196 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Delete document?'), findsNothing);
+    });
+  });
+
+  group('Version delete', () {
+    final testDoc = DocumentItem(
+      id: 'doc-1',
+      name: 'My Passport',
+      documentType: 'Passport',
+      documentTypeId: '1',
+      originalFileName: 'passport.pdf',
+      contentType: 'application/pdf',
+      fileSizeBytes: 638,
+      status: 'Active',
+      createdAt: DateTime(2026, 9, 18),
+    );
+
+    final olderVersion = DocumentVersion(
+      id: 'ver-1',
+      documentId: 'doc-1',
+      versionNumber: 1,
+      originalFileName: 'v1.pdf',
+      fileSizeBytes: 638,
+      isCurrent: false,
+      createdAt: DateTime(2026, 9, 18, 6, 39),
+    );
+
+    final currentVersion = DocumentVersion(
+      id: 'ver-2',
+      documentId: 'doc-1',
+      versionNumber: 2,
+      originalFileName: 'v2.pdf',
+      fileSizeBytes: 634,
+      isCurrent: true,
+      createdAt: DateTime(2026, 9, 18, 6, 50),
+    );
+
+    testWidgets('delete icon visible for older version when multiple versions exist',
+        (tester) async {
+      docService.mockVersions = [currentVersion, olderVersion];
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentDetailScreen(
+          document: testDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Scroll until the version delete icon comes into view
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.delete_outline, skipOffstage: false).first,
+        200,
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.delete_outline), findsWidgets);
+    });
+
+    testWidgets('delete icon not shown when only one version exists', (tester) async {
+      // Sole current version — deletion not allowed per _canDeleteVersion logic
+      docService.mockVersions = [currentVersion];
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentDetailScreen(
+          document: testDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // With a single version no delete_outline icon should exist anywhere in the tree
+      expect(
+        find.byIcon(Icons.delete_outline, skipOffstage: false),
+        findsNothing,
+      );
+      expect(docService.deleteVersionCalled, isFalse);
+    });
+
+    testWidgets('confirmation dialog appears on version delete tap', (tester) async {
+      docService.mockVersions = [currentVersion, olderVersion];
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentDetailScreen(
+          document: testDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Scroll version delete icon into view then tap it
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.delete_outline, skipOffstage: false).first,
+        200,
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Delete version?'), findsOneWidget);
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Delete'), findsOneWidget);
+    });
+
+    testWidgets('cancel on version delete dialog does not call deleteVersion',
+        (tester) async {
+      docService.mockVersions = [currentVersion, olderVersion];
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentDetailScreen(
+          document: testDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.delete_outline, skipOffstage: false).first,
+        200,
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(docService.deleteVersionCalled, isFalse);
+      expect(find.text('Delete version?'), findsNothing);
+    });
+
+    testWidgets('confirming version delete calls deleteVersion and shows success snackbar',
+        (tester) async {
+      docService.mockVersions = [currentVersion, olderVersion];
+      docService.versionsAfterDelete = [currentVersion];
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentDetailScreen(
+          document: testDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.delete_outline, skipOffstage: false).first,
+        200,
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      expect(docService.deleteVersionCalled, isTrue);
+      expect(find.text('Version deleted'), findsOneWidget);
+    });
+
+    testWidgets('version delete failure shows error and preserves UI state',
+        (tester) async {
+      docService.mockVersions = [currentVersion, olderVersion];
+      docService.deleteVersionShouldFail = true;
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentDetailScreen(
+          document: testDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.byIcon(Icons.delete_outline, skipOffstage: false).first,
+        200,
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.delete_outline).first);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Delete'));
+      await tester.pumpAndSettle();
+
+      // Error snackbar shown
+      expect(find.text('Unable to delete version. Please try again.'), findsOneWidget);
+      // Version list still present in tree (UI not cleared on failure)
+      expect(find.text('v1.pdf', skipOffstage: false), findsOneWidget);
     });
   });
 

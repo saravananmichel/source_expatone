@@ -14,11 +14,12 @@ using Microsoft.Extensions.Options;
 
 namespace ExpatOne.Tests;
 
-public class AuthEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection("Integration")]
+public class AuthEndpointTests
 {
     private readonly WebApplicationFactory<Program> _factory;
 
-    public AuthEndpointTests(WebApplicationFactory<Program> factory)
+    public AuthEndpointTests(AppFactory factory)
     {
         _factory = factory.WithWebHostBuilder(builder =>
         {

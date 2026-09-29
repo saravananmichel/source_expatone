@@ -13,6 +13,9 @@ public class DocumentDto
     public DateTime? ExpiryDate { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+    public bool IsAnalyzed { get; set; }
+    public int VersionCount { get; set; }
+    public int ActiveShareCount { get; set; }
 }
 
 public class DocumentTypeDto
@@ -38,7 +41,6 @@ public class UploadUrlResponseDto
 {
     public Guid DocumentId { get; set; }
     public required string UploadUrl { get; set; }
-    public required string ObjectKey { get; set; }
 }
 
 public class AccessUrlResponseDto

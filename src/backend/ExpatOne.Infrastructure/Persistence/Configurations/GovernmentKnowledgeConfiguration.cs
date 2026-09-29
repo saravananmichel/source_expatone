@@ -35,6 +35,12 @@ public class GovernmentKnowledgeConfiguration : IEntityTypeConfiguration<Governm
         builder.Property(gk => gk.Version)
             .HasMaxLength(50);
 
+        builder.Property(gk => gk.ContentHash)
+            .HasMaxLength(64);
+
+        builder.Property(gk => gk.Embedding)
+            .HasColumnType("vector(768)");
+
         builder.HasOne(gk => gk.GovernmentSource)
             .WithMany()
             .HasForeignKey(gk => gk.GovernmentSourceId)
@@ -42,5 +48,10 @@ public class GovernmentKnowledgeConfiguration : IEntityTypeConfiguration<Governm
 
         builder.HasIndex(gk => gk.CountryCode);
         builder.HasIndex(gk => gk.Category);
+        builder.HasIndex(gk => gk.GovernmentSourceId);
+
+        builder.HasIndex(gk => gk.Embedding)
+            .HasMethod("hnsw")
+            .HasOperators("vector_cosine_ops");
     }
 }

@@ -11,7 +11,7 @@ class AppConfig {
 
   static const AppConfig development = AppConfig(
     environment: Environment.development,
-    apiBaseUrl: 'http://localhost:5000/api',
+    apiBaseUrl: 'http://10.0.2.2:5000/api',
   );
 
   static const AppConfig staging = AppConfig(

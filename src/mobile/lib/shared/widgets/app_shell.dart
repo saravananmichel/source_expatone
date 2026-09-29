@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
+import '../../core/services/assistant_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/document_service.dart';
+import '../../core/services/emergency_service.dart';
+import '../../core/services/reminder_service.dart';
+import '../../core/services/translation_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../features/assistant/assistant_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
 import '../../features/documents/documents_screen.dart';
-import '../../features/profile/profile_screen.dart';
+import '../../features/reminders/reminders_screen.dart';
 import '../services/health_service.dart';
+import 'more_screen.dart';
 
 class AppShell extends StatefulWidget {
   final HealthService healthService;
   final IAuthService authService;
   final UserService userService;
   final DocumentService documentService;
+  final ReminderService reminderService;
+  final AssistantService assistantService;
+  final TranslationService translationService;
+  final EmergencyService emergencyService;
   final VoidCallback onLogout;
   final String? userName;
 
@@ -22,6 +32,10 @@ class AppShell extends StatefulWidget {
     required this.authService,
     required this.userService,
     required this.documentService,
+    required this.reminderService,
+    required this.assistantService,
+    required this.translationService,
+    required this.emergencyService,
     required this.onLogout,
     this.userName,
   });
@@ -33,16 +47,33 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
+  void _navigateToTab(int index) {
+    if (index >= 0 && index < 5) {
+      setState(() => _currentIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screens = [
-      DashboardScreen(healthService: widget.healthService, userName: widget.userName),
-      DocumentsScreen(documentService: widget.documentService),
-      const _PlaceholderScreen(title: 'Assistant', icon: Icons.account_balance),
-      const _PlaceholderScreen(title: 'Reminders', icon: Icons.notifications_outlined),
-      ProfileScreen(
+      DashboardScreen(
+        healthService: widget.healthService,
+        userService: widget.userService,
+        reminderService: widget.reminderService,
+        userName: widget.userName,
+        onNavigateToTab: _navigateToTab,
+      ),
+      DocumentsScreen(
+        documentService: widget.documentService,
+        reminderService: widget.reminderService,
+      ),
+      AssistantScreen(assistantService: widget.assistantService),
+      RemindersScreen(reminderService: widget.reminderService),
+      MoreScreen(
         authService: widget.authService,
         userService: widget.userService,
+        translationService: widget.translationService,
+        emergencyService: widget.emergencyService,
         onLogout: widget.onLogout,
       ),
     ];
@@ -54,11 +85,10 @@ class _AppShellState extends State<AppShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
-        },
+        onDestinationSelected: (index) => setState(() => _currentIndex = index),
         backgroundColor: Colors.white,
         indicatorColor: AppTheme.primaryColor.withValues(alpha: 0.12),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -81,39 +111,11 @@ class _AppShellState extends State<AppShell> {
             label: 'Reminders',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
+            icon: Icon(Icons.more_horiz_outlined),
+            selectedIcon: Icon(Icons.more_horiz),
+            label: 'More',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _PlaceholderScreen extends StatelessWidget {
-  final String title;
-  final IconData icon;
-
-  const _PlaceholderScreen({required this.title, required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 48, color: AppTheme.textSecondary),
-            const SizedBox(height: 16),
-            Text(title, style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 8),
-            Text(
-              'Coming soon',
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ],
-        ),
       ),
     );
   }

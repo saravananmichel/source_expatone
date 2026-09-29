@@ -27,15 +27,8 @@ public class HealthController : ControllerBase
             databaseConnected = false;
         }
 
-        var status = databaseConnected ? "healthy" : "degraded";
+        var status = databaseConnected ? "ok" : "degraded";
 
-        return Ok(new
-        {
-            status,
-            service = "ExpatOne API",
-            version = "0.1.0",
-            database = databaseConnected ? "connected" : "unavailable",
-            timestamp = DateTime.UtcNow
-        });
+        return Ok(new { status });
     }
 }
