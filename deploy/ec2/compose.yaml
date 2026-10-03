@@ -1,0 +1,104 @@
+name: expatone
+x-logging: &logging
+  driver: local
+  options:
+    max-size: '10m'
+    max-file: '3'
+services:
+  ollama:
+    image: ollama/ollama:0.35.0
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_NO_CLOUD: '1'
+      OLLAMA_NUM_PARALLEL: '1'
+      OLLAMA_MAX_LOADED_MODELS: '1'
+      OLLAMA_DEBUG: 'false'
+    volumes:
+      - models:/root/.ollama
+    healthcheck:
+      test: ['CMD', 'ollama', 'list']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 10g
+    logging: *logging
+    # No host port for Ollama.
+  model-init:
+    image: ollama/ollama:0.35.0
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_NO_CLOUD: '1'
+    entrypoint: ['/bin/sh', '-ec']
+    command:
+      - |
+        if ! ollama show qwen3:4b >/dev/null 2>&1; then
+          timeout 1800 ollama pull qwen3:4b
+        fi
+        ollama show qwen3:4b >/dev/null
+    depends_on:
+      ollama:
+        condition: service_healthy
+    restart: 'no'
+    logging: *logging
+  backend:
+    build: ../../src/backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_HTTP_PORTS: '8080'
+      ASPNETCORE_HTTPS_PORT: '443'
+      Firebase__CredentialJson: ${Firebase__CredentialJson:?Set Firebase__CredentialJson}
+      DocumentIntelligence__Enabled: 'true'
+      DocumentIntelligence__Provider: Local
+      DocumentIntelligence__EnableFallback: 'false'
+      DocumentIntelligence__ServiceUrl: http://127.0.0.1:8090/
+      DocumentIntelligence__ServiceKey: ${DOCUMENT_AI_SERVICE_KEY:?Set DOCUMENT_AI_SERVICE_KEY}
+      DocumentIntelligence__ConfigurationVersion: ec2-qwen3-4b-v1
+    ports:
+      # Restrict EC2 port 8080 to the ALB security group. Never open publicly.
+      - '8080:8080'
+    depends_on:
+      model-init:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    mem_limit: 2g
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    logging: *logging
+  document-ai:
+    build: ../../document-ai
+    restart: unless-stopped
+    # Share the API's network namespace so document traffic stays on loopback.
+    # This preserves its existing production HTTPS-or-loopback transport policy.
+    network_mode: service:backend
+    environment:
+      DOCUMENT_AI_ENVIRONMENT: Production
+      DOCUMENT_AI_VALIDATE_STARTUP: 'true'
+      DOCUMENT_AI_SERVICE_KEY: ${DOCUMENT_AI_SERVICE_KEY:?Set DOCUMENT_AI_SERVICE_KEY}
+      OLLAMA_BASE_URL: http://ollama:11434
+      OLLAMA_MODEL: qwen3:4b
+      SUPPORT_MODEL: qwen3:4b
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-eng+msa+tam+chi_sim}
+      DOCUMENT_AI_REQUEST_SECONDS: '900'
+    # Bind FastAPI only to the shared loopback interface; no public port.
+    command: ['uvicorn', 'app.main:app', '--host', '127.0.0.1', '--port', '8090', '--no-access-log']
+    depends_on:
+      backend:
+        condition: service_started
+      model-init:
+        condition: service_completed_successfully
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    mem_limit: 2g
+    cpus: 2
+    cap_drop: [ALL]
+    security_opt: ['no-new-privileges:true']
+    logging: *logging
+volumes:
+  models:

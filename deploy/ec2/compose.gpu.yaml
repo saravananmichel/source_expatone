@@ -1,0 +1,10 @@
+# Opt in only on a host with an NVIDIA driver and Container Toolkit.
+services:
+  ollama:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
