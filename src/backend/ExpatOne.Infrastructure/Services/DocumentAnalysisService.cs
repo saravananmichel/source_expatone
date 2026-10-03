@@ -1,255 +1,73 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
+using ExpatOne.Application.Common;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
+using ExpatOne.Domain.Enums;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace ExpatOne.Infrastructure.Services;
 
-public class DocumentAnalysisService : IDocumentAnalysisService
+// Document routes depend only on the private local provider and persisted job results.
+public class DocumentAnalysisService(ExpatOneDbContext db, IDocumentAnalysisJobs jobs,
+    IDocumentIntelligenceService intelligence) : IDocumentAnalysisService
 {
-    private readonly ExpatOneDbContext _dbContext;
-    private readonly IStorageService _storageService;
-    private readonly IAIService _aiService;
-    private readonly ILogger<DocumentAnalysisService> _logger;
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-    };
-
-    private static readonly HashSet<string> KnownDocumentCategories = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "Passport", "Visa", "Employment Pass", "Immigration Document",
-        "Employment Contract", "Insurance", "Rental Agreement", "Tax Document",
-        "Government Letter", "Government Correspondence", "General Correspondence",
-        "Driving Licence", "Medical Card", "Work Permit", "Other"
-    };
-
-    private const int MaxQuestionLength = 2000;
-
-    public DocumentAnalysisService(
-        ExpatOneDbContext dbContext,
-        IStorageService storageService,
-        IAIService aiService,
-        ILogger<DocumentAnalysisService> logger)
-    {
-        _dbContext = dbContext;
-        _storageService = storageService;
-        _aiService = aiService;
-        _logger = logger;
-    }
-
     public async Task<DocumentAnalysisDto> AnalyzeDocumentAsync(Guid userId, Guid documentId, bool forceReanalyze = false)
     {
-        var document = await _dbContext.Documents
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId)
-            ?? throw new KeyNotFoundException("Document not found.");
-
-        if (!forceReanalyze && !string.IsNullOrEmpty(document.ExtractedMetadata))
-        {
-            var cached = DeserializeAnalysis(document.ExtractedMetadata, documentId);
-            if (cached is not null)
-                return cached;
-        }
-
-        if (string.IsNullOrEmpty(document.S3ObjectKey))
-            throw new InvalidOperationException("Document has no associated file.");
-
-        if (string.IsNullOrEmpty(document.ContentType))
-            throw new InvalidOperationException("Document has no content type.");
-
-        Stream documentStream;
-        try
-        {
-            documentStream = await _storageService.DownloadFileAsync(document.S3ObjectKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to download document {DocumentId} from storage for analysis", documentId);
-            throw new InvalidOperationException("Unable to retrieve the document for analysis. Please try again.");
-        }
-
-        AIResponse aiResponse;
-        try
-        {
-            await using (documentStream)
-            {
-                aiResponse = await _aiService.AnalyzeDocumentAsync(documentStream, document.ContentType);
-            }
-        }
-        catch (ArgumentException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "AI analysis failed for document {DocumentId}", documentId);
-            throw new InvalidOperationException("Document analysis failed. Please try again.");
-        }
-
-        var analysisDto = ParseAnalysisResponse(aiResponse.StructuredJson ?? aiResponse.Content, documentId);
-
-        document.ExtractedMetadata = JsonSerializer.Serialize(analysisDto, JsonOptions);
-        await _dbContext.SaveChangesAsync();
-
-        _logger.LogInformation("Analysis completed for document {DocumentId} by user {UserId}", documentId, userId);
-
-        return analysisDto;
+        if (!forceReanalyze && await GetDocumentAnalysisAsync(userId, documentId) is { } existing) return existing;
+        await jobs.EnqueueAsync(userId, documentId, forceReanalyze, default);
+        throw new InvalidOperationException("Local document analysis is processing. Please retry when it finishes.");
     }
 
     public async Task<DocumentAnalysisDto?> GetDocumentAnalysisAsync(Guid userId, Guid documentId)
     {
-        var document = await _dbContext.Documents
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId);
-
-        if (document is null)
-            return null;
-
-        if (string.IsNullOrEmpty(document.ExtractedMetadata))
-            return null;
-
-        return DeserializeAnalysis(document.ExtractedMetadata, documentId);
-    }
-
-    public async Task<DocumentAnswerDto> AskDocumentAsync(Guid userId, Guid documentId, string question)
-    {
-        if (string.IsNullOrWhiteSpace(question))
-            throw new ArgumentException("Question cannot be empty.");
-
-        if (question.Length > MaxQuestionLength)
-            throw new ArgumentException($"Question cannot exceed {MaxQuestionLength} characters.");
-
-        var document = await _dbContext.Documents
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId)
+        var document = await db.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId)
             ?? throw new KeyNotFoundException("Document not found.");
-
-        if (string.IsNullOrEmpty(document.S3ObjectKey))
-            throw new InvalidOperationException("Document has no associated file.");
-
-        if (string.IsNullOrEmpty(document.ContentType))
-            throw new InvalidOperationException("Document has no content type.");
-
-        Stream documentStream;
-        try
+        var version = await db.DocumentVersions.AsNoTracking().FirstOrDefaultAsync(v => v.DocumentId == documentId && v.IsCurrent);
+        var runs = await db.DocumentAnalysisRuns.AsNoTracking().Where(x => x.DocumentId == documentId && x.UserId == userId &&
+            x.ObjectKey == document.S3ObjectKey && (x.Status == "COMPLETED" || x.Status == "REQUIRES_REVIEW"))
+            .OrderByDescending(x => x.CreatedAt).ToListAsync();
+        foreach (var run in runs)
         {
-            documentStream = await _storageService.DownloadFileAsync(document.S3ObjectKey);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to download document {DocumentId} from storage for Q&A", documentId);
-            throw new InvalidOperationException("Unable to retrieve the document. Please try again.");
-        }
-
-        AIResponse aiResponse;
-        try
-        {
-            await using (documentStream)
+            if (version != null && (run.DocumentVersionId != version.Id ||
+                (version.Sha256Hash != null && version.Sha256Hash != run.ContentHash))) continue;
+            try
             {
-                aiResponse = await _aiService.AnalyzeDocumentAsync(documentStream, document.ContentType, question);
+                var result = JsonSerializer.Deserialize<DocumentAnalysisDto>(run.ResultJson ?? "null", new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (result?.Provider == "Local" && (result.ModelVersion == "qwen3:4b" || result.ModelVersion?.StartsWith("qwen3:4b@", StringComparison.Ordinal) == true) &&
+                    result.SemanticDocument is { ValueKind: JsonValueKind.Object } semantic && semantic.TryGetProperty("pages", out var pages) &&
+                    pages.ValueKind == JsonValueKind.Array && pages.GetArrayLength() > 0) return result;
             }
+            catch (JsonException) { /* Invalid/stale results require local reanalysis; never an external provider. */ }
         }
-        catch (ArgumentException)
-        {
-            throw;
-        }
-        catch (InvalidOperationException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Document Q&A failed for document {DocumentId}", documentId);
-            throw new InvalidOperationException("Unable to answer your question about this document. Please try again.");
-        }
-
-        _logger.LogInformation("Q&A completed for document {DocumentId} by user {UserId}", documentId, userId);
-
-        return new DocumentAnswerDto
-        {
-            DocumentId = documentId,
-            Answer = aiResponse.Content,
-            Grounded = true,
-            DocumentName = document.DocumentName,
-        };
+        return null;
     }
 
-    private DocumentAnalysisDto? DeserializeAnalysis(string json, Guid documentId)
+    public async Task<DocumentAnswerDto> AskDocumentAsync(Guid userId, Guid documentId, string question, CancellationToken cancellationToken = default)
     {
+        if (string.IsNullOrWhiteSpace(question) || question.Length > 2000)
+            throw new ArgumentException("Question must contain between 1 and 2000 characters.");
+        var document = await db.Documents.AsNoTracking().FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId)
+            ?? throw new KeyNotFoundException("Document not found.");
+        if (document.Status == DocumentStatus.PendingUpload) throw new InvalidOperationException("Complete the upload first.");
+        var analysis = await GetDocumentAnalysisAsync(userId, documentId);
+        if (analysis == null)
+        {
+            await jobs.EnqueueAsync(userId, documentId, true, cancellationToken);
+            throw new InvalidOperationException("Local document analysis is processing. Open document analysis and retry when it finishes.");
+        }
+        var context = DocumentContextSelector.Select(analysis, question);
+        if (context.Count == 0) return new DocumentAnswerDto { DocumentId = documentId, DocumentName = document.DocumentName,
+            Answer = "The document does not provide enough evidence to answer this question.", Grounded = false };
         try
         {
-            var dto = JsonSerializer.Deserialize<DocumentAnalysisDto>(json, JsonOptions);
-            if (dto is not null)
-                dto.DocumentId = documentId;
-            return dto;
+            var answer = await intelligence.AskAsync(new DocumentAskRequestDto { Question = question.Trim(),
+                DocumentCategory = analysis.DocumentCategory, Context = context }, cancellationToken);
+            answer.DocumentId = documentId;
+            answer.DocumentName = document.DocumentName;
+            return answer;
         }
-        catch (JsonException ex)
-        {
-            _logger.LogWarning(ex, "Invalid cached analysis JSON for document {DocumentId}, will re-analyze", documentId);
-            return null;
-        }
-    }
-
-    private static DocumentAnalysisDto ParseAnalysisResponse(string json, Guid documentId)
-    {
-        DocumentAnalysisDto? dto;
-        try
-        {
-            dto = JsonSerializer.Deserialize<DocumentAnalysisDto>(json, JsonOptions);
-        }
-        catch (JsonException ex)
-        {
-            throw new InvalidOperationException("Document analysis returned an invalid response format.", ex);
-        }
-
-        if (dto is null)
-            throw new InvalidOperationException("Document analysis returned an empty response.");
-
-        dto.DocumentId = documentId;
-        dto.AnalyzedAt = DateTime.UtcNow;
-        dto.ImportantDates ??= [];
-        dto.Deadlines ??= [];
-        dto.RequiredActions ??= [];
-        dto.KeyInformation ??= [];
-        dto.Warnings ??= [];
-        dto.Terminology ??= [];
-
-        dto.DocumentCategory = NormalizeDocumentCategory(dto.DocumentCategory);
-
-        return dto;
-    }
-
-    private static string NormalizeDocumentCategory(string category)
-    {
-        if (string.IsNullOrWhiteSpace(category))
-            return "Other";
-
-        if (KnownDocumentCategories.Contains(category))
-            return KnownDocumentCategories.First(k => k.Equals(category, StringComparison.OrdinalIgnoreCase));
-
-        var lower = category.ToLowerInvariant();
-        if (lower.Contains("passport")) return "Passport";
-        if (lower.Contains("visa") || lower.Contains("pass") && lower.Contains("employ")) return "Employment Pass";
-        if (lower.Contains("visa")) return "Visa";
-        if (lower.Contains("immigration")) return "Immigration Document";
-        if (lower.Contains("employment") && lower.Contains("contract")) return "Employment Contract";
-        if (lower.Contains("insurance") || lower.Contains("policy")) return "Insurance";
-        if (lower.Contains("rental") || lower.Contains("tenancy") || lower.Contains("lease")) return "Rental Agreement";
-        if (lower.Contains("tax")) return "Tax Document";
-        if (lower.Contains("government") && lower.Contains("letter")) return "Government Letter";
-        if (lower.Contains("government")) return "Government Correspondence";
-        if (lower.Contains("correspondence") || lower.Contains("letter")) return "General Correspondence";
-        if (lower.Contains("driv")) return "Driving Licence";
-        if (lower.Contains("medical")) return "Medical Card";
-        if (lower.Contains("work permit")) return "Work Permit";
-
-        return "Other";
+        catch (HttpRequestException) { throw new AIProviderUnavailableException("Local document Q&A is unavailable. Please retry."); }
+        catch (TaskCanceledException) { throw new AIProviderUnavailableException("Local document Q&A timed out. Please retry."); }
     }
 }

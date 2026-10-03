@@ -70,12 +70,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
                 // Keep temp open when the HTTP content disposes its stream.
                 await using var source = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
                 var execution = DocumentAnalysisConfiguration.Decode(run.ConfigurationVersion);
-                try { result = await provider.AnalyzeWithConfigurationAsync(source, run.ContentType, timeout.Token, execution.Provider, execution.Fallback); }
-                catch (LocalAnalysisFallbackException)
-                {
-                    await using var fallback = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                    result = await provider.AnalyzeGeminiAsync(fallback, run.ContentType, timeout.Token);
-                }
+                result = await provider.AnalyzeWithConfigurationAsync(source, run.ContentType, timeout.Token, execution.Provider, execution.Fallback);
                 var quality = result.QualityDiagnostics is { ValueKind: JsonValueKind.Object } q
                     ? JsonSerializer.Deserialize<Dictionary<string, object>>(q.GetRawText())! : new Dictionary<string, object>();
                 quality["storageMs"] = storageMs;
@@ -110,7 +105,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
         }
         catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
-            var retry = run.Attempts < 2 && ex is HttpRequestException or OperationCanceledException;
+            var retry = run.Attempts < 2 && IsTransientFailure(ex);
             await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && x.LeaseToken == token).ExecuteUpdateAsync(set => set
                 .SetProperty(x => x.Status, retry ? "QUEUED" : "FAILED").SetProperty(x => x.Stage, retry ? "Retrying" : "Failed")
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow).SetProperty(x => x.ErrorCategory, ex is OperationCanceledException ? "timeout" : "processing_failed")
@@ -119,4 +114,14 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
         }
         return true;
     }
+
+    private static bool IsTransientFailure(Exception error) => error switch
+    {
+        OperationCanceledException => true,
+        HttpRequestException request => request.StatusCode is null
+            || request.StatusCode is System.Net.HttpStatusCode.RequestTimeout
+                or System.Net.HttpStatusCode.TooManyRequests
+            || (int)request.StatusCode >= 500,
+        _ => false
+    };
 }

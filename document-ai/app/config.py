@@ -1,5 +1,6 @@
 """Shared Ollama transport configuration; OLLAMA_URL remains a legacy alias."""
 import os
+import ipaddress
 from urllib.parse import urlsplit
 
 import httpx
@@ -11,6 +12,15 @@ def ollama_base_url():
     url = urlsplit(value)
     if url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password or url.query or url.fragment:
         raise ValueError('Invalid Ollama base URL')
+    if os.getenv('DOCUMENT_AI_ENVIRONMENT') == 'Production':
+        host = url.hostname
+        try:
+            address = ipaddress.ip_address(host)
+            private = address.is_loopback or any(address in ipaddress.ip_network(net) for net in
+                ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16') if address.version == 4)
+        except ValueError:
+            private = host in ('ollama', 'localhost')
+        if not private: raise ValueError('Production Ollama must use a private address')
     return value
 
 

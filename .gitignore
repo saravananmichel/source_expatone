@@ -82,3 +82,6 @@ document-ai/.venv/
 .pytest_cache/
 
 .tools/
+
+# Private EC2 credential mount
+deploy/ec2/firebase-service-account.json

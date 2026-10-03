@@ -63,7 +63,7 @@ public class DocumentShareService : IDocumentShareService
         await _auditService.LogAsync(documentId, ownerUserId, "share_created", targetShareId: share.Id,
             metadata: $"shared_with_user_id:{targetUser.Id}");
 
-        _logger.LogInformation("Document {DocumentId} shared with user {TargetUserId}", documentId, targetUser.Id);
+        _logger.LogInformation("Document {DocumentId} shared", documentId);
 
         return new DocumentShareDto
         {

@@ -1,3 +1,5 @@
+from .ollama import post_chat
+from .config import ollama_base_url, ollama_timeout
 """Claim-level support review. A model judge is a fallible check, not calibrated entailment."""
 import os
 import re
@@ -57,10 +59,10 @@ async def review_support(semantic):
             groups.append(current);current=[];size=0
         current.append(entry);size+=length
     if current: groups.append(current)
-    async with httpx.AsyncClient(timeout=90) as client:
+    async with httpx.AsyncClient(timeout=ollama_timeout(90)) as client:
         for group in groups:
             try:
-                response=await client.post(os.getenv('OLLAMA_URL','http://127.0.0.1:11434')+'/api/chat',json={
+                response=await post_chat(client, {
                     'model':os.getenv('SUPPORT_MODEL',os.environ['OLLAMA_MODEL']), 'stream':False,'think':False,
                     'format':Review.model_json_schema(), 'options':{'temperature':0,'num_gpu':int(os.getenv('OLLAMA_NUM_GPU','-1')),'num_ctx':16384,'num_predict':3000},
                     'messages':[{'role':'system','content':JUDGE},{'role':'user','content':json.dumps(group,ensure_ascii=False)}]})

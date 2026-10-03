@@ -174,7 +174,7 @@ public class KnowledgeIngestionService : IKnowledgeIngestionService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Failed to generate embedding for knowledge {KnowledgeId}", item.Id);
+                _logger.LogWarning("Failed to generate embedding for knowledge {KnowledgeId} category={Category}", item.Id, ex.GetType().Name);
                 break;
             }
         }

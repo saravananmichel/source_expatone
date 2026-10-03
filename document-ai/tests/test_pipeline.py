@@ -57,6 +57,8 @@ def test_service_requires_key(monkeypatch):
 def test_service_fails_safely(monkeypatch):
     monkeypatch.setenv('DOCUMENT_AI_SERVICE_KEY','synthetic-test-key')
     monkeypatch.setenv('OLLAMA_MODEL','test')
+    async def ready(): pass
+    monkeypatch.setattr('app.main.check_model', ready)
     with TestClient(app) as client:
         response=client.post('/analyze',headers={'X-Service-Key':'synthetic-test-key'},files={'file':('x.pdf',b'private invalid contents','application/pdf')})
         assert response.status_code == 422

@@ -5,9 +5,9 @@ CPU ECS with measured latency, or ECS EC2 GPU capacity; Fargate does not provide
 The local Mac benchmark uses Metal on Apple unified memory and is not an AWS GPU benchmark.
 
 Use immutable ECR digests for both built images, private subnets, no public IP for Python/model
-services, and security groups allowing only the API worker to reach Python over TLS or a private
-service mesh. Never expose Ollama port 11434 outside its task/host. Use a private service address
-for DocumentIntelligence__ServiceUrl. Readiness must fail until the configured model is installed.
+services. Production document-ai must share the API host/task loopback network;
+DocumentIntelligence__ServiceUrl must be a loopback URL. Never expose Ollama port 11434
+outside its task/host. Readiness must fail until the configured model is installed.
 Pre-stage reviewed model weights in a private encrypted volume/artifact; do not download models
 on the first document request. Set OLLAMA_NO_CLOUD=1. License review remains required for each
 selected model and OCR/layout dependency.
@@ -31,3 +31,8 @@ Do not deploy until private bucket policy/encryption, least-privilege IAM, secre
 user isolation, HTTPS, real CPU/GPU latency and failure recovery are independently verified.
 The current development AWS identity could upload/read through the application but received
 AccessDenied on bucket-security inspection APIs. Production cloud security is not certified.
+
+For a concrete single-host Ubuntu/EC2 deployment that preserves the current API
+and local Qwen3:4B worker, see [the EC2 runbook](../ec2/README.md).
+
+Document Q&A and the final production privacy trace are documented in [DOCUMENT_AI_FLOW.md](DOCUMENT_AI_FLOW.md).

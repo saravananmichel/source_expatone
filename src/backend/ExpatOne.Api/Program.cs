@@ -179,7 +179,6 @@ var geminiApiKey = builder.Configuration["Gemini:ApiKey"];
 if (!string.IsNullOrEmpty(geminiApiKey))
 {
     builder.Services.AddHttpClient<IAIService, GeminiAIService>();
-    builder.Services.AddScoped<IDocumentAnalysisService, DocumentAnalysisService>();
     builder.Services.AddScoped<IKnowledgeIngestionService, KnowledgeIngestionService>();
     builder.Services.AddScoped<IKnowledgeSearchService, KnowledgeSearchService>();
     builder.Services.AddScoped<IAssistantService, AssistantService>();
@@ -190,11 +189,12 @@ if (!string.IsNullOrEmpty(geminiApiKey))
 if (!string.IsNullOrEmpty(awsRegion) && builder.Configuration["DocumentIntelligence:Enabled"] == "true")
 {
     builder.Services.AddScoped<IDocumentAnalysisJobs, DocumentAnalysisJobs>();
+    builder.Services.AddScoped<IDocumentAnalysisService, DocumentAnalysisService>();
     builder.Services.AddHttpClient<DocumentIntelligenceService>(client =>
     {
         var address = new Uri(builder.Configuration["DocumentIntelligence:ServiceUrl"] ?? "http://localhost:8090/");
-        if (!builder.Environment.IsDevelopment() && address.Scheme != "https" && !address.IsLoopback)
-            throw new InvalidOperationException("Document model transport must use HTTPS outside local development.");
+        if (!builder.Environment.IsDevelopment() && !address.IsLoopback)
+            throw new InvalidOperationException("Document model transport must use private loopback outside local development.");
         client.BaseAddress = address;
         client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
         client.Timeout = TimeSpan.FromMinutes(16);
@@ -266,7 +266,10 @@ app.UseForwardedHeaders();
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
-    app.UseHttpsRedirection();
+    // ALB health probes arrive over HTTP without X-Forwarded-Proto.
+    // Only the content-free health probe is exempt; application routes require HTTPS.
+    app.UseWhen(context => !context.Request.Path.Equals("/api/health", StringComparison.OrdinalIgnoreCase),
+        branch => branch.UseHttpsRedirection());
 }
 
 // DEPLOYMENT REQUIREMENT: set ASPNETCORE_ENVIRONMENT=Production in all production environments.

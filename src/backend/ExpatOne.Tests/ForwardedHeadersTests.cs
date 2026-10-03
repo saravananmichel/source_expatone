@@ -33,8 +33,27 @@ namespace ExpatOne.Tests;
 /// actual cross-IP traffic.  The "public-IP rejected" test simulates that by
 /// verifying the middleware ignores an X-Forwarded-Proto header it doesn't trust.
 /// </summary>
+// Serialise app-host tests sharing the process-wide Firebase default instance.
+[Collection("Integration")]
 public class ForwardedHeadersTests
 {
+    [Fact]
+    public async Task Production_HttpHealthProbe_DoesNotRedirect()
+    {
+        using var factory = new ForwardedHeadersConfigFactory("Production", trustedCidrs: null);
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            BaseAddress = new Uri("http://localhost"),
+            AllowAutoRedirect = false
+        });
+        var response = await client.GetAsync("/api/health");
+        Assert.True(response.StatusCode is HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable);
+        Assert.Null(response.Headers.Location);
+        var applicationResponse = await client.GetAsync("/api/documents");
+        Assert.Equal(HttpStatusCode.TemporaryRedirect, applicationResponse.StatusCode);
+        Assert.Equal("https", applicationResponse.Headers.Location?.Scheme);
+    }
+
     // ── 1. Invalid CIDR in config should throw at startup ────────────────────
 
     [Fact]
@@ -161,6 +180,7 @@ internal sealed class ForwardedHeadersConfigFactory : WebApplicationFactory<Prog
 
         builder.ConfigureServices(services =>
         {
+            services.Configure<Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionOptions>(o => o.HttpsPort = 443);
             var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<ExpatOneDbContext>));
             if (descriptor != null) services.Remove(descriptor);

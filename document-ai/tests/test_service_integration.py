@@ -16,6 +16,8 @@ def test_pdf_ingestion_to_grounded_analysis(monkeypatch):
             'statements':[{'id':'s1','kind':'fact','label':'Salary','text':'The agreement states RM12,000 per month.',
                 'originalValue':'RM12,000','confidence':.8,'evidenceIds':['e1']}]
         }),'test-model'
+    async def ready(): pass
+    monkeypatch.setattr('app.main.check_model', ready)
     monkeypatch.setattr('app.main.reason',model)
     with TestClient(app) as client:
         response=client.post('/analyze',headers={'X-Service-Key':'synthetic-test-key'},

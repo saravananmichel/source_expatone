@@ -64,7 +64,7 @@ public class DocumentService : IDocumentService
         var uploadUrl = _storageService.GeneratePresignedUploadUrl(
             objectKey, dto.ContentType, TimeSpan.FromMinutes(15));
 
-        _logger.LogInformation("Upload requested for document {DocumentId} by user {UserId}", documentId, userId);
+        _logger.LogInformation("Upload requested for document {DocumentId}", documentId);
 
         return new UploadUrlResponseDto
         {
@@ -157,13 +157,12 @@ public class DocumentService : IDocumentService
             }
             catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogWarning("S3 object {ObjectKey} was already absent when deleting document {DocumentId} — continuing",
-                    key, documentId);
+                _logger.LogWarning("Storage object was already absent when deleting document {DocumentId}", documentId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to delete S3 object {ObjectKey} for document {DocumentId}",
-                    key, documentId);
+                _logger.LogError("Failed to delete storage object for document {DocumentId} category={Category}",
+                    documentId, ex.GetType().Name);
                 throw;
             }
         }
@@ -173,8 +172,8 @@ public class DocumentService : IDocumentService
         _dbContext.Documents.Remove(document);
         await _dbContext.SaveChangesAsync();
 
-        _logger.LogInformation("Deleted document {DocumentId} ({VersionCount} versions) for user {UserId}",
-            documentId, document.Versions.Count, userId);
+        _logger.LogInformation("Deleted document {DocumentId} ({VersionCount} versions)",
+            documentId, document.Versions.Count);
     }
 
     public async Task<List<DocumentTypeDto>> GetDocumentTypesAsync()

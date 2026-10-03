@@ -99,19 +99,12 @@ public class DocumentsController : ControllerBase
             var job = await _jobs.EnqueueAsync(userId, id, dto?.ForceReanalyze ?? false, HttpContext.RequestAborted);
             return Accepted($"/api/documents/{id}/analysis/status", job);
         }
-        if (_documentAnalysisService is null) return StatusCode(503, new { message = "Document analysis is unavailable." });
-        var result = await _documentAnalysisService.AnalyzeDocumentAsync(userId, id, dto?.ForceReanalyze ?? false);
-        return Ok(result);
+        return StatusCode(503, new { message = "Local document analysis is unavailable." });
     }
 
     [HttpGet("{id:guid}/analysis")]
     public async Task<IActionResult> GetAnalysis(Guid id)
     {
-        if (_jobs != null)
-        {
-            var job = await _jobs.GetAsync(await GetUserIdAsync(), id, null, HttpContext.RequestAborted);
-            if (job != null) return job.Analysis == null ? NotFound() : Ok(job.Analysis);
-        }
         if (_documentAnalysisService is null) return StatusCode(503);
 
         var userId = await GetUserIdAsync();
@@ -148,10 +141,10 @@ public class DocumentsController : ControllerBase
     public async Task<IActionResult> AskDocument(Guid id, [FromBody] DocumentQuestionDto dto)
     {
         if (_documentAnalysisService is null)
-            return StatusCode(503, new { message = "Document Q&A is not available. Gemini API is not configured." });
+            return StatusCode(503, new { message = "Local document Q&A is unavailable." });
 
         var userId = await GetUserIdAsync();
-        var result = await _documentAnalysisService.AskDocumentAsync(userId, id, dto.Question);
+        var result = await _documentAnalysisService.AskDocumentAsync(userId, id, dto.Question, HttpContext.RequestAborted);
         return Ok(result);
     }
 

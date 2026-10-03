@@ -73,6 +73,7 @@ public class DocumentEndpointTests
                 mockStorage.Setup(s => s.DeleteFileAsync(It.IsAny<string>()))
                     .Returns(Task.CompletedTask);
 
+                mockStorage.Setup(s => s.DownloadFileAsync(It.IsAny<string>())).ReturnsAsync(() => (Stream)new MemoryStream([1,2,3]));
                 services.AddSingleton(mockStorage.Object);
                 services.AddScoped<IDocumentService, DocumentService>();
 
@@ -84,6 +85,8 @@ public class DocumentEndpointTests
                         StructuredJson = JsonSerializer.Serialize(new { documentCategory = "Passport", summary = "Test passport" }),
                     });
                 services.AddSingleton(mockAi.Object);
+                services.AddScoped<IDocumentAnalysisJobs, DocumentAnalysisJobs>();
+                services.AddSingleton(new Mock<IDocumentIntelligenceService>().Object);
                 services.AddScoped<IDocumentAnalysisService, DocumentAnalysisService>();
             });
         });

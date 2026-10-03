@@ -1,6 +1,7 @@
 services:
   ollama:
     image: ollama/ollama:0.35.0
+    restart: unless-stopped
     environment:
       OLLAMA_NO_CLOUD: '1'
       OLLAMA_NUM_PARALLEL: '1'
@@ -8,17 +9,37 @@ services:
       - models:/root/.ollama
     # Internal network only. GPU hosts must add their runtime/device configuration.
     mem_limit: 8g
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  model-init:
+    image: ollama/ollama:0.35.0
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_NO_CLOUD: "1"
+    entrypoint: ["/bin/sh", "-ec"]
+    command: ["ollama show qwen3:4b >/dev/null 2>&1 || timeout 1800 ollama pull qwen3:4b; ollama show qwen3:4b >/dev/null"]
+    depends_on:
+      ollama:
+        condition: service_healthy
   document-ai:
     build: .
+    restart: unless-stopped
     environment:
       DOCUMENT_AI_SERVICE_KEY: ${DOCUMENT_AI_SERVICE_KEY:?Set a service key}
-      OLLAMA_URL: http://ollama:11434
+      OLLAMA_BASE_URL: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      DOCUMENT_AI_VALIDATE_STARTUP: "true"
       OCR_LANGUAGES: ${OCR_LANGUAGES:-eng}
     ports:
       - '127.0.0.1:8090:8090'
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
+      model-init:
+        condition: service_completed_successfully
     read_only: true
     tmpfs:
       - /tmp:size=128m,mode=1777

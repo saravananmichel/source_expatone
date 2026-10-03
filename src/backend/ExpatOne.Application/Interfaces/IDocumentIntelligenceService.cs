@@ -2,6 +2,7 @@ using ExpatOne.Application.DTOs;
 namespace ExpatOne.Application.Interfaces;
 public interface IDocumentIntelligenceService
 {
+    Task<DocumentAnswerDto> AskAsync(DocumentAskRequestDto request, CancellationToken cancellationToken);
     Task<DocumentAnalysisDto> AnalyzeAsync(Stream file, string contentType, CancellationToken cancellationToken);
 }
 public interface IDocumentAnalysisJobs

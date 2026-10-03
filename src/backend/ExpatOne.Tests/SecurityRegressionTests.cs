@@ -135,7 +135,7 @@ public class DocumentAnalysisIdorTests
             });
 
         var logger = new Mock<ILogger<DocumentAnalysisService>>().Object;
-        var svc = new DocumentAnalysisService(ctx, mockStorage.Object, mockAi.Object, logger);
+        var svc = new DocumentAnalysisService(ctx, new Mock<IDocumentAnalysisJobs>().Object, new Mock<IDocumentIntelligenceService>().Object);
         return (ctx, svc);
     }
 
@@ -183,7 +183,9 @@ public class DocumentAnalysisIdorTests
         ctx.Documents.Add(doc);
         await ctx.SaveChangesAsync();
 
-        // Owner can analyze their own document
+        // Owner can retrieve a completed local analysis for their own document.
+        ctx.DocumentAnalysisRuns.Add(DocumentAnalysisServiceTests.Run(doc));
+        await ctx.SaveChangesAsync();
         var result = await svc.AnalyzeDocumentAsync(UserAId, doc.Id);
         Assert.NotNull(result);
     }

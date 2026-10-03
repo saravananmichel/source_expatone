@@ -1,0 +1,99 @@
+{
+  "synthetic": true,
+  "model": "qwen3:4b",
+  "results": [
+    {
+      "case": "cold-short",
+      "httpStatus": 503,
+      "grounded": false,
+      "totalMs": 50010,
+      "contextCharacters": 87,
+      "inferencePasses": [
+        {
+          "firstTokenMs": 21014,
+          "totalMs": 34473,
+          "promptTokens": 198,
+          "outputTokens": 48,
+          "tokensPerSecond": 3.5683421148002563,
+          "loadMs": 15903.572756,
+          "validation": {
+            "sufficientEvidence": true,
+            "citationCount": 1,
+            "idsValid": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "warm-short",
+      "httpStatus": 200,
+      "grounded": true,
+      "totalMs": 21298,
+      "contextCharacters": 87,
+      "inferencePasses": [
+        {
+          "firstTokenMs": 565,
+          "totalMs": 12172,
+          "promptTokens": 198,
+          "outputTokens": 48,
+          "tokensPerSecond": 4.136401635636617,
+          "loadMs": 7.521042,
+          "validation": {
+            "sufficientEvidence": true,
+            "citationCount": 1,
+            "idsValid": true
+          }
+        },
+        {
+          "firstTokenMs": 150,
+          "totalMs": 9051,
+          "promptTokens": 352,
+          "outputTokens": 42,
+          "tokensPerSecond": 4.721273970582416,
+          "loadMs": 13.350834
+        }
+      ]
+    },
+    {
+      "case": "warm-bounded",
+      "httpStatus": 200,
+      "grounded": true,
+      "totalMs": 44304,
+      "contextCharacters": 5698,
+      "inferencePasses": [
+        {
+          "firstTokenMs": 15849,
+          "totalMs": 28512,
+          "promptTokens": 959,
+          "outputTokens": 49,
+          "tokensPerSecond": 3.844270937939345,
+          "loadMs": 7.103125,
+          "validation": {
+            "sufficientEvidence": true,
+            "citationCount": 1,
+            "idsValid": true
+          }
+        },
+        {
+          "firstTokenMs": 3319,
+          "totalMs": 15725,
+          "promptTokens": 457,
+          "outputTokens": 43,
+          "tokensPerSecond": 3.466002225979476,
+          "loadMs": 12.099791
+        }
+      ]
+    }
+  ],
+  "destinations": [
+    [
+      "ollama",
+      "/api/tags"
+    ],
+    [
+      "ollama",
+      "/api/chat"
+    ]
+  ],
+  "limitations": "First-token measures upstream Ollama content, not Flutter delivery. Answers are buffered until citation/support validation. No real user data."
+}

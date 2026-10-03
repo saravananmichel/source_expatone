@@ -1,0 +1,91 @@
+{
+  "synthetic": true,
+  "model": "qwen3:4b",
+  "results": [
+    {
+      "case": "cold-short",
+      "httpStatus": 503,
+      "grounded": false,
+      "totalMs": 50021,
+      "contextCharacters": 87,
+      "inferencePasses": [
+        {
+          "firstTokenMs": 27795,
+          "totalMs": 43902,
+          "promptTokens": 198,
+          "outputTokens": 48,
+          "tokensPerSecond": 2.9804538113484504,
+          "loadMs": 22911.602052,
+          "validation": {
+            "sufficientEvidence": true,
+            "citationCount": 1,
+            "idsValid": true
+          }
+        }
+      ]
+    },
+    {
+      "case": "warm-short",
+      "httpStatus": 200,
+      "grounded": true,
+      "totalMs": 19116,
+      "contextCharacters": 87,
+      "inferencePasses": [
+        {
+          "firstTokenMs": 1648,
+          "totalMs": 10413,
+          "promptTokens": 198,
+          "outputTokens": 48,
+          "tokensPerSecond": 5.4819032665633705,
+          "loadMs": 13.956875,
+          "validation": {
+            "sufficientEvidence": true,
+            "citationCount": 1,
+            "idsValid": true
+          }
+        },
+        {
+          "firstTokenMs": 185,
+          "totalMs": 8515,
+          "promptTokens": 352,
+          "outputTokens": 42,
+          "tokensPerSecond": 5.043046605315204,
+          "loadMs": 11.220042
+        }
+      ]
+    },
+    {
+      "case": "warm-bounded",
+      "httpStatus": 503,
+      "grounded": false,
+      "totalMs": 50009,
+      "contextCharacters": 5698,
+      "inferencePasses": [
+        {
+          "firstTokenMs": 21764,
+          "totalMs": 41095,
+          "promptTokens": 959,
+          "outputTokens": 49,
+          "tokensPerSecond": 2.5389428494845765,
+          "loadMs": 7.197417,
+          "validation": {
+            "sufficientEvidence": true,
+            "citationCount": 1,
+            "idsValid": true
+          }
+        }
+      ]
+    }
+  ],
+  "destinations": [
+    [
+      "ollama",
+      "/api/chat"
+    ],
+    [
+      "ollama",
+      "/api/tags"
+    ]
+  ],
+  "limitations": "First-token measures upstream Ollama content, not Flutter delivery. Answers are buffered until citation/support validation. No real user data."
+}

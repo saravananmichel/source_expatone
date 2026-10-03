@@ -8,8 +8,9 @@ public static class DocumentAnalysisConfiguration
     public static string Fingerprint(IConfiguration config)
     {
         var provider = config["DocumentIntelligence:Provider"] ?? "Local";
-        if (provider is not ("Local" or "Gemini" or "Hybrid")) throw new InvalidOperationException("Invalid analysis provider.");
+        if (provider != "Local") throw new InvalidOperationException("Document AI requires Local provider.");
         var fallback = string.Equals(config["DocumentIntelligence:EnableFallback"], "true", StringComparison.OrdinalIgnoreCase);
+        if (fallback) throw new InvalidOperationException("Document AI fallback must be disabled.");
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("|",
             config["DocumentIntelligence:ConfigurationVersion"] ?? "local-v2", provider, fallback))));
         // Provider choice travels with the queued run, independent of which worker claims it.

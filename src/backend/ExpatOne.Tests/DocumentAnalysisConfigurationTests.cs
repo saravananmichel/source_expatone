@@ -5,8 +5,6 @@ public class DocumentAnalysisConfigurationTests
 {
     [Theory]
     [InlineData("Local", false)]
-    [InlineData("Gemini", false)]
-    [InlineData("Hybrid", true)]
     public void QueuedProviderAndFallbackAreRecoverable(string provider, bool fallback)
     {
         var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> {
@@ -16,6 +14,14 @@ public class DocumentAnalysisConfigurationTests
         var decoded = DocumentAnalysisConfiguration.Decode(encoded);
         Assert.Equal(provider, decoded.Provider); Assert.Equal(fallback, decoded.Fallback);
         Assert.True(encoded.Length < 120);
+    }
+    [Theory]
+    [InlineData("Gemini",false)][InlineData("Hybrid",false)][InlineData("Local",true)]
+    public void UnsafeProvidersCannotBeQueued(string provider,bool fallback)
+    {
+        var config=new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string,string?> {
+            ["DocumentIntelligence:Provider"]=provider,["DocumentIntelligence:EnableFallback"]=fallback.ToString() }).Build();
+        Assert.Throws<InvalidOperationException>(()=>DocumentAnalysisConfiguration.Fingerprint(config));
     }
     [Fact]
     public void LegacyFingerprintsRemainCompatible()

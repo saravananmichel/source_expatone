@@ -70,6 +70,7 @@ class _DocumentQAScreenState extends State<DocumentQAScreen> {
             question: question,
             answer: answer.answer,
             grounded: answer.grounded,
+            evidence: answer.evidence,
           );
           _isLoading = false;
         });
@@ -217,6 +218,11 @@ class _DocumentQAScreenState extends State<DocumentQAScreen> {
                   style: TextStyle(color: AppTheme.textPrimary, fontSize: 14, height: 1.5)),
             ),
           ),
+          ...entry.evidence.map((e) => Padding(
+            padding: const EdgeInsets.only(left: 4, right: 48, bottom: 8),
+            child: Text('Page ${e.page}: “${e.sourceText}”',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+          )),
           if (entry.grounded == false)
             Padding(
               padding: const EdgeInsets.only(bottom: 12, left: 4),
@@ -347,6 +353,7 @@ class _QAEntry {
   final String? answer;
   final bool? grounded;
   final String? error;
+  final List<DocumentAnswerEvidence> evidence;
 
-  _QAEntry({required this.question, this.answer, this.grounded, this.error});
+  _QAEntry({required this.question, this.answer, this.grounded, this.error, this.evidence = const []});
 }

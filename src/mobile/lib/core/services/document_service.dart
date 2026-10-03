@@ -132,6 +132,7 @@ class DocumentShare {
   final String id;
   final String documentId;
   final String? documentName;
+  final List<DocumentAnswerEvidence> evidence;
   final String sharedWithUserId;
   final String? sharedWithEmail;
   final String permission;
@@ -142,6 +143,7 @@ class DocumentShare {
     required this.id,
     required this.documentId,
     this.documentName,
+    this.evidence = const [],
     required this.sharedWithUserId,
     this.sharedWithEmail,
     required this.permission,
@@ -153,6 +155,7 @@ class DocumentShare {
         id: json['id'] as String,
         documentId: json['documentId'] as String,
         documentName: json['documentName'] as String?,
+        evidence: (json['evidence'] as List? ?? []).map((e) => DocumentAnswerEvidence.fromJson(Map<String, dynamic>.from(e as Map))).toList(),
         sharedWithUserId: json['sharedWithUserId'] as String,
         sharedWithEmail: json['sharedWithEmail'] as String?,
         permission: json['permission'] as String? ?? 'Read',
@@ -363,7 +366,7 @@ class DocumentService {
     if (response['analysisId'] == null) return response;
     final analysisId = response['analysisId'] as String;
     for (var attempt = 0; attempt < 180; attempt++) {
-      final job = await _apiClient.get('/documents/$documentId/analysis/status?analysisId=$analysisId');
+      final job = await _apiClient.get('/documents/$documentId/analysis/status', queryParams: {'analysisId': analysisId});
       final status = job['status'];
       _analysisProgress.add({'documentId': documentId, 'status': status as String? ?? 'PROCESSING',
         'stage': job['stage'] as String? ?? 'Understanding document'});
@@ -470,23 +473,35 @@ class DocumentService {
   }
 }
 
+class DocumentAnswerEvidence {
+  final String id;
+  final int page;
+  final String sourceText;
+  const DocumentAnswerEvidence({required this.id, required this.page, required this.sourceText});
+  factory DocumentAnswerEvidence.fromJson(Map<String, dynamic> json) => DocumentAnswerEvidence(
+    id: json['id'] as String, page: json['page'] as int, sourceText: json['sourceText'] as String);
+}
+
 class DocumentAnswer {
   final String documentId;
   final String answer;
   final bool grounded;
   final String? documentName;
+  final List<DocumentAnswerEvidence> evidence;
 
   const DocumentAnswer({
     required this.documentId,
     required this.answer,
     required this.grounded,
     this.documentName,
+    this.evidence = const [],
   });
 
   factory DocumentAnswer.fromJson(Map<String, dynamic> json) => DocumentAnswer(
         documentId: json['documentId'] as String,
         answer: json['answer'] as String,
-        grounded: json['grounded'] as bool? ?? true,
+        grounded: json['grounded'] as bool? ?? false,
         documentName: json['documentName'] as String?,
+        evidence: (json['evidence'] as List? ?? []).map((e) => DocumentAnswerEvidence.fromJson(Map<String, dynamic>.from(e as Map))).toList(),
       );
 }

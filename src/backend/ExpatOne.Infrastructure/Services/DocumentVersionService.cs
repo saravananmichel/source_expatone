@@ -177,7 +177,7 @@ public class DocumentVersionService : IDocumentVersionService
         }
         catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
         {
-            _logger.LogWarning("S3 object {ObjectKey} already absent for version {VersionId}", version.S3ObjectKey, versionId);
+            _logger.LogWarning("Storage object already absent for version {VersionId}", versionId);
         }
 
         _dbContext.DocumentVersions.Remove(version);

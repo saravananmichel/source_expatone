@@ -1,3 +1,5 @@
+from .ollama import post_chat
+from .config import ollama_base_url, ollama_timeout
 import json
 import os
 import re
@@ -130,9 +132,9 @@ async def reason_batch(pages):
         'think':False,'options':{'temperature':0,'num_gpu':int(os.getenv('OLLAMA_NUM_GPU','-1')),'num_ctx':16384,'num_predict':num_predict},'messages':[
             {'role':'system','content':PROMPT+' Write explanations in '+os.getenv('EXPLANATION_LANGUAGE','English')+'.'},
             {'role':'user','content':json.dumps([p.model_dump() for p in pages],ensure_ascii=False)}]}
-    async with httpx.AsyncClient(timeout=batch_timeout) as client:
+    async with httpx.AsyncClient(timeout=ollama_timeout(batch_timeout)) as client:
         for attempt in range(2):
-            response = await client.post(os.getenv('OLLAMA_URL','http://127.0.0.1:11434')+'/api/chat',json=payload)
+            response = await post_chat(client, payload)
             response.raise_for_status()
             try:
                 parsed = SemanticDocument.model_validate_json(response.json()['message']['content'])
@@ -197,8 +199,8 @@ async def reason(pages):
         classificationConfidence=min(r.classificationConfidence for r in matching),
         classificationEvidenceIds=[value for r in matching for value in r.classificationEvidenceIds],
         statements=[s for r in results for s in r.statements], evidence=[e for r in results for e in r.evidence])
-    async with httpx.AsyncClient(timeout=5) as client:
-        metadata=await client.get(os.getenv('OLLAMA_URL','http://127.0.0.1:11434')+'/api/tags')
+    async with httpx.AsyncClient(timeout=ollama_timeout(5)) as client:
+        metadata=await client.get(ollama_base_url()+'/api/tags')
         metadata.raise_for_status()
         digest=next(item['digest'] for item in metadata.json()['models'] if item['name']==model)
     import time

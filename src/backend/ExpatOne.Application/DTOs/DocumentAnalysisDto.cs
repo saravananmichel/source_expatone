@@ -69,12 +69,17 @@ public class DocumentQuestionDto
     public required string Question { get; set; }
 }
 
+public class DocumentAskRequestDto
+{
+    public required string Question { get; set; }
+    public string DocumentCategory { get; set; } = "Other";
+    public List<DocumentContextDto> Context { get; set; } = [];
+}
+public record DocumentContextDto(string Id, int Page, string Text);
+
 public class DocumentAnswerDto
 {
-    public List<AnalysisSectionDto> AnalysisSections { get; set; } = [];
-    public List<string> MissingInformation { get; set; } = [];
-    public string? ExplanationLanguage { get; set; }
-    public System.Text.Json.JsonElement? QualityDiagnostics { get; set; }
+    public List<DocumentEvidenceDto> Evidence { get; set; } = [];
     public Guid DocumentId { get; set; }
     public required string Answer { get; set; }
     public bool Grounded { get; set; }

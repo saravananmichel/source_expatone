@@ -44,7 +44,7 @@ public class KnowledgeSearchService : IKnowledgeSearchService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate embedding for search query");
+            _logger.LogError("Failed to generate embedding for search query category={Category}", ex.GetType().Name);
             throw new InvalidOperationException("Unable to process your search. Please try again.");
         }
 

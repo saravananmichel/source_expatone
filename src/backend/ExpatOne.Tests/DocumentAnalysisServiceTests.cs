@@ -6,350 +6,104 @@ using ExpatOne.Domain.Enums;
 using ExpatOne.Infrastructure.Persistence;
 using ExpatOne.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using Moq;
-
 namespace ExpatOne.Tests;
 
 public class DocumentAnalysisServiceTests
 {
-    private static readonly Guid PassportTypeId = Guid.Parse("10000000-0000-0000-0000-000000000001");
-    private static readonly Guid UserId = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
-    private static readonly Guid OtherUserId = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb");
-
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    internal static DocumentAnalysisDto Analysis() => new() {
+        Provider = "Local", ModelVersion = "qwen3:4b@synthetic-digest", DocumentCategory = "Employment Contract",
+        Summary = "Synthetic contract", SemanticDocument = JsonSerializer.SerializeToElement(new {
+            pages = new[] { new { page = 2, text = "Salary: RM12,000 per month. Notice is seven days.",
+                blocks = new[] { new { text = "Salary: RM12,000 per month." } } } } }),
+        Evidence = [new() { Id = "e1", Page = 2, SourceText = "Salary: RM12,000 per month." }]
     };
-
-    private static readonly string ValidAnalysisJson = JsonSerializer.Serialize(new
+    internal static DocumentAnalysisRun Run(Document document, DocumentAnalysisDto? analysis = null) => new() {
+        DocumentId = document.Id, UserId = document.UserId, ObjectKey = document.S3ObjectKey,
+        ContentType = "application/pdf", ConfigurationVersion = "synthetic:Local:0", Status = "REQUIRES_REVIEW",
+        ResultJson = JsonSerializer.Serialize(analysis ?? Analysis())
+    };
+    private static (ExpatOneDbContext Db, Document Doc, DocumentAnalysisService Service, Mock<IDocumentAnalysisJobs> Jobs,
+        Mock<IDocumentIntelligenceService> Local) Fixture(bool persisted = true)
     {
-        documentCategory = "Passport",
-        summary = "Malaysian passport issued to holder",
-        importantDates = new[]
-        {
-            new { label = "Issue Date", date = "01 Jan 2024", isExtracted = true },
-            new { label = "Expiry Date", date = "01 Jan 2034", isExtracted = true }
-        },
-        expiryDate = "01 Jan 2034",
-        deadlines = new[] { "Renew 6 months before expiry" },
-        requiredActions = new[] { "Keep valid at all times while in Malaysia" },
-        keyInformation = new[]
-        {
-            new { label = "Passport Number", value = "A12345678", isExtracted = true },
-            new { label = "Nationality", value = "Malaysian", isExtracted = true }
-        },
-        warnings = new[] { "Document must not be damaged or defaced" },
-        terminology = new[]
-        {
-            new { term = "Immigration endorsement", explanation = "A stamp or sticker placed in the passport by immigration authorities" }
+        var db = new ExpatOneDbContext(new DbContextOptionsBuilder<ExpatOneDbContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
+        var doc = new Document { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), DocumentTypeId = Guid.NewGuid(),
+            DocumentName = "Synthetic", S3ObjectKey = "synthetic/current.pdf", ContentType = "application/pdf", Status = DocumentStatus.Active };
+        db.Documents.Add(doc);
+        if (persisted) db.DocumentAnalysisRuns.Add(Run(doc));
+        db.SaveChanges();
+        var jobs = new Mock<IDocumentAnalysisJobs>(MockBehavior.Strict);
+        jobs.Setup(x => x.EnqueueAsync(doc.UserId, doc.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new AnalysisJobDto(Guid.NewGuid(), doc.Id, null, "QUEUED", "Queued", DateTime.UtcNow, null, null));
+        var local = new Mock<IDocumentIntelligenceService>(MockBehavior.Strict);
+        local.Setup(x => x.AskAsync(It.IsAny<DocumentAskRequestDto>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new DocumentAnswerDto { Answer = "RM12,000 per month", Grounded = true,
+                Evidence = [new() { Id = "e1", Page = 2, SourceText = "Salary: RM12,000 per month." }] });
+        return (db, doc, new DocumentAnalysisService(db, jobs.Object, local.Object), jobs, local);
+    }
+    [Fact]
+    public async Task ExistingCurrentQwenAnalysisIsReusedWithoutStorageOrExtraction()
+    {
+        var (db, doc, service, jobs, local) = Fixture();
+        var answer = await service.AskDocumentAsync(doc.UserId, doc.Id, "What is the salary?");
+        Assert.True(answer.Grounded); Assert.Equal(2, answer.Evidence.Single().Page);
+        Assert.Equal(doc.Id, answer.DocumentId);
+        jobs.VerifyNoOtherCalls();
+        local.Verify(x => x.AskAsync(It.Is<DocumentAskRequestDto>(r => r.Context.Count <= 6 &&
+            r.Context.Sum(c => c.Text.Length) <= 6000 && r.Context.Any(c => c.Text.Contains("12,000"))), It.IsAny<CancellationToken>()), Times.Once);
+    }
+    [Theory]
+    [InlineData("missing")][InlineData("Gemini")][InlineData("stale")][InlineData("wrong_model")][InlineData("corrupt")][InlineData("version")]
+    public async Task InvalidAnalysisQueuesLocalAndDoesNotAskAnyProvider(string reason)
+    {
+        var (db, doc, service, jobs, local) = Fixture(reason != "missing");
+        if (reason != "missing") {
+            var run = db.DocumentAnalysisRuns.Single();
+            if (reason == "stale") run.ObjectKey = "old-version.pdf";
+            if (reason == "corrupt") run.ResultJson = "{";
+            if (reason == "version") db.DocumentVersions.Add(new DocumentVersion { DocumentId = doc.Id, VersionNumber = 2,
+                S3ObjectKey = doc.S3ObjectKey, OriginalFileName = "new.pdf", ContentType = "application/pdf", IsCurrent = true });
+            if (reason is "Gemini" or "wrong_model") {
+                var analysis = Analysis();
+                if (reason == "Gemini") analysis.Provider = "Gemini"; else analysis.ModelVersion = "other-model";
+                run.ResultJson = JsonSerializer.Serialize(analysis);
+            }
+            db.SaveChanges();
         }
-    }, JsonOptions);
-
-    private (ExpatOneDbContext context, DocumentAnalysisService service, Mock<IStorageService> mockStorage, Mock<IAIService> mockAi) CreateService()
-    {
-        var options = new DbContextOptionsBuilder<ExpatOneDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
-            .Options;
-        var context = new ExpatOneDbContext(options);
-
-        context.DocumentTypes.Add(new DocumentType
-        {
-            Id = PassportTypeId, Name = "Passport", HasExpiry = true, IsSystem = true
-        });
-        context.Users.Add(new User
-        {
-            Id = UserId, ExternalId = "uid-a", ExternalProvider = "firebase", Email = "a@test.com"
-        });
-        context.Users.Add(new User
-        {
-            Id = OtherUserId, ExternalId = "uid-b", ExternalProvider = "firebase", Email = "b@test.com"
-        });
-        context.SaveChanges();
-
-        var mockStorage = new Mock<IStorageService>();
-        mockStorage.Setup(s => s.DownloadFileAsync(It.IsAny<string>()))
-            .ReturnsAsync(() => new MemoryStream(new byte[] { 0x25, 0x50, 0x44, 0x46 })); // %PDF
-
-        var mockAi = new Mock<IAIService>();
-        mockAi.Setup(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()))
-            .ReturnsAsync(new AIResponse
-            {
-                Content = ValidAnalysisJson,
-                StructuredJson = ValidAnalysisJson,
-            });
-
-        var logger = new Mock<ILogger<DocumentAnalysisService>>().Object;
-        var service = new DocumentAnalysisService(context, mockStorage.Object, mockAi.Object, logger);
-
-        return (context, service, mockStorage, mockAi);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.AskDocumentAsync(doc.UserId, doc.Id, "What is the salary?"));
+        jobs.Verify(x => x.EnqueueAsync(doc.UserId, doc.Id, true, It.IsAny<CancellationToken>()), Times.Once);
+        local.VerifyNoOtherCalls();
     }
-
-    private Document CreateActiveDocument(ExpatOneDbContext context, Guid userId, string contentType = "application/pdf")
-    {
-        var doc = new Document
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            DocumentTypeId = PassportTypeId,
-            DocumentName = "Test Document",
-            S3ObjectKey = $"users/{userId}/documents/test/doc.pdf",
-            ContentType = contentType,
-            FileSizeBytes = 500_000,
-            Status = DocumentStatus.Active,
-        };
-        context.Documents.Add(doc);
-        context.SaveChanges();
-        return doc;
-    }
-
     [Fact]
-    public async Task AnalyzeDocument_OwnedPdf_Succeeds()
+    public async Task UnrelatedQuestionReturnsInsufficientEvidenceWithoutInference()
     {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId, "application/pdf");
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        Assert.Equal(doc.Id, result.DocumentId);
-        Assert.Equal("Passport", result.DocumentCategory);
-        Assert.NotEmpty(result.Summary);
-        Assert.NotEmpty(result.ImportantDates);
-        Assert.NotEmpty(result.KeyInformation);
+        var (_, doc, service, jobs, local) = Fixture();
+        var answer = await service.AskDocumentAsync(doc.UserId, doc.Id, "Which volcano erupted yesterday?");
+        Assert.False(answer.Grounded); Assert.Empty(answer.Evidence);
+        jobs.VerifyNoOtherCalls(); local.VerifyNoOtherCalls();
     }
-
     [Fact]
-    public async Task AnalyzeDocument_OwnedJpeg_Succeeds()
+    public async Task OtherUserCannotReadOrAskOrEnqueue()
     {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId, "image/jpeg");
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        Assert.Equal(doc.Id, result.DocumentId);
-        Assert.NotEmpty(result.Summary);
+        var (_, doc, service, jobs, local) = Fixture();
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.AskDocumentAsync(Guid.NewGuid(), doc.Id, "Salary?"));
+        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.AnalyzeDocumentAsync(Guid.NewGuid(), doc.Id));
+        jobs.VerifyNoOtherCalls(); local.VerifyNoOtherCalls();
     }
-
-    [Fact]
-    public async Task AnalyzeDocument_OwnedPng_Succeeds()
+    [Theory][InlineData(0)][InlineData(2001)]
+    public async Task QuestionLengthIsValidated(int length)
     {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId, "image/png");
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        Assert.Equal(doc.Id, result.DocumentId);
-        Assert.NotEmpty(result.Summary);
+        var (_, doc, service, jobs, local) = Fixture();
+        await Assert.ThrowsAsync<ArgumentException>(() => service.AskDocumentAsync(doc.UserId, doc.Id, new string('x',length)));
+        jobs.VerifyNoOtherCalls(); local.VerifyNoOtherCalls();
     }
-
     [Fact]
-    public async Task AnalyzeDocument_OtherUser_Rejected()
+    public void RetrievalBoundsLongDocumentsAndFindsRelevantLaterPage()
     {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            svc.AnalyzeDocumentAsync(OtherUserId, doc.Id));
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_CachedAnalysis_ReturnsWithoutGeminiCall()
-    {
-        var (ctx, svc, _, mockAi) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        var cachedDto = new DocumentAnalysisDto
-        {
-            DocumentId = doc.Id,
-            DocumentCategory = "Cached Passport",
-            Summary = "Cached analysis",
-            AnalyzedAt = DateTime.UtcNow,
-        };
-        doc.ExtractedMetadata = JsonSerializer.Serialize(cachedDto, JsonOptions);
-        await ctx.SaveChangesAsync();
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        Assert.Equal("Cached Passport", result.DocumentCategory);
-        mockAi.Verify(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_ForceReanalyze_BypassesCache()
-    {
-        var (ctx, svc, _, mockAi) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        doc.ExtractedMetadata = JsonSerializer.Serialize(new DocumentAnalysisDto
-        {
-            DocumentCategory = "Old", Summary = "Old analysis", AnalyzedAt = DateTime.UtcNow,
-        }, JsonOptions);
-        await ctx.SaveChangesAsync();
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id, forceReanalyze: true);
-
-        Assert.Equal("Passport", result.DocumentCategory);
-        mockAi.Verify(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_MalformedGeminiJson_ThrowsSafely()
-    {
-        var (ctx, svc, _, mockAi) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        mockAi.Setup(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()))
-            .ReturnsAsync(new AIResponse { Content = "not valid json {{{", StructuredJson = "not valid json {{{"});
-
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            svc.AnalyzeDocumentAsync(UserId, doc.Id));
-
-        Assert.Contains("invalid response", ex.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_PartialGeminiResponse_HandledSafely()
-    {
-        var (ctx, svc, _, mockAi) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        var partialJson = JsonSerializer.Serialize(new
-        {
-            documentCategory = "Visa",
-            summary = "A work visa",
-        }, JsonOptions);
-
-        mockAi.Setup(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()))
-            .ReturnsAsync(new AIResponse { Content = partialJson, StructuredJson = partialJson });
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        Assert.Equal("Visa", result.DocumentCategory);
-        Assert.NotNull(result.ImportantDates);
-        Assert.Empty(result.ImportantDates);
-        Assert.NotNull(result.KeyInformation);
-        Assert.Empty(result.KeyInformation);
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_MissingDocument_ThrowsNotFound()
-    {
-        var (_, svc, _, _) = CreateService();
-
-        await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            svc.AnalyzeDocumentAsync(UserId, Guid.NewGuid()));
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_MissingS3ObjectKey_Throws()
-    {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = new Document
-        {
-            Id = Guid.NewGuid(),
-            UserId = UserId,
-            DocumentTypeId = PassportTypeId,
-            DocumentName = "No Key",
-            S3ObjectKey = "",
-            ContentType = "application/pdf",
-            Status = DocumentStatus.Active,
-        };
-        ctx.Documents.Add(doc);
-        await ctx.SaveChangesAsync();
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            svc.AnalyzeDocumentAsync(UserId, doc.Id));
-    }
-
-    [Fact]
-    public async Task GetDocumentAnalysis_ReturnsNull_WhenNoAnalysis()
-    {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        var result = await svc.GetDocumentAnalysisAsync(UserId, doc.Id);
-
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task GetDocumentAnalysis_ReturnsCached_WhenExists()
-    {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        var cachedDto = new DocumentAnalysisDto
-        {
-            DocumentId = doc.Id,
-            DocumentCategory = "Insurance",
-            Summary = "Health insurance policy",
-            AnalyzedAt = DateTime.UtcNow,
-        };
-        doc.ExtractedMetadata = JsonSerializer.Serialize(cachedDto, JsonOptions);
-        await ctx.SaveChangesAsync();
-
-        var result = await svc.GetDocumentAnalysisAsync(UserId, doc.Id);
-
-        Assert.NotNull(result);
-        Assert.Equal("Insurance", result!.DocumentCategory);
-    }
-
-    [Fact]
-    public async Task GetDocumentAnalysis_OtherUser_ReturnsNull()
-    {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        doc.ExtractedMetadata = JsonSerializer.Serialize(new DocumentAnalysisDto
-        {
-            DocumentCategory = "Passport", Summary = "test", AnalyzedAt = DateTime.UtcNow,
-        }, JsonOptions);
-        await ctx.SaveChangesAsync();
-
-        var result = await svc.GetDocumentAnalysisAsync(OtherUserId, doc.Id);
-
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task GetDocumentAnalysis_InvalidCachedJson_ReturnsNull()
-    {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        doc.ExtractedMetadata = "corrupted json {{{";
-        await ctx.SaveChangesAsync();
-
-        var result = await svc.GetDocumentAnalysisAsync(UserId, doc.Id);
-
-        Assert.Null(result);
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_InvalidCachedJson_TriggersReanalysis()
-    {
-        var (ctx, svc, _, mockAi) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        doc.ExtractedMetadata = "corrupted json {{{";
-        await ctx.SaveChangesAsync();
-
-        var result = await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        Assert.Equal("Passport", result.DocumentCategory);
-        mockAi.Verify(a => a.AnalyzeDocumentAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string?>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task AnalyzeDocument_PersistsResult()
-    {
-        var (ctx, svc, _, _) = CreateService();
-        var doc = CreateActiveDocument(ctx, UserId);
-
-        await svc.AnalyzeDocumentAsync(UserId, doc.Id);
-
-        var updatedDoc = await ctx.Documents.FindAsync(doc.Id);
-        Assert.NotNull(updatedDoc);
-        Assert.False(string.IsNullOrEmpty(updatedDoc!.ExtractedMetadata));
+        var analysis = Analysis();
+        analysis.SemanticDocument = JsonSerializer.SerializeToElement(new { pages = Enumerable.Range(1,40).Select(i => new {
+            page=i, text = i==39 ? "Termination notice is seven days." : new string('x',5000), blocks=Array.Empty<object>() }) });
+        var context = DocumentContextSelector.Select(analysis,"What is the termination notice?");
+        Assert.Contains(context,c => c.Page==39); Assert.True(context.Sum(c=>c.Text.Length)<=6000); Assert.True(context.Count<=6);
     }
 }

@@ -60,7 +60,7 @@ public class FirebaseAuthenticationHandler : AuthenticationHandler<Authenticatio
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Firebase token validation failed");
+            Logger.LogError("Firebase token validation failed category={Category}", ex.GetType().Name);
             return AuthenticateResult.Fail("Token validation failed.");
         }
     }

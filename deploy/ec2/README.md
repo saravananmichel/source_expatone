@@ -15,17 +15,18 @@ Public routes that enqueue local analysis are document upload completion,
 The API worker downloads the owned document and calls `/analyze`; the mobile app
 polls `/api/documents/{id}/analysis/status` and retrieves persisted results.
 
-Existing Gemini-backed routes remain unchanged: document `/ask`, translation
-`/translate`, assistant conversation `/messages`, emergency `/assist`, knowledge
-source `/ingest` and `/embeddings/generate` (embedding requests, rather than chat).
-The deployment sets document provider **Local**, fallback **false**, extraction
-and support models **qwen3:4b**, and `OLLAMA_NO_CLOUD=1`. An optional existing
-Gemini key preserves the other features; it is never used as document fallback.
-Already-queued jobs retain their original provider snapshot: drain/review any old
-Gemini/Hybrid/fallback jobs before enabling this deployment.
+Document `/ask` now reuses persisted current-version Local/Qwen source context and calls
+private document-ai `/ask`. It never calls Gemini or downloads/OCRs a ready document again.
+See [the complete document flow and privacy report](../document-intelligence/DOCUMENT_AI_FLOW.md).
 
-No authentication, upload flow, mobile API contract, grounding or model prompts
-were replaced. Production CORS stays disabled because the client is native
+Gemini remains for translation `/translate`, assistant conversation `/messages`,
+emergency `/assist`, and curated knowledge embeddings/search. The deployment keeps document
+provider **Local**, fallback **false**, extraction/support/Q&A models **qwen3:4b**, and
+`OLLAMA_NO_CLOUD=1`. Unsafe old Gemini/Hybrid/fallback queued jobs fail locally; requeue
+them with Local/no fallback. They cannot send documents externally.
+
+Authentication and S3 upload contracts remain unchanged. Document Q&A adds source
+citations and returns a processing conflict until valid local analysis exists. Production CORS stays disabled because the client is native
 Flutter; permissive development CORS remains development-only. A browser frontend
 would require a separate explicit origin allowlist. No fictitious `DATABASE_URL`,
 `CORS_ORIGINS`, `HOST` or `PORT` settings were added to the ASP.NET application.

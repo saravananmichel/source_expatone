@@ -232,7 +232,7 @@ public class AssistantService : IAssistantService
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Knowledge search failed for conversation {ConversationId}", conversationId);
+                _logger.LogWarning("Knowledge search failed for conversation {ConversationId} category={Category}", conversationId, ex.GetType().Name);
                 searchResults = [];
             }
 
@@ -369,7 +369,7 @@ public class AssistantService : IAssistantService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Gemini generation failed for conversation {ConversationId}", conversationId);
+            _logger.LogError("Gemini generation failed for conversation {ConversationId} category={Category}", conversationId, ex.GetType().Name);
             throw new InvalidOperationException("The assistant could not generate a response. Please try again.");
         }
     }

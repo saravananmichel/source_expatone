@@ -30,3 +30,12 @@ docker-compose*.yml
 docker-compose*.yaml
 
 README.md
+
+# Keep local secrets out of all nested build directories.
+**/.env
+**/.env.*
+!**/.env.example
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/*service-account*.json
+**/secrets.json

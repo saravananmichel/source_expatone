@@ -1,0 +1,32 @@
+{
+  "verification": "Final document request paths, guarded HTTP integration tests and real CPU Ollama benchmark",
+  "documentBackendTests": 116,
+  "pythonTests": 86,
+  "flutterTests": 208,
+  "privateDockerNetwork": true,
+  "publishedPorts": {
+    "expatone-qa-ollama": {},
+    "expatone-qa-benchmark": {}
+  },
+  "ollamaNoCloud": true,
+  "documentTestLogGoogleRequests": 0,
+  "benchmarkDestinations": [
+    [
+      "ollama",
+      "/api/tags"
+    ],
+    [
+      "ollama",
+      "/api/chat"
+    ]
+  ],
+  "runtime": "Local Linux aarch64 Docker; 10 Docker vCPUs; ~7.75 GiB Docker VM memory; document worker capped at 2 CPUs; Ollama CPU inference",
+  "limitations": "Synthetic fixtures, not live AWS network capture. Unrelated-feature tests can legitimately invoke Gemini; document-only tests do not.",
+  "backendFullSuiteTests": 419,
+  "backendFullSuitePassed": true,
+  "flutterStaticAnalysis": "No issues found",
+  "dockerBuilds": [
+    "expatone-backend:document-qa",
+    "expatone-document-ai:document-qa"
+  ]
+}

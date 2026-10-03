@@ -1,3 +1,5 @@
+from .ollama import post_chat
+from .config import ollama_base_url, ollama_timeout
 """Document-level reasoning over evidence from all extraction batches."""
 import json
 import os
@@ -80,8 +82,8 @@ STRICT RULES:
 '''
     prompt+=STRATEGIES.get(semantic.documentCategory,'Explain purpose, explicit facts, conditions and consequences grounded only in evidence.')
     try:
-        async with httpx.AsyncClient(timeout=150) as client:
-            response=await client.post(os.getenv('OLLAMA_URL','http://127.0.0.1:11434')+'/api/chat',json={
+        async with httpx.AsyncClient(timeout=ollama_timeout(150)) as client:
+            response=await post_chat(client, {
                 'model':os.environ['OLLAMA_MODEL'],'stream':False,'think':False,'format':Conclusions.model_json_schema(),
                 'options':{'temperature':0,'num_gpu':int(os.getenv('OLLAMA_NUM_GPU','-1')),'num_ctx':16384,'num_predict':1800},
                 'messages':[{'role':'system','content':prompt}, {'role':'user','content':json.dumps({
@@ -205,10 +207,9 @@ async def hierarchical_document_reasoning(semantic, pages):
         'Explain purpose, explicit facts, conditions and consequences grounded only in the digest.')
 
     try:
-        async with httpx.AsyncClient(timeout=150) as client:
-            response = await client.post(
-                os.getenv('OLLAMA_URL', 'http://127.0.0.1:11434') + '/api/chat',
-                json={
+        async with httpx.AsyncClient(timeout=ollama_timeout(150)) as client:
+            response = await post_chat(
+                client, {
                     'model': os.environ['OLLAMA_MODEL'],
                     'stream': False, 'think': False,
                     'format': Conclusions.model_json_schema(),

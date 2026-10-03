@@ -528,14 +528,14 @@ void main() {
       expect(answer.documentName, 'Test Doc');
     });
 
-    test('defaults grounded to true when missing', () {
+    test('defaults grounded to false when missing', () {
       final json = {
         'documentId': 'abc-123',
         'answer': 'Answer',
       };
 
       final answer = DocumentAnswer.fromJson(json);
-      expect(answer.grounded, isTrue);
+      expect(answer.grounded, isFalse);
       expect(answer.documentName, isNull);
     });
   });

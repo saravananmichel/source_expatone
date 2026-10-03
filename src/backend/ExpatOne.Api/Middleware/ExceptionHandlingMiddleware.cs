@@ -23,7 +23,7 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unhandled exception occurred");
+            _logger.LogError("Unhandled exception category={Category}", ex.GetType().Name);
             await HandleExceptionAsync(context, ex);
         }
     }

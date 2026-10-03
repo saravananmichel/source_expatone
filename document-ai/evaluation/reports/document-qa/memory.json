@@ -1,0 +1,240 @@
+{
+  "samplingSeconds": 3,
+  "samples": [
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "51.71MiB / 7.748GiB",
+      "cpu": "42.96%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.11MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "1.018GiB / 7.748GiB",
+      "cpu": "60.08%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.11MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "1.859GiB / 7.748GiB",
+      "cpu": "75.23%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.11MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.885GiB / 7.748GiB",
+      "cpu": "1186.86%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.11MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.914GiB / 7.748GiB",
+      "cpu": "1076.87%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.11MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.914GiB / 7.748GiB",
+      "cpu": "1083.80%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.36MiB / 2GiB",
+      "cpu": "0.17%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.927GiB / 7.748GiB",
+      "cpu": "1093.29%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.12MiB / 2GiB",
+      "cpu": "12.44%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.981GiB / 7.748GiB",
+      "cpu": "989.11%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.3MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.981GiB / 7.748GiB",
+      "cpu": "1253.71%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.3MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.981GiB / 7.748GiB",
+      "cpu": "1075.66%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.3MiB / 2GiB",
+      "cpu": "0.17%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4GiB / 7.748GiB",
+      "cpu": "1161.08%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.04MiB / 2GiB",
+      "cpu": "5.48%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4GiB / 7.748GiB",
+      "cpu": "1093.17%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.04MiB / 2GiB",
+      "cpu": "0.18%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4GiB / 7.748GiB",
+      "cpu": "1048.02%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.34MiB / 2GiB",
+      "cpu": "0.21%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "3.987GiB / 7.748GiB",
+      "cpu": "1089.60%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "39.93MiB / 2GiB",
+      "cpu": "0.20%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.076GiB / 7.748GiB",
+      "cpu": "1196.55%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.18MiB / 2GiB",
+      "cpu": "5.04%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.076GiB / 7.748GiB",
+      "cpu": "1152.43%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.18MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.076GiB / 7.748GiB",
+      "cpu": "1127.72%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.18MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.082GiB / 7.748GiB",
+      "cpu": "1066.40%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.18MiB / 2GiB",
+      "cpu": "7.68%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.082GiB / 7.748GiB",
+      "cpu": "1079.45%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.71MiB / 2GiB",
+      "cpu": "0.16%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.088GiB / 7.748GiB",
+      "cpu": "1038.29%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.66MiB / 2GiB",
+      "cpu": "0.19%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.174GiB / 7.748GiB",
+      "cpu": "1071.38%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.59MiB / 2GiB",
+      "cpu": "0.00%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.174GiB / 7.748GiB",
+      "cpu": "1087.96%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.59MiB / 2GiB",
+      "cpu": "0.49%"
+    },
+    {
+      "container": "expatone-qa-ollama",
+      "memory": "4.174GiB / 7.748GiB",
+      "cpu": "1150.23%"
+    },
+    {
+      "container": "expatone-qa-benchmark",
+      "memory": "40.84MiB / 2GiB",
+      "cpu": "0.15%"
+    }
+  ],
+  "limitations": "Docker memory accounting samples, not OS RSS or guaranteed instantaneous peak.",
+  "observedMaximumMiB": {
+    "expatone-qa-ollama": 4274.176,
+    "expatone-qa-benchmark": 40.84
+  }
+}
