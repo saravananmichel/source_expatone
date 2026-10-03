@@ -1,25 +1,71 @@
 version: 0.2
 
-phases:
+env:
+  shell: bash
 
+phases:
   pre_build:
     commands:
-      - echo Logging in to Amazon ECR...
-      - ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-      - REPOSITORY_URI=$ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/expatone-api
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
-      - echo $REPOSITORY_URI
+      - |
+        set -euo pipefail
+
+        # All three images will target Linux/X86_64.
+        test "$(uname -m)" = "x86_64" || {
+          echo "Use an x86_64 Linux CodeBuild environment."
+          exit 1
+        }
+
+        export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+        export ECR_REGION=ap-southeast-1
+        export REGISTRY="$ACCOUNT_ID.dkr.ecr.$ECR_REGION.amazonaws.com"
+        export IMAGE_TAG="$CODEBUILD_RESOLVED_SOURCE_VERSION"
+
+        aws ecr get-login-password --region "$ECR_REGION" |
+          docker login --username AWS --password-stdin "$REGISTRY"
+
+        cd "$CODEBUILD_SRC_DIR"
+        test -f src/backend/Dockerfile
+        test -f document-ai/Dockerfile
+        test -f document-ai/Dockerfile.ollama
+        test -f document-ai/requirements.txt
 
   build:
     commands:
-      - echo Build started on `date`
-      - cd src/backend
-      - docker build -t $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
-      - docker tag $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION $REPOSITORY_URI:latest
+      - |
+        set -euo pipefail
+        cd "$CODEBUILD_SRC_DIR"
+
+        echo "Building .NET API..."
+        docker build --platform linux/amd64 \
+          -t "$REGISTRY/expatone-api:$IMAGE_TAG" \
+          ./src/backend
+
+        echo "Building Python document service..."
+        docker build --platform linux/amd64 \
+          -t "$REGISTRY/expatone-document-ai:$IMAGE_TAG" \
+          ./document-ai
+
+        echo "Building Ollama with qwen3:4b..."
+        docker build --platform linux/amd64 \
+          -f document-ai/Dockerfile.ollama \
+          -t "$REGISTRY/expatone-ollama:$IMAGE_TAG" \
+          ./document-ai
 
   post_build:
     commands:
-      - echo Pushing Docker image...
-      - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
-      - docker push $REPOSITORY_URI:latest
-      - echo Build completed
+      - |
+        set -euo pipefail
+
+        if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" != "1" ]; then
+          echo "Build failed; skipping image pushes."
+          exit 1
+        fi
+
+        for REPO_NAME in expatone-api expatone-document-ai expatone-ollama; do
+          docker push "$REGISTRY/$REPO_NAME:$IMAGE_TAG"
+        done
+
+        echo "Image URIs for ECS:"
+        echo "$REGISTRY/expatone-api:$IMAGE_TAG"
+        echo "$REGISTRY/expatone-document-ai:$IMAGE_TAG"
+        echo "$REGISTRY/expatone-ollama:$IMAGE_TAG"
