@@ -1,0 +1,42 @@
+[
+  {
+    "RoleName": "ExpatOneEcsTaskRole",
+    "PolicyName": "ExpatOneBedrockAccess",
+    "PolicyDocument": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "ExpatOneBedrockInvoke",
+          "Effect": "Allow",
+          "Action": [
+            "bedrock:InvokeModel",
+            "bedrock:InvokeModelWithResponseStream"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  },
+  {
+    "RoleName": "ExpatOneEcsTaskRole",
+    "PolicyName": "ExpatOneTextractAccess",
+    "PolicyDocument": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "ExpatOneTextractAccess",
+          "Effect": "Allow",
+          "Action": [
+            "textract:DetectDocumentText",
+            "textract:AnalyzeDocument",
+            "textract:StartDocumentTextDetection",
+            "textract:GetDocumentTextDetection",
+            "textract:StartDocumentAnalysis",
+            "textract:GetDocumentAnalysis"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  }
+]

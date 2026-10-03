@@ -144,9 +144,9 @@ public class GeminiAIService : IAIService
                 _logger.LogError("Gemini API request timed out for document analysis");
                 throw new InvalidOperationException("Document analysis timed out. Please try again.");
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
-                _logger.LogError(ex, "Network error communicating with Gemini API");
+                _logger.LogError("Network error communicating with Gemini API");
                 throw new InvalidOperationException("Unable to reach the document analysis service. Please try again.");
             }
 
@@ -241,9 +241,9 @@ public class GeminiAIService : IAIService
                 _logger.LogError("Gemini API request timed out for assistant response");
                 throw new AIProviderUnavailableException("The Government Assistant is temporarily unavailable. Please try again in a moment.");
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
-                _logger.LogError(ex, "Network error communicating with Gemini API for assistant");
+                _logger.LogError("Network error communicating with Gemini API for assistant");
                 throw new AIProviderUnavailableException("The Government Assistant is temporarily unavailable. Please try again in a moment.");
             }
 
@@ -345,9 +345,9 @@ public class GeminiAIService : IAIService
                 _logger.LogError("Gemini API request timed out for translation");
                 throw new AIProviderUnavailableException("Translation is temporarily unavailable. Please try again in a moment.");
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
-                _logger.LogError(ex, "Network error communicating with Gemini API for translation");
+                _logger.LogError("Network error communicating with Gemini API for translation");
                 throw new AIProviderUnavailableException("Translation is temporarily unavailable. Please try again in a moment.");
             }
 
@@ -449,9 +449,9 @@ public class GeminiAIService : IAIService
                 _logger.LogError("Gemini embedding request timed out");
                 throw new InvalidOperationException("Embedding generation timed out. Please try again.");
             }
-            catch (HttpRequestException ex)
+            catch (HttpRequestException)
             {
-                _logger.LogError(ex, "Network error communicating with Gemini embedding API");
+                _logger.LogError("Network error communicating with Gemini embedding API");
                 throw new InvalidOperationException("Unable to reach the embedding service. Please try again.");
             }
 

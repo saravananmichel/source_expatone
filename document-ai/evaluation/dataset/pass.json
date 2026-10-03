@@ -1,0 +1,23 @@
+{
+  "id": "pass",
+  "category": "Employment Pass",
+  "pages": [
+    "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass."
+  ],
+  "values": [
+    "Avery Example",
+    "TEST-EP-001",
+    "2027-06-30"
+  ],
+  "clauses": [
+    "employer"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

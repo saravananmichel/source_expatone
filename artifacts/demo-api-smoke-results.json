@@ -1,0 +1,200 @@
+{
+  "baseUrl": "https://d38i3e3pvvjux7.cloudfront.net/api",
+  "checkedAt": "2026-10-01T08:51:25.166605+00:00",
+  "results": [
+    {
+      "test": "health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "unauthorized",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "test": "Firebase signup",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "Firebase login",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "authenticated identity",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "identity email matches Firebase",
+      "passed": true
+    },
+    {
+      "test": "profile update",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "profile options",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "profile checklist",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "document types",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "request PDF upload",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "S3 presigned HTTPS upload",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "complete upload",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "document list",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "document detail",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "download URL",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "S3 HTTPS download matches PDF",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "AI document analysis",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "analysis fields",
+      "fields": [
+        "documentId",
+        "documentCategory",
+        "summary",
+        "title",
+        "personName",
+        "issuingAuthority",
+        "documentNumber",
+        "issueDate",
+        "expiryDate",
+        "effectiveDate",
+        "documentStatus",
+        "plainLanguageExplanation",
+        "confidence",
+        "importantDates",
+        "deadlines",
+        "requiredActions",
+        "keyInformation",
+        "warnings",
+        "terminology",
+        "analyzedAt"
+      ]
+    },
+    {
+      "test": "persisted analysis",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "reminder create",
+      "status": 201,
+      "passed": true
+    },
+    {
+      "test": "reminder list",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "reminder update",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "reminder delete",
+      "status": 204,
+      "passed": true
+    },
+    {
+      "test": "document delete",
+      "status": 204,
+      "passed": true
+    },
+    {
+      "test": "supported translation languages",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "Gemini text translation",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "translated text nonempty",
+      "passed": true
+    },
+    {
+      "test": "assistant conversation",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "assistant RAG and Gemini",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "official source grounding",
+      "passed": true,
+      "responseMode": "official_grounded",
+      "sourceCount": 5
+    },
+    {
+      "test": "assistant history",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "assistant conversation delete",
+      "status": 204,
+      "passed": true
+    },
+    {
+      "test": "emergency AI assistance",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "test": "logout no bearer",
+      "status": 401,
+      "passed": true
+    }
+  ]
+}

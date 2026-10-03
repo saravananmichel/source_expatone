@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
@@ -141,17 +142,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_error!, style: TextStyle(color: AppTheme.errorColor)),
-                      const SizedBox(height: 12),
-                      ElevatedButton(onPressed: _loadProfile, child: const Text('Retry')),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(_error!, style: TextStyle(color: AppTheme.errorColor)),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _loadProfile,
+                    child: const Text('Retry'),
                   ),
-                )
-              : _buildProfileContent(),
+                ],
+              ),
+            )
+          : _buildProfileContent(),
     );
   }
 
@@ -185,35 +189,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Text(
           _profile!.email,
           textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                color: AppTheme.textSecondary,
-              ),
+          style: Theme.of(context).textTheme.bodyLarge
+              ?.copyWith(color: AppTheme.textSecondary),
         ),
         const SizedBox(height: 32),
         _buildSectionHeader('Account'),
         _buildInfoTile(Icons.email_outlined, 'Email', _profile!.email),
-        _buildInfoTile(Icons.person_outlined, 'Name', _profile!.displayName ?? 'Not set'),
-        _buildInfoTile(Icons.phone_outlined, 'Phone', _profile!.phoneNumber ?? 'Not set'),
+        _buildInfoTile(
+          Icons.person_outlined,
+          'Name',
+          _profile!.displayName ?? 'Not set',
+        ),
+        _buildInfoTile(
+          Icons.phone_outlined,
+          'Phone',
+          _profile!.phoneNumber ?? 'Not set',
+        ),
         const SizedBox(height: 20),
         _buildSectionHeader('Personal'),
-        _buildInfoTile(Icons.flag_outlined, 'Nationality', _profile!.nationality ?? 'Not set'),
-        _buildInfoTile(Icons.location_on_outlined, 'Country', _profile!.countryCode),
-        _buildInfoTile(Icons.place_outlined, 'Location', _profile!.residenceLocation ?? 'Not set'),
+        _buildInfoTile(
+          Icons.flag_outlined,
+          'Nationality',
+          _profile!.nationality ?? 'Not set',
+        ),
+        _buildInfoTile(
+          Icons.location_on_outlined,
+          'Country',
+          _profile!.countryCode,
+        ),
+        _buildInfoTile(
+          Icons.place_outlined,
+          'Location',
+          _profile!.residenceLocation ?? 'Not set',
+        ),
         const SizedBox(height: 20),
         _buildSectionHeader('Status'),
-        _buildInfoTile(Icons.badge_outlined, 'Visa/Pass', _getLabel(_options?.visaPassTypes, _profile!.visaPassType)),
-        _buildInfoTile(Icons.work_outlined, 'Employment', _getLabel(_options?.employmentStatuses, _profile!.employmentStatus)),
-        _buildInfoTile(Icons.family_restroom_outlined, 'Family', _getLabel(_options?.familyStatuses, _profile!.familyStatus)),
+        _buildInfoTile(
+          Icons.badge_outlined,
+          'Visa/Pass',
+          _getLabel(_options?.visaPassTypes, _profile!.visaPassType),
+        ),
+        _buildInfoTile(
+          Icons.work_outlined,
+          'Employment',
+          _getLabel(_options?.employmentStatuses, _profile!.employmentStatus),
+        ),
+        _buildInfoTile(
+          Icons.family_restroom_outlined,
+          'Family',
+          _getLabel(_options?.familyStatuses, _profile!.familyStatus),
+        ),
         if (_profile!.hasChildren == true)
-          _buildInfoTile(Icons.child_care_outlined, 'Children', '${_profile!.numberOfChildren ?? 0}'),
+          _buildInfoTile(
+            Icons.child_care_outlined,
+            'Children',
+            '${_profile!.numberOfChildren ?? 0}',
+          ),
         const SizedBox(height: 20),
         _buildSectionHeader('Preferences'),
-        _buildInfoTile(Icons.language_outlined, 'Language', _getLabel(_options?.supportedLanguages, _profile!.preferredLanguage)),
+        _buildInfoTile(
+          Icons.language_outlined,
+          'Language',
+          _getLabel(_options?.supportedLanguages, _profile!.preferredLanguage),
+        ),
         const SizedBox(height: 32),
         OutlinedButton.icon(
           onPressed: _logout,
           icon: const Icon(Icons.logout, color: AppTheme.errorColor),
-          label: const Text('Sign Out', style: TextStyle(color: AppTheme.errorColor)),
+          label: const Text(
+            'Sign Out',
+            style: TextStyle(color: AppTheme.errorColor),
+          ),
           style: OutlinedButton.styleFrom(
             side: BorderSide(color: AppTheme.errorColor.withValues(alpha: 0.5)),
             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -245,9 +291,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Icon(icon, size: 20, color: AppTheme.textSecondary),
           const SizedBox(width: 12),
-          Text(label, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          Text(
+            label,
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          ),
           const Spacer(),
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );
@@ -290,9 +342,15 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: widget.profile.displayName ?? '');
-    _phoneController = TextEditingController(text: widget.profile.phoneNumber ?? '');
-    _locationController = TextEditingController(text: widget.profile.residenceLocation ?? '');
+    _nameController = TextEditingController(
+      text: widget.profile.displayName ?? '',
+    );
+    _phoneController = TextEditingController(
+      text: widget.profile.phoneNumber ?? '',
+    );
+    _locationController = TextEditingController(
+      text: widget.profile.residenceLocation ?? '',
+    );
     _nationality = widget.profile.nationality;
     _countryCode = widget.profile.countryCode;
     _visaPassType = widget.profile.visaPassType;
@@ -332,9 +390,8 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isSaving = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Failed to save: $e')));
       }
     }
   }
@@ -400,7 +457,9 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
             label: 'Visa / Pass Type',
             value: _visaPassType,
             items: widget.options.visaPassTypes
-                .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label)))
+                .map(
+                  (o) => DropdownMenuItem(value: o.value, child: Text(o.label)),
+                )
                 .toList(),
             onChanged: (v) => setState(() => _visaPassType = v),
           ),
@@ -409,7 +468,9 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
             label: 'Employment Status',
             value: _employmentStatus,
             items: widget.options.employmentStatuses
-                .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label)))
+                .map(
+                  (o) => DropdownMenuItem(value: o.value, child: Text(o.label)),
+                )
                 .toList(),
             onChanged: (v) => setState(() => _employmentStatus = v),
           ),
@@ -418,7 +479,9 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
             label: 'Family Status',
             value: _familyStatus,
             items: widget.options.familyStatuses
-                .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label)))
+                .map(
+                  (o) => DropdownMenuItem(value: o.value, child: Text(o.label)),
+                )
                 .toList(),
             onChanged: (v) => setState(() => _familyStatus = v),
           ),
@@ -430,7 +493,7 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
               if (!v) _numberOfChildren = 0;
             }),
             title: const Text('Have children'),
-            activeColor: AppTheme.primaryColor,
+            activeThumbColor: AppTheme.primaryColor,
             contentPadding: EdgeInsets.zero,
           ),
           if (_hasChildren) ...[
@@ -444,7 +507,13 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
                       ? () => setState(() => _numberOfChildren--)
                       : null,
                 ),
-                Text('$_numberOfChildren', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                Text(
+                  '$_numberOfChildren',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline),
                   onPressed: _numberOfChildren < 20
@@ -459,7 +528,9 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
             label: 'Preferred Language',
             value: _preferredLanguage,
             items: widget.options.supportedLanguages
-                .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label)))
+                .map(
+                  (o) => DropdownMenuItem(value: o.value, child: Text(o.label)),
+                )
                 .toList(),
             onChanged: (v) => setState(() => _preferredLanguage = v ?? 'en'),
           ),
@@ -488,7 +559,8 @@ class _ProfileEditScreenState extends State<_ProfileEditScreen> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      key: ValueKey(value),
+      initialValue: value,
       decoration: InputDecoration(labelText: label),
       items: items,
       onChanged: onChanged,

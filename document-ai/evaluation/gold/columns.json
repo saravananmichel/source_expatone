@@ -1,0 +1,66 @@
+{
+  "id": "columns",
+  "category": "Insurance Document",
+  "expectedValues": [
+    "Avery Example",
+    "RM20,000",
+    "RM100"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Avery Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM20,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM100",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [
+    "RM20,000",
+    "RM100"
+  ],
+  "sections": [],
+  "clauses": [
+    "excluded",
+    "receipts"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "guaranteed payment"
+  ],
+  "summaryCoverageTargets": [
+    "Avery Example",
+    "RM20,000",
+    "RM100",
+    "excluded",
+    "receipts"
+  ],
+  "descriptiveExplanationTargets": [
+    "excluded",
+    "receipts"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

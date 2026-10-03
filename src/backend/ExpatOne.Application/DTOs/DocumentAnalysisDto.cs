@@ -2,6 +2,21 @@ namespace ExpatOne.Application.DTOs;
 
 public class DocumentAnalysisDto
 {
+    public Guid? DocumentVersionId { get; set; }
+    public Guid? AnalysisId { get; set; }
+    public string? ConfigurationVersion { get; set; }
+    public string? PromptVersion { get; set; }
+    public string? Provider { get; set; }
+    public string? ModelVersion { get; set; }
+    public string AnalyzerVersion { get; set; } = "document-engine-v1";
+    public bool RequiresReview { get; set; }
+    public List<GroundedStatement> Statements { get; set; } = [];
+    public List<DocumentEvidenceDto> Evidence { get; set; } = [];
+    public System.Text.Json.JsonElement? SemanticDocument { get; set; }
+    public List<AnalysisSectionDto> AnalysisSections { get; set; } = [];
+    public List<string> MissingInformation { get; set; } = [];
+    public string? ExplanationLanguage { get; set; }
+    public System.Text.Json.JsonElement? QualityDiagnostics { get; set; }
     public Guid DocumentId { get; set; }
     public string DocumentCategory { get; set; } = "";
     public string Summary { get; set; } = "";
@@ -56,6 +71,10 @@ public class DocumentQuestionDto
 
 public class DocumentAnswerDto
 {
+    public List<AnalysisSectionDto> AnalysisSections { get; set; } = [];
+    public List<string> MissingInformation { get; set; } = [];
+    public string? ExplanationLanguage { get; set; }
+    public System.Text.Json.JsonElement? QualityDiagnostics { get; set; }
     public Guid DocumentId { get; set; }
     public required string Answer { get; set; }
     public bool Grounded { get; set; }

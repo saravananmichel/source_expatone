@@ -1,0 +1,928 @@
+{
+  "documentCategory": "Insurance Document",
+  "title": "Insurance Document Analysis",
+  "summary": "This document is an insurance policy issued by Synthetic Insurance to Casey Example, effective January 1, 2:00 PM, 2026, and expiring December 31, 2026. It covers inpatient hospital treatment up to RM50,000 per month with a monthly premium of RM250. Pre-existing conditions are excluded from coverage.",
+  "plainLanguageExplanation": "The insured person is Casey Example, who is the policyholder responsible for paying the premium and receiving coverage under this insurance policy.\n\nThe premium is RM250 per month, which the insured person must pay to maintain coverage under this policy.\n\nCoverage includes inpatient hospital treatment up to RM50,000 per month, meaning the insurer will pay for hospital costs within this limit if the insured person is hospitalized.\n\nPre-existing conditions are excluded from coverage, meaning any health issues the insured person had before the policy started are not covered by this insurance.",
+  "keyInformation": [
+    {
+      "label": "Person",
+      "value": "Casey Example",
+      "isExtracted": true,
+      "description": "The policy holder is Casey Example."
+    },
+    {
+      "label": "Organization",
+      "value": "Synthetic Insurance",
+      "isExtracted": true,
+      "description": "The insurer is Synthetic Insurance."
+    },
+    {
+      "label": "Policy Number",
+      "value": "TEST-POLICY-01",
+      "isExtracted": true,
+      "description": "The policy number is TEST-POLICY-01."
+    },
+    {
+      "label": "Premium",
+      "value": "RM250 per month",
+      "isExtracted": true,
+      "description": "The monthly premium is RM250, as stated in the policy details."
+    },
+    {
+      "label": "Coverage",
+      "value": "Inpatient hospital treatment up to RM50,000",
+      "isExtracted": true,
+      "description": "The policy covers inpatient hospital treatment up to RM50,000."
+    },
+    {
+      "label": "Effective Date",
+      "value": "2026-01-01",
+      "isExtracted": true,
+      "description": "The policy becomes effective on 2026-01-01, which is the start date of coverage."
+    },
+    {
+      "label": "Expiry Date",
+      "value": "2026-12-31",
+      "isExtracted": true,
+      "description": "The policy expires on 2026-12-31, which is the end date of coverage."
+    },
+    {
+      "label": "Exclusion",
+      "value": "Pre-existing conditions are excluded.",
+      "isExtracted": true,
+      "description": "Pre-existing conditions are excluded from coverage."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Effective Date",
+      "date": "2026-01-01",
+      "isExtracted": true,
+      "description": "The policy becomes effective on 2026-01-01, which is the start date of coverage."
+    },
+    {
+      "label": "Expiry Date",
+      "date": "2026-12-31",
+      "isExtracted": true,
+      "description": "The policy expires on 2026-12-31, which is the end date of coverage."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person-1",
+      "kind": "entity",
+      "label": "Person",
+      "text": "The policy holder is Casey Example.",
+      "originalValue": "Casey Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-organization-1",
+      "kind": "entity",
+      "label": "Organization",
+      "text": "The insurer is Synthetic Insurance.",
+      "originalValue": "Synthetic Insurance",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-policy-number-1",
+      "kind": "entity",
+      "label": "Policy Number",
+      "text": "The policy number is TEST-POLICY-01.",
+      "originalValue": "TEST-POLICY-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-premium-1",
+      "kind": "money",
+      "label": "Premium",
+      "text": "The monthly premium is RM250, as stated in the policy details.",
+      "originalValue": "RM250 per month",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-coverage-1",
+      "kind": "entity",
+      "label": "Coverage",
+      "text": "The policy covers inpatient hospital treatment up to RM50,000.",
+      "originalValue": "Inpatient hospital treatment up to RM50,000",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-effective-date-1",
+      "kind": "date",
+      "label": "Effective Date",
+      "text": "The policy becomes effective on 2026-01-01, which is the start date of coverage.",
+      "originalValue": "2026-01-01",
+      "normalizedValue": "2026-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-expiry-date-1",
+      "kind": "date",
+      "label": "Expiry Date",
+      "text": "The policy expires on 2026-12-31, which is the end date of coverage.",
+      "originalValue": "2026-12-31",
+      "normalizedValue": "2026-12-31",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-exclusion-1",
+      "kind": "entity",
+      "label": "Exclusion",
+      "text": "Pre-existing conditions are excluded from coverage.",
+      "originalValue": "Pre-existing conditions are excluded.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "rule-expiry-b0-expiry-date-1",
+      "kind": "finding",
+      "label": "Expiry needs attention",
+      "text": "The stated expiry date is approaching. Review this date and confirm any next steps with the issuing authority.",
+      "originalValue": "2026-12-31",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds 'approaching' and 'review' not in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is an insurance policy issued by Synthetic Insurance to Casey Example, effective January 1, 2:00 PM, 2026, and expiring December 31, 2026. It covers inpatient hospital treatment up to RM50,000 per month with a monthly premium of RM250. Pre-existing conditions are excluded from coverage.",
+      "originalValue": "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Insured person",
+      "text": "The insured person is Casey Example, who is the policyholder responsible for paying the premium and receiving coverage under this insurance policy.",
+      "originalValue": "Policy holder: Casey Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Premium",
+      "text": "The premium is RM250 per month, which the insured person must pay to maintain coverage under this policy.",
+      "originalValue": "Premium: RM250 per month",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Coverage",
+      "text": "Coverage includes inpatient hospital treatment up to RM50,000 per month, meaning the insurer will pay for hospital costs within this limit if the insured person is hospitalized.",
+      "originalValue": "Coverage: Inpatient hospital treatment up to RM50,000",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "interpretation",
+      "label": "Exclusions",
+      "text": "Pre-existing conditions are excluded from coverage, meaning any health issues the insured person had before the policy started are not covered by this insurance.",
+      "originalValue": "Exclusion: Pre-existing conditions are excluded",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-person-1",
+        "b0-organization-1",
+        "b0-policy-number-1",
+        "b0-coverage-1",
+        "b0-exclusion-1"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-effective-date-1",
+        "b0-expiry-date-1"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-premium-1"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-0",
+        "global-1",
+        "global-2",
+        "global-3",
+        "global-4"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [
+    "Claim procedure: not found in extracted fields from the analyzed document. Check the original and any schedules."
+  ],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 47771,
+    "inferenceBatches": [
+      {
+        "total_duration": 47714727208,
+        "load_duration": 2461042,
+        "prompt_eval_count": 739,
+        "prompt_eval_duration": 581337000,
+        "eval_count": 881,
+        "eval_duration": 47012814000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 36794,
+    "supportValidationMs": 36372,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 13,
+    "unsupportedClaims": 1,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.9285714285714286,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Insurance Document",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person-1",
+        "kind": "entity",
+        "label": "Person",
+        "text": "The policy holder is Casey Example.",
+        "originalValue": "Casey Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-organization-1",
+        "kind": "entity",
+        "label": "Organization",
+        "text": "The insurer is Synthetic Insurance.",
+        "originalValue": "Synthetic Insurance",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-policy-number-1",
+        "kind": "entity",
+        "label": "Policy Number",
+        "text": "The policy number is TEST-POLICY-01.",
+        "originalValue": "TEST-POLICY-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-premium-1",
+        "kind": "money",
+        "label": "Premium",
+        "text": "The monthly premium is RM250, as stated in the policy details.",
+        "originalValue": "RM250 per month",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-coverage-1",
+        "kind": "entity",
+        "label": "Coverage",
+        "text": "The policy covers inpatient hospital treatment up to RM50,000.",
+        "originalValue": "Inpatient hospital treatment up to RM50,000",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-effective-date-1",
+        "kind": "date",
+        "label": "Effective Date",
+        "text": "The policy becomes effective on 2026-01-01, which is the start date of coverage.",
+        "originalValue": "2026-01-01",
+        "normalizedValue": "2026-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-expiry-date-1",
+        "kind": "date",
+        "label": "Expiry Date",
+        "text": "The policy expires on 2026-12-31, which is the end date of coverage.",
+        "originalValue": "2026-12-31",
+        "normalizedValue": "2026-12-31",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-exclusion-1",
+        "kind": "entity",
+        "label": "Exclusion",
+        "text": "Pre-existing conditions are excluded from coverage.",
+        "originalValue": "Pre-existing conditions are excluded.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "rule-expiry-b0-expiry-date-1",
+        "kind": "finding",
+        "label": "Expiry needs attention",
+        "text": "The stated expiry date is approaching. Review this date and confirm any next steps with the issuing authority.",
+        "originalValue": "2026-12-31",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds 'approaching' and 'review' not in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is an insurance policy issued by Synthetic Insurance to Casey Example, effective January 1, 2:00 PM, 2026, and expiring December 31, 2026. It covers inpatient hospital treatment up to RM50,000 per month with a monthly premium of RM250. Pre-existing conditions are excluded from coverage.",
+        "originalValue": "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Insured person",
+        "text": "The insured person is Casey Example, who is the policyholder responsible for paying the premium and receiving coverage under this insurance policy.",
+        "originalValue": "Policy holder: Casey Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Premium",
+        "text": "The premium is RM250 per month, which the insured person must pay to maintain coverage under this policy.",
+        "originalValue": "Premium: RM250 per month",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Coverage",
+        "text": "Coverage includes inpatient hospital treatment up to RM50,000 per month, meaning the insurer will pay for hospital costs within this limit if the insured person is hospitalized.",
+        "originalValue": "Coverage: Inpatient hospital treatment up to RM50,000",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "interpretation",
+        "label": "Exclusions",
+        "text": "Pre-existing conditions are excluded from coverage, meaning any health issues the insured person had before the policy started are not covered by this insurance.",
+        "originalValue": "Exclusion: Pre-existing conditions are excluded",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person-1",
+          "kind": "entity",
+          "label": "Person",
+          "value": "Casey Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-organization-1",
+          "kind": "entity",
+          "label": "Organization",
+          "value": "Synthetic Insurance",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-policy-number-1",
+          "kind": "entity",
+          "label": "Policy Number",
+          "value": "TEST-POLICY-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-premium-1",
+          "kind": "money",
+          "label": "Premium",
+          "value": "RM250 per month",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-coverage-1",
+          "kind": "entity",
+          "label": "Coverage",
+          "value": "Inpatient hospital treatment up to RM50,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-effective-date-1",
+          "kind": "date",
+          "label": "Effective Date",
+          "value": "2026-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-expiry-date-1",
+          "kind": "date",
+          "label": "Expiry Date",
+          "value": "2026-12-31",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-exclusion-1",
+          "kind": "entity",
+          "label": "Exclusion",
+          "value": "Pre-existing conditions are excluded.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "rule-expiry-b0-expiry-date-1",
+          "kind": "finding",
+          "label": "Expiry needs attention",
+          "value": "2026-12-31",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Insured person",
+          "value": "Policy holder: Casey Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Premium",
+          "value": "Premium: RM250 per month",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Coverage",
+          "value": "Coverage: Inpatient hospital treatment up to RM50,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "interpretation",
+          "label": "Exclusions",
+          "value": "Exclusion: Pre-existing conditions are excluded",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-organization-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-policy-number-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-premium-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-coverage-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-effective-date-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-expiry-date-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-exclusion-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "rule-expiry-b0-expiry-date-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-person-1",
+        "kind": "entity",
+        "label": "Person",
+        "text": "The policy holder is Casey Example.",
+        "originalValue": "Casey Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-organization-1",
+        "kind": "entity",
+        "label": "Organization",
+        "text": "The insurer is Synthetic Insurance.",
+        "originalValue": "Synthetic Insurance",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-policy-number-1",
+        "kind": "entity",
+        "label": "Policy Number",
+        "text": "The policy number is TEST-POLICY-01.",
+        "originalValue": "TEST-POLICY-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-coverage-1",
+        "kind": "entity",
+        "label": "Coverage",
+        "text": "The policy covers inpatient hospital treatment up to RM50,000.",
+        "originalValue": "Inpatient hospital treatment up to RM50,000",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-exclusion-1",
+        "kind": "entity",
+        "label": "Exclusion",
+        "text": "Pre-existing conditions are excluded from coverage.",
+        "originalValue": "Pre-existing conditions are excluded.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-premium-1",
+        "kind": "money",
+        "label": "Premium",
+        "text": "The monthly premium is RM250, as stated in the policy details.",
+        "originalValue": "RM250 per month",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-effective-date-1",
+        "kind": "date",
+        "label": "Effective Date",
+        "text": "The policy becomes effective on 2026-01-01, which is the start date of coverage.",
+        "originalValue": "2026-01-01",
+        "normalizedValue": "2026-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-expiry-date-1",
+        "kind": "date",
+        "label": "Expiry Date",
+        "text": "The policy expires on 2026-12-31, which is the end date of coverage.",
+        "originalValue": "2026-12-31",
+        "normalizedValue": "2026-12-31",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

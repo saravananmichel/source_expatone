@@ -1,0 +1,21 @@
+{
+  "id": "tamil",
+  "category": "Offer Letter",
+  "pages": [
+    "வேலை வாய்ப்புக் கடிதம்\nபெயர்: அருண் மாதிரி\nபதவி: பொறியாளர்\nமாத சம்பளம்: RM5,000\nதொடக்க தேதி: 2027-01-01"
+  ],
+  "values": [
+    "அருண் மாதிரி",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "clauses": [],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "ta",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

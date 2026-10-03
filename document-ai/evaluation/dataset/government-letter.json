@@ -1,0 +1,22 @@
+{
+  "id": "government-letter",
+  "category": "Government Letter",
+  "pages": [
+    "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15."
+  ],
+  "values": [
+    "TEST-APP-01",
+    "2027-02-15"
+  ],
+  "clauses": [
+    "address"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

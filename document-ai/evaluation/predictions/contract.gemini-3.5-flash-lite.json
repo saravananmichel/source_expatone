@@ -1,0 +1,857 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This is a Employment Contract. Employee: Alex Example. The employer named in this contract is Synthetic Systems Sdn. Bhd. The monthly salary is RM12,000 per month, as stated in the compensation clause. Employment begins on 2027-01-01, which is the agreed start date. Either party may terminate the contract by giving sixty days written notice. The document does not specify the notice period during probation, which could lead to disputes if the Employee is terminated before confirmation. The reader should verify with the Employer about the probation notice duration to avoid misunderstandings.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [
+    {
+      "label": "Employee",
+      "value": "Alex Example",
+      "isExtracted": true,
+      "description": "Employee: Alex Example."
+    },
+    {
+      "label": "Employer",
+      "value": "Synthetic Systems Sdn. Bhd.",
+      "isExtracted": true,
+      "description": "The employer named in this contract is Synthetic Systems Sdn. Bhd."
+    },
+    {
+      "label": "Position",
+      "value": "Software Engineer",
+      "isExtracted": true,
+      "description": "The position held by the employee is Software Engineer."
+    },
+    {
+      "label": "Salary",
+      "value": "RM12,000 per month",
+      "isExtracted": true,
+      "description": "The monthly salary is RM12,000 per month, as stated in the compensation clause."
+    },
+    {
+      "label": "Start date",
+      "value": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 2027-01-01, which is the agreed start date."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Start date",
+      "date": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 2027-01-01, which is the agreed start date."
+    }
+  ],
+  "requiredActions": [
+    "The reader should confirm the specific notice period during probation with the Employer before the start date to ensure compliance with the contract terms."
+  ],
+  "warnings": [
+    "The document does not specify the notice period during probation, which could lead to disputes if the Employee is terminated before confirmation. The reader should verify with the Employer about the probation notice duration to avoid misunderstandings.",
+    "The Employee must protect all confidential business information, which could include technical details, client data, and internal processes. This obligation matters because breaches could lead to legal action or loss of employment."
+  ],
+  "statements": [
+    {
+      "id": "st-employee",
+      "kind": "entity",
+      "label": "Employee",
+      "text": "Employee: Alex Example.",
+      "originalValue": "Alex Example",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-employee"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-employer",
+      "kind": "entity",
+      "label": "Employer",
+      "text": "The employer named in this contract is Synthetic Systems Sdn. Bhd.",
+      "originalValue": "Synthetic Systems Sdn. Bhd.",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-employer"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-position",
+      "kind": "entity",
+      "label": "Position",
+      "text": "The position held by the employee is Software Engineer.",
+      "originalValue": "Software Engineer",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-position"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-salary",
+      "kind": "money",
+      "label": "Salary",
+      "text": "The monthly salary is RM12,000 per month, as stated in the compensation clause.",
+      "originalValue": "RM12,000 per month",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-salary"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-start-date",
+      "kind": "date",
+      "label": "Start date",
+      "text": "Employment begins on 2027-01-01, which is the agreed start date.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-start-date"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-termination-clause",
+      "kind": "clause",
+      "label": "Termination Clause",
+      "text": "Either party may terminate the contract by giving sixty days written notice.",
+      "originalValue": "Either party may terminate by giving sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-termination"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-confidentiality-obligation",
+      "kind": "obligation",
+      "label": "Confidentiality Obligation",
+      "text": "The employee must protect confidential business information.",
+      "originalValue": "The employee must protect confidential business information.",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-confidentiality"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Termination notice period applies to both probation and post-confirmation",
+      "text": "The termination notice period applies both during and after probation, but the length differs: sixty days for the entire contract period (as stated in ev-termination) versus a shorter period during probation (as implied by the absence of a specific probation notice duration in the evidence).",
+      "originalValue": "Either party may terminate by giving sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.85,
+      "evidenceIds": [
+        "ev-termination"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Evidence doesn't mention probation notice period"
+    },
+    {
+      "id": "global-2",
+      "kind": "warning",
+      "label": "Probation notice duration is not explicitly defined",
+      "text": "The document does not specify the notice period during probation, which could lead to disputes if the Employee is terminated before confirmation. The reader should verify with the Employer about the probation notice duration to avoid misunderstandings.",
+      "originalValue": "Either party may terminate by giving sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.9,
+      "evidenceIds": [
+        "ev-termination"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence doesn't specify probation notice duration"
+    },
+    {
+      "id": "global-3",
+      "kind": "warning",
+      "label": "Confidentiality obligations are broad",
+      "text": "The Employee must protect all confidential business information, which could include technical details, client data, and internal processes. This obligation matters because breaches could lead to legal action or loss of employment.",
+      "originalValue": "The employee must protect confidential business information.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "ev-confidentiality"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence matches broad obligation"
+    },
+    {
+      "id": "global-4",
+      "kind": "action",
+      "label": "Verify probation notice duration with Employer",
+      "text": "The reader should confirm the specific notice period during probation with the Employer before the start date to ensure compliance with the contract terms.",
+      "originalValue": "Either party may terminate by giving sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.8,
+      "evidenceIds": [
+        "ev-termination"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence implies need for verification"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-doc-type",
+      "page": 1,
+      "section": null,
+      "sourceText": "EMPLOYMENT CONTRACT",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-employee",
+      "page": 1,
+      "section": null,
+      "sourceText": "Employee: Alex Example",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-employer",
+      "page": 1,
+      "section": null,
+      "sourceText": "Employer: Synthetic Systems Sdn. Bhd.",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-position",
+      "page": 1,
+      "section": null,
+      "sourceText": "Position: Software Engineer",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-salary",
+      "page": 1,
+      "section": null,
+      "sourceText": "Salary: RM12,000 per month.",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-start-date",
+      "page": 1,
+      "section": null,
+      "sourceText": "Start date: 2027-01-01",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-termination",
+      "page": 1,
+      "section": null,
+      "sourceText": "Either party may terminate by giving sixty days written notice.",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-confidentiality",
+      "page": 1,
+      "section": null,
+      "sourceText": "The employee must protect confidential business information.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": [
+        "global-2",
+        "global-3"
+      ]
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "st-employee",
+        "st-employer",
+        "st-position"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "st-start-date"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "st-salary"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "st-termination-clause",
+        "st-confidentiality-obligation"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": [
+        "global-4"
+      ]
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "supportValidationMs": 87700,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 10,
+    "unsupportedClaims": 1,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.9090909090909091,
+    "findingsCount": 0,
+    "actionsCount": 1,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems Sdn. Bhd.\nPosition: Software Engineer\nSalary: RM12,000 per month.\nStart date: 2027-01-01\nEither party may terminate by giving sixty days written notice.\nThe employee must protect confidential business information.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 1.0,
+    "classificationEvidenceIds": [
+      "ev-doc-type"
+    ],
+    "statements": [
+      {
+        "id": "st-employee",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-employee"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-employer",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer named in this contract is Synthetic Systems Sdn. Bhd.",
+        "originalValue": "Synthetic Systems Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-employer"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-position",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The position held by the employee is Software Engineer.",
+        "originalValue": "Software Engineer",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-position"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-salary",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM12,000 per month, as stated in the compensation clause.",
+        "originalValue": "RM12,000 per month",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-salary"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-start-date",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 2027-01-01, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-start-date"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-termination-clause",
+        "kind": "clause",
+        "label": "Termination Clause",
+        "text": "Either party may terminate the contract by giving sixty days written notice.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-termination"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-confidentiality-obligation",
+        "kind": "obligation",
+        "label": "Confidentiality Obligation",
+        "text": "The employee must protect confidential business information.",
+        "originalValue": "The employee must protect confidential business information.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-confidentiality"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Termination notice period applies to both probation and post-confirmation",
+        "text": "The termination notice period applies both during and after probation, but the length differs: sixty days for the entire contract period (as stated in ev-termination) versus a shorter period during probation (as implied by the absence of a specific probation notice duration in the evidence).",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.85,
+        "evidenceIds": [
+          "ev-termination"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Evidence doesn't mention probation notice period"
+      },
+      {
+        "id": "global-2",
+        "kind": "warning",
+        "label": "Probation notice duration is not explicitly defined",
+        "text": "The document does not specify the notice period during probation, which could lead to disputes if the Employee is terminated before confirmation. The reader should verify with the Employer about the probation notice duration to avoid misunderstandings.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.9,
+        "evidenceIds": [
+          "ev-termination"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence doesn't specify probation notice duration"
+      },
+      {
+        "id": "global-3",
+        "kind": "warning",
+        "label": "Confidentiality obligations are broad",
+        "text": "The Employee must protect all confidential business information, which could include technical details, client data, and internal processes. This obligation matters because breaches could lead to legal action or loss of employment.",
+        "originalValue": "The employee must protect confidential business information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "ev-confidentiality"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence matches broad obligation"
+      },
+      {
+        "id": "global-4",
+        "kind": "action",
+        "label": "Verify probation notice duration with Employer",
+        "text": "The reader should confirm the specific notice period during probation with the Employer before the start date to ensure compliance with the contract terms.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "ev-termination"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence implies need for verification"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-doc-type",
+        "page": 1,
+        "section": null,
+        "sourceText": "EMPLOYMENT CONTRACT",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-employee",
+        "page": 1,
+        "section": null,
+        "sourceText": "Employee: Alex Example",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-employer",
+        "page": 1,
+        "section": null,
+        "sourceText": "Employer: Synthetic Systems Sdn. Bhd.",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-position",
+        "page": 1,
+        "section": null,
+        "sourceText": "Position: Software Engineer",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-salary",
+        "page": 1,
+        "section": null,
+        "sourceText": "Salary: RM12,000 per month.",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-start-date",
+        "page": 1,
+        "section": null,
+        "sourceText": "Start date: 2027-01-01",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-termination",
+        "page": 1,
+        "section": null,
+        "sourceText": "Either party may terminate by giving sixty days written notice.",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-confidentiality",
+        "page": 1,
+        "section": null,
+        "sourceText": "The employee must protect confidential business information.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "st-employee",
+          "kind": "entity",
+          "label": "Employee",
+          "value": "Alex Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-employer",
+          "kind": "entity",
+          "label": "Employer",
+          "value": "Synthetic Systems Sdn. Bhd.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-position",
+          "kind": "entity",
+          "label": "Position",
+          "value": "Software Engineer",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-salary",
+          "kind": "money",
+          "label": "Salary",
+          "value": "RM12,000 per month",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-start-date",
+          "kind": "date",
+          "label": "Start date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-termination-clause",
+          "kind": "clause",
+          "label": "Termination Clause",
+          "value": "Either party may terminate by giving sixty days written notice.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-confidentiality-obligation",
+          "kind": "obligation",
+          "label": "Confidentiality Obligation",
+          "value": "The employee must protect confidential business information.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Termination notice period applies to both probation and post-confirmation",
+          "value": "Either party may terminate by giving sixty days written notice.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "warning",
+          "label": "Probation notice duration is not explicitly defined",
+          "value": "Either party may terminate by giving sixty days written notice.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "warning",
+          "label": "Confidentiality obligations are broad",
+          "value": "The employee must protect confidential business information.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "action",
+          "label": "Verify probation notice duration with Employer",
+          "value": "Either party may terminate by giving sixty days written notice.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "st-employee",
+          "to": "ev-employee",
+          "relation": "cites"
+        },
+        {
+          "from": "st-employer",
+          "to": "ev-employer",
+          "relation": "cites"
+        },
+        {
+          "from": "st-position",
+          "to": "ev-position",
+          "relation": "cites"
+        },
+        {
+          "from": "st-salary",
+          "to": "ev-salary",
+          "relation": "cites"
+        },
+        {
+          "from": "st-start-date",
+          "to": "ev-start-date",
+          "relation": "cites"
+        },
+        {
+          "from": "st-termination-clause",
+          "to": "ev-termination",
+          "relation": "cites"
+        },
+        {
+          "from": "st-confidentiality-obligation",
+          "to": "ev-confidentiality",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "ev-termination",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "ev-termination",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "ev-confidentiality",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "ev-termination",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "ev-doc-type": 1,
+        "ev-employee": 1,
+        "ev-employer": 1,
+        "ev-position": 1,
+        "ev-salary": 1,
+        "ev-start-date": 1,
+        "ev-termination": 1,
+        "ev-confidentiality": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "st-employee",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-employee"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-employer",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer named in this contract is Synthetic Systems Sdn. Bhd.",
+        "originalValue": "Synthetic Systems Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-employer"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-position",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The position held by the employee is Software Engineer.",
+        "originalValue": "Software Engineer",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-position"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "st-salary",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM12,000 per month, as stated in the compensation clause.",
+        "originalValue": "RM12,000 per month",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-salary"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-start-date",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 2027-01-01, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-start-date"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "st-termination-clause",
+        "kind": "clause",
+        "label": "Termination Clause",
+        "text": "Either party may terminate the contract by giving sixty days written notice.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-termination"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "obligations": [
+      {
+        "id": "st-confidentiality-obligation",
+        "kind": "obligation",
+        "label": "Confidentiality Obligation",
+        "text": "The employee must protect confidential business information.",
+        "originalValue": "The employee must protect confidential business information.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-confidentiality"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Gemini extraction with local reasoning/support review",
+  "modelVersion": "gemini-3.5-flash-lite",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

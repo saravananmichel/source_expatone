@@ -1,0 +1,636 @@
+{
+  "documentCategory": "Offer Letter",
+  "title": "Offer Letter Analysis",
+  "summary": "This Offer Letter The employee named in this offer letter is Ali Contoh. The monthly salary is RM5,000, as stated in the compensation clause. Employment begins on 1 January 2027, which is the agreed start date.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [
+    {
+      "label": "Person",
+      "value": "Ali Contoh",
+      "isExtracted": true,
+      "description": "The employee named in this offer letter is Ali Contoh."
+    },
+    {
+      "label": "Role",
+      "value": "Jurutera",
+      "isExtracted": true,
+      "description": "The job title offered to the employee is Jurutera."
+    },
+    {
+      "label": "Salary",
+      "value": "RM5,000 sebulan",
+      "isExtracted": true,
+      "description": "The monthly salary is RM5,000, as stated in the compensation clause."
+    },
+    {
+      "label": "Start Date",
+      "value": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    },
+    {
+      "label": "Trial Period",
+      "value": "enam bulan",
+      "isExtracted": true,
+      "description": "The trial period lasts for six months, as specified in the offer letter."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Start Date",
+      "date": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person_ali_contoh",
+      "kind": "entity",
+      "label": "Person",
+      "text": "The employee named in this offer letter is Ali Contoh.",
+      "originalValue": "Ali Contoh",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-role_engineer",
+      "kind": "entity",
+      "label": "Role",
+      "text": "The job title offered to the employee is Jurutera.",
+      "originalValue": "Jurutera",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-salary_5000_per_month",
+      "kind": "money",
+      "label": "Salary",
+      "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+      "originalValue": "RM5,000 sebulan",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-start_date_2027_01_01",
+      "kind": "date",
+      "label": "Start Date",
+      "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-trial_period_six_months",
+      "kind": "entity",
+      "label": "Trial Period",
+      "text": "The trial period lasts for six months, as specified in the offer letter.",
+      "originalValue": "enam bulan",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Role",
+      "text": "The role offered is civil engineer (Jurutera), which is a technical position requiring specific skills and qualifications.",
+      "originalValue": "Jawatan: Jurutera",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds interpretation not in evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Compensation",
+      "text": "The compensation is a fixed monthly salary of RM5,000, which is the total amount the employee will receive each month for the job.",
+      "originalValue": "Gaji: RM5,000 sebulan",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds interpretation not in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Acceptance Requirements",
+      "text": "The employee must accept the offer within a specified timeframe to become a formal employee, but the exact deadline for acceptance is not stated in this document.",
+      "originalValue": "SURAT TAWARAN - SINTETIK",
+      "normalizedValue": null,
+      "confidence": 0.85,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds interpretation not in evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "interpretation",
+      "label": "Start Date",
+      "text": "The start date is January 1, 2027, meaning the employee will begin working on this date after the acceptance of the offer.",
+      "originalValue": "Tarikh mula: 2027-01-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds interpretation not in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "SURAT TAWARAN - SINTETIK\nNama pekerja: Ali Contoh\nJawatan: Jurutera\nGaji: RM5,000 sebulan\nTarikh mula: 2027-01-01\nTempoh percubaan: enam bulan.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-person_ali_contoh",
+        "b0-role_engineer",
+        "b0-trial_period_six_months"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-start_date_2027_01_01"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-salary_5000_per_month"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": []
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 32285,
+    "inferenceBatches": [
+      {
+        "total_duration": 32216564208,
+        "load_duration": 5427458,
+        "prompt_eval_count": 712,
+        "prompt_eval_duration": 491734000,
+        "eval_count": 586,
+        "eval_duration": 31472219000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 36195,
+    "supportValidationMs": 20725,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 5,
+    "unsupportedClaims": 4,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.5555555555555556,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "SURAT TAWARAN - SINTETIK\nNama pekerja: Ali Contoh\nJawatan: Jurutera\nGaji: RM5,000 sebulan\nTarikh mula: 2027-01-01\nTempoh percubaan: enam bulan.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Offer Letter",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person_ali_contoh",
+        "kind": "entity",
+        "label": "Person",
+        "text": "The employee named in this offer letter is Ali Contoh.",
+        "originalValue": "Ali Contoh",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-role_engineer",
+        "kind": "entity",
+        "label": "Role",
+        "text": "The job title offered to the employee is Jurutera.",
+        "originalValue": "Jurutera",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-salary_5000_per_month",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+        "originalValue": "RM5,000 sebulan",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-start_date_2027_01_01",
+        "kind": "date",
+        "label": "Start Date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-trial_period_six_months",
+        "kind": "entity",
+        "label": "Trial Period",
+        "text": "The trial period lasts for six months, as specified in the offer letter.",
+        "originalValue": "enam bulan",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Role",
+        "text": "The role offered is civil engineer (Jurutera), which is a technical position requiring specific skills and qualifications.",
+        "originalValue": "Jawatan: Jurutera",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds interpretation not in evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Compensation",
+        "text": "The compensation is a fixed monthly salary of RM5,000, which is the total amount the employee will receive each month for the job.",
+        "originalValue": "Gaji: RM5,000 sebulan",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds interpretation not in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Acceptance Requirements",
+        "text": "The employee must accept the offer within a specified timeframe to become a formal employee, but the exact deadline for acceptance is not stated in this document.",
+        "originalValue": "SURAT TAWARAN - SINTETIK",
+        "normalizedValue": null,
+        "confidence": 0.85,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds interpretation not in evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "interpretation",
+        "label": "Start Date",
+        "text": "The start date is January 1, 2027, meaning the employee will begin working on this date after the acceptance of the offer.",
+        "originalValue": "Tarikh mula: 2027-01-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds interpretation not in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "SURAT TAWARAN - SINTETIK\nNama pekerja: Ali Contoh\nJawatan: Jurutera\nGaji: RM5,000 sebulan\nTarikh mula: 2027-01-01\nTempoh percubaan: enam bulan.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person_ali_contoh",
+          "kind": "entity",
+          "label": "Person",
+          "value": "Ali Contoh",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-role_engineer",
+          "kind": "entity",
+          "label": "Role",
+          "value": "Jurutera",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-salary_5000_per_month",
+          "kind": "money",
+          "label": "Salary",
+          "value": "RM5,000 sebulan",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-start_date_2027_01_01",
+          "kind": "date",
+          "label": "Start Date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-trial_period_six_months",
+          "kind": "entity",
+          "label": "Trial Period",
+          "value": "enam bulan",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Role",
+          "value": "Jawatan: Jurutera",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Compensation",
+          "value": "Gaji: RM5,000 sebulan",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Acceptance Requirements",
+          "value": "SURAT TAWARAN - SINTETIK",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "interpretation",
+          "label": "Start Date",
+          "value": "Tarikh mula: 2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person_ali_contoh",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-role_engineer",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-salary_5000_per_month",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-start_date_2027_01_01",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-trial_period_six_months",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-person_ali_contoh",
+        "kind": "entity",
+        "label": "Person",
+        "text": "The employee named in this offer letter is Ali Contoh.",
+        "originalValue": "Ali Contoh",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-role_engineer",
+        "kind": "entity",
+        "label": "Role",
+        "text": "The job title offered to the employee is Jurutera.",
+        "originalValue": "Jurutera",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-trial_period_six_months",
+        "kind": "entity",
+        "label": "Trial Period",
+        "text": "The trial period lasts for six months, as specified in the offer letter.",
+        "originalValue": "enam bulan",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-salary_5000_per_month",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+        "originalValue": "RM5,000 sebulan",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-start_date_2027_01_01",
+        "kind": "date",
+        "label": "Start Date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

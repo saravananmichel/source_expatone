@@ -1,0 +1,75 @@
+{
+  "provider": "local",
+  "model": "qwen3:4b",
+  "pipelineSourceHash": "3b2842d0027dc850cd257be5df8a80edd01bea597a2a00678004823ad49e235a",
+  "cases": 1,
+  "valid": 1,
+  "classificationAccuracy": 1.0,
+  "meanExactFieldTargetRecall": 1.0,
+  "independentSemanticAccuracy": null,
+  "confidenceCalibrated": false,
+  "limitations": "Partial synthetic gold. Keyword/target scores and same-family model-judge verdicts are proxies, not scientific entailment or human accuracy. Missing measurements are null.",
+  "results": [
+    {
+      "id": "chinese",
+      "language": "zh",
+      "layout": "native",
+      "pageCount": 1,
+      "extractionMs": 0,
+      "valid": true,
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "classificationCorrect": true,
+      "exactFieldTargetRecall": 1.0,
+      "dateTargetRecall": 1.0,
+      "moneyTargetRecall": 1.0,
+      "clauseKeywordRecall": 1.0,
+      "findingKeywordRecall": null,
+      "actionKeywordRecall": null,
+      "summaryTargetCoverage": 1.0,
+      "forbiddenPhraseCount": 0,
+      "quoteMatchRate": 1.0,
+      "modelJudgeUnsupportedFraction": 0.0,
+      "modelJudgeSupportedFraction": 1.0,
+      "independentEvidenceSupportRate": null,
+      "semanticHallucinationRate": null,
+      "humanUsefulness": null,
+      "diagnostics": {
+        "extractionInferenceMs": 80292,
+        "inferenceBatches": [
+          {
+            "total_duration": 36935244417,
+            "load_duration": 22724083,
+            "prompt_eval_count": 458,
+            "prompt_eval_duration": 338674000,
+            "eval_count": 509,
+            "eval_duration": 36481955000
+          }
+        ],
+        "reasoningStatus": "completed",
+        "reasoningMs": 55799,
+        "supportValidationMs": 58857,
+        "supportMethod": "model-judge-v1; uncalibrated",
+        "verdictCoverage": 1.0,
+        "supportModel": "qwen3:4b",
+        "pageCount": 1,
+        "ocrConfidence": 1,
+        "supportedClaims": 11,
+        "unsupportedClaims": 0,
+        "uncertainClaims": 0,
+        "evidenceCoverage": 1.0,
+        "findingsCount": 0,
+        "actionsCount": 0,
+        "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+      },
+      "residentModels": [
+        {
+          "name": "qwen3:4b",
+          "size": 5106921635,
+          "size_vram": 5106921635,
+          "context_length": 16384
+        }
+      ],
+      "seconds": 194.97
+    }
+  ]
+}

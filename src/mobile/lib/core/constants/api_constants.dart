@@ -6,30 +6,33 @@ class ApiConstants {
     defaultValue: 'http://10.0.2.2:5000/api',
   );
 
-  // In release mode, reject any URL that points to a local/emulator address.
-  // A release build must be given an explicit --dart-define=API_BASE_URL=https://...
-  // Production builds that omit this define will assert-fail at startup rather
-  // than silently shipping with the Android emulator address.
+  // Release assertions are disabled, so enforce HTTPS with a runtime check.
   static String get baseUrl {
-    assert(
-      !const bool.fromEnvironment('dart.vm.product') || _isProductionUrl(_rawBaseUrl),
-      'RELEASE BUILD ERROR: API_BASE_URL is "$_rawBaseUrl". '
-      'Production builds must pass --dart-define=API_BASE_URL=https://<production-domain>/api. '
-      'The emulator/localhost address must never ship in a production APK.',
-    );
+    if (const bool.fromEnvironment('dart.vm.product') &&
+        !isProductionUrlForTest(_rawBaseUrl)) {
+      throw StateError(
+        'Release builds require --dart-define=API_BASE_URL=https://<host>/api',
+      );
+    }
     return _rawBaseUrl;
   }
 
-  static bool _isProductionUrl(String url) => isProductionUrlForTest(url);
-
-  // Exposed for tests only. Do not call from application code.
   static bool isProductionUrlForTest(String url) {
-    final lower = url.toLowerCase();
-    if (lower.contains('10.0.2.2')) return false;
-    if (lower.contains('localhost')) return false;
-    if (lower.contains('127.0.0.1')) return false;
-    if (!lower.startsWith('https://')) return false;
-    return true;
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty ||
+        uri.hasQuery ||
+        uri.hasFragment) {
+      return false;
+    }
+    final host = uri.host.toLowerCase();
+    return host != 'localhost' &&
+        !host.endsWith('.localhost') &&
+        host != '10.0.2.2' &&
+        !host.startsWith('127.') &&
+        host != '::1';
   }
 
   static const Duration connectTimeout = Duration(seconds: 30);

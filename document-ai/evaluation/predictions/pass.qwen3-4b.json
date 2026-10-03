@@ -1,0 +1,661 @@
+{
+  "documentCategory": "Employment Pass",
+  "title": "Employment Pass Analysis",
+  "summary": "This is a Employment Pass. The holder of this employment pass is Avery Example. The employer listed on this employment pass is Example Research Sdn. Bhd. This employment pass is valid until 30 June 2027, which is the expiration date for the pass. The holder is Avery Example, who is the person authorized to work under this Employment Pass.",
+  "plainLanguageExplanation": "This pass is valid until June 30, 2027, meaning the holder can work under this pass until that date.\n\nThe holder's employment is restricted to the named employer (Example Research Sdn. Bhd.), so they cannot work for other companies.",
+  "keyInformation": [
+    {
+      "label": "Holder",
+      "value": "Avery Example",
+      "isExtracted": true,
+      "description": "The holder of this employment pass is Avery Example."
+    },
+    {
+      "label": "Pass number",
+      "value": "TEST-EP-001",
+      "isExtracted": true,
+      "description": "The pass number for this employment pass is TEST-EP-001."
+    },
+    {
+      "label": "Employer",
+      "value": "Example Research Sdn. Bhd.",
+      "isExtracted": true,
+      "description": "The employer listed on this employment pass is Example Research Sdn. Bhd."
+    },
+    {
+      "label": "Valid until",
+      "value": "2027-06-30",
+      "isExtracted": true,
+      "description": "This employment pass is valid until 30 June 2027, which is the expiration date for the pass."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Valid until",
+      "date": "2027-06-30",
+      "isExtracted": true,
+      "description": "This employment pass is valid until 30 June 2027, which is the expiration date for the pass."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person_1",
+      "kind": "entity",
+      "label": "Holder",
+      "text": "The holder of this employment pass is Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-pass_number_1",
+      "kind": "entity",
+      "label": "Pass number",
+      "text": "The pass number for this employment pass is TEST-EP-001.",
+      "originalValue": "TEST-EP-001",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-employer_1",
+      "kind": "entity",
+      "label": "Employer",
+      "text": "The employer listed on this employment pass is Example Research Sdn. Bhd.",
+      "originalValue": "Example Research Sdn. Bhd.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-valid_until_1",
+      "kind": "date",
+      "label": "Valid until",
+      "text": "This employment pass is valid until 30 June 2027, which is the expiration date for the pass.",
+      "originalValue": "2027-06-30",
+      "normalizedValue": "2027-06-30",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-condition_1",
+      "kind": "clause",
+      "label": "Condition",
+      "text": "The employment is restricted to the employer named on this pass, meaning the holder can only work for Example Research Sdn. Bhd.",
+      "originalValue": "Employment is restricted to the employer named on this pass.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "PARTIALLY_SUPPORTED",
+      "supportReason": "Adds 'Example Research Sdn. Bhd.' not in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is an Employment Pass issued to Avery Example by Example Research Sdn. Bhd., valid until June 30, 2:00 PM, 2027. It restricts the holder's employment to the named employer only, meaning they cannot work for other companies. The holder has the right to work under this pass but must adhere to the specified employer restriction.",
+      "originalValue": "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds time '2:00 PM' not in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Holder",
+      "text": "The holder is Avery Example, who is the person authorized to work under this Employment Pass.",
+      "originalValue": "Holder: Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Sponsor",
+      "text": "The sponsor is Example Research Sdn. Bhd., the employer that issued this Employment Pass to the holder.",
+      "originalValue": "Employer: Example Research Sdn. Bhd.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds 'sponsor' role not in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Validity",
+      "text": "This pass is valid until June 30, 2027, meaning the holder can work under this pass until that date.",
+      "originalValue": "Valid until: 2027-06-30",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "interpretation",
+      "label": "Employment Restriction",
+      "text": "The holder's employment is restricted to the named employer (Example Research Sdn. Bhd.), so they cannot work for other companies.",
+      "originalValue": "Condition: Employment is restricted to the employer named on this pass.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-person_1",
+        "b0-pass_number_1",
+        "b0-employer_1"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-valid_until_1"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-1",
+        "global-3",
+        "global-4"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 24295,
+    "inferenceBatches": [
+      {
+        "total_duration": 24263816167,
+        "load_duration": 3217917,
+        "prompt_eval_count": 711,
+        "prompt_eval_duration": 325561000,
+        "eval_count": 612,
+        "eval_duration": 23828207000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 24407,
+    "supportValidationMs": 19508,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 7,
+    "unsupportedClaims": 2,
+    "uncertainClaims": 1,
+    "evidenceCoverage": 0.7,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Employment Pass",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person_1",
+        "kind": "entity",
+        "label": "Holder",
+        "text": "The holder of this employment pass is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-pass_number_1",
+        "kind": "entity",
+        "label": "Pass number",
+        "text": "The pass number for this employment pass is TEST-EP-001.",
+        "originalValue": "TEST-EP-001",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-employer_1",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer listed on this employment pass is Example Research Sdn. Bhd.",
+        "originalValue": "Example Research Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-valid_until_1",
+        "kind": "date",
+        "label": "Valid until",
+        "text": "This employment pass is valid until 30 June 2027, which is the expiration date for the pass.",
+        "originalValue": "2027-06-30",
+        "normalizedValue": "2027-06-30",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-condition_1",
+        "kind": "clause",
+        "label": "Condition",
+        "text": "The employment is restricted to the employer named on this pass, meaning the holder can only work for Example Research Sdn. Bhd.",
+        "originalValue": "Employment is restricted to the employer named on this pass.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "PARTIALLY_SUPPORTED",
+        "supportReason": "Adds 'Example Research Sdn. Bhd.' not in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is an Employment Pass issued to Avery Example by Example Research Sdn. Bhd., valid until June 30, 2:00 PM, 2027. It restricts the holder's employment to the named employer only, meaning they cannot work for other companies. The holder has the right to work under this pass but must adhere to the specified employer restriction.",
+        "originalValue": "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds time '2:00 PM' not in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Holder",
+        "text": "The holder is Avery Example, who is the person authorized to work under this Employment Pass.",
+        "originalValue": "Holder: Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Sponsor",
+        "text": "The sponsor is Example Research Sdn. Bhd., the employer that issued this Employment Pass to the holder.",
+        "originalValue": "Employer: Example Research Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds 'sponsor' role not in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Validity",
+        "text": "This pass is valid until June 30, 2027, meaning the holder can work under this pass until that date.",
+        "originalValue": "Valid until: 2027-06-30",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "interpretation",
+        "label": "Employment Restriction",
+        "text": "The holder's employment is restricted to the named employer (Example Research Sdn. Bhd.), so they cannot work for other companies.",
+        "originalValue": "Condition: Employment is restricted to the employer named on this pass.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person_1",
+          "kind": "entity",
+          "label": "Holder",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-pass_number_1",
+          "kind": "entity",
+          "label": "Pass number",
+          "value": "TEST-EP-001",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-employer_1",
+          "kind": "entity",
+          "label": "Employer",
+          "value": "Example Research Sdn. Bhd.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-valid_until_1",
+          "kind": "date",
+          "label": "Valid until",
+          "value": "2027-06-30",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-condition_1",
+          "kind": "clause",
+          "label": "Condition",
+          "value": "Employment is restricted to the employer named on this pass.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "PARTIALLY_SUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "EMPLOYMENT PASS - SYNTHETIC\nHolder: Avery Example\nPass number: TEST-EP-001\nEmployer: Example Research Sdn. Bhd.\nValid until: 2027-06-30\nCondition: Employment is restricted to the employer named on this pass.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Holder",
+          "value": "Holder: Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Sponsor",
+          "value": "Employer: Example Research Sdn. Bhd.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Validity",
+          "value": "Valid until: 2027-06-30",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "interpretation",
+          "label": "Employment Restriction",
+          "value": "Condition: Employment is restricted to the employer named on this pass.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-pass_number_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-employer_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-valid_until_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-condition_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-person_1",
+        "kind": "entity",
+        "label": "Holder",
+        "text": "The holder of this employment pass is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-pass_number_1",
+        "kind": "entity",
+        "label": "Pass number",
+        "text": "The pass number for this employment pass is TEST-EP-001.",
+        "originalValue": "TEST-EP-001",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-employer_1",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer listed on this employment pass is Example Research Sdn. Bhd.",
+        "originalValue": "Example Research Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-valid_until_1",
+        "kind": "date",
+        "label": "Valid until",
+        "text": "This employment pass is valid until 30 June 2027, which is the expiration date for the pass.",
+        "originalValue": "2027-06-30",
+        "normalizedValue": "2027-06-30",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

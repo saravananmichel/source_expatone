@@ -1,4 +1,9 @@
+import 'dart:async';
+
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
 import '../../core/services/document_service.dart';
 import '../../core/theme/app_theme.dart';
 import 'document_qa_screen.dart';
@@ -22,10 +27,21 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
   bool _isLoading = true;
   bool _isAnalyzing = false;
   String? _error;
+  String _processingStage = 'Queued';
+  StreamSubscription<Map<String, String>>? _progressSubscription;
 
   @override
   void initState() {
     super.initState();
+    _progressSubscription = widget.documentService.analysisProgress.listen((
+      event,
+    ) {
+      if (mounted && event['documentId'] == widget.document.id) {
+        setState(
+          () => _processingStage = event['stage'] ?? 'Understanding document',
+        );
+      }
+    });
     if (widget.document.isAnalyzed) {
       _loadAnalysis();
     } else {
@@ -40,7 +56,9 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
     });
 
     try {
-      final result = await widget.documentService.getDocumentAnalysis(widget.document.id);
+      final result = await widget.documentService.getDocumentAnalysis(
+        widget.document.id,
+      );
       if (mounted) {
         setState(() {
           _analysis = result;
@@ -88,15 +106,94 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
   }
 
   @override
+  void dispose() {
+    _progressSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _showHistory() async {
+    try {
+      final history = await widget.documentService.getAnalysisHistory(
+        widget.document.id,
+      );
+      if (!mounted) return;
+      await showModalBottomSheet<void>(
+        context: context,
+        builder: (context) => SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            children: [
+              const ListTile(title: Text('Analysis history')),
+              ...history.asMap().entries.map((entry) {
+                final job = entry.value;
+                return ListTile(
+                  title: Text(
+                    'Analysis v${history.length - entry.key} · ${job['status']}',
+                  ),
+                  subtitle: Text(job['createdAt'] as String? ?? ''),
+                  enabled: job['analysis'] is Map,
+                  onTap: () {
+                    setState(
+                      () => _analysis = Map<String, dynamic>.from(
+                        job['analysis'] as Map,
+                      ),
+                    );
+                    Navigator.pop(context);
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to load analysis history.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _openSource(Map source) async {
+    try {
+      final jobId = _analysis?['documentVersionId'];
+      final url = jobId is String
+          ? await widget.documentService.getVersionAccessUrl(
+              widget.document.id,
+              jobId,
+            )
+          : await widget.documentService.getAccessUrl(widget.document.id);
+      final uri = Uri.parse(url).replace(fragment: 'page=${source['page']}');
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+        throw StateError('Unable to open');
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open the source document.')),
+        );
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Document Analysis'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Analysis history',
+            onPressed: _showHistory,
+          ),
           if (_analysis != null)
             IconButton(
               icon: const Icon(Icons.refresh),
-              onPressed: _isAnalyzing ? null : () => _analyzeDocument(forceReanalyze: true),
+              onPressed: _isAnalyzing
+                  ? null
+                  : () => _analyzeDocument(forceReanalyze: true),
               tooltip: 'Re-analyze',
             ),
         ],
@@ -120,7 +217,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             if (_isAnalyzing) ...[
               const SizedBox(height: 8),
               Text(
-                'This may take a moment',
+                '$_processingStage · This may take a moment',
                 style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
               ),
             ],
@@ -138,8 +235,11 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             children: [
               Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
               const SizedBox(height: 16),
-              Text(_error!, textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16)),
+              Text(
+                _error!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () => _analyzeDocument(),
@@ -158,21 +258,278 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        _buildReviewNotice(),
         _buildSummarySection(),
-        _buildStructuredFieldsSection(),
-        _buildKeyInformationSection(),
-        _buildImportantDatesSection(),
-        _buildRequiredActionsSection(),
-        _buildDeadlinesSection(),
-        _buildWarningsSection(),
-        _buildTerminologySection(),
-        _buildExplanationSection(),
+        _buildGroundedStatements(),
+        if ((_analysis?['statements'] as List? ?? []).isEmpty) ...[
+          _buildStructuredFieldsSection(),
+          _buildKeyInformationSection(),
+          _buildImportantDatesSection(),
+          _buildRequiredActionsSection(),
+          _buildDeadlinesSection(),
+          _buildWarningsSection(),
+          _buildTerminologySection(),
+          _buildExplanationSection(),
+        ],
+        _buildMissingInformation(),
         _buildConfidenceBadge(),
+        if (kDebugMode) _buildQualityPanel(),
         const SizedBox(height: 16),
         _buildAskButton(),
         const SizedBox(height: 12),
         _buildDisclaimerBanner(),
         const SizedBox(height: 24),
+      ],
+    );
+  }
+
+  Widget _buildReviewNotice() {
+    if (_analysis?['requiresReview'] != true) return const SizedBox.shrink();
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          'Review recommended. Verify important interpretations against the original document.',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroundedStatements() {
+    final statements = _analysis?['statements'] as List? ?? [];
+    final evidence = _analysis?['evidence'] as List? ?? [];
+    if (statements.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ..._groupStatements(statements).entries.map(
+          (group) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                group.key,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...group.value.map((raw) {
+                final statement = raw as Map;
+                final ids = statement['evidenceIds'] as List? ?? [];
+                final sources = evidence
+                    .where((raw) => ids.contains((raw as Map)['id']))
+                    .toList();
+                final card = Card(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          statement['supportStatus'] != null &&
+                                  statement['supportStatus'] != 'SUPPORTED'
+                              ? 'Source detail to verify'
+                              : '${statement['kind'] ?? 'fact'} · ${statement['label'] ?? ''}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 8),
+                        if (statement['supportStatus'] != null &&
+                            statement['supportStatus'] != 'SUPPORTED') ...[
+                          Text(
+                            'Interpretation needs review',
+                            style: TextStyle(color: AppTheme.warningColor),
+                          ),
+                          const SizedBox(height: 6),
+                          SelectableText(
+                            'Extracted value: ${statement['originalValue'] ?? ''}',
+                            style: const TextStyle(height: 1.5),
+                          ),
+                        ] else
+                          SelectableText(
+                            statement['text'] as String? ?? '',
+                            style: const TextStyle(height: 1.5),
+                          ),
+                        if (sources.isNotEmpty)
+                          TextButton.icon(
+                            icon: const Icon(Icons.find_in_page_outlined),
+                            label: const Text('View source'),
+                            onPressed: () => showModalBottomSheet<void>(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) => SafeArea(
+                                child: SingleChildScrollView(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Source evidence',
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      ...sources.map((raw) {
+                                        final source = raw as Map;
+                                        return Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Page ${source['page']} · ${source['section'] ?? 'Document'}',
+                                              ),
+                                              const SizedBox(height: 8),
+                                              SelectableText(
+                                                source['sourceText']
+                                                        as String? ??
+                                                    '',
+                                              ),
+                                              TextButton(
+                                                onPressed: () =>
+                                                    _openSource(source),
+                                                child: Text(
+                                                  'Open page ${source['page']}',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+                final expandable =
+                    [
+                      'clause',
+                      'condition',
+                      'obligation',
+                      'relationship',
+                      'interpretation',
+                    ].contains(statement['kind']) &&
+                    (statement['supportStatus'] == null ||
+                        statement['supportStatus'] == 'SUPPORTED');
+                return expandable
+                    ? ExpansionTile(
+                        title: Text(
+                          statement['label'] as String? ?? 'Document term',
+                        ),
+                        children: [card],
+                      )
+                    : card;
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Map<String, List<dynamic>> _groupStatements(List<dynamic> statements) {
+    const titles = {
+      'finding': 'What matters',
+      'warning': 'What matters',
+      'fact': 'Key details',
+      'entity': 'Key details',
+      'date': 'Dates and deadlines',
+      'money': 'Financial details',
+      'action': 'Suggested next steps',
+    };
+    final groups = <String, List<dynamic>>{};
+    for (final raw in statements) {
+      final item = raw as Map;
+      final status = item['supportStatus'];
+      final title = status != null && status != 'SUPPORTED'
+          ? 'Details to verify'
+          : titles[item['kind']] ?? 'Terms and conditions';
+      groups.putIfAbsent(title, () => []).add(raw);
+    }
+    const order = [
+      'What matters',
+      'Key details',
+      'Dates and deadlines',
+      'Financial details',
+      'Terms and conditions',
+      'Suggested next steps',
+      'Details to verify',
+    ];
+    return {
+      for (final title in order)
+        if (groups.containsKey(title)) title: groups[title]!,
+    };
+  }
+
+  Widget _buildMissingInformation() {
+    final items = _analysis?['missingInformation'] as List? ?? [];
+    if (items.isEmpty) return const SizedBox.shrink();
+    return _buildSection(
+      title: 'Information to check',
+      icon: Icons.help_outline,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text('$item'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQualityPanel() {
+    final quality = _analysis?['qualityDiagnostics'] as Map?;
+    if (quality == null) return const SizedBox.shrink();
+    const keys = [
+      'pageCount',
+      'ocrConfidence',
+      'evidenceCoverage',
+      'unsupportedClaims',
+      'uncertainClaims',
+      'findingsCount',
+      'actionsCount',
+      'extractionMs',
+      'extractionInferenceMs',
+      'reasoningMs',
+      'supportValidationMs',
+      'understandingMs',
+      'storageMs',
+      'workerMs',
+      'supportMethod',
+      'supportModel',
+      'reasoningStatus',
+      'confidenceCalibration',
+    ];
+    return ExpansionTile(
+      title: const Text('Quality diagnostics · Debug'),
+      childrenPadding: const EdgeInsets.all(16),
+      children: [
+        Text(
+          'Provider: ${_analysis?['provider']}\nModel: ${_analysis?['modelVersion']}\nAnalyzer: ${_analysis?['analyzerVersion']}\nConfiguration: ${_analysis?['configurationVersion']}',
+        ),
+        for (final key in keys)
+          if (quality.containsKey(key))
+            ListTile(
+              dense: true,
+              title: Text(key),
+              subtitle: Text('${quality[key]}'),
+            ),
       ],
     );
   }
@@ -192,11 +549,14 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               color: AppTheme.primaryColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Text(category,
-                style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600)),
+            child: Text(
+              category,
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         if (category.isNotEmpty) const SizedBox(height: 12),
         if (summary.isNotEmpty)
@@ -231,23 +591,39 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
       title: 'Document Details',
       icon: Icons.description_outlined,
       child: Column(
-        children: fields.map((f) => Padding(
-          padding: const EdgeInsets.symmetric(vertical: 5),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Text(f.key, style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+        children: fields
+            .map(
+              (f) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 5),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        f.key,
+                        style: TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 3,
+                      child: Text(
+                        f.value,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 3,
-                child: Text(f.value, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
-              ),
-            ],
-          ),
-        )).toList(),
+            )
+            .toList(),
       ),
     );
   }
@@ -270,8 +646,13 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               children: [
                 Expanded(
                   flex: 2,
-                  child: Text(map['label'] as String? ?? '',
-                      style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                  child: Text(
+                    map['label'] as String? ?? '',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -279,8 +660,13 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
                   child: Row(
                     children: [
                       Flexible(
-                        child: Text(map['value'] as String? ?? '',
-                            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                        child: Text(
+                          map['value'] as String? ?? '',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
                       if (!isExtracted) ...[
                         const SizedBox(width: 4),
@@ -312,12 +698,26 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
                 children: [
-                  Icon(Icons.warning_amber_outlined, size: 16, color: AppTheme.warningColor),
+                  Icon(
+                    Icons.warning_amber_outlined,
+                    size: 16,
+                    color: AppTheme.warningColor,
+                  ),
                   const SizedBox(width: 8),
-                  Text('Expiry: ', style: TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 13)),
-                  Text(expiryDate, style: const TextStyle(
-                      fontSize: 13, fontWeight: FontWeight.w600)),
+                  Text(
+                    'Expiry: ',
+                    style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 13,
+                    ),
+                  ),
+                  Text(
+                    expiryDate,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -329,11 +729,21 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(map['label'] as String? ?? '',
-                        style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+                    child: Text(
+                      map['label'] as String? ?? '',
+                      style: TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
-                  Text(map['date'] as String? ?? '',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+                  Text(
+                    map['date'] as String? ?? '',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                   if (!isExtracted) ...[
                     const SizedBox(width: 4),
                     _buildInferredBadge(),
@@ -364,7 +774,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               children: [
                 Icon(Icons.arrow_right, size: 18, color: AppTheme.primaryColor),
                 const SizedBox(width: 4),
-                Expanded(child: Text(item as String, style: const TextStyle(fontSize: 13))),
+                Expanded(
+                  child: Text(
+                    item as String,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
               ],
             ),
           );
@@ -390,7 +805,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               children: [
                 Icon(Icons.schedule, size: 16, color: AppTheme.warningColor),
                 const SizedBox(width: 8),
-                Expanded(child: Text(item as String, style: const TextStyle(fontSize: 13))),
+                Expanded(
+                  child: Text(
+                    item as String,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
               ],
             ),
           );
@@ -420,9 +840,18 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.warning_amber, size: 16, color: AppTheme.warningColor),
+                Icon(
+                  Icons.warning_amber,
+                  size: 16,
+                  color: AppTheme.warningColor,
+                ),
                 const SizedBox(width: 8),
-                Expanded(child: Text(item as String, style: const TextStyle(fontSize: 13))),
+                Expanded(
+                  child: Text(
+                    item as String,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
               ],
             ),
           );
@@ -447,11 +876,22 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(map['term'] as String? ?? '',
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(
+                  map['term'] as String? ?? '',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(map['explanation'] as String? ?? '',
-                    style: TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.4)),
+                Text(
+                  map['explanation'] as String? ?? '',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
               ],
             ),
           );
@@ -462,19 +902,26 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
 
   Widget _buildExplanationSection() {
     final explanation = _analysis!['plainLanguageExplanation'] as String?;
-    if (explanation == null || explanation.isEmpty) return const SizedBox.shrink();
+    if (explanation == null || explanation.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return _buildSection(
       title: 'What This Means',
       icon: Icons.lightbulb_outlined,
       iconColor: AppTheme.secondaryColor,
-      child: Text(explanation, style: const TextStyle(fontSize: 13, height: 1.5)),
+      child: Text(
+        explanation,
+        style: const TextStyle(fontSize: 13, height: 1.5),
+      ),
     );
   }
 
   Widget _buildConfidenceBadge() {
     final confidence = _analysis!['confidence'] as String?;
-    if (confidence == null || confidence.isEmpty) return const SizedBox.shrink();
+    if (confidence == null || confidence.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     final (color, icon) = switch (confidence.toLowerCase()) {
       'high' => (AppTheme.successColor, Icons.verified_outlined),
@@ -490,7 +937,11 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
           const SizedBox(width: 6),
           Text(
             'Extraction confidence: ${confidence[0].toUpperCase()}${confidence.substring(1)}',
-            style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: 12,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ],
       ),
@@ -512,7 +963,10 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             ),
           );
         },
-        icon: Icon(Icons.question_answer_outlined, color: AppTheme.secondaryColor),
+        icon: Icon(
+          Icons.question_answer_outlined,
+          color: AppTheme.secondaryColor,
+        ),
         label: const Text('Ask About This Document'),
       ),
     );
@@ -531,8 +985,10 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
           children: [
             Icon(icon, size: 18, color: iconColor ?? AppTheme.primaryColor),
             const SizedBox(width: 8),
-            Text(title, style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -549,11 +1005,14 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         color: AppTheme.accentColor.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text('AI',
-          style: TextStyle(
-              fontSize: 9,
-              fontWeight: FontWeight.w600,
-              color: AppTheme.secondaryColor)),
+      child: Text(
+        'AI',
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.secondaryColor,
+        ),
+      ),
     );
   }
 
@@ -573,7 +1032,11 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             child: Text(
               'This analysis was generated by AI. Facts marked "AI" are inferences, not direct extractions. '
               'Verify important information with the relevant authority.',
-              style: TextStyle(fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
+              style: TextStyle(
+                fontSize: 11,
+                color: AppTheme.textSecondary,
+                height: 1.4,
+              ),
             ),
           ),
         ],

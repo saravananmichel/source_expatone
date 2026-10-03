@@ -1,0 +1,832 @@
+{
+  "documentCategory": "Visa",
+  "title": "Visa Analysis",
+  "summary": "This document is a visa issued by the Synthetic Immigration Office to Riley Example, valid from January 1, 2:01 to December 31, 2026, with multiple entries allowed but explicitly prohibiting employment under this visa type. Riley Example must not attempt to work under this visa, as it is explicitly prohibited by the visa conditions. Attempting to work could lead to visa revocation or legal penalties.",
+  "plainLanguageExplanation": "This visa does not permit employment, as stated in the condition clause.\n\nThe visa explicitly states that employment is not permitted under this visa type, meaning Riley Example cannot work legally in the country with this visa.\n\nThis visa permits multiple entries into the country during its validity period, allowing Riley Example to travel in and out as needed without requiring a new visa each time.\n\nThe visa is valid for one year, from January 1, 2026 to December 31, 2026, as indicated by the issue and expiry dates.",
+  "keyInformation": [
+    {
+      "label": "Visa holder",
+      "value": "Riley Example",
+      "isExtracted": true,
+      "description": "The visa holder is Riley Example."
+    },
+    {
+      "label": "Issuing authority",
+      "value": "Synthetic Immigration Office",
+      "isExtracted": true,
+      "description": "The issuing authority for this visa is the Synthetic Immigration Office."
+    },
+    {
+      "label": "Visa number",
+      "value": "TEST-VISA-01",
+      "isExtracted": true,
+      "description": "The visa number is TEST-VISA-01."
+    },
+    {
+      "label": "Issue date",
+      "value": "2026-01-01",
+      "isExtracted": true,
+      "description": "The visa was issued on 2026-01-01, which is the date when this visa became valid."
+    },
+    {
+      "label": "Entries permitted",
+      "value": "Multiple",
+      "isExtracted": true,
+      "description": "Multiple entries into the country are permitted under this visa."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Issue date",
+      "date": "2026-01-01",
+      "isExtracted": true,
+      "description": "The visa was issued on 2026-01-01, which is the date when this visa became valid."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [
+    "Riley Example must not attempt to work under this visa, as it is explicitly prohibited by the visa conditions. Attempting to work could lead to visa revocation or legal penalties."
+  ],
+  "statements": [
+    {
+      "id": "b0-visa_holder",
+      "kind": "entity",
+      "label": "Visa holder",
+      "text": "The visa holder is Riley Example.",
+      "originalValue": "Riley Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-issuing_authority",
+      "kind": "entity",
+      "label": "Issuing authority",
+      "text": "The issuing authority for this visa is the Synthetic Immigration Office.",
+      "originalValue": "Synthetic Immigration Office",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-visa_number",
+      "kind": "entity",
+      "label": "Visa number",
+      "text": "The visa number is TEST-VISA-01.",
+      "originalValue": "TEST-VISA-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-issue_date",
+      "kind": "date",
+      "label": "Issue date",
+      "text": "The visa was issued on 2026-01-01, which is the date when this visa became valid.",
+      "originalValue": "2026-01-01",
+      "normalizedValue": "2026-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-expiry_date",
+      "kind": "date",
+      "label": "Expiry date",
+      "text": "The visa expires on 2026-12-31, meaning it is valid for one year from the issue date.",
+      "originalValue": "2026-12-31",
+      "normalizedValue": "2026-12-31",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "PARTIALLY_SUPPORTED",
+      "supportReason": "Adds one year duration not in evidence"
+    },
+    {
+      "id": "b0-entries_permitted",
+      "kind": "entity",
+      "label": "Entries permitted",
+      "text": "Multiple entries into the country are permitted under this visa.",
+      "originalValue": "Multiple",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-condition",
+      "kind": "clause",
+      "label": "Condition",
+      "text": "This visa does not permit employment, as stated in the condition clause.",
+      "originalValue": "Employment is not permitted under this visa.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "rule-expiry-b0-expiry_date",
+      "kind": "finding",
+      "label": "Expiry needs attention",
+      "text": "The stated expiry date is approaching. Review this date and confirm any next steps with the issuing authority.",
+      "originalValue": "2026-12-31",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds external context not in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is a visa issued by the Synthetic Immigration Office to Riley Example, valid from January 1, 2:01 to December 31, 2026, with multiple entries allowed but explicitly prohibiting employment under this visa type.",
+      "originalValue": "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Visa type restricts work rights",
+      "text": "The visa explicitly states that employment is not permitted under this visa type, meaning Riley Example cannot work legally in the country with this visa.",
+      "originalValue": "Condition: Employment is not permitted under this visa.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Visa allows multiple entries",
+      "text": "This visa permits multiple entries into the country during its validity period, allowing Riley Example to travel in and out as needed without requiring a new visa each time.",
+      "originalValue": "Entries permitted: Multiple",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Visa is valid for one year",
+      "text": "The visa is valid for one year, from January 1, 2026 to December 31, 2026, as indicated by the issue and expiry dates.",
+      "originalValue": "Issue date: 2026-01-01\nExpiry date: 2026-12-31",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "warning",
+      "label": "Employment is prohibited",
+      "text": "Riley Example must not attempt to work under this visa, as it is explicitly prohibited by the visa conditions. Attempting to work could lead to visa revocation or legal penalties.",
+      "originalValue": "Condition: Employment is not permitted under this visa.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": [
+        "global-4"
+      ]
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-visa_holder",
+        "b0-issuing_authority",
+        "b0-visa_number",
+        "b0-entries_permitted"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-issue_date"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "b0-condition",
+        "global-0",
+        "global-1",
+        "global-2",
+        "global-3"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 150922,
+    "inferenceBatches": [
+      {
+        "total_duration": 150865385916,
+        "load_duration": 3592250,
+        "prompt_eval_count": 620,
+        "prompt_eval_duration": 48669000,
+        "eval_count": 760,
+        "eval_duration": 34285242000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 86881,
+    "supportValidationMs": 42021,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 11,
+    "unsupportedClaims": 1,
+    "uncertainClaims": 1,
+    "evidenceCoverage": 0.8461538461538461,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Visa",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-visa_holder",
+        "kind": "entity",
+        "label": "Visa holder",
+        "text": "The visa holder is Riley Example.",
+        "originalValue": "Riley Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-issuing_authority",
+        "kind": "entity",
+        "label": "Issuing authority",
+        "text": "The issuing authority for this visa is the Synthetic Immigration Office.",
+        "originalValue": "Synthetic Immigration Office",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-visa_number",
+        "kind": "entity",
+        "label": "Visa number",
+        "text": "The visa number is TEST-VISA-01.",
+        "originalValue": "TEST-VISA-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-issue_date",
+        "kind": "date",
+        "label": "Issue date",
+        "text": "The visa was issued on 2026-01-01, which is the date when this visa became valid.",
+        "originalValue": "2026-01-01",
+        "normalizedValue": "2026-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-expiry_date",
+        "kind": "date",
+        "label": "Expiry date",
+        "text": "The visa expires on 2026-12-31, meaning it is valid for one year from the issue date.",
+        "originalValue": "2026-12-31",
+        "normalizedValue": "2026-12-31",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "PARTIALLY_SUPPORTED",
+        "supportReason": "Adds one year duration not in evidence"
+      },
+      {
+        "id": "b0-entries_permitted",
+        "kind": "entity",
+        "label": "Entries permitted",
+        "text": "Multiple entries into the country are permitted under this visa.",
+        "originalValue": "Multiple",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-condition",
+        "kind": "clause",
+        "label": "Condition",
+        "text": "This visa does not permit employment, as stated in the condition clause.",
+        "originalValue": "Employment is not permitted under this visa.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "rule-expiry-b0-expiry_date",
+        "kind": "finding",
+        "label": "Expiry needs attention",
+        "text": "The stated expiry date is approaching. Review this date and confirm any next steps with the issuing authority.",
+        "originalValue": "2026-12-31",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds external context not in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is a visa issued by the Synthetic Immigration Office to Riley Example, valid from January 1, 2:01 to December 31, 2026, with multiple entries allowed but explicitly prohibiting employment under this visa type.",
+        "originalValue": "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Visa type restricts work rights",
+        "text": "The visa explicitly states that employment is not permitted under this visa type, meaning Riley Example cannot work legally in the country with this visa.",
+        "originalValue": "Condition: Employment is not permitted under this visa.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Visa allows multiple entries",
+        "text": "This visa permits multiple entries into the country during its validity period, allowing Riley Example to travel in and out as needed without requiring a new visa each time.",
+        "originalValue": "Entries permitted: Multiple",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Visa is valid for one year",
+        "text": "The visa is valid for one year, from January 1, 2026 to December 31, 2026, as indicated by the issue and expiry dates.",
+        "originalValue": "Issue date: 2026-01-01\nExpiry date: 2026-12-31",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "warning",
+        "label": "Employment is prohibited",
+        "text": "Riley Example must not attempt to work under this visa, as it is explicitly prohibited by the visa conditions. Attempting to work could lead to visa revocation or legal penalties.",
+        "originalValue": "Condition: Employment is not permitted under this visa.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-visa_holder",
+          "kind": "entity",
+          "label": "Visa holder",
+          "value": "Riley Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-issuing_authority",
+          "kind": "entity",
+          "label": "Issuing authority",
+          "value": "Synthetic Immigration Office",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-visa_number",
+          "kind": "entity",
+          "label": "Visa number",
+          "value": "TEST-VISA-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-issue_date",
+          "kind": "date",
+          "label": "Issue date",
+          "value": "2026-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-expiry_date",
+          "kind": "date",
+          "label": "Expiry date",
+          "value": "2026-12-31",
+          "pages": [
+            1
+          ],
+          "supportStatus": "PARTIALLY_SUPPORTED"
+        },
+        {
+          "id": "b0-entries_permitted",
+          "kind": "entity",
+          "label": "Entries permitted",
+          "value": "Multiple",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-condition",
+          "kind": "clause",
+          "label": "Condition",
+          "value": "Employment is not permitted under this visa.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "rule-expiry-b0-expiry_date",
+          "kind": "finding",
+          "label": "Expiry needs attention",
+          "value": "2026-12-31",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Visa type restricts work rights",
+          "value": "Condition: Employment is not permitted under this visa.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Visa allows multiple entries",
+          "value": "Entries permitted: Multiple",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Visa is valid for one year",
+          "value": "Issue date: 2026-01-01\nExpiry date: 2026-12-31",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "warning",
+          "label": "Employment is prohibited",
+          "value": "Condition: Employment is not permitted under this visa.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-visa_holder",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-issuing_authority",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-visa_number",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-issue_date",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-expiry_date",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-entries_permitted",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-condition",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "rule-expiry-b0-expiry_date",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-visa_holder",
+        "kind": "entity",
+        "label": "Visa holder",
+        "text": "The visa holder is Riley Example.",
+        "originalValue": "Riley Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-issuing_authority",
+        "kind": "entity",
+        "label": "Issuing authority",
+        "text": "The issuing authority for this visa is the Synthetic Immigration Office.",
+        "originalValue": "Synthetic Immigration Office",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-visa_number",
+        "kind": "entity",
+        "label": "Visa number",
+        "text": "The visa number is TEST-VISA-01.",
+        "originalValue": "TEST-VISA-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-entries_permitted",
+        "kind": "entity",
+        "label": "Entries permitted",
+        "text": "Multiple entries into the country are permitted under this visa.",
+        "originalValue": "Multiple",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-issue_date",
+        "kind": "date",
+        "label": "Issue date",
+        "text": "The visa was issued on 2026-01-01, which is the date when this visa became valid.",
+        "originalValue": "2026-01-01",
+        "normalizedValue": "2026-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-condition",
+        "kind": "clause",
+        "label": "Condition",
+        "text": "This visa does not permit employment, as stated in the condition clause.",
+        "originalValue": "Employment is not permitted under this visa.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

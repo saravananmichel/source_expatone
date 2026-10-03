@@ -1,0 +1,107 @@
+{
+  "model": "qwen3:8b",
+  "handAuthoredSyntheticClaims": 10,
+  "diagnostics": {
+    "supportValidationMs": 90017,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 0.0,
+    "supportModel": "qwen3:8b"
+  },
+  "binaryAccuracy": 0.6,
+  "supportedPrecision": null,
+  "supportedRecall": 0.0,
+  "unknownCount": 10,
+  "results": [
+    {
+      "id": "s0",
+      "claim": "Salary is RM5,000 per month.",
+      "evidence": "Salary: RM5,000 per month.",
+      "goldSupported": true,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s1",
+      "claim": "Salary after tax is RM5,000 per month.",
+      "evidence": "Salary: RM5,000 per month.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s2",
+      "claim": "The holder may work under this visa.",
+      "evidence": "Employment is not permitted under this visa.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s3",
+      "claim": "This visa does not permit employment.",
+      "evidence": "Employment is not permitted under this visa.",
+      "goldSupported": true,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s4",
+      "claim": "Either party must always give fourteen days written notice.",
+      "evidence": "During probation, either party may terminate with fourteen days written notice.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s5",
+      "claim": "During probation, either party may terminate with fourteen days written notice.",
+      "evidence": "During probation, either party may terminate with fourteen days written notice.",
+      "goldSupported": true,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s6",
+      "claim": "Pre-existing conditions are covered.",
+      "evidence": "Pre-existing conditions are excluded.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s7",
+      "claim": "Probation is guaranteed to end on 2027-07-01.",
+      "evidence": "Start date: 2027-01-01. Probation period: six months.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s8",
+      "claim": "The account has a closing balance of RM1,300.",
+      "evidence": "Closing balance: RM1,300.",
+      "goldSupported": true,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s9",
+      "claim": "The account holder is creditworthy.",
+      "evidence": "Closing balance: RM1,300.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Semantic support has not been verified.",
+      "confidence": 0.9
+    }
+  ],
+  "limitations": "10 narrow author-defined examples, no independent human corpus review or calibration."
+}

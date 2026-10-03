@@ -1,0 +1,58 @@
+{
+  "id": "passport",
+  "category": "Passport",
+  "expectedValues": [
+    "Morgan Example",
+    "TEST000001",
+    "2034-01-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Morgan Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "TEST000001",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2034-01-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2034-01-01"
+  ],
+  "money": [],
+  "sections": [],
+  "clauses": [],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "salary",
+    "termination"
+  ],
+  "summaryCoverageTargets": [
+    "Morgan Example",
+    "TEST000001",
+    "2034-01-01"
+  ],
+  "descriptiveExplanationTargets": [],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

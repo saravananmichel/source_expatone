@@ -1,0 +1,23 @@
+{
+  "id": "malay",
+  "category": "Offer Letter",
+  "pages": [
+    "SURAT TAWARAN - SINTETIK\nNama pekerja: Ali Contoh\nJawatan: Jurutera\nGaji: RM5,000 sebulan\nTarikh mula: 2027-01-01\nTempoh percubaan: enam bulan."
+  ],
+  "values": [
+    "Ali Contoh",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "clauses": [
+    "probation"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "ms",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

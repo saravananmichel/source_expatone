@@ -10,6 +10,8 @@ public class ExpatOneDbContext : DbContext
     {
     }
 
+    public DbSet<DocumentAnalysisRun> DocumentAnalysisRuns => Set<DocumentAnalysisRun>();
+
     public DbSet<User> Users => Set<User>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();

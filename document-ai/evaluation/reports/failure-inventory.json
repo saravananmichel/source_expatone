@@ -1,0 +1,25 @@
+{
+  "checks": {
+    "corrupt_pdf": "Python parser tests",
+    "encrypted_pdf": "Python parser tests",
+    "oversize_upload": "pre-spool limit tests",
+    "too_many_pages": "41-page parser rejection test",
+    "invalid_model_quote": "grounding tests",
+    "invalid_model_schema": "strict Pydantic/model retry + safe service error tests",
+    "missing_model": "readiness guards implemented; live fault test pending",
+    "model_unavailable": "provider fallback unit test; live hybrid test pending",
+    "model_timeout": "actual reasoning timeouts observed in corpus/live local run",
+    "service_unauthorized": "real container 401 and auth-before-multipart tests",
+    "bad_evidence_references": "new .NET v2 validation tests",
+    "semantic_reviewer_unavailable": "fails closed; malformed/missing verdict tests",
+    "S3_failure": "generic worker failure path; dedicated live fault test not measured",
+    "database_failure": "worker retries queue access; dedicated live fault test not measured",
+    "worker_restart_expired_lease": "real SQLite lease/transaction recovery test with model/storage doubles",
+    "duplicate_requests": "actual authenticated PostgreSQL/S3 workflow same active analysis ID",
+    "version_history": "actual source snapshot/history persisted and reloaded; version change tests",
+    "unauthorized_owner": "owner isolation backend endpoint/job tests; anonymous actual 401",
+    "config_version_change": "fingerprint cache key, provider/fallback snapshot tests; complete rolling-deploy fault test not measured",
+    "OCR_failure": "safe extraction process failure tests; multilingual OCR failures measured"
+  },
+  "limitations": "Inventory distinguishes implemented guards, tests with doubles, actual observations and unmeasured chaos tests."
+}

@@ -1,0 +1,60 @@
+{
+  "id": "tamil",
+  "category": "Offer Letter",
+  "expectedValues": [
+    "அருண் மாதிரி",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "அருண் மாதிரி",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM5,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-01-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-01-01"
+  ],
+  "money": [
+    "RM5,000"
+  ],
+  "sections": [],
+  "clauses": [],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "அருண் மாதிரி",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "descriptiveExplanationTargets": [],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

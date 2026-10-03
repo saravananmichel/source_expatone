@@ -1,0 +1,17 @@
+[
+  {
+    "name": "health",
+    "status": 200,
+    "passed": true
+  },
+  {
+    "name": "ready",
+    "status": 200,
+    "passed": true
+  },
+  {
+    "name": "auth-before-multipart",
+    "status": 401,
+    "passed": true
+  }
+]

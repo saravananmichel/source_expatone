@@ -1,0 +1,348 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This document appears to be a Employment Contract. Source details: 录用通知书（合成测试）\n员工姓名：林示例\n职位：工程师\n月薪：RM5,000\n入职日期：2027-01-01\n试用期：六个月。. Verify important information with the relevant authority.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person_1",
+      "kind": "entity",
+      "label": "Employee",
+      "text": "Employee: 林示例.",
+      "originalValue": "林示例",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-role_1",
+      "kind": "entity",
+      "label": "Role",
+      "text": "The employee's role in this contract is engineer.",
+      "originalValue": "工程师",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-salary_1",
+      "kind": "money",
+      "label": "Salary",
+      "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+      "originalValue": "RM5,000",
+      "normalizedValue": "MYR 5000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-start_date_1",
+      "kind": "date",
+      "label": "Start Date",
+      "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-probation_period_1",
+      "kind": "entity",
+      "label": "Probation Period",
+      "text": "The employee is subject to a six-month probation period.",
+      "originalValue": "六个月",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "录用通知书（合成测试）\n员工姓名：林示例\n职位：工程师\n月薪：RM5,000\n入职日期：2027-01-01\n试用期：六个月。",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": []
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": []
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [
+    "Termination notice: not found in extracted fields from the analyzed document. Check the original and any schedules."
+  ],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 138051,
+    "inferenceBatches": [
+      {
+        "total_duration": 137811990542,
+        "load_duration": 5825459,
+        "prompt_eval_count": 694,
+        "prompt_eval_duration": 234642000,
+        "eval_count": 562,
+        "eval_duration": 33351230000
+      }
+    ],
+    "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+    "reasoningMs": 150025,
+    "supportValidationMs": 90026,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 0.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 0,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 5,
+    "evidenceCoverage": 0.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "录用通知书（合成测试）\n员工姓名：林示例\n职位：工程师\n月薪：RM5,000\n入职日期：2027-01-01\n试用期：六个月。",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person_1",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: 林示例.",
+        "originalValue": "林示例",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-role_1",
+        "kind": "entity",
+        "label": "Role",
+        "text": "The employee's role in this contract is engineer.",
+        "originalValue": "工程师",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-salary_1",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+        "originalValue": "RM5,000",
+        "normalizedValue": "MYR 5000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-start_date_1",
+        "kind": "date",
+        "label": "Start Date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-probation_period_1",
+        "kind": "entity",
+        "label": "Probation Period",
+        "text": "The employee is subject to a six-month probation period.",
+        "originalValue": "六个月",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "录用通知书（合成测试）\n员工姓名：林示例\n职位：工程师\n月薪：RM5,000\n入职日期：2027-01-01\n试用期：六个月。",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person_1",
+          "kind": "entity",
+          "label": "Employee",
+          "value": "林示例",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-role_1",
+          "kind": "entity",
+          "label": "Role",
+          "value": "工程师",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-salary_1",
+          "kind": "money",
+          "label": "Salary",
+          "value": "RM5,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-start_date_1",
+          "kind": "date",
+          "label": "Start Date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-probation_period_1",
+          "kind": "entity",
+          "label": "Probation Period",
+          "value": "六个月",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-role_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-salary_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-start_date_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-probation_period_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [],
+    "facts": [],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

@@ -1,0 +1,732 @@
+{
+  "documentCategory": "Offer Letter",
+  "title": "Offer Letter Analysis",
+  "summary": "This is a Offer Letter. Candidate: Alex Example. Employment start date is listed as 2027-02-01 in the main text. The document lists two start dates: 2027-02-01 (in the main text) and 2027-03-01 (in the appendix), creating a conflict that must be resolved before acceptance. There is a contradiction regarding the start date between the main text (2027-02-01) and the appendix (2027-03-01). The user needs to confirm which start date applies before accepting.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [
+    {
+      "label": "Candidate",
+      "value": "Alex Example",
+      "isExtracted": true,
+      "description": "Candidate: Alex Example."
+    },
+    {
+      "label": "Position",
+      "value": "Analyst",
+      "isExtracted": true,
+      "description": "The position offered is Analyst."
+    },
+    {
+      "label": "Start date",
+      "value": "2027-02-01",
+      "isExtracted": true,
+      "description": "Employment start date is listed as 2027-02-01 in the main text."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Start date",
+      "date": "2027-02-01",
+      "isExtracted": true,
+      "description": "Employment start date is listed as 2027-02-01 in the main text."
+    }
+  ],
+  "requiredActions": [
+    "The user must confirm which start date applies before accepting the offer.",
+    "The candidate must confirm which start date applies before accepting the offer, as stated in the document's warning section."
+  ],
+  "warnings": [
+    "There is a contradiction regarding the start date between the main text (2027-02-01) and the appendix (2027-03-01). The user needs to confirm which start date applies before accepting."
+  ],
+  "statements": [
+    {
+      "id": "st-candidate",
+      "kind": "entity",
+      "label": "Candidate",
+      "text": "Candidate: Alex Example.",
+      "originalValue": "Alex Example",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-candidate"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-position",
+      "kind": "entity",
+      "label": "Position",
+      "text": "The position offered is Analyst.",
+      "originalValue": "Analyst",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-position"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-date-1",
+      "kind": "date",
+      "label": "Start date",
+      "text": "Employment start date is listed as 2027-02-01 in the main text.",
+      "originalValue": "2027-02-01",
+      "normalizedValue": "2027-02-01",
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-date-1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "st-date-2",
+      "kind": "date",
+      "label": "Appendix start date",
+      "text": "The appendix states the start date is 2027-03-01, creating a contradiction with the main text.",
+      "originalValue": "2027-03-01",
+      "normalizedValue": "2027-03-01",
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-date-2"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Contradicts main text start date"
+    },
+    {
+      "id": "st-warning-contradiction",
+      "kind": "warning",
+      "label": "Contradiction in Start Date",
+      "text": "There is a contradiction regarding the start date between the main text (2027-02-01) and the appendix (2027-03-01). The user needs to confirm which start date applies before accepting.",
+      "originalValue": "The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-warning"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence matches warning"
+    },
+    {
+      "id": "st-action-confirm",
+      "kind": "action",
+      "label": "Confirm Start Date",
+      "text": "The user must confirm which start date applies before accepting the offer.",
+      "originalValue": "Please confirm which start date applies before accepting.",
+      "normalizedValue": null,
+      "confidence": 1.0,
+      "evidenceIds": [
+        "ev-action"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Start date conflict",
+      "text": "The document lists two start dates: 2027-02-01 (in the main text) and 2027-03-01 (in the appendix), creating a conflict that must be resolved before acceptance.",
+      "originalValue": "2027-02-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "ev-date-1",
+        "ev-date-2"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence confirms both dates"
+    },
+    {
+      "id": "global-2",
+      "kind": "warning",
+      "label": "Critical discrepancy in start date",
+      "text": "The candidate must confirm which start date applies before accepting the offer, as the document explicitly states that the start date is 2027-03-01 in the appendix but also lists 2027-02-01 in the main text. This discrepancy could lead to delays in employment or confusion about when the candidate's responsibilities begin.",
+      "originalValue": "2027-03-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "ev-warning"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds delay risk not in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "action",
+      "label": "Clarify start date before acceptance",
+      "text": "The candidate must confirm which start date applies before accepting the offer, as stated in the document's warning section.",
+      "originalValue": "Please confirm which start date applies before accepting.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "ev-action"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "warning",
+      "label": "Unresolved inconsistency",
+      "text": "The document contains an unresolved inconsistency between the main text (2027-02-01) and the appendix (2027-03-01) for the start date, which could cause confusion about the effective start of employment.",
+      "originalValue": "2027-03-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "ev-date-2"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds confusion risk not in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "ev-doc-cat",
+      "page": 1,
+      "section": null,
+      "sourceText": "OFFER LETTER",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-candidate",
+      "page": 1,
+      "section": null,
+      "sourceText": "Candidate: Alex Example",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-position",
+      "page": 1,
+      "section": null,
+      "sourceText": "Position: Analyst",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-date-1",
+      "page": 1,
+      "section": null,
+      "sourceText": "Start date: 2027-02-01",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-date-2",
+      "page": 1,
+      "section": null,
+      "sourceText": "The start date is 2027-03-01.",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-warning",
+      "page": 1,
+      "section": null,
+      "sourceText": "Appendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+      "boundingBox": null
+    },
+    {
+      "id": "ev-action",
+      "page": 1,
+      "section": null,
+      "sourceText": "Please confirm which start date applies before accepting.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": [
+        "st-warning-contradiction"
+      ]
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "st-candidate",
+        "st-position"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "st-date-1"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-1"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": [
+        "st-action-confirm",
+        "global-3"
+      ]
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "supportValidationMs": 67618,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 7,
+    "unsupportedClaims": 3,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.7,
+    "findingsCount": 0,
+    "actionsCount": 2,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "OFFER LETTER\nCandidate: Alex Example\nPosition: Analyst\nStart date: 2027-02-01\nAppendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Offer Letter",
+    "classificationConfidence": 1.0,
+    "classificationEvidenceIds": [
+      "ev-doc-cat"
+    ],
+    "statements": [
+      {
+        "id": "st-candidate",
+        "kind": "entity",
+        "label": "Candidate",
+        "text": "Candidate: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-candidate"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-position",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The position offered is Analyst.",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-position"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-date-1",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment start date is listed as 2027-02-01 in the main text.",
+        "originalValue": "2027-02-01",
+        "normalizedValue": "2027-02-01",
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-date-1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-date-2",
+        "kind": "date",
+        "label": "Appendix start date",
+        "text": "The appendix states the start date is 2027-03-01, creating a contradiction with the main text.",
+        "originalValue": "2027-03-01",
+        "normalizedValue": "2027-03-01",
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-date-2"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Contradicts main text start date"
+      },
+      {
+        "id": "st-warning-contradiction",
+        "kind": "warning",
+        "label": "Contradiction in Start Date",
+        "text": "There is a contradiction regarding the start date between the main text (2027-02-01) and the appendix (2027-03-01). The user needs to confirm which start date applies before accepting.",
+        "originalValue": "The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-warning"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence matches warning"
+      },
+      {
+        "id": "st-action-confirm",
+        "kind": "action",
+        "label": "Confirm Start Date",
+        "text": "The user must confirm which start date applies before accepting the offer.",
+        "originalValue": "Please confirm which start date applies before accepting.",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-action"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Start date conflict",
+        "text": "The document lists two start dates: 2027-02-01 (in the main text) and 2027-03-01 (in the appendix), creating a conflict that must be resolved before acceptance.",
+        "originalValue": "2027-02-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "ev-date-1",
+          "ev-date-2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence confirms both dates"
+      },
+      {
+        "id": "global-2",
+        "kind": "warning",
+        "label": "Critical discrepancy in start date",
+        "text": "The candidate must confirm which start date applies before accepting the offer, as the document explicitly states that the start date is 2027-03-01 in the appendix but also lists 2027-02-01 in the main text. This discrepancy could lead to delays in employment or confusion about when the candidate's responsibilities begin.",
+        "originalValue": "2027-03-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "ev-warning"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds delay risk not in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "action",
+        "label": "Clarify start date before acceptance",
+        "text": "The candidate must confirm which start date applies before accepting the offer, as stated in the document's warning section.",
+        "originalValue": "Please confirm which start date applies before accepting.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "ev-action"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "warning",
+        "label": "Unresolved inconsistency",
+        "text": "The document contains an unresolved inconsistency between the main text (2027-02-01) and the appendix (2027-03-01) for the start date, which could cause confusion about the effective start of employment.",
+        "originalValue": "2027-03-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "ev-date-2"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds confusion risk not in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "ev-doc-cat",
+        "page": 1,
+        "section": null,
+        "sourceText": "OFFER LETTER",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-candidate",
+        "page": 1,
+        "section": null,
+        "sourceText": "Candidate: Alex Example",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-position",
+        "page": 1,
+        "section": null,
+        "sourceText": "Position: Analyst",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-date-1",
+        "page": 1,
+        "section": null,
+        "sourceText": "Start date: 2027-02-01",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-date-2",
+        "page": 1,
+        "section": null,
+        "sourceText": "The start date is 2027-03-01.",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-warning",
+        "page": 1,
+        "section": null,
+        "sourceText": "Appendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+        "boundingBox": null
+      },
+      {
+        "id": "ev-action",
+        "page": 1,
+        "section": null,
+        "sourceText": "Please confirm which start date applies before accepting.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "st-candidate",
+          "kind": "entity",
+          "label": "Candidate",
+          "value": "Alex Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-position",
+          "kind": "entity",
+          "label": "Position",
+          "value": "Analyst",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-date-1",
+          "kind": "date",
+          "label": "Start date",
+          "value": "2027-02-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-date-2",
+          "kind": "date",
+          "label": "Appendix start date",
+          "value": "2027-03-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "st-warning-contradiction",
+          "kind": "warning",
+          "label": "Contradiction in Start Date",
+          "value": "The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "st-action-confirm",
+          "kind": "action",
+          "label": "Confirm Start Date",
+          "value": "Please confirm which start date applies before accepting.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Start date conflict",
+          "value": "2027-02-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "warning",
+          "label": "Critical discrepancy in start date",
+          "value": "2027-03-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "action",
+          "label": "Clarify start date before acceptance",
+          "value": "Please confirm which start date applies before accepting.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "warning",
+          "label": "Unresolved inconsistency",
+          "value": "2027-03-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "st-candidate",
+          "to": "ev-candidate",
+          "relation": "cites"
+        },
+        {
+          "from": "st-position",
+          "to": "ev-position",
+          "relation": "cites"
+        },
+        {
+          "from": "st-date-1",
+          "to": "ev-date-1",
+          "relation": "cites"
+        },
+        {
+          "from": "st-date-2",
+          "to": "ev-date-2",
+          "relation": "cites"
+        },
+        {
+          "from": "st-warning-contradiction",
+          "to": "ev-warning",
+          "relation": "cites"
+        },
+        {
+          "from": "st-action-confirm",
+          "to": "ev-action",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "ev-date-1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "ev-date-2",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "ev-warning",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "ev-action",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "ev-date-2",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "ev-doc-cat": 1,
+        "ev-candidate": 1,
+        "ev-position": 1,
+        "ev-date-1": 1,
+        "ev-date-2": 1,
+        "ev-warning": 1,
+        "ev-action": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "st-candidate",
+        "kind": "entity",
+        "label": "Candidate",
+        "text": "Candidate: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-candidate"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "st-position",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The position offered is Analyst.",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-position"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "st-date-1",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment start date is listed as 2027-02-01 in the main text.",
+        "originalValue": "2027-02-01",
+        "normalizedValue": "2027-02-01",
+        "confidence": 1.0,
+        "evidenceIds": [
+          "ev-date-1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Gemini extraction with local reasoning/support review",
+  "modelVersion": "gemini-3.5-flash-lite",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

@@ -30,10 +30,11 @@ public class S3StorageService : IStorageService
             Key = objectKey,
             InputStream = fileStream,
             ContentType = contentType,
+            ServerSideEncryptionMethod = ServerSideEncryptionMethod.AES256,
         };
 
         await _s3Client.PutObjectAsync(request);
-        _logger.LogInformation("Uploaded object {ObjectKey} to S3", objectKey);
+        _logger.LogInformation("Uploaded object to private storage");
         return objectKey;
     }
 
@@ -46,7 +47,7 @@ public class S3StorageService : IStorageService
     public async Task DeleteFileAsync(string objectKey)
     {
         await _s3Client.DeleteObjectAsync(_bucketName, objectKey);
-        _logger.LogInformation("Deleted object {ObjectKey} from S3", objectKey);
+        _logger.LogInformation("Deleted object from private storage");
     }
 
     public Task<string> GeneratePresignedUrlAsync(string objectKey, TimeSpan expiry)

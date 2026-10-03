@@ -1,0 +1,21 @@
+{
+  "id": "statement",
+  "category": "Bank Statement",
+  "values": [
+    "Taylor Example",
+    "RM1,000",
+    "RM1,300"
+  ],
+  "clauses": [],
+  "forbidden": [
+    "investment recommendation",
+    "notice period"
+  ],
+  "pages": [
+    "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

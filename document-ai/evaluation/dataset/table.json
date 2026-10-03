@@ -1,0 +1,23 @@
+{
+  "id": "table",
+  "category": "Bank Statement",
+  "pages": [
+    "BANK STATEMENT - SYNTHETIC\nHolder: Avery Example\nDate | Description | Debit | Credit\n2026-09-01 | Opening | - | RM1,000\n2026-09-03 | Rent | RM200 | -\n2026-09-04 | Transfer | - | RM500\nClosing balance: RM1,300"
+  ],
+  "values": [
+    "RM1,000",
+    "RM200",
+    "RM500",
+    "RM1,300"
+  ],
+  "clauses": [],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "en",
+  "layout": "table",
+  "findings": [],
+  "actions": [],
+  "inputFile": "table.pdf"
+}

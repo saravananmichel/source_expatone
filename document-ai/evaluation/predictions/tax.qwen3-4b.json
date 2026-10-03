@@ -1,0 +1,346 @@
+{
+  "documentCategory": "Tax Document",
+  "title": "Tax Document Analysis",
+  "summary": "This document appears to be a Tax Document. Source details: TAX STATEMENT - SYNTHETIC\nTaxpayer: Avery Example\nAssessment year: 2026\nEmployment income: RM84,000\nTax deducted: RM3,000\nThis statement records deductions and is not a tax assessment.. Verify important information with the relevant authority.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-taxpayer_name",
+      "kind": "entity",
+      "label": "Taxpayer",
+      "text": "The taxpayer named in this statement is Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-assessment_year",
+      "kind": "date",
+      "label": "Assessment Year",
+      "text": "The assessment year for this tax statement is 2026, which is the fiscal year used to calculate tax obligations.",
+      "originalValue": "2026",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-employment_income",
+      "kind": "money",
+      "label": "Employment Income",
+      "text": "The taxpayer earned RM84,000 in employment income during the assessment year.",
+      "originalValue": "RM84,000",
+      "normalizedValue": "MYR 84000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-tax_deducted",
+      "kind": "money",
+      "label": "Tax Deducted",
+      "text": "RM3,000 in tax was deducted from the taxpayer's employment income during the assessment year.",
+      "originalValue": "RM3,000",
+      "normalizedValue": "MYR 3000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-statement_description",
+      "kind": "finding",
+      "label": "Statement Purpose",
+      "text": "This tax statement records deductions and is not a tax assessment, meaning it does not represent the final tax liability but rather a record of taxes already deducted.",
+      "originalValue": "This statement records deductions and is not a tax assessment.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page_1",
+      "page": 1,
+      "section": null,
+      "sourceText": "TAX STATEMENT - SYNTHETIC\nTaxpayer: Avery Example\nAssessment year: 2026\nEmployment income: RM84,000\nTax deducted: RM3,000\nThis statement records deductions and is not a tax assessment.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": []
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": []
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 91433,
+    "inferenceBatches": [
+      {
+        "total_duration": 91378321375,
+        "load_duration": 2894584,
+        "prompt_eval_count": 606,
+        "prompt_eval_duration": 68737000,
+        "eval_count": 616,
+        "eval_duration": 45503081000
+      }
+    ],
+    "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+    "reasoningMs": 150026,
+    "supportValidationMs": 90137,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 0.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 0,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 5,
+    "evidenceCoverage": 0.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "TAX STATEMENT - SYNTHETIC\nTaxpayer: Avery Example\nAssessment year: 2026\nEmployment income: RM84,000\nTax deducted: RM3,000\nThis statement records deductions and is not a tax assessment.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Tax Document",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page_1"
+    ],
+    "statements": [
+      {
+        "id": "b0-taxpayer_name",
+        "kind": "entity",
+        "label": "Taxpayer",
+        "text": "The taxpayer named in this statement is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-assessment_year",
+        "kind": "date",
+        "label": "Assessment Year",
+        "text": "The assessment year for this tax statement is 2026, which is the fiscal year used to calculate tax obligations.",
+        "originalValue": "2026",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-employment_income",
+        "kind": "money",
+        "label": "Employment Income",
+        "text": "The taxpayer earned RM84,000 in employment income during the assessment year.",
+        "originalValue": "RM84,000",
+        "normalizedValue": "MYR 84000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-tax_deducted",
+        "kind": "money",
+        "label": "Tax Deducted",
+        "text": "RM3,000 in tax was deducted from the taxpayer's employment income during the assessment year.",
+        "originalValue": "RM3,000",
+        "normalizedValue": "MYR 3000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-statement_description",
+        "kind": "finding",
+        "label": "Statement Purpose",
+        "text": "This tax statement records deductions and is not a tax assessment, meaning it does not represent the final tax liability but rather a record of taxes already deducted.",
+        "originalValue": "This statement records deductions and is not a tax assessment.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page_1",
+        "page": 1,
+        "section": null,
+        "sourceText": "TAX STATEMENT - SYNTHETIC\nTaxpayer: Avery Example\nAssessment year: 2026\nEmployment income: RM84,000\nTax deducted: RM3,000\nThis statement records deductions and is not a tax assessment.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-taxpayer_name",
+          "kind": "entity",
+          "label": "Taxpayer",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-assessment_year",
+          "kind": "date",
+          "label": "Assessment Year",
+          "value": "2026",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-employment_income",
+          "kind": "money",
+          "label": "Employment Income",
+          "value": "RM84,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-tax_deducted",
+          "kind": "money",
+          "label": "Tax Deducted",
+          "value": "RM3,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-statement_description",
+          "kind": "finding",
+          "label": "Statement Purpose",
+          "value": "This statement records deductions and is not a tax assessment.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-taxpayer_name",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-assessment_year",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-employment_income",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-tax_deducted",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_description",
+          "to": "b0-page_1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page_1": 1
+      }
+    },
+    "entities": [],
+    "facts": [],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

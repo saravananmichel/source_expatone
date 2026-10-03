@@ -1,0 +1,64 @@
+{
+  "id": "tax",
+  "category": "Tax Document",
+  "expectedValues": [
+    "2026",
+    "RM84,000",
+    "RM3,000"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "2026",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM84,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM3,000",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [
+    "RM84,000",
+    "RM3,000"
+  ],
+  "sections": [],
+  "clauses": [
+    "assessment"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "2026",
+    "RM84,000",
+    "RM3,000",
+    "assessment"
+  ],
+  "descriptiveExplanationTargets": [
+    "assessment"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

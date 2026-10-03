@@ -1,0 +1,59 @@
+{
+  "id": "statement",
+  "category": "Bank Statement",
+  "expectedValues": [
+    "Taylor Example",
+    "RM1,000",
+    "RM1,300"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Taylor Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM1,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM1,300",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [
+    "RM1,000",
+    "RM1,300"
+  ],
+  "sections": [],
+  "clauses": [],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "investment recommendation",
+    "notice period"
+  ],
+  "summaryCoverageTargets": [
+    "Taylor Example",
+    "RM1,000",
+    "RM1,300"
+  ],
+  "descriptiveExplanationTargets": [],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

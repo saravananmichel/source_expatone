@@ -1,0 +1,63 @@
+{
+  "id": "medical",
+  "category": "Medical Document",
+  "expectedValues": [
+    "Avery Example",
+    "2026-09-15",
+    "120/80"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Avery Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2026-09-15",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "120/80",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2026-09-15"
+  ],
+  "money": [],
+  "sections": [],
+  "clauses": [
+    "review"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "Avery Example",
+    "2026-09-15",
+    "120/80",
+    "review"
+  ],
+  "descriptiveExplanationTargets": [
+    "review"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

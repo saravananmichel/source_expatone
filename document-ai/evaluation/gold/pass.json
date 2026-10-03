@@ -1,0 +1,63 @@
+{
+  "id": "pass",
+  "category": "Employment Pass",
+  "expectedValues": [
+    "Avery Example",
+    "TEST-EP-001",
+    "2027-06-30"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Avery Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "TEST-EP-001",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-06-30",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-06-30"
+  ],
+  "money": [],
+  "sections": [],
+  "clauses": [
+    "employer"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "Avery Example",
+    "TEST-EP-001",
+    "2027-06-30",
+    "employer"
+  ],
+  "descriptiveExplanationTargets": [
+    "employer"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

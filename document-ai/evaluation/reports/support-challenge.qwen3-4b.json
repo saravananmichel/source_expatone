@@ -1,0 +1,109 @@
+{
+  "model": "qwen3:4b",
+  "handAuthoredSyntheticClaims": 10,
+  "diagnostics": {
+    "supportValidationMs": 25174,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b"
+  },
+  "binaryAccuracy": 1.0,
+  "supportedPrecision": 1.0,
+  "supportedRecall": 1.0,
+  "unknownCount": 1,
+  "results": [
+    {
+      "id": "s0",
+      "claim": "Salary is RM5,000 per month.",
+      "evidence": "Salary: RM5,000 per month.",
+      "goldSupported": true,
+      "predictedStatus": "SUPPORTED",
+      "reason": "Direct quote matches claim exactly.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s1",
+      "claim": "Salary after tax is RM5,000 per month.",
+      "evidence": "Salary: RM5,000 per month.",
+      "goldSupported": false,
+      "predictedStatus": "UNSUPPORTED",
+      "reason": "Quote says 'Salary' but claim specifies 'after tax'.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s2",
+      "claim": "The holder may work under this visa.",
+      "evidence": "Employment is not permitted under this visa.",
+      "goldSupported": false,
+      "predictedStatus": "UNSUPPORTED",
+      "reason": "Quote says 'not permitted' but claim says 'may work'.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s3",
+      "claim": "This visa does not permit employment.",
+      "evidence": "Employment is not permitted under this visa.",
+      "goldSupported": true,
+      "predictedStatus": "SUPPORTED",
+      "reason": "Quote directly states employment is not permitted.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s4",
+      "claim": "Either party must always give fourteen days written notice.",
+      "evidence": "During probation, either party may terminate with fourteen days written notice.",
+      "goldSupported": false,
+      "predictedStatus": "PARTIALLY_SUPPORTED",
+      "reason": "Quote specifies 'during probation' but claim says 'always'.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s5",
+      "claim": "During probation, either party may terminate with fourteen days written notice.",
+      "evidence": "During probation, either party may terminate with fourteen days written notice.",
+      "goldSupported": true,
+      "predictedStatus": "SUPPORTED",
+      "reason": "Quote and claim match exactly.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s6",
+      "claim": "Pre-existing conditions are covered.",
+      "evidence": "Pre-existing conditions are excluded.",
+      "goldSupported": false,
+      "predictedStatus": "UNSUPPORTED",
+      "reason": "Quote says 'excluded' but claim says 'covered'.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s7",
+      "claim": "Probation is guaranteed to end on 2027-07-01.",
+      "evidence": "Start date: 2027-01-01. Probation period: six months.",
+      "goldSupported": false,
+      "predictedStatus": "UNCERTAIN",
+      "reason": "Quote gives start date and probation period but not end date.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s8",
+      "claim": "The account has a closing balance of RM1,300.",
+      "evidence": "Closing balance: RM1,300.",
+      "goldSupported": true,
+      "predictedStatus": "SUPPORTED",
+      "reason": "Direct quote matches closing balance exactly.",
+      "confidence": 0.9
+    },
+    {
+      "id": "s9",
+      "claim": "The account holder is creditworthy.",
+      "evidence": "Closing balance: RM1,300.",
+      "goldSupported": false,
+      "predictedStatus": "UNSUPPORTED",
+      "reason": "Quote provides balance but not creditworthiness.",
+      "confidence": 0.9
+    }
+  ],
+  "limitations": "10 narrow author-defined examples, no independent human corpus review or calibration.",
+  "decisiveCoverage": 0.8,
+  "binaryAccuracyInterpretation": "SUPPORTED vs all other statuses, including uncertain; conservative screening decisions, not decisive entailment accuracy"
+}

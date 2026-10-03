@@ -1,0 +1,53 @@
+{
+  "id": "government-form",
+  "category": "Government Form",
+  "expectedValues": [
+    "Avery Example",
+    "TEST-FORM-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Avery Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "TEST-FORM-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [],
+  "sections": [],
+  "clauses": [
+    "declaration"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "Avery Example",
+    "TEST-FORM-01",
+    "declaration"
+  ],
+  "descriptiveExplanationTargets": [
+    "declaration"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

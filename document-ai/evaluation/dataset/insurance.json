@@ -1,0 +1,22 @@
+{
+  "id": "insurance",
+  "category": "Insurance Document",
+  "values": [
+    "Casey Example",
+    "RM250",
+    "2026-12-31"
+  ],
+  "clauses": [
+    "excluded"
+  ],
+  "forbidden": [
+    "diagnosis"
+  ],
+  "pages": [
+    "INSURANCE POLICY\nInsurer: Synthetic Insurance\nPolicy holder: Casey Example\nPolicy number: TEST-POLICY-01\nPremium: RM250 per month\nCoverage: Inpatient hospital treatment up to RM50,000\nEffective date: 2026-01-01\nExpiry date: 2026-12-31\nExclusion: Pre-existing conditions are excluded."
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

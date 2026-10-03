@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -76,7 +77,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await widget.userService.updateMe(
         nationality: _nationality,
         countryCode: _countryOfResidence,
-        residenceLocation: _residenceLocation.isNotEmpty ? _residenceLocation : null,
+        residenceLocation: _residenceLocation.isNotEmpty
+            ? _residenceLocation
+            : null,
         visaPassType: _visaPassType,
         employmentStatus: _employmentStatus,
         familyStatus: _familyStatus,
@@ -96,7 +99,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await widget.userService.updateMe(
         nationality: _nationality,
         countryCode: _countryOfResidence,
-        residenceLocation: _residenceLocation.isNotEmpty ? _residenceLocation : null,
+        residenceLocation: _residenceLocation.isNotEmpty
+            ? _residenceLocation
+            : null,
         visaPassType: _visaPassType,
         employmentStatus: _employmentStatus,
         familyStatus: _familyStatus,
@@ -149,7 +154,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             children: [
               Text(_error!, style: TextStyle(color: AppTheme.errorColor)),
               const SizedBox(height: 12),
-              ElevatedButton(onPressed: _loadOptions, child: const Text('Retry')),
+              ElevatedButton(
+                onPressed: _loadOptions,
+                child: const Text('Retry'),
+              ),
             ],
           ),
         ),
@@ -235,9 +243,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppTheme.textSecondary,
-                ),
+            style: Theme.of(context).textTheme.bodyLarge
+                ?.copyWith(color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 32),
           Expanded(child: content),
@@ -258,14 +265,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: SizedBox(
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (_isSaving || !canContinue) ? null : (onContinue ?? _next),
+                      onPressed: (_isSaving || !canContinue)
+                          ? null
+                          : (onContinue ?? _next),
                       child: _isSaving
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
                             )
-                          : Text(continueLabel, style: const TextStyle(fontSize: 16)),
+                          : Text(
+                              continueLabel,
+                              style: const TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
                 ),
@@ -285,15 +300,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       content: Column(
         children: [
           const SizedBox(height: 24),
-          Icon(Icons.public, size: 80, color: AppTheme.primaryColor.withValues(alpha: 0.3)),
+          Icon(
+            Icons.public,
+            size: 80,
+            color: AppTheme.primaryColor.withValues(alpha: 0.3),
+          ),
           const SizedBox(height: 32),
-          _buildFeatureRow(Icons.description_outlined, 'Secure document wallet'),
+          _buildFeatureRow(
+            Icons.description_outlined,
+            'Secure document wallet',
+          ),
           const SizedBox(height: 16),
-          _buildFeatureRow(Icons.account_balance_outlined, 'Government process guidance'),
+          _buildFeatureRow(
+            Icons.account_balance_outlined,
+            'Government process guidance',
+          ),
           const SizedBox(height: 16),
-          _buildFeatureRow(Icons.translate_outlined, 'Multilingual translation'),
+          _buildFeatureRow(
+            Icons.translate_outlined,
+            'Multilingual translation',
+          ),
           const SizedBox(height: 16),
-          _buildFeatureRow(Icons.notifications_outlined, 'Smart expiry reminders'),
+          _buildFeatureRow(
+            Icons.notifications_outlined,
+            'Smart expiry reminders',
+          ),
         ],
       ),
     );
@@ -334,58 +365,63 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _buildStepScaffold(
       title: 'What\'s your nationality?',
       subtitle: 'This helps us tailor government process information for you.',
-      content: ListView.builder(
-        itemCount: commonCountries.length,
-        itemBuilder: (context, index) {
-          final (code, name) = commonCountries[index];
-          return RadioListTile<String>(
-            value: code,
-            groupValue: _nationality,
-            onChanged: (v) => setState(() => _nationality = v),
-            title: Text(name),
-            subtitle: Text(code),
-            activeColor: AppTheme.primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          );
-        },
+      content: RadioGroup<String>(
+        groupValue: _nationality,
+        onChanged: (v) => setState(() => _nationality = v),
+        child: ListView.builder(
+          itemCount: commonCountries.length,
+          itemBuilder: (context, index) {
+            final (code, name) = commonCountries[index];
+            return RadioListTile<String>(
+              value: code,
+              title: Text(name),
+              subtitle: Text(code),
+              activeColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildResidenceStep() {
-    final countries = [
-      ('MY', 'Malaysia'),
-      ('SG', 'Singapore'),
-    ];
+    final countries = [('MY', 'Malaysia'), ('SG', 'Singapore')];
 
     return _buildStepScaffold(
       title: 'Where do you live?',
       subtitle: 'Your country and city of residence in Malaysia.',
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          ...countries.map((c) {
-            final (code, name) = c;
-            return RadioListTile<String>(
-              value: code,
-              groupValue: _countryOfResidence,
-              onChanged: (v) => setState(() => _countryOfResidence = v ?? 'MY'),
-              title: Text(name),
-              activeColor: AppTheme.primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            );
-          }),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _residenceController,
-            decoration: const InputDecoration(
-              labelText: 'City / Area (optional)',
-              hintText: 'e.g. Kuala Lumpur, Penang, Johor Bahru',
-              prefixIcon: Icon(Icons.location_on_outlined),
+      content: RadioGroup<String>(
+        groupValue: _countryOfResidence,
+        onChanged: (v) => setState(() => _countryOfResidence = v ?? 'MY'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ...countries.map((c) {
+              final (code, name) = c;
+              return RadioListTile<String>(
+                value: code,
+                title: Text(name),
+                activeColor: AppTheme.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              );
+            }),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _residenceController,
+              decoration: const InputDecoration(
+                labelText: 'City / Area (optional)',
+                hintText: 'e.g. Kuala Lumpur, Penang, Johor Bahru',
+                prefixIcon: Icon(Icons.location_on_outlined),
+              ),
+              onChanged: (v) => _residenceLocation = v.trim(),
             ),
-            onChanged: (v) => _residenceLocation = v.trim(),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -395,19 +431,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _buildStepScaffold(
       title: 'Your visa / pass type',
       subtitle: 'Select the type of visa or pass you currently hold.',
-      content: ListView.builder(
-        itemCount: types.length,
-        itemBuilder: (context, index) {
-          final option = types[index];
-          return RadioListTile<String>(
-            value: option.value,
-            groupValue: _visaPassType,
-            onChanged: (v) => setState(() => _visaPassType = v),
-            title: Text(option.label),
-            activeColor: AppTheme.primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          );
-        },
+      content: RadioGroup<String>(
+        groupValue: _visaPassType,
+        onChanged: (v) => setState(() => _visaPassType = v),
+        child: ListView.builder(
+          itemCount: types.length,
+          itemBuilder: (context, index) {
+            final option = types[index];
+            return RadioListTile<String>(
+              value: option.value,
+              title: Text(option.label),
+              activeColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -417,19 +457,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _buildStepScaffold(
       title: 'Employment status',
       subtitle: 'This helps us show relevant employment-related guidance.',
-      content: ListView.builder(
-        itemCount: statuses.length,
-        itemBuilder: (context, index) {
-          final option = statuses[index];
-          return RadioListTile<String>(
-            value: option.value,
-            groupValue: _employmentStatus,
-            onChanged: (v) => setState(() => _employmentStatus = v),
-            title: Text(option.label),
-            activeColor: AppTheme.primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          );
-        },
+      content: RadioGroup<String>(
+        groupValue: _employmentStatus,
+        onChanged: (v) => setState(() => _employmentStatus = v),
+        child: ListView.builder(
+          itemCount: statuses.length,
+          itemBuilder: (context, index) {
+            final option = statuses[index];
+            return RadioListTile<String>(
+              value: option.value,
+              title: Text(option.label),
+              activeColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -439,56 +483,67 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _buildStepScaffold(
       title: 'Family status',
       subtitle: 'We\'ll tailor family-related reminders and guidance for you.',
-      content: ListView(
-        children: [
-          ...statuses.map((option) => RadioListTile<String>(
+      content: RadioGroup<String>(
+        groupValue: _familyStatus,
+        onChanged: (v) => setState(() => _familyStatus = v),
+        child: ListView(
+          children: [
+            ...statuses.map(
+              (option) => RadioListTile<String>(
                 value: option.value,
-                groupValue: _familyStatus,
-                onChanged: (v) => setState(() => _familyStatus = v),
                 title: Text(option.label),
                 activeColor: AppTheme.primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              )),
-          const SizedBox(height: 24),
-          SwitchListTile(
-            value: _hasChildren,
-            onChanged: (v) => setState(() {
-              _hasChildren = v;
-              if (!v) _numberOfChildren = 0;
-            }),
-            title: const Text('Do you have children?'),
-            activeColor: AppTheme.primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-          if (_hasChildren) ...[
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  const Text('Number of children:'),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.remove_circle_outline),
-                    onPressed: _numberOfChildren > 1
-                        ? () => setState(() => _numberOfChildren--)
-                        : null,
-                  ),
-                  Text(
-                    '$_numberOfChildren',
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: _numberOfChildren < 20
-                        ? () => setState(() => _numberOfChildren++)
-                        : null,
-                  ),
-                ],
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
+            const SizedBox(height: 24),
+            SwitchListTile(
+              value: _hasChildren,
+              onChanged: (v) => setState(() {
+                _hasChildren = v;
+                if (!v) _numberOfChildren = 0;
+              }),
+              title: const Text('Do you have children?'),
+              activeThumbColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            if (_hasChildren) ...[
+              const SizedBox(height: 12),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: [
+                    const Text('Number of children:'),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      onPressed: _numberOfChildren > 1
+                          ? () => setState(() => _numberOfChildren--)
+                          : null,
+                    ),
+                    Text(
+                      '$_numberOfChildren',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      onPressed: _numberOfChildren < 20
+                          ? () => setState(() => _numberOfChildren++)
+                          : null,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
@@ -498,19 +553,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return _buildStepScaffold(
       title: 'Preferred language',
       subtitle: 'Choose the language you\'d like to use in ExpatOne.',
-      content: ListView.builder(
-        itemCount: languages.length,
-        itemBuilder: (context, index) {
-          final option = languages[index];
-          return RadioListTile<String>(
-            value: option.value,
-            groupValue: _preferredLanguage,
-            onChanged: (v) => setState(() => _preferredLanguage = v ?? 'en'),
-            title: Text(option.label),
-            activeColor: AppTheme.primaryColor,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          );
-        },
+      content: RadioGroup<String>(
+        groupValue: _preferredLanguage,
+        onChanged: (v) => setState(() => _preferredLanguage = v ?? 'en'),
+        child: ListView.builder(
+          itemCount: languages.length,
+          itemBuilder: (context, index) {
+            final option = languages[index];
+            return RadioListTile<String>(
+              value: option.value,
+              title: Text(option.label),
+              activeColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -532,14 +591,25 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           if (_residenceLocation.isNotEmpty)
             _buildSummaryTile('Location', _residenceLocation),
           if (_visaPassType != null)
-            _buildSummaryTile('Visa/Pass', _getOptionLabel(_options?.visaPassTypes, _visaPassType!)),
+            _buildSummaryTile(
+              'Visa/Pass',
+              _getOptionLabel(_options?.visaPassTypes, _visaPassType!),
+            ),
           if (_employmentStatus != null)
-            _buildSummaryTile('Employment', _getOptionLabel(_options?.employmentStatuses, _employmentStatus!)),
+            _buildSummaryTile(
+              'Employment',
+              _getOptionLabel(_options?.employmentStatuses, _employmentStatus!),
+            ),
           if (_familyStatus != null)
-            _buildSummaryTile('Family', _getOptionLabel(_options?.familyStatuses, _familyStatus!)),
-          if (_hasChildren)
-            _buildSummaryTile('Children', '$_numberOfChildren'),
-          _buildSummaryTile('Language', _getOptionLabel(_options?.supportedLanguages, _preferredLanguage)),
+            _buildSummaryTile(
+              'Family',
+              _getOptionLabel(_options?.familyStatuses, _familyStatus!),
+            ),
+          if (_hasChildren) _buildSummaryTile('Children', '$_numberOfChildren'),
+          _buildSummaryTile(
+            'Language',
+            _getOptionLabel(_options?.supportedLanguages, _preferredLanguage),
+          ),
         ],
       ),
     );
@@ -550,9 +620,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Text(label, style: TextStyle(color: AppTheme.textSecondary, fontSize: 14)),
+          Text(
+            label,
+            style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+          ),
           const Spacer(),
-          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );

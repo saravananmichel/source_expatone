@@ -1,0 +1,64 @@
+{
+  "provider": "local",
+  "model": "phi4-mini:latest",
+  "pipelineSourceHash": "386aa10b514ded77c027c148dc9ea846dc59f8303874a7120895efeb8e3fe67d",
+  "executionConfig": {
+    "gpu": "automatic",
+    "explanationLanguage": "English",
+    "ocrLanguages": "eng",
+    "supportModel": "phi4-mini:latest"
+  },
+  "cases": 4,
+  "valid": 0,
+  "classificationAccuracy": 0.0,
+  "meanExactFieldTargetRecall": 0.0,
+  "independentSemanticAccuracy": null,
+  "confidenceCalibrated": false,
+  "limitations": "Partial synthetic gold. Keyword/target scores and same-family model-judge verdicts are proxies, not scientific entailment or human accuracy. Missing measurements are null.",
+  "results": [
+    {
+      "id": "contract",
+      "language": "en",
+      "layout": "native",
+      "pageCount": 1,
+      "extractionMs": 0,
+      "valid": false,
+      "errorType": "ReadTimeout",
+      "failureCategory": "processing_failed",
+      "seconds": 300.07
+    },
+    {
+      "id": "contradiction",
+      "language": "en",
+      "layout": "native",
+      "pageCount": 1,
+      "extractionMs": 0,
+      "valid": false,
+      "errorType": "ReadTimeout",
+      "failureCategory": "processing_failed",
+      "seconds": 300.02
+    },
+    {
+      "id": "cross-page",
+      "language": "en",
+      "layout": "multi-page",
+      "pageCount": 3,
+      "extractionMs": 0,
+      "valid": false,
+      "errorType": "ReadTimeout",
+      "failureCategory": "processing_failed",
+      "seconds": 300.03
+    },
+    {
+      "id": "insurance",
+      "language": "en",
+      "layout": "native",
+      "pageCount": 1,
+      "extractionMs": 1,
+      "valid": false,
+      "errorType": "ReadTimeout",
+      "failureCategory": "processing_failed",
+      "seconds": 300.05
+    }
+  ]
+}

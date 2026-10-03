@@ -1,0 +1,48 @@
+{
+  "id": "missing",
+  "category": "Employment Contract",
+  "expectedValues": [
+    "Alex Example",
+    "Analyst"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Alex Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "Analyst",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [],
+  "sections": [],
+  "clauses": [],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "RM12,000",
+    "monthly salary is"
+  ],
+  "summaryCoverageTargets": [
+    "Alex Example",
+    "Analyst"
+  ],
+  "descriptiveExplanationTargets": [],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

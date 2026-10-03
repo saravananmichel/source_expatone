@@ -1,0 +1,64 @@
+{
+  "id": "insurance",
+  "category": "Insurance Document",
+  "expectedValues": [
+    "Casey Example",
+    "RM250",
+    "2026-12-31"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Casey Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM250",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2026-12-31",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2026-12-31"
+  ],
+  "money": [
+    "RM250"
+  ],
+  "sections": [],
+  "clauses": [
+    "excluded"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "diagnosis"
+  ],
+  "summaryCoverageTargets": [
+    "Casey Example",
+    "RM250",
+    "2026-12-31",
+    "excluded"
+  ],
+  "descriptiveExplanationTargets": [
+    "excluded"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "visa",
+  "category": "Visa",
+  "expectedValues": [
+    "Riley Example",
+    "2026-12-31"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Riley Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2026-12-31",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2026-12-31"
+  ],
+  "money": [],
+  "sections": [],
+  "clauses": [
+    "employment"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "Riley Example",
+    "2026-12-31",
+    "employment"
+  ],
+  "descriptiveExplanationTargets": [
+    "employment"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

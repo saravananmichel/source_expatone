@@ -1,0 +1,26 @@
+{
+  "id": "scan",
+  "category": "Employment Contract",
+  "values": [
+    "Alex Example",
+    "RM12,000",
+    "Software Engineer",
+    "2027-01-01"
+  ],
+  "clauses": [
+    "notice",
+    "confidential"
+  ],
+  "forbidden": [
+    "after tax",
+    "legal requirement"
+  ],
+  "pages": [
+    "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems Sdn. Bhd.\nPosition: Software Engineer\nSalary: RM12,000 per month.\nStart date: 2027-01-01\nEither party may terminate by giving sixty days written notice.\nThe employee must protect confidential business information."
+  ],
+  "language": "en",
+  "layout": "scan",
+  "findings": [],
+  "actions": [],
+  "inputFile": "scan.pdf"
+}

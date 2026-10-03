@@ -1,0 +1,21 @@
+{
+  "id": "contradiction",
+  "category": "Offer Letter",
+  "values": [
+    "2027-02-01",
+    "2027-03-01"
+  ],
+  "clauses": [
+    "confirm"
+  ],
+  "forbidden": [
+    "definitely begins"
+  ],
+  "pages": [
+    "OFFER LETTER\nCandidate: Alex Example\nPosition: Analyst\nStart date: 2027-02-01\nAppendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting."
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

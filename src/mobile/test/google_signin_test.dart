@@ -11,7 +11,8 @@ import 'package:expatone_app/core/services/auth_service.dart';
 /// Web OAuth client (type 3): clientConfigurationError.
 class _MissingWebClientAuthService implements IAuthService {
   @override
-  AuthState get currentState => const AuthState(status: AuthStatus.unauthenticated);
+  AuthState get currentState =>
+      const AuthState(status: AuthStatus.unauthenticated);
 
   @override
   Stream<AuthState> get authStateChanges =>
@@ -51,7 +52,8 @@ class _MissingWebClientAuthService implements IAuthService {
 /// Simulates user cancelling the Google account picker.
 class _CancelledAuthService implements IAuthService {
   @override
-  AuthState get currentState => const AuthState(status: AuthStatus.unauthenticated);
+  AuthState get currentState =>
+      const AuthState(status: AuthStatus.unauthenticated);
 
   @override
   Stream<AuthState> get authStateChanges =>
@@ -63,44 +65,7 @@ class _CancelledAuthService implements IAuthService {
 
   @override
   Future<AuthUser> signInWithGoogle() async {
-    throw const GoogleSignInException(
-      code: GoogleSignInExceptionCode.canceled,
-    );
-  }
-
-  @override
-  Future<AuthUser> registerWithEmail(String e, String p, String n) async =>
-      const AuthUser(uid: 'uid', email: 'e@t.com');
-
-  @override
-  Future<void> signOut() async {}
-
-  @override
-  Future<void> sendPasswordResetEmail(String email) async {}
-
-  @override
-  Future<String?> getIdToken() async => null;
-}
-
-/// Simulates a provider (Firebase) configuration issue.
-class _ProviderConfigErrorAuthService implements IAuthService {
-  @override
-  AuthState get currentState => const AuthState(status: AuthStatus.unauthenticated);
-
-  @override
-  Stream<AuthState> get authStateChanges =>
-      Stream.value(const AuthState(status: AuthStatus.unauthenticated));
-
-  @override
-  Future<AuthUser> signInWithEmail(String e, String p) async =>
-      const AuthUser(uid: 'uid', email: 'e@t.com');
-
-  @override
-  Future<AuthUser> signInWithGoogle() async {
-    throw const GoogleSignInException(
-      code: GoogleSignInExceptionCode.providerConfigurationError,
-      description: 'Firebase SHA-1 fingerprint not registered.',
-    );
+    throw const GoogleSignInException(code: GoogleSignInExceptionCode.canceled);
   }
 
   @override
@@ -129,7 +94,8 @@ class _ProviderConfigErrorAuthService implements IAuthService {
 /// Runs the same catch logic as FirebaseAuthService.signInWithGoogle()
 /// against a given thrower, and returns the mapped AuthServiceException.
 Future<AuthServiceException?> _runGoogleSignInCatch(
-    Future<void> Function() thrower) async {
+  Future<void> Function() thrower,
+) async {
   try {
     await thrower();
     return null;
@@ -143,7 +109,9 @@ Future<AuthServiceException?> _runGoogleSignInCatch(
     if (e.code == GoogleSignInExceptionCode.canceled) {
       return const AuthServiceException('Sign-in was cancelled.');
     }
-    return const AuthServiceException('Google sign-in failed. Please try again.');
+    return const AuthServiceException(
+      'Google sign-in failed. Please try again.',
+    );
   } on AuthServiceException catch (e) {
     return e;
   }
@@ -151,31 +119,41 @@ Future<AuthServiceException?> _runGoogleSignInCatch(
 
 void main() {
   group('Google Sign-In error mapping', () {
-    test('missing Web OAuth client → user-facing configuration message', () async {
-      final err = await _runGoogleSignInCatch(() async {
-        throw const GoogleSignInException(
-          code: GoogleSignInExceptionCode.clientConfigurationError,
-          description: 'CredentialManager requires a serverClientId.',
+    test(
+      'missing Web OAuth client → user-facing configuration message',
+      () async {
+        final err = await _runGoogleSignInCatch(() async {
+          throw const GoogleSignInException(
+            code: GoogleSignInExceptionCode.clientConfigurationError,
+            description: 'CredentialManager requires a serverClientId.',
+          );
+        });
+
+        expect(err, isNotNull);
+        expect(
+          err!.message,
+          'Google sign-in is not available. Please sign in with email instead.',
         );
-      });
+      },
+    );
 
-      expect(err, isNotNull);
-      expect(err!.message,
-          'Google sign-in is not available. Please sign in with email instead.');
-    });
+    test(
+      'providerConfigurationError → configuration message (not generic)',
+      () async {
+        final err = await _runGoogleSignInCatch(() async {
+          throw const GoogleSignInException(
+            code: GoogleSignInExceptionCode.providerConfigurationError,
+            description: 'SHA-1 not registered.',
+          );
+        });
 
-    test('providerConfigurationError → configuration message (not generic)', () async {
-      final err = await _runGoogleSignInCatch(() async {
-        throw const GoogleSignInException(
-          code: GoogleSignInExceptionCode.providerConfigurationError,
-          description: 'SHA-1 not registered.',
+        expect(err, isNotNull);
+        expect(
+          err!.message,
+          'Google sign-in is not available. Please sign in with email instead.',
         );
-      });
-
-      expect(err, isNotNull);
-      expect(err!.message,
-          'Google sign-in is not available. Please sign in with email instead.');
-    });
+      },
+    );
 
     test('user cancelled → cancelled message, not generic failure', () async {
       final err = await _runGoogleSignInCatch(() async {
@@ -229,7 +207,10 @@ void main() {
       }
 
       expect(cancelEx?.code, GoogleSignInExceptionCode.canceled);
-      expect(configEx?.code, GoogleSignInExceptionCode.clientConfigurationError);
+      expect(
+        configEx?.code,
+        GoogleSignInExceptionCode.clientConfigurationError,
+      );
       expect(cancelEx?.code, isNot(configEx?.code));
     });
   });

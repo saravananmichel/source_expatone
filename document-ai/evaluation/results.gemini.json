@@ -1,0 +1,100 @@
+{
+  "provider": "gemini",
+  "syntheticCases": 8,
+  "validResults": 8,
+  "classificationAccuracy": 1.0,
+  "meanFieldRecall": 1.0,
+  "semanticHallucinationRate": null,
+  "humanUsefulness": null,
+  "limitations": "Exact quote matching does not establish semantic entailment; human ratings and real scan benchmarks required.",
+  "results": [
+    {
+      "id": "contract",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 3.28
+    },
+    {
+      "id": "passport",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 3.56
+    },
+    {
+      "id": "statement",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 9.89
+    },
+    {
+      "id": "insurance",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 3.38
+    },
+    {
+      "id": "tenancy",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 3.68
+    },
+    {
+      "id": "visa",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 5.33
+    },
+    {
+      "id": "missing",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 3.89
+    },
+    {
+      "id": "contradiction",
+      "model": "gemini-3.5-flash-lite",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 3.38
+    }
+  ]
+}

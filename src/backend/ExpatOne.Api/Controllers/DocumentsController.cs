@@ -12,6 +12,7 @@ namespace ExpatOne.Api.Controllers;
 [Authorize]
 public class DocumentsController : ControllerBase
 {
+    private readonly IDocumentAnalysisJobs? _jobs;
     private readonly IDocumentService _documentService;
     private readonly IUserService _userService;
     private readonly IDocumentAnalysisService? _documentAnalysisService;
@@ -25,8 +26,10 @@ public class DocumentsController : ControllerBase
         IDocumentAnalysisService? documentAnalysisService = null,
         IDocumentVersionService? documentVersionService = null,
         IDocumentShareService? documentShareService = null,
-        IDocumentAuditService? documentAuditService = null)
+        IDocumentAuditService? documentAuditService = null,
+        IDocumentAnalysisJobs? jobs = null)
     {
+        _jobs = jobs;
         _documentService = documentService;
         _userService = userService;
         _documentAnalysisService = documentAnalysisService;
@@ -66,6 +69,7 @@ public class DocumentsController : ControllerBase
     {
         var userId = await GetUserIdAsync();
         var document = await _documentService.CompleteUploadAsync(userId, id);
+        if (_jobs != null) await _jobs.EnqueueAsync(userId, id, false, HttpContext.RequestAborted);
         return Ok(document);
     }
 
@@ -89,10 +93,13 @@ public class DocumentsController : ControllerBase
     [EnableRateLimiting("ai-per-user")]
     public async Task<IActionResult> AnalyzeDocument(Guid id, [FromBody] AnalyzeRequestDto? dto = null)
     {
-        if (_documentAnalysisService is null)
-            return StatusCode(503, new { message = "Document analysis is not available. Gemini API is not configured." });
-
         var userId = await GetUserIdAsync();
+        if (_jobs != null)
+        {
+            var job = await _jobs.EnqueueAsync(userId, id, dto?.ForceReanalyze ?? false, HttpContext.RequestAborted);
+            return Accepted($"/api/documents/{id}/analysis/status", job);
+        }
+        if (_documentAnalysisService is null) return StatusCode(503, new { message = "Document analysis is unavailable." });
         var result = await _documentAnalysisService.AnalyzeDocumentAsync(userId, id, dto?.ForceReanalyze ?? false);
         return Ok(result);
     }
@@ -100,8 +107,12 @@ public class DocumentsController : ControllerBase
     [HttpGet("{id:guid}/analysis")]
     public async Task<IActionResult> GetAnalysis(Guid id)
     {
-        if (_documentAnalysisService is null)
-            return StatusCode(503, new { message = "Document analysis is not available. Gemini API is not configured." });
+        if (_jobs != null)
+        {
+            var job = await _jobs.GetAsync(await GetUserIdAsync(), id, null, HttpContext.RequestAborted);
+            if (job != null) return job.Analysis == null ? NotFound() : Ok(job.Analysis);
+        }
+        if (_documentAnalysisService is null) return StatusCode(503);
 
         var userId = await GetUserIdAsync();
         var result = await _documentAnalysisService.GetDocumentAnalysisAsync(userId, id);
@@ -109,6 +120,28 @@ public class DocumentsController : ControllerBase
             return NotFound();
         return Ok(result);
     }
+
+    [HttpGet("{id:guid}/analysis/status")]
+    public async Task<IActionResult> AnalysisStatus(Guid id, [FromQuery] Guid? analysisId = null)
+    {
+        if (_jobs == null) return StatusCode(503);
+        var result = await _jobs.GetAsync(await GetUserIdAsync(), id, analysisId, HttpContext.RequestAborted);
+        return result == null ? NotFound() : Ok(result);
+    }
+
+    [HttpGet("{id:guid}/analysis/{analysisId:guid}")]
+    public Task<IActionResult> AnalysisVersion(Guid id, Guid analysisId) => AnalysisStatus(id, analysisId);
+
+    [HttpGet("{id:guid}/analysis/history")]
+    public async Task<IActionResult> AnalysisHistory(Guid id)
+    {
+        if (_jobs == null) return StatusCode(503);
+        return Ok(await _jobs.HistoryAsync(await GetUserIdAsync(), id, HttpContext.RequestAborted));
+    }
+
+    [HttpPost("{id:guid}/reanalyze")]
+    [EnableRateLimiting("ai-per-user")]
+    public Task<IActionResult> Reanalyze(Guid id) => AnalyzeDocument(id, new AnalyzeRequestDto { ForceReanalyze = true });
 
     [HttpPost("{id:guid}/ask")]
     [EnableRateLimiting("ai-per-user")]

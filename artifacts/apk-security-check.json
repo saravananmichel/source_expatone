@@ -1,0 +1,6 @@
+{
+  "secureDemoHostnamePresent": true,
+  "emulatorUrlPresentInReleaseCode": false,
+  "awsPrivateCredentialPatternMatches": 0,
+  "sha256": "16674e4aa7042d344aa92db5042389148eda87037e6f8f3dd7d488e430290c75"
+}

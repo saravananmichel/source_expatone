@@ -1,0 +1,566 @@
+{
+  "documentCategory": "Government Letter",
+  "title": "Government Letter Analysis",
+  "summary": "This document is a government letter from the Synthetic Licensing Office to Avery Example, stating that their application (reference TEST-APP-01) requires additional information, specifically proof of address, which must be submitted by February 15, 2...",
+  "plainLanguageExplanation": "The Synthetic Licensing Office (issuer) is sending this letter to Avery Example (recipient) regarding their application TEST-APP-01.\n\nThe decision states that additional information is required, specifically proof of address, which must be submitted by February 15, 2027.",
+  "keyInformation": [
+    {
+      "label": "Recipient",
+      "value": "Avery Example",
+      "isExtracted": true,
+      "description": "The recipient of this government letter is Avery Example."
+    },
+    {
+      "label": "Application reference",
+      "value": "TEST-APP-01",
+      "isExtracted": true,
+      "description": "The application reference number for this synthetic licensing application is TEST-APP-01."
+    },
+    {
+      "label": "Decision",
+      "value": "Additional information required.",
+      "isExtracted": true,
+      "description": "This government letter states that additional information is required for the synthetic licensing application."
+    },
+    {
+      "label": "Deadline for action",
+      "value": "by 2027-02-15",
+      "isExtracted": true,
+      "description": "The recipient must submit proof of address by 15 February 2027 to comply with the decision."
+    }
+  ],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "fact",
+      "label": "Recipient",
+      "text": "The recipient of this government letter is Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "fact",
+      "label": "Application reference",
+      "text": "The application reference number for this synthetic licensing application is TEST-APP-01.",
+      "originalValue": "TEST-APP-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "fact",
+      "label": "Decision",
+      "text": "This government letter states that additional information is required for the synthetic licensing application.",
+      "originalValue": "Additional information required.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement4",
+      "kind": "fact",
+      "label": "Deadline for action",
+      "text": "The recipient must submit proof of address by 15 February 2027 to comply with the decision.",
+      "originalValue": "by 2027-02-15",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is a government letter from the Synthetic Licensing Office to Avery Example, stating that their application (reference TEST-APP-01) requires additional information, specifically proof of address, which must be submitted by February 15, 2...",
+      "originalValue": "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Issuer and recipient",
+      "text": "The Synthetic Licensing Office (issuer) is sending this letter to Avery Example (recipient) regarding their application TEST-APP-01.",
+      "originalValue": "Synthetic Licensing Office\nRecipient: Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Decision and requirement",
+      "text": "The decision states that additional information is required, specifically proof of address, which must be submitted by February 15, 2027.",
+      "originalValue": "Decision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "warning",
+      "label": "Deadline warning",
+      "text": "Failure to submit proof of address by February 15, 2027, may result in the application being rejected or delayed further processing.",
+      "originalValue": "Please submit proof of address by 2027-02-15.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Evidence doesn't mention consequences of missing deadline"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement1",
+        "b0-statement2",
+        "b0-statement3",
+        "b0-statement4"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-0",
+        "global-1",
+        "global-2"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 25413,
+    "inferenceBatches": [
+      {
+        "total_duration": 25357230833,
+        "load_duration": 2540458,
+        "prompt_eval_count": 700,
+        "prompt_eval_duration": 300179000,
+        "eval_count": 485,
+        "eval_duration": 24904391000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 27564,
+    "supportValidationMs": 18633,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 7,
+    "unsupportedClaims": 1,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.875,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Government Letter",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "fact",
+        "label": "Recipient",
+        "text": "The recipient of this government letter is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "fact",
+        "label": "Application reference",
+        "text": "The application reference number for this synthetic licensing application is TEST-APP-01.",
+        "originalValue": "TEST-APP-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "fact",
+        "label": "Decision",
+        "text": "This government letter states that additional information is required for the synthetic licensing application.",
+        "originalValue": "Additional information required.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "fact",
+        "label": "Deadline for action",
+        "text": "The recipient must submit proof of address by 15 February 2027 to comply with the decision.",
+        "originalValue": "by 2027-02-15",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is a government letter from the Synthetic Licensing Office to Avery Example, stating that their application (reference TEST-APP-01) requires additional information, specifically proof of address, which must be submitted by February 15, 2...",
+        "originalValue": "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Issuer and recipient",
+        "text": "The Synthetic Licensing Office (issuer) is sending this letter to Avery Example (recipient) regarding their application TEST-APP-01.",
+        "originalValue": "Synthetic Licensing Office\nRecipient: Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Decision and requirement",
+        "text": "The decision states that additional information is required, specifically proof of address, which must be submitted by February 15, 2027.",
+        "originalValue": "Decision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "warning",
+        "label": "Deadline warning",
+        "text": "Failure to submit proof of address by February 15, 2027, may result in the application being rejected or delayed further processing.",
+        "originalValue": "Please submit proof of address by 2027-02-15.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Evidence doesn't mention consequences of missing deadline"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "fact",
+          "label": "Recipient",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "fact",
+          "label": "Application reference",
+          "value": "TEST-APP-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "fact",
+          "label": "Decision",
+          "value": "Additional information required.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement4",
+          "kind": "fact",
+          "label": "Deadline for action",
+          "value": "by 2027-02-15",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "GOVERNMENT LETTER - SYNTHETIC\nSynthetic Licensing Office\nRecipient: Avery Example\nApplication reference: TEST-APP-01\nDecision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Issuer and recipient",
+          "value": "Synthetic Licensing Office\nRecipient: Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Decision and requirement",
+          "value": "Decision: Additional information required.\nPlease submit proof of address by 2027-02-15.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "warning",
+          "label": "Deadline warning",
+          "value": "Please submit proof of address by 2027-02-15.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [],
+    "facts": [
+      {
+        "id": "b0-statement1",
+        "kind": "fact",
+        "label": "Recipient",
+        "text": "The recipient of this government letter is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "fact",
+        "label": "Application reference",
+        "text": "The application reference number for this synthetic licensing application is TEST-APP-01.",
+        "originalValue": "TEST-APP-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "fact",
+        "label": "Decision",
+        "text": "This government letter states that additional information is required for the synthetic licensing application.",
+        "originalValue": "Additional information required.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "fact",
+        "label": "Deadline for action",
+        "text": "The recipient must submit proof of address by 15 February 2027 to comply with the decision.",
+        "originalValue": "by 2027-02-15",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

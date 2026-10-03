@@ -1,0 +1,20 @@
+{
+  "id": "missing",
+  "category": "Employment Contract",
+  "values": [
+    "Alex Example",
+    "Analyst"
+  ],
+  "clauses": [],
+  "forbidden": [
+    "RM12,000",
+    "monthly salary is"
+  ],
+  "pages": [
+    "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document."
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

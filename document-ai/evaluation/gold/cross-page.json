@@ -1,0 +1,82 @@
+{
+  "id": "cross-page",
+  "category": "Employment Contract",
+  "expectedValues": [
+    "2027-01-01",
+    "RM6,000",
+    "fourteen days",
+    "sixty days"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "2027-01-01",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM6,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "fourteen days",
+      "evidencePages": [
+        2
+      ]
+    },
+    {
+      "value": "sixty days",
+      "evidencePages": [
+        3
+      ]
+    }
+  ],
+  "dates": [
+    "2027-01-01"
+  ],
+  "money": [
+    "RM6,000"
+  ],
+  "sections": [],
+  "clauses": [
+    "probation",
+    "confirmation"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [
+    "probation",
+    "notice"
+  ],
+  "findings": [
+    "probation",
+    "notice"
+  ],
+  "actions": [],
+  "forbiddenClaims": [
+    "2027-07-01",
+    "after tax"
+  ],
+  "summaryCoverageTargets": [
+    "2027-01-01",
+    "RM6,000",
+    "fourteen days",
+    "sixty days",
+    "probation",
+    "confirmation"
+  ],
+  "descriptiveExplanationTargets": [
+    "probation",
+    "confirmation"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

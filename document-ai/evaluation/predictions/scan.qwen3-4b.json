@@ -1,0 +1,936 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This is a Employment Contract. Employee: Alex Example. The employer of this contract is Synthetic Systems Sdn. Bhd. The monthly salary is RM12,000, as stated in the compensation clause. Employment begins on 1 January 2027, which is the agreed start date. Either party may terminate the contract by providing sixty days written notice.",
+  "plainLanguageExplanation": "The employee must protect confidential business information from disclosure.",
+  "keyInformation": [
+    {
+      "label": "Employee",
+      "value": "Alex Example",
+      "isExtracted": true,
+      "description": "Employee: Alex Example."
+    },
+    {
+      "label": "Employer",
+      "value": "Synthetic Systems Sdn. Bhd.",
+      "isExtracted": true,
+      "description": "The employer of this contract is Synthetic Systems Sdn. Bhd."
+    },
+    {
+      "label": "Position",
+      "value": "Software Engineer",
+      "isExtracted": true,
+      "description": "The employee's position in this contract is Software Engineer."
+    },
+    {
+      "label": "Salary",
+      "value": "RM12,000 per month.",
+      "isExtracted": true,
+      "description": "The monthly salary is RM12,000, as stated in the compensation clause."
+    },
+    {
+      "label": "Start date",
+      "value": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Start date",
+      "date": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement_0",
+      "kind": "entity",
+      "label": "Employee",
+      "text": "Employee: Alex Example.",
+      "originalValue": "Alex Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "b0-statement_1",
+      "kind": "entity",
+      "label": "Employer",
+      "text": "The employer of this contract is Synthetic Systems Sdn. Bhd.",
+      "originalValue": "Synthetic Systems Sdn. Bhd.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_2"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "b0-statement_2",
+      "kind": "entity",
+      "label": "Position",
+      "text": "The employee's position in this contract is Software Engineer.",
+      "originalValue": "Software Engineer",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_3"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "b0-statement_3",
+      "kind": "money",
+      "label": "Salary",
+      "text": "The monthly salary is RM12,000, as stated in the compensation clause.",
+      "originalValue": "RM12,000 per month.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_4"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "b0-statement_4",
+      "kind": "date",
+      "label": "Start date",
+      "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_5"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "b0-statement_5",
+      "kind": "clause",
+      "label": "Termination clause",
+      "text": "Either party may terminate the contract by providing sixty days written notice.",
+      "originalValue": "Either party may terminate by giving sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_6"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "b0-statement_6",
+      "kind": "clause",
+      "label": "Confidentiality clause",
+      "text": "The employee must protect confidential business information from disclosure.",
+      "originalValue": "The employee must protect confidential business information.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_7"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Termination Notice Period",
+      "text": "Either party may terminate the contract by providing sixty days written notice, which applies to the entire employment relationship regardless of probation status.",
+      "originalValue": "Either party may terminate by giving sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_6"
+      ],
+      "supportStatus": "PARTIALLY_SUPPORTED",
+      "supportReason": "Adds 'regardless of probation status'"
+    },
+    {
+      "id": "global-4",
+      "kind": "interpretation",
+      "label": "Confidentiality Obligation",
+      "text": "The employee must protect confidential business information as part of their role responsibilities.",
+      "originalValue": "The employee must protect confidential business information.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1_block_7"
+      ],
+      "supportStatus": "PARTIALLY_SUPPORTED",
+      "supportReason": "Adds 'as part of their role responsibilities'"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page_1_block_0",
+      "page": 1,
+      "section": null,
+      "sourceText": "EMPLOYMENT CONTRACT",
+      "boundingBox": [
+        56.0,
+        93.0,
+        389.0,
+        115.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_1",
+      "page": 1,
+      "section": null,
+      "sourceText": "Employee: Alex Example",
+      "boundingBox": [
+        56.0,
+        138.0,
+        342.0,
+        166.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_2",
+      "page": 1,
+      "section": null,
+      "sourceText": "Employer: Synthetic Systems Sdn. Bhd.",
+      "boundingBox": [
+        56.0,
+        183.0,
+        510.0,
+        211.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_3",
+      "page": 1,
+      "section": null,
+      "sourceText": "Position: Software Engineer",
+      "boundingBox": [
+        55.0,
+        228.0,
+        375.0,
+        256.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_4",
+      "page": 1,
+      "section": null,
+      "sourceText": "Salary: RM12,000 per month.",
+      "boundingBox": [
+        55.0,
+        273.0,
+        390.0,
+        301.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_5",
+      "page": 1,
+      "section": null,
+      "sourceText": "Start date: 2027-01-01",
+      "boundingBox": [
+        55.0,
+        318.0,
+        307.0,
+        340.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_6",
+      "page": 1,
+      "section": null,
+      "sourceText": "Either party may terminate by giving sixty days written notice.",
+      "boundingBox": [
+        56.0,
+        362.0,
+        752.0,
+        391.0
+      ]
+    },
+    {
+      "id": "b0-page_1_block_7",
+      "page": 1,
+      "section": null,
+      "sourceText": "The employee must protect confidential business information.",
+      "boundingBox": [
+        54.0,
+        407.0,
+        757.0,
+        436.0
+      ]
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement_0",
+        "b0-statement_1",
+        "b0-statement_2"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-statement_4"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-statement_3"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "b0-statement_5",
+        "b0-statement_6"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 62853,
+    "inferenceBatches": [
+      {
+        "total_duration": 62798636208,
+        "load_duration": 5166375,
+        "prompt_eval_count": 1142,
+        "prompt_eval_duration": 1271982000,
+        "eval_count": 1262,
+        "eval_duration": 61452286000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 29506,
+    "supportValidationMs": 16682,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 0.9570967741935483,
+    "supportedClaims": 7,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 2,
+    "evidenceCoverage": 0.7777777777777778,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems Sdn. Bhd.\nPosition: Software Engineer\nSalary: RM12,000 per month.\nStart date: 2027-01-01\nEither party may terminate by giving sixty days written notice.\nThe employee must protect confidential business information.",
+        "width": 1224.0,
+        "height": 1584.0,
+        "extraction": "ocr",
+        "rotationDegrees": 0,
+        "coordinateSpace": "preprocessed_image_pixels",
+        "extractionConfidence": 0.9570967741935483,
+        "blocks": [
+          {
+            "text": "EMPLOYMENT CONTRACT",
+            "boundingBox": [
+              56.0,
+              93.0,
+              389.0,
+              115.0
+            ],
+            "kind": "heading"
+          },
+          {
+            "text": "Employee: Alex Example",
+            "boundingBox": [
+              56.0,
+              138.0,
+              342.0,
+              166.0
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Employer: Synthetic Systems Sdn. Bhd.",
+            "boundingBox": [
+              56.0,
+              183.0,
+              510.0,
+              211.0
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Position: Software Engineer",
+            "boundingBox": [
+              55.0,
+              228.0,
+              375.0,
+              256.0
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Salary: RM12,000 per month.",
+            "boundingBox": [
+              55.0,
+              273.0,
+              390.0,
+              301.0
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Start date: 2027-01-01",
+            "boundingBox": [
+              55.0,
+              318.0,
+              307.0,
+              340.0
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Either party may terminate by giving sixty days written notice.",
+            "boundingBox": [
+              56.0,
+              362.0,
+              752.0,
+              391.0
+            ],
+            "kind": "paragraph"
+          },
+          {
+            "text": "The employee must protect confidential business information.",
+            "boundingBox": [
+              54.0,
+              407.0,
+              757.0,
+              436.0
+            ],
+            "kind": "paragraph"
+          }
+        ]
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page_1_block_0",
+      "b0-page_1_block_1",
+      "b0-page_1_block_2"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement_0",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_1",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer of this contract is Synthetic Systems Sdn. Bhd.",
+        "originalValue": "Synthetic Systems Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_2",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The employee's position in this contract is Software Engineer.",
+        "originalValue": "Software Engineer",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_3",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM12,000, as stated in the compensation clause.",
+        "originalValue": "RM12,000 per month.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_4"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_4",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_5"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_5",
+        "kind": "clause",
+        "label": "Termination clause",
+        "text": "Either party may terminate the contract by providing sixty days written notice.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_6"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_6",
+        "kind": "clause",
+        "label": "Confidentiality clause",
+        "text": "The employee must protect confidential business information from disclosure.",
+        "originalValue": "The employee must protect confidential business information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_7"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Termination Notice Period",
+        "text": "Either party may terminate the contract by providing sixty days written notice, which applies to the entire employment relationship regardless of probation status.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_6"
+        ],
+        "supportStatus": "PARTIALLY_SUPPORTED",
+        "supportReason": "Adds 'regardless of probation status'"
+      },
+      {
+        "id": "global-4",
+        "kind": "interpretation",
+        "label": "Confidentiality Obligation",
+        "text": "The employee must protect confidential business information as part of their role responsibilities.",
+        "originalValue": "The employee must protect confidential business information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_7"
+        ],
+        "supportStatus": "PARTIALLY_SUPPORTED",
+        "supportReason": "Adds 'as part of their role responsibilities'"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page_1_block_0",
+        "page": 1,
+        "section": null,
+        "sourceText": "EMPLOYMENT CONTRACT",
+        "boundingBox": [
+          56.0,
+          93.0,
+          389.0,
+          115.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_1",
+        "page": 1,
+        "section": null,
+        "sourceText": "Employee: Alex Example",
+        "boundingBox": [
+          56.0,
+          138.0,
+          342.0,
+          166.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_2",
+        "page": 1,
+        "section": null,
+        "sourceText": "Employer: Synthetic Systems Sdn. Bhd.",
+        "boundingBox": [
+          56.0,
+          183.0,
+          510.0,
+          211.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_3",
+        "page": 1,
+        "section": null,
+        "sourceText": "Position: Software Engineer",
+        "boundingBox": [
+          55.0,
+          228.0,
+          375.0,
+          256.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_4",
+        "page": 1,
+        "section": null,
+        "sourceText": "Salary: RM12,000 per month.",
+        "boundingBox": [
+          55.0,
+          273.0,
+          390.0,
+          301.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_5",
+        "page": 1,
+        "section": null,
+        "sourceText": "Start date: 2027-01-01",
+        "boundingBox": [
+          55.0,
+          318.0,
+          307.0,
+          340.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_6",
+        "page": 1,
+        "section": null,
+        "sourceText": "Either party may terminate by giving sixty days written notice.",
+        "boundingBox": [
+          56.0,
+          362.0,
+          752.0,
+          391.0
+        ]
+      },
+      {
+        "id": "b0-page_1_block_7",
+        "page": 1,
+        "section": null,
+        "sourceText": "The employee must protect confidential business information.",
+        "boundingBox": [
+          54.0,
+          407.0,
+          757.0,
+          436.0
+        ]
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement_0",
+          "kind": "entity",
+          "label": "Employee",
+          "value": "Alex Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement_1",
+          "kind": "entity",
+          "label": "Employer",
+          "value": "Synthetic Systems Sdn. Bhd.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement_2",
+          "kind": "entity",
+          "label": "Position",
+          "value": "Software Engineer",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement_3",
+          "kind": "money",
+          "label": "Salary",
+          "value": "RM12,000 per month.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement_4",
+          "kind": "date",
+          "label": "Start date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement_5",
+          "kind": "clause",
+          "label": "Termination clause",
+          "value": "Either party may terminate by giving sixty days written notice.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement_6",
+          "kind": "clause",
+          "label": "Confidentiality clause",
+          "value": "The employee must protect confidential business information.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Termination Notice Period",
+          "value": "Either party may terminate by giving sixty days written notice.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "PARTIALLY_SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "interpretation",
+          "label": "Confidentiality Obligation",
+          "value": "The employee must protect confidential business information.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "PARTIALLY_SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement_0",
+          "to": "b0-page_1_block_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_1",
+          "to": "b0-page_1_block_2",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_2",
+          "to": "b0-page_1_block_3",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_3",
+          "to": "b0-page_1_block_4",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_4",
+          "to": "b0-page_1_block_5",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_5",
+          "to": "b0-page_1_block_6",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement_6",
+          "to": "b0-page_1_block_7",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page_1_block_6",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page_1_block_7",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page_1_block_0": 1,
+        "b0-page_1_block_1": 1,
+        "b0-page_1_block_2": 1,
+        "b0-page_1_block_3": 1,
+        "b0-page_1_block_4": 1,
+        "b0-page_1_block_5": 1,
+        "b0-page_1_block_6": 1,
+        "b0-page_1_block_7": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-statement_0",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_1",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer of this contract is Synthetic Systems Sdn. Bhd.",
+        "originalValue": "Synthetic Systems Sdn. Bhd.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_2",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The employee's position in this contract is Software Engineer.",
+        "originalValue": "Software Engineer",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-statement_3",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM12,000, as stated in the compensation clause.",
+        "originalValue": "RM12,000 per month.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_4"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_4",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_5"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-statement_5",
+        "kind": "clause",
+        "label": "Termination clause",
+        "text": "Either party may terminate the contract by providing sixty days written notice.",
+        "originalValue": "Either party may terminate by giving sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_6"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      },
+      {
+        "id": "b0-statement_6",
+        "kind": "clause",
+        "label": "Confidentiality clause",
+        "text": "The employee must protect confidential business information from disclosure.",
+        "originalValue": "The employee must protect confidential business information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1_block_7"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match"
+      }
+    ],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

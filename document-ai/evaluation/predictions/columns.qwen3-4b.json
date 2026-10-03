@@ -1,0 +1,1012 @@
+{
+  "documentCategory": "Insurance Document",
+  "title": "Insurance Document Analysis",
+  "summary": "This is a Insurance Document. Policyholder: Avery Example. The monthly premium for this insurance policy is RM100. The coverage limit is RM20,000 for hospital treatment, meaning the insurer will pay up to this amount per claim but not exceed it.",
+  "plainLanguageExplanation": "Cosmetic procedures are explicitly excluded from coverage, so any treatment for cosmetic purposes will not be paid by the insurer.\n\nTo make a claim, the insured must submit receipts within thirty days of the treatment date, as stated in the claims column.\n\nThe policyholder must pay a monthly premium of RM100 to maintain coverage, as specified in the premium column.",
+  "keyInformation": [
+    {
+      "label": "Policyholder",
+      "value": "Avery Example",
+      "isExtracted": true,
+      "description": "Policyholder: Avery Example."
+    },
+    {
+      "label": "Coverage",
+      "value": "Hospital treatment up to RM20,000.",
+      "isExtracted": true,
+      "description": "This insurance policy covers hospital treatment up to RM20,000."
+    },
+    {
+      "label": "Exclusions",
+      "value": "Cosmetic treatment is excluded.",
+      "isExtracted": true,
+      "description": "Cosmetic treatment is excluded from this insurance policy."
+    },
+    {
+      "label": "Claims Process",
+      "value": "Submit receipts within thirty days.",
+      "isExtracted": true,
+      "description": "To make a claim, the policyholder must submit receipts within thirty days of the treatment."
+    },
+    {
+      "label": "Premium",
+      "value": "RM100 per month.",
+      "isExtracted": true,
+      "description": "The monthly premium for this insurance policy is RM100."
+    }
+  ],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "entity",
+      "label": "Policyholder",
+      "text": "Policyholder: Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block2"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "entity",
+      "label": "Coverage",
+      "text": "This insurance policy covers hospital treatment up to RM20,000.",
+      "originalValue": "Hospital treatment up to RM20,000.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block3",
+        "b0-page1_block4"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "entity",
+      "label": "Exclusions",
+      "text": "Cosmetic treatment is excluded from this insurance policy.",
+      "originalValue": "Cosmetic treatment is excluded.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block5",
+        "b0-page1_block6"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement4",
+      "kind": "entity",
+      "label": "Claims Process",
+      "text": "To make a claim, the policyholder must submit receipts within thirty days of the treatment.",
+      "originalValue": "Submit receipts within thirty days.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block7",
+        "b0-page1_block8"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement5",
+      "kind": "money",
+      "label": "Premium",
+      "text": "The monthly premium for this insurance policy is RM100.",
+      "originalValue": "RM100 per month.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block9"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Coverage limit",
+      "text": "The coverage limit is RM20,000 for hospital treatment, meaning the insurer will pay up to this amount per claim but not exceed it.",
+      "originalValue": "treatment up to RM20,000.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block4"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Exclusions",
+      "text": "Cosmetic procedures are explicitly excluded from coverage, so any treatment for cosmetic purposes will not be paid by the insurer.",
+      "originalValue": "Exclusions column: Cosmetic",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block5"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Claim submission requirement",
+      "text": "To make a claim, the insured must submit receipts within thirty days of the treatment date, as stated in the claims column.",
+      "originalValue": "Submit receipts within thirty days.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block7",
+        "b0-page1_block8"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "interpretation",
+      "label": "Premium payment",
+      "text": "The policyholder must pay a monthly premium of RM100 to maintain coverage, as specified in the premium column.",
+      "originalValue": "RM100 per month.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1_block9"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase of evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1_block0",
+      "page": 1,
+      "section": null,
+      "sourceText": "SYNTHETIC EVALUATION - NO REAL PERSONAL DATA",
+      "boundingBox": [
+        42.404998779296875,
+        19.43902587890625,
+        278.06103515625,
+        26.0989990234375
+      ]
+    },
+    {
+      "id": "b0-page1_block1",
+      "page": 1,
+      "section": null,
+      "sourceText": "INSURANCE POLICY - SYNTHETIC",
+      "boundingBox": [
+        43.02299880981445,
+        53.98101806640625,
+        221.87197875976562,
+        62.1209716796875
+      ]
+    },
+    {
+      "id": "b0-page1_block2",
+      "page": 1,
+      "section": null,
+      "sourceText": "Policyholder: Avery Example",
+      "boundingBox": [
+        42.84700012207031,
+        79.1240234375,
+        181.5349884033203,
+        89.29901123046875
+      ]
+    },
+    {
+      "id": "b0-page1_block3",
+      "page": 1,
+      "section": null,
+      "sourceText": "Coverage column: Hospital",
+      "boundingBox": [
+        42.54999923706055,
+        113.99200439453125,
+        177.10198974609375,
+        124.29901123046875
+      ]
+    },
+    {
+      "id": "b0-page1_block4",
+      "page": 1,
+      "section": null,
+      "sourceText": "treatment up to RM20,000.",
+      "boundingBox": [
+        42.198001861572266,
+        130.09100341796875,
+        175.90298461914062,
+        140.177978515625
+      ]
+    },
+    {
+      "id": "b0-page1_block5",
+      "page": 1,
+      "section": null,
+      "sourceText": "Exclusions column: Cosmetic",
+      "boundingBox": [
+        317.8689880371094,
+        113.99200439453125,
+        463.09100341796875,
+        122.1209716796875
+      ]
+    },
+    {
+      "id": "b0-page1_block6",
+      "page": 1,
+      "section": null,
+      "sourceText": "treatment is excluded.",
+      "boundingBox": [
+        317.197998046875,
+        130.1240234375,
+        427.65997314453125,
+        138.1209716796875
+      ]
+    },
+    {
+      "id": "b0-page1_block7",
+      "page": 1,
+      "section": null,
+      "sourceText": "Claims column: Submit receipts",
+      "boundingBox": [
+        42.54999923706055,
+        208.99200439453125,
+        199.0909881591797,
+        219.177978515625
+      ]
+    },
+    {
+      "id": "b0-page1_block8",
+      "page": 1,
+      "section": null,
+      "sourceText": "within thirty days.",
+      "boundingBox": [
+        42.03300094604492,
+        225.1240234375,
+        129.4169921875,
+        235.29901123046875
+      ]
+    },
+    {
+      "id": "b0-page1_block9",
+      "page": 1,
+      "section": null,
+      "sourceText": "Premium column: RM100 per month.",
+      "boundingBox": [
+        317.84698486328125,
+        209.09100341796875,
+        499.7759704589844,
+        219.177978515625
+      ]
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement1",
+        "b0-statement2",
+        "b0-statement3",
+        "b0-statement4"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-statement5"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-1",
+        "global-2",
+        "global-3",
+        "global-4"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 53983,
+    "inferenceBatches": [
+      {
+        "total_duration": 53948304291,
+        "load_duration": 3983458,
+        "prompt_eval_count": 1831,
+        "prompt_eval_duration": 2026941000,
+        "eval_count": 1681,
+        "eval_duration": 51811331000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 31125,
+    "supportValidationMs": 21544,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 9,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 1.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "SYNTHETIC EVALUATION - NO REAL PERSONAL DATA\r\nINSURANCE POLICY - SYNTHETIC\r\nPolicyholder: Avery Example\r\nCoverage column: Hospital \r\ntreatment up to RM20,000. \r\nExclusions column: Cosmetic \r\ntreatment is excluded. \r\nClaims column: Submit receipts \r\nwithin thirty days. \r\nPremium column: RM100 per month. \r\nSynthetic fixture / Page 1",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "native",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": [
+          {
+            "text": "SYNTHETIC EVALUATION - NO REAL PERSONAL DATA",
+            "boundingBox": [
+              42.404998779296875,
+              19.43902587890625,
+              278.06103515625,
+              26.0989990234375
+            ],
+            "kind": "heading"
+          },
+          {
+            "text": "INSURANCE POLICY - SYNTHETIC",
+            "boundingBox": [
+              43.02299880981445,
+              53.98101806640625,
+              221.87197875976562,
+              62.1209716796875
+            ],
+            "kind": "heading"
+          },
+          {
+            "text": "Policyholder: Avery Example",
+            "boundingBox": [
+              42.84700012207031,
+              79.1240234375,
+              181.5349884033203,
+              89.29901123046875
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Coverage column: Hospital",
+            "boundingBox": [
+              42.54999923706055,
+              113.99200439453125,
+              177.10198974609375,
+              124.29901123046875
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "treatment up to RM20,000.",
+            "boundingBox": [
+              42.198001861572266,
+              130.09100341796875,
+              175.90298461914062,
+              140.177978515625
+            ],
+            "kind": "paragraph"
+          },
+          {
+            "text": "Exclusions column: Cosmetic",
+            "boundingBox": [
+              317.8689880371094,
+              113.99200439453125,
+              463.09100341796875,
+              122.1209716796875
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "treatment is excluded.",
+            "boundingBox": [
+              317.197998046875,
+              130.1240234375,
+              427.65997314453125,
+              138.1209716796875
+            ],
+            "kind": "paragraph"
+          },
+          {
+            "text": "Claims column: Submit receipts",
+            "boundingBox": [
+              42.54999923706055,
+              208.99200439453125,
+              199.0909881591797,
+              219.177978515625
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "within thirty days.",
+            "boundingBox": [
+              42.03300094604492,
+              225.1240234375,
+              129.4169921875,
+              235.29901123046875
+            ],
+            "kind": "paragraph"
+          },
+          {
+            "text": "Premium column: RM100 per month.",
+            "boundingBox": [
+              317.84698486328125,
+              209.09100341796875,
+              499.7759704589844,
+              219.177978515625
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Synthetic fixture / Page 1",
+            "boundingBox": [
+              42.404998779296875,
+              755.4480018615723,
+              140.40599060058594,
+              763.8810005187988
+            ],
+            "kind": "paragraph"
+          }
+        ]
+      }
+    ],
+    "documentCategory": "Insurance Document",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1_block0",
+      "b0-page1_block1",
+      "b0-page1_block2"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "entity",
+        "label": "Policyholder",
+        "text": "Policyholder: Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "entity",
+        "label": "Coverage",
+        "text": "This insurance policy covers hospital treatment up to RM20,000.",
+        "originalValue": "Hospital treatment up to RM20,000.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block3",
+          "b0-page1_block4"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "entity",
+        "label": "Exclusions",
+        "text": "Cosmetic treatment is excluded from this insurance policy.",
+        "originalValue": "Cosmetic treatment is excluded.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block5",
+          "b0-page1_block6"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "entity",
+        "label": "Claims Process",
+        "text": "To make a claim, the policyholder must submit receipts within thirty days of the treatment.",
+        "originalValue": "Submit receipts within thirty days.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block7",
+          "b0-page1_block8"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "money",
+        "label": "Premium",
+        "text": "The monthly premium for this insurance policy is RM100.",
+        "originalValue": "RM100 per month.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block9"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Coverage limit",
+        "text": "The coverage limit is RM20,000 for hospital treatment, meaning the insurer will pay up to this amount per claim but not exceed it.",
+        "originalValue": "treatment up to RM20,000.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block4"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Exclusions",
+        "text": "Cosmetic procedures are explicitly excluded from coverage, so any treatment for cosmetic purposes will not be paid by the insurer.",
+        "originalValue": "Exclusions column: Cosmetic",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block5"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Claim submission requirement",
+        "text": "To make a claim, the insured must submit receipts within thirty days of the treatment date, as stated in the claims column.",
+        "originalValue": "Submit receipts within thirty days.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block7",
+          "b0-page1_block8"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "interpretation",
+        "label": "Premium payment",
+        "text": "The policyholder must pay a monthly premium of RM100 to maintain coverage, as specified in the premium column.",
+        "originalValue": "RM100 per month.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block9"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase of evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1_block0",
+        "page": 1,
+        "section": null,
+        "sourceText": "SYNTHETIC EVALUATION - NO REAL PERSONAL DATA",
+        "boundingBox": [
+          42.404998779296875,
+          19.43902587890625,
+          278.06103515625,
+          26.0989990234375
+        ]
+      },
+      {
+        "id": "b0-page1_block1",
+        "page": 1,
+        "section": null,
+        "sourceText": "INSURANCE POLICY - SYNTHETIC",
+        "boundingBox": [
+          43.02299880981445,
+          53.98101806640625,
+          221.87197875976562,
+          62.1209716796875
+        ]
+      },
+      {
+        "id": "b0-page1_block2",
+        "page": 1,
+        "section": null,
+        "sourceText": "Policyholder: Avery Example",
+        "boundingBox": [
+          42.84700012207031,
+          79.1240234375,
+          181.5349884033203,
+          89.29901123046875
+        ]
+      },
+      {
+        "id": "b0-page1_block3",
+        "page": 1,
+        "section": null,
+        "sourceText": "Coverage column: Hospital",
+        "boundingBox": [
+          42.54999923706055,
+          113.99200439453125,
+          177.10198974609375,
+          124.29901123046875
+        ]
+      },
+      {
+        "id": "b0-page1_block4",
+        "page": 1,
+        "section": null,
+        "sourceText": "treatment up to RM20,000.",
+        "boundingBox": [
+          42.198001861572266,
+          130.09100341796875,
+          175.90298461914062,
+          140.177978515625
+        ]
+      },
+      {
+        "id": "b0-page1_block5",
+        "page": 1,
+        "section": null,
+        "sourceText": "Exclusions column: Cosmetic",
+        "boundingBox": [
+          317.8689880371094,
+          113.99200439453125,
+          463.09100341796875,
+          122.1209716796875
+        ]
+      },
+      {
+        "id": "b0-page1_block6",
+        "page": 1,
+        "section": null,
+        "sourceText": "treatment is excluded.",
+        "boundingBox": [
+          317.197998046875,
+          130.1240234375,
+          427.65997314453125,
+          138.1209716796875
+        ]
+      },
+      {
+        "id": "b0-page1_block7",
+        "page": 1,
+        "section": null,
+        "sourceText": "Claims column: Submit receipts",
+        "boundingBox": [
+          42.54999923706055,
+          208.99200439453125,
+          199.0909881591797,
+          219.177978515625
+        ]
+      },
+      {
+        "id": "b0-page1_block8",
+        "page": 1,
+        "section": null,
+        "sourceText": "within thirty days.",
+        "boundingBox": [
+          42.03300094604492,
+          225.1240234375,
+          129.4169921875,
+          235.29901123046875
+        ]
+      },
+      {
+        "id": "b0-page1_block9",
+        "page": 1,
+        "section": null,
+        "sourceText": "Premium column: RM100 per month.",
+        "boundingBox": [
+          317.84698486328125,
+          209.09100341796875,
+          499.7759704589844,
+          219.177978515625
+        ]
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "entity",
+          "label": "Policyholder",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "entity",
+          "label": "Coverage",
+          "value": "Hospital treatment up to RM20,000.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "entity",
+          "label": "Exclusions",
+          "value": "Cosmetic treatment is excluded.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement4",
+          "kind": "entity",
+          "label": "Claims Process",
+          "value": "Submit receipts within thirty days.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement5",
+          "kind": "money",
+          "label": "Premium",
+          "value": "RM100 per month.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Coverage limit",
+          "value": "treatment up to RM20,000.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Exclusions",
+          "value": "Exclusions column: Cosmetic",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Claim submission requirement",
+          "value": "Submit receipts within thirty days.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "interpretation",
+          "label": "Premium payment",
+          "value": "RM100 per month.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1_block2",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1_block3",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1_block4",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1_block5",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1_block6",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1_block7",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1_block8",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement5",
+          "to": "b0-page1_block9",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1_block4",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1_block5",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1_block7",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1_block8",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1_block9",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1_block0": 1,
+        "b0-page1_block1": 1,
+        "b0-page1_block2": 1,
+        "b0-page1_block3": 1,
+        "b0-page1_block4": 1,
+        "b0-page1_block5": 1,
+        "b0-page1_block6": 1,
+        "b0-page1_block7": 1,
+        "b0-page1_block8": 1,
+        "b0-page1_block9": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-statement1",
+        "kind": "entity",
+        "label": "Policyholder",
+        "text": "Policyholder: Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "entity",
+        "label": "Coverage",
+        "text": "This insurance policy covers hospital treatment up to RM20,000.",
+        "originalValue": "Hospital treatment up to RM20,000.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block3",
+          "b0-page1_block4"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "entity",
+        "label": "Exclusions",
+        "text": "Cosmetic treatment is excluded from this insurance policy.",
+        "originalValue": "Cosmetic treatment is excluded.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block5",
+          "b0-page1_block6"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "entity",
+        "label": "Claims Process",
+        "text": "To make a claim, the policyholder must submit receipts within thirty days of the treatment.",
+        "originalValue": "Submit receipts within thirty days.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block7",
+          "b0-page1_block8"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-statement5",
+        "kind": "money",
+        "label": "Premium",
+        "text": "The monthly premium for this insurance policy is RM100.",
+        "originalValue": "RM100 per month.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1_block9"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "medium"
+}

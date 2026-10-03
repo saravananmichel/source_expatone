@@ -1,0 +1,10 @@
+<Project>
+  <!--
+    Workaround: override the problematic Copy target that fails on space-containing
+    paths in MSBuild's incremental build tracking. This target is responsible for
+    copying out-of-date source items; replacing it with a no-op avoids the path
+    escaping bug while keeping compilation and test execution functional.
+    The DLL is still built and copied by the normal compilation targets.
+  -->
+  <Target Name="_CopyOutOfDateSourceItemsToOutputDirectory" />
+</Project>

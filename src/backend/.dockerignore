@@ -20,6 +20,7 @@ coverage/
 !.env.example
 
 **/appsettings.Development.json
+**/appsettings.json
 **/secrets.json
 **/*firebase*.json
 **/*service-account*.json

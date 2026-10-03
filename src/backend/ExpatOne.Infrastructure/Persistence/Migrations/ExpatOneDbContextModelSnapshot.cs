@@ -209,6 +209,88 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.ToTable("documents", (string)null);
                 });
 
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentAnalysisRun", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ConfigurationVersion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ContentHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("DocumentVersionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ErrorCategory")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<Guid?>("LeaseToken")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("LeaseUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ObjectKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ResultJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Stage")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId", "CreatedAt");
+
+                    b.HasIndex("Status", "LeaseUntil");
+
+                    b.HasIndex("DocumentId", "ObjectKey", "ConfigurationVersion")
+                        .IsUnique()
+                        .HasFilter("\"Status\" IN ('QUEUED', 'PROCESSING')");
+
+                    b.ToTable("document_analysis_runs", (string)null);
+                });
+
             modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentAuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -926,6 +1008,15 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.Navigation("DocumentType");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentAnalysisRun", b =>
+                {
+                    b.HasOne("ExpatOne.Domain.Entities.Document", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("ExpatOne.Domain.Entities.DocumentAuditLog", b =>

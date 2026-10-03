@@ -1,0 +1,55 @@
+{
+  "id": "contradiction",
+  "category": "Offer Letter",
+  "expectedValues": [
+    "2027-02-01",
+    "2027-03-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "2027-02-01",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-03-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-02-01",
+    "2027-03-01"
+  ],
+  "money": [],
+  "sections": [],
+  "clauses": [
+    "confirm"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "definitely begins"
+  ],
+  "summaryCoverageTargets": [
+    "2027-02-01",
+    "2027-03-01",
+    "confirm"
+  ],
+  "descriptiveExplanationTargets": [
+    "confirm"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

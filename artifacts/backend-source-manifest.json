@@ -1,0 +1,594 @@
+[
+  {
+    "path": "src/backend/Dockerfile",
+    "sha256": "b2f65acac968c2a290d098fc2df0b6e42b8f4955b74c33c2af4bfdb529a05415"
+  },
+  {
+    "path": "src/backend/.dockerignore",
+    "sha256": "ff67b575b278280e69aa6a0ae36ea505f72d3a94702f3b114f99540e78e95f6e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/ExpatOne.Application.csproj",
+    "sha256": "f2e40ff63422757f5e39fd829dce0b2ed043f148473a8ea42c8fdfb8d56a0423"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/DocumentWalletTests.cs",
+    "sha256": "78a6205c30341edba5d03afce7bf1025f038a80146042cdae0f36f4be4de98bb"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/UserServiceTests.cs",
+    "sha256": "dc56af7c9f633aff69968ba07faac94240e5c7263674e2f772bc8141d854d679"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/SecurityRegressionTests.cs",
+    "sha256": "1fef29842389eb6d1f917f1e15a6fe0e5d5b8817bc57da46f3f33608fb5a7f75"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/HealthEndpointTests.cs",
+    "sha256": "b82bf0b5e96d8b021b60bbf2c73dabd126419d4b4cff77f174db32a789cce748"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/AssistantEndpointTests.cs",
+    "sha256": "19068cbcc5ce378c0b26fafaf4053300cc130b5d09770fdb4a476e95b0e0a797"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/DocumentEndpointTests.cs",
+    "sha256": "399d4f11df2f3ef6986ad98f8db096fd182bd5ac3f3ee42297bb5f77188f2201"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/ForwardedHeadersTests.cs",
+    "sha256": "db4067de8bf774aa29f5a5ddfc2de4f1e98e72c2aafd8c0032e13f955587800e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/KnowledgeSeedTests.cs",
+    "sha256": "9246c6b23a21c4487c7458e4414987e57faf30c43998c200c13e300498fe586e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/DbContextTests.cs",
+    "sha256": "adb8a9ff02464222848428fb7d9982c66d09fda1f82a7b5d48dd3d6d215add00"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/AuthEndpointTests.cs",
+    "sha256": "e62c81e4dcfe90090e0a01e26d613578d1fe6e906692b536d4e5ed508fe30eb1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/GeminiAIServiceTests.cs",
+    "sha256": "8a0c33fa68d4aff67e6699263d3632e354a5f9046d09d2195ec4b145a13f4f44"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/IntegrationTestInfrastructure.cs",
+    "sha256": "53623cbb4681092281d936280b2d5703c07e9c602095ded16c31d77ad4e026c4"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/EmergencyAssistServiceTests.cs",
+    "sha256": "457639d3e5a5de0109f67041a23dfee5d443bf002e48c20751ed70455411216a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/ProfileEndpointTests.cs",
+    "sha256": "f0aba334baa42650c12ff27890baf9803c334047063995c739c735ae18eb3ae7"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/DocumentServiceTests.cs",
+    "sha256": "b92eb2b40d6bcb52d557b58aa7d1f7c637208ca757fd9ec0cb36a6e47d4f3fc8"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/KnowledgeIngestionServiceTests.cs",
+    "sha256": "2a55f1e3331acaae33d4a191f09e3c2176e608cb2943bff247936a701792541e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/KnowledgeEndpointTests.cs",
+    "sha256": "091924e50d6f90cd245bec0cd6debbb7a5c7c386b67d6d881b86240d24a265d7"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/DocumentAnalysisServiceTests.cs",
+    "sha256": "fb862a6906bc00e66b710dee05f288f916a3c8242a59110779510627c2527e92"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/DocumentIntelligenceTests.cs",
+    "sha256": "4f39ada1776a944c23cb74be7801e103eb34a75e7a27ad6e88fcc053a6140a63"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/AssistantServiceModeTests.cs",
+    "sha256": "cdebc12cc4b80d89a87dac71d0915d472b9240ded88f00d59118d09c8eff9a26"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/GlobalUsings.cs",
+    "sha256": "e8de9b91579ba661cbfebd3912328c2dc917d2a519cc565b717446c7f39e6d33"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/ExpatOne.Tests.csproj",
+    "sha256": "0d79f760b9d738dfe36349b8a94b529b555caa49d5a1ef3ee06461deb089a647"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/SecurityHardeningBatchCTests.cs",
+    "sha256": "9c5a9cfb5424f54927db2bbed040041f2b34cef3a8952d0da09f3ba8a53b66c7"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/RateLimitingTests.cs",
+    "sha256": "d3aa813feca607fc08c480f2dbf712a55593055a40ced7f1be078ffee3e796b2"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/SecurityHardeningBatchBTests.cs",
+    "sha256": "945b3734a527e2e61d9b73661c45d804447112403cddc93b1edf845058a63593"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/KnowledgeSearchServiceTests.cs",
+    "sha256": "7ded6ab95aa123991b361626fd6f47b1b35f3a345c3f0e618d88186746359eed"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/TranslationServiceTests.cs",
+    "sha256": "d36f6d1778724691227d01a58bff09efb62aa96aa61cb2c1896c48d4fbcaebac"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/AssistantServiceGroundingTests.cs",
+    "sha256": "7fd7446f54ca382602f17c23179b4c18058e4ae8807aa28dab39ced3019ca9d3"
+  },
+  {
+    "path": "src/backend/ExpatOne.Tests/ReminderServiceTests.cs",
+    "sha256": "a33d55c83027ff28933e0197c117b571bb0dcb572a03eabb42d144fd90e0e86f"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/ExpatOne.Infrastructure.csproj",
+    "sha256": "f1346f7c38d063e060deab2e13d62126cebc96415cc4e067b4026883a8ecb6f0"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/ExpatOne.Domain.csproj",
+    "sha256": "cd85c4c3f30b32d869ebd2c9f378d99ed5f4a7a74433c211eccf99252672b4ee"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/ExpatOne.Api.csproj",
+    "sha256": "01d14a4af6ac26a3dfa786c7eca7249b6332f62550c1766c535ce32f395bdf11"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/appsettings.Production.json",
+    "sha256": "cab169790390728dfc55cf2d13bfc5c981a1bad9da065a75d8da661e16fb072a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Program.cs",
+    "sha256": "41db124dbed051cd45740403f4469878b859548145f1a047f5d679fd0553440a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Middleware/ExceptionHandlingMiddleware.cs",
+    "sha256": "dcfcb922b8bac761e5f52efd07977a8b2cb8bde0ce5d0f7729e6c61ca71f1738"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Auth/FirebaseAuthenticationHandler.cs",
+    "sha256": "671f8fc35bdd737fa180762c27b283a5bf67e81c35b94bdfd06d185f7b0337a1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Extensions/RateLimitPartitioners.cs",
+    "sha256": "f72cb3d2983fca7b42f303a7afa6f4555be3e0521dc21cd660d17f2e25986926"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/DocumentTypesController.cs",
+    "sha256": "0473a5ff79fb152b85889c8db23fbdcbcb699d9ef2e225fef52900943f983213"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/DocumentsController.cs",
+    "sha256": "8e1706d33ec4a26a3c9629185bed665447b18c9e5ee44e129fc1211f0cf78488"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/AssistantController.cs",
+    "sha256": "24c4d5b0d513386603097f7200369ee2a907773d7d85c2966ec324cd8d114077"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/KnowledgeController.cs",
+    "sha256": "1994613b5e1435fcea72fdd4a1d19a6242c418af873418678df3f6a0ec618455"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/TranslationController.cs",
+    "sha256": "f36a86a12c86ab4edff2c53036a78a519a6fcf4f6883528336cb6b3702d6d659"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/RemindersController.cs",
+    "sha256": "11c9139556db5222d5dbe552a3a0ea605d22693e9938e64e881acd29ba9c6947"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/EmergencyController.cs",
+    "sha256": "91f1b4f1473e910b7f138d2416ad86e2309bb6090faff297fa5f4fb85584eb9f"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/ProfileController.cs",
+    "sha256": "f40d247e0846293d889151b746089fe03715fa77a92a86401c59b2f29eba217f"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/HealthController.cs",
+    "sha256": "355e63228b5728a0dbbeceed2deb9706b50849a7f3f8584c6f81e26dd87160be"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Controllers/UsersController.cs",
+    "sha256": "50da3968d25f5df7fc1442a5518e16b5c72c3931c513053502a2d0b12eab6676"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Services/KnowledgeSeedService.cs",
+    "sha256": "1a2187a17075f149b019b5a410b7caf48588ede3a1760f05dab2bfa9ddc225e2"
+  },
+  {
+    "path": "src/backend/ExpatOne.Api/Services/ReminderProcessorService.cs",
+    "sha256": "a253abca81005253beea184386f0b5f14fd5a5ecec1594c135cfec69422d55ed"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Enums/FamilyStatus.cs",
+    "sha256": "da23a42f3430c0f504ecea25e5a46e8ecdb7cb1a5bdbb363fc0c594018d92126"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Enums/EmploymentStatus.cs",
+    "sha256": "35acb88da3ae148c78ced6f7076791d6c87aebe49adc65c7e503040180b4584c"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Enums/DocumentStatus.cs",
+    "sha256": "3de6cfdcb6372447e45f9e067d90cacd155a76e019f69ca02a8502957af02ac9"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Enums/VisaPassType.cs",
+    "sha256": "fc0b3103f79cda46c8c4eab1bd96ebed92adb7fc94adbc15dc91b49e1e98506c"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Enums/ReminderStatus.cs",
+    "sha256": "2afbce46f2d5a4d1cf7610e6bc438cd2222d6ed2b2292b6c7169bfcd3ced2b3e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Common/BaseEntity.cs",
+    "sha256": "ce31b2d821d8b815bb7b3c0b6d795f9ab6fa561b0bb54e73c706b0b312c7a420"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/GovernmentKnowledge.cs",
+    "sha256": "808dae82532ebc8152d6eba363c7380c0aa06ba3a5acdad2bc5c802cfd54fea1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/AIConversationMessage.cs",
+    "sha256": "7a959571a99d7e5c4fa50e9af299d59eb063fbc5c940f092abaa1dd3cfc5d82c"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/User.cs",
+    "sha256": "da500e404a6ad36e8380a2a098b119a07defec3e0c8adfce6ac6081fc8739a90"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/EmergencyResource.cs",
+    "sha256": "dfd0034e7c706dd455cf3ba74bde6c8372a44759ec5bdc1d15317c6887fa9ba5"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/DocumentShare.cs",
+    "sha256": "53a6b5efb2d62bd1f7473941a4f620c65ec0f13f880c6cc2c139d0c1437b381e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/AIConversation.cs",
+    "sha256": "e86da82dea8a608346b31ec8b28b5480167789adbcfe98b603d65b4979e17c78"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/DocumentType.cs",
+    "sha256": "09712d82b746c9ef35edcff71dab6d975b5112b8dc6ee4f0c2b426e980c69ac1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/GovernmentSource.cs",
+    "sha256": "a1cb9a6c23d57d117988fa22c8219befe8a02d2ccf2f04ff98dbee006e738bec"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/Reminder.cs",
+    "sha256": "ebddfb76dea77f1d4a5a2e4135951ca7c2a48919db283b452695a16121fd8820"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/Country.cs",
+    "sha256": "58ee0366fe10f293aab32e828bbbd2d24747bd0c01b9f76019ac0657c2ed01f6"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/DocumentVersion.cs",
+    "sha256": "d57f66702ead68b327965520a49a5d2271a2a5d8d09364e40e31d372df041c14"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/DocumentAuditLog.cs",
+    "sha256": "2ed2f21c709df9fe9620d0bad3343cf3e9c01997cbc789cfbe2778a0f75ccd9b"
+  },
+  {
+    "path": "src/backend/ExpatOne.Domain/Entities/Document.cs",
+    "sha256": "5bb4fdacd4e8669f99a53d02bdadfc77b046ac7a2bbb4378ae8fc10cf501ffb1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/ExpatOneDbContext.cs",
+    "sha256": "f16b659b7e03b728e9e1f46e0669d24e4367199026eb527c5c0dfc7bccb78d02"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/KnowledgeSearchService.cs",
+    "sha256": "cd2d707d42fa3f232f39b7d39ab0a1fd1806963657e7ea2f1f74dcbaa4641eeb"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/UserService.cs",
+    "sha256": "e92ce70c9c0acb47d925b1bb7bab3561f72a4bb507b65d7d51d251db98fdf612"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/DocumentAnalysisService.cs",
+    "sha256": "8320e20187b1667dd5a384ddb4eb2a3229267e0d5587ec53fb73d4fce7807b07"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/ReminderService.cs",
+    "sha256": "47135b87d879690895acde9e10372cce3e5a101ff2b060f4c77bb9711d180fe2"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/EmergencyAssistService.cs",
+    "sha256": "dc22a4e4ee1923f279e1bdc5f0fcfcccff9dfab7320c8387c7ccb86f096817b1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/S3StorageService.cs",
+    "sha256": "200cfe5bf97a54ac0835a99cb52b68d6db1806df6d1dc1f608d1d6cae65e20d5"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/ProfileService.cs",
+    "sha256": "756ab3ebf83f18f87aaa4d5d30ac02cd9cd225e4e5246424d661c018d7c02b48"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/DocumentVersionService.cs",
+    "sha256": "c5f5cbfc0fbcf388ca3ae247456f7e8ac74047bd2228fdeea12b5ee34ab0531b"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/DocumentAuditService.cs",
+    "sha256": "d6fdd1129240907c886aaae07edd5189cbc6318daa90ae8c3a3e49e2242db512"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/KnowledgeIngestionService.cs",
+    "sha256": "3a03ba4ce56ed991f33e9ec92837b87bd720c1feabca1a4a78668ed8963b6408"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/AssistantService.cs",
+    "sha256": "cbb75da18feeef23402b7acd33737417882aea060fb4ce4698cbf84c00b7977e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/DocumentShareService.cs",
+    "sha256": "40c29771a9113cc302423854fa04093d9d74ac9e1f5004ae80619cc922e7c07b"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/DocumentService.cs",
+    "sha256": "e7b8f71fcefb5015211af205d29a2a2eba8f40c7b3bfee466e62386248a1ef1a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/GeminiAIService.cs",
+    "sha256": "3953316c3fdb4fad0f3eb932d31782e267567a77a2dbfe7cc6d700ac21fac5c7"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Services/TranslationService.cs",
+    "sha256": "2157665d7ecf0bc75d3239c93eb9c4bfb437528eeb536e83af70ffef35e7a4ca"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/AIConversationMessageConfiguration.cs",
+    "sha256": "4da55f1b6b89475932a14b1dc950d9574144b676b2091784d6e7533a814d92cd"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/DocumentVersionConfiguration.cs",
+    "sha256": "267883841152ad13acc192e5d04f83ec4f7247433b2dfbfc1b2b14ac3db4fbe8"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/DocumentAuditLogConfiguration.cs",
+    "sha256": "015059ec8ed5f611d64a0e636aed4bc7816589e87f3d6046b89a774b5de775c3"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/ReminderConfiguration.cs",
+    "sha256": "32e01e01feb2ffcf09b9ae0e44ce89c112d508794f8aee9afa3049e5961e250d"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/CountryConfiguration.cs",
+    "sha256": "5fdb90c32ac0830229736520234e492173f2968b7f2c61b6d9e427c093eb9cdf"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/AIConversationConfiguration.cs",
+    "sha256": "a9386a947fc3c48e6b4b072fe2f8154be7d7b57a8f1bc6bd9dbc3d2d10bbf1bb"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/GovernmentSourceConfiguration.cs",
+    "sha256": "0a48c4a3e4e6c8903ec6d31ef1e2f406850a8b300d8903807b4e0130da7714fe"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/DocumentShareConfiguration.cs",
+    "sha256": "74a73c87dcc2f744a11c5f5f364dfa65e64fa23d3ad3e15415763b930820998f"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/GovernmentKnowledgeConfiguration.cs",
+    "sha256": "e3a569ed4036af06c6d26ff573bee87626a8ac936a577f623c597c8199c25fce"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/DocumentConfiguration.cs",
+    "sha256": "4102849dd2a741346754d5241c72d3fdf8971f393ff59583ffe23943a5804695"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/UserConfiguration.cs",
+    "sha256": "e0b2d57b0c33e49ab8e37e39bce18ccb42ff1553dacbe5e27da932d713772ade"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/EmergencyResourceConfiguration.cs",
+    "sha256": "e8cee064c9c5c00148567d999e7f1bee367e5f4b059eae119ffcce989aff20c1"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Configurations/DocumentTypeConfiguration.cs",
+    "sha256": "bb177c365ee5359c7b71160e817bd9778158e49530453d8e04b6b63adbb096be"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260910090627_InitialCreate.cs",
+    "sha256": "edd5608636893c2a3de8a2603d82965c16064254330f6580ffa9e93b23bc469a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260911052214_AddDocumentOriginalFileNameAndSeedDocumentTypes.Designer.cs",
+    "sha256": "5f2b4f1904ba51b2d95b90e98bd15b575f511e418ceff5c51bcfae41e1678b0c"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260911055808_AddReminderDaysBeforeExpiryAndCascadeDelete.cs",
+    "sha256": "8f4a04127f019bdd87caa0df11bfd3c2310ea321149392680480fe26411c7f4d"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260917161000_AddDocumentIntelligenceTypes.Designer.cs",
+    "sha256": "9d296708bf38e2daf0ab85f96651101422a5daa18fa417a212a779a90304e37e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260917172033_AddDocumentVersioningSharingAudit.Designer.cs",
+    "sha256": "ce9ceaac2973d176b1c81468009b5cdd61daede763511ba39a8742110af11d66"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260917172033_AddDocumentVersioningSharingAudit.cs",
+    "sha256": "ffc0587bbddabdc0771161c86b6a5057257b55638e4eefdd6860ee74801cd298"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/ExpatOneDbContextModelSnapshot.cs",
+    "sha256": "41c43bdc21ca124d12b31db7b1d963be5e629da71a02d605af7c0c793703fc28"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260913101120_AddKnowledgeVectorColumns.Designer.cs",
+    "sha256": "e0d0ab99aea46ce7a0e19f46ba7e2b0e223af68fb5873fc91a67478422780e7b"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260917154428_AddProfileAndOnboardingFields.cs",
+    "sha256": "88b8904a980f455eeca6a1bdbfa2f8f0032bc34c2aad3a8c01d1cf5decb7ba5e"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260917161000_AddDocumentIntelligenceTypes.cs",
+    "sha256": "683ec745b00520aac94ad8c16f5bb426b9aeccef875781f112608796d927d0fe"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260911052214_AddDocumentOriginalFileNameAndSeedDocumentTypes.cs",
+    "sha256": "5c51042e48dd6e8ba2aee917c60029600629510901c30ac637877f464ca9f175"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260917154428_AddProfileAndOnboardingFields.Designer.cs",
+    "sha256": "e89e95c2ef292873f9e339c4ead6d64bfa1791aa01d6ccc56dfe0589499a48af"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260911042824_AddCompositeExternalIdentityIndex.cs",
+    "sha256": "887b53eeb3ae803702105cdf1a58c15468a924d20805cea83da05c980cd7dc11"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260911055808_AddReminderDaysBeforeExpiryAndCascadeDelete.Designer.cs",
+    "sha256": "baddb9f35cf9da6f3e1b9e335bda62fe5917e8f4f45645063ac4150baaf44979"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260913101120_AddKnowledgeVectorColumns.cs",
+    "sha256": "0304f3fe23d9bc1f595848db9d2f382ab4c5646b07210f864b7c5bba308ec971"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260911042824_AddCompositeExternalIdentityIndex.Designer.cs",
+    "sha256": "cff6717ba7a95ed170acade780fa11357e64889cb67050e2a00c215e90fe2e04"
+  },
+  {
+    "path": "src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20260910090627_InitialCreate.Designer.cs",
+    "sha256": "ee40aad6ede14cecb6b58380dd0ff95b2b2b927ed658c6392288d1ea60ef704f"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/AssistantDto.cs",
+    "sha256": "836bcbf49b070a7aaa25c46cf0e60e9874b390cc4623d393aa02123a026d3b07"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/EmergencyDto.cs",
+    "sha256": "3af78d73db5deb488050a0be878d23f6ed569d214683d8bf9a51f312f7fdb7e9"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/DocumentDto.cs",
+    "sha256": "c5a2d9fdc767868a77a8e7e0cf9e44d1118ec81b5b5cffcf7768c632415d127a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/DocumentShareDto.cs",
+    "sha256": "1d19c846bf64c5732c9ac18efc19b7fba6b92cecbf710f59c2f085ee6e46b5b6"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/DocumentAnalysisDto.cs",
+    "sha256": "6d5123b4a61fa0935e7d5daf76056ec03dc3d572a39c36378c5df3b06b7db584"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/UserDto.cs",
+    "sha256": "14acd2ebfb8865328213987650a89e4752e6f507b86d7e68ce8c8e9304655fe2"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/ProfileDto.cs",
+    "sha256": "5e39ad0325552844ff5496e2df9c7e9cc70d61ee855e919e19d78aaf0bd9f69c"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/KnowledgeDto.cs",
+    "sha256": "d6ec984e6f8201a6b37b286af0df7449f46e0e20501ef307da85d5435247daab"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/ReminderDto.cs",
+    "sha256": "5a28a45eef03f99867abbc9a2e3de358df9e96e209feef9485e1a67115d13c69"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/DocumentVersionDto.cs",
+    "sha256": "af9fee8ca02f66de174344601fefb6fb490fa0c197479a7ab5f47e9570932fda"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/TranslationDto.cs",
+    "sha256": "d878345cd23e13e16dfec4b171759117882b736a6f0e06c4eb529b8cd6e1b564"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/DTOs/DocumentAuditLogDto.cs",
+    "sha256": "24197d551410459392c5603786f4bb7d20013a6ef6ef975a01f4f917e9a43f9d"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Common/AIProviderUnavailableException.cs",
+    "sha256": "bc7c63e334d361f7238f8e954ca84b2fef0769b6c748667b0bfe1d6340373842"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Common/PagedResult.cs",
+    "sha256": "7561766af787970c8759ced0804b1c5c5ee32b62e31809ed1bbe1ddb231d93a9"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Common/ApiErrorResponse.cs",
+    "sha256": "9b4da4d204db2de36f23da13e5fd5933841ff4cc05f120987caccf05a240247a"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IDocumentVersionService.cs",
+    "sha256": "e95d173322abfcc81f145d69a35c9048f972121e61c7ac71a374ff06abb89bce"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IProfileService.cs",
+    "sha256": "05375e5fbe049740eb886b299d51da1a761cb8b8f424469f5304c8ec3d38269b"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IDocumentAuditService.cs",
+    "sha256": "64d066234e484bc8ebeacecbed747a09e20eb337e746fb79b9dbcf4446407118"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IDocumentAnalysisService.cs",
+    "sha256": "f525706c188a45369c39ae530411f107af6ec1b067bd94689e934687d79deede"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/INotificationService.cs",
+    "sha256": "4b6bb6204c7064ca678f4e791cc22c9f29cdf4b2e718609adda649288960d4db"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IReminderService.cs",
+    "sha256": "8117f5ceb3b544f8b837385d1adc9320f5ca34cd8b0ffa0defce8db84836655d"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/ITranslationService.cs",
+    "sha256": "60ca01ca4f962184b74165f5deba29e76fbed66fa3e97d1551b3a614ee03d979"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IDocumentShareService.cs",
+    "sha256": "dca2e67aab7c5df6d16a266c469b6c406640ffd5dcfab00a9968d6fe7af954e8"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IKnowledgeSearchService.cs",
+    "sha256": "8a801f8f065eb55dc4d987560e27d6d9c2cd373cb89612d431ad0508493e7b24"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IAssistantService.cs",
+    "sha256": "6fdab5cdf62603952250f29e38c60aeaad9374079ade91b89b49615afb00a658"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IStorageService.cs",
+    "sha256": "ee3894987da4cb26eebe6b2886f296d6dc8b16e449a532f2984ce32832099c82"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IEmergencyAssistService.cs",
+    "sha256": "80ea8a81e3369aa6160507f7eacce9ed377d6032e0fab090da950372ab0a167b"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IKnowledgeIngestionService.cs",
+    "sha256": "296b3b42b54be67b8602de0a055ef1344e5300a6309ceaf6e46293527483caad"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IAIService.cs",
+    "sha256": "7fb961d23aa2099ec39ad1a1c4e57c0c9e2264af2096c8a2e614769b86c27d32"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IUserService.cs",
+    "sha256": "dc631d7910a62ed1ffae7658605d7d2f85efb339a9acf5910ac293fe81b0e5d6"
+  },
+  {
+    "path": "src/backend/ExpatOne.Application/Interfaces/IDocumentService.cs",
+    "sha256": "b012bf64420c340fa89cc856b5d5134a249db314ecefb2a647a5005082e7ccc3"
+  }
+]

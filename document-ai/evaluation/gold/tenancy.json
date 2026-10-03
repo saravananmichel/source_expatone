@@ -1,0 +1,63 @@
+{
+  "id": "tenancy",
+  "category": "Tenancy Agreement",
+  "expectedValues": [
+    "Jordan Example",
+    "RM2,000",
+    "RM4,000"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Jordan Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM2,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM4,000",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [
+    "RM2,000",
+    "RM4,000"
+  ],
+  "sections": [],
+  "clauses": [
+    "notice"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "visa eligibility"
+  ],
+  "summaryCoverageTargets": [
+    "Jordan Example",
+    "RM2,000",
+    "RM4,000",
+    "notice"
+  ],
+  "descriptiveExplanationTargets": [
+    "notice"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

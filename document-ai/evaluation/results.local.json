@@ -1,0 +1,102 @@
+{
+  "provider": "local",
+  "syntheticCases": 8,
+  "validResults": 8,
+  "classificationAccuracy": 1.0,
+  "meanFieldRecall": 1.0,
+  "semanticHallucinationRate": null,
+  "humanUsefulness": null,
+  "analyzerVersion": "document-engine-v1",
+  "promptVersion": "grounding-v2",
+  "limitations": "Exact quote matching does not establish semantic entailment; human ratings and real scan benchmarks required.",
+  "results": [
+    {
+      "id": "contract",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 68.95
+    },
+    {
+      "id": "passport",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 50.93
+    },
+    {
+      "id": "statement",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 97.22
+    },
+    {
+      "id": "insurance",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 51.83
+    },
+    {
+      "id": "tenancy",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 82.77
+    },
+    {
+      "id": "visa",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 41.02
+    },
+    {
+      "id": "missing",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 42.82
+    },
+    {
+      "id": "contradiction",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 73.31
+    }
+  ]
+}

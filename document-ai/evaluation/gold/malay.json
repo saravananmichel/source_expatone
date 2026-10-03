@@ -1,0 +1,65 @@
+{
+  "id": "malay",
+  "category": "Offer Letter",
+  "expectedValues": [
+    "Ali Contoh",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Ali Contoh",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM5,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-01-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-01-01"
+  ],
+  "money": [
+    "RM5,000"
+  ],
+  "sections": [],
+  "clauses": [
+    "probation"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "Ali Contoh",
+    "RM5,000",
+    "2027-01-01",
+    "probation"
+  ],
+  "descriptiveExplanationTargets": [
+    "probation"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

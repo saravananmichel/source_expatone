@@ -1,0 +1,12 @@
+[
+  {
+    "path": "/health",
+    "status": 200,
+    "passed": true
+  },
+  {
+    "path": "/documents",
+    "status": 401,
+    "passed": true
+  }
+]

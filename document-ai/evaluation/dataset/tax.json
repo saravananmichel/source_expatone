@@ -1,0 +1,23 @@
+{
+  "id": "tax",
+  "category": "Tax Document",
+  "pages": [
+    "TAX STATEMENT - SYNTHETIC\nTaxpayer: Avery Example\nAssessment year: 2026\nEmployment income: RM84,000\nTax deducted: RM3,000\nThis statement records deductions and is not a tax assessment."
+  ],
+  "values": [
+    "2026",
+    "RM84,000",
+    "RM3,000"
+  ],
+  "clauses": [
+    "assessment"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "government-form",
+  "category": "Government Form",
+  "pages": [
+    "GOVERNMENT FORM - SYNTHETIC\nApplicant: Avery Example\nReference: TEST-FORM-01\nAddress: [blank]\nAttachment checklist: [X] Passport copy [ ] Proof of address\nDeclaration: The applicant confirms the supplied information is accurate."
+  ],
+  "values": [
+    "Avery Example",
+    "TEST-FORM-01"
+  ],
+  "clauses": [
+    "declaration"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

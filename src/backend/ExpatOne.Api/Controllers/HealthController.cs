@@ -29,6 +29,8 @@ public class HealthController : ControllerBase
 
         var status = databaseConnected ? "ok" : "degraded";
 
-        return Ok(new { status });
+        return databaseConnected
+            ? Ok(new { status })
+            : StatusCode(StatusCodes.Status503ServiceUnavailable, new { status });
     }
 }

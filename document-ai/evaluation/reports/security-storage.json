@@ -1,0 +1,22 @@
+{
+  "get-public-access-block": {
+    "accessible": false,
+    "configuration": null,
+    "errorCategory": "AccessDenied"
+  },
+  "get-bucket-encryption": {
+    "accessible": false,
+    "configuration": null,
+    "errorCategory": "AccessDenied"
+  },
+  "get-bucket-policy-status": {
+    "accessible": false,
+    "configuration": null,
+    "errorCategory": "AccessDenied"
+  },
+  "get-bucket-versioning": {
+    "accessible": false,
+    "configuration": null,
+    "errorCategory": "AccessDenied"
+  }
+}

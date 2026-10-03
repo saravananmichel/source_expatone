@@ -1,0 +1,23 @@
+{
+  "id": "medical",
+  "category": "Medical Document",
+  "pages": [
+    "MEDICAL REPORT - SYNTHETIC\nPatient: Avery Example\nProvider: Example Clinic\nVisit date: 2026-09-15\nObservation: Blood pressure reading 120/80.\nInstruction: Return for review in four weeks."
+  ],
+  "values": [
+    "Avery Example",
+    "2026-09-15",
+    "120/80"
+  ],
+  "clauses": [
+    "review"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

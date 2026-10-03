@@ -1,0 +1,197 @@
+{
+  "provider": "local",
+  "model": "qwen3:4b",
+  "pipelineSourceHash": "4f68732868f34456f96913055e61e61946f35b1bb296e7943bb4146f6a40d9c6",
+  "cases": 3,
+  "valid": 3,
+  "classificationAccuracy": 1.0,
+  "meanExactFieldTargetRecall": 1.0,
+  "independentSemanticAccuracy": null,
+  "confidenceCalibrated": false,
+  "limitations": "Partial synthetic gold. Keyword/target scores and same-family model-judge verdicts are proxies, not scientific entailment or human accuracy. Missing measurements are null.",
+  "results": [
+    {
+      "id": "chinese",
+      "language": "zh",
+      "layout": "native",
+      "pageCount": 1,
+      "extractionMs": 0,
+      "valid": true,
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "classificationCorrect": true,
+      "exactFieldTargetRecall": 1.0,
+      "dateTargetRecall": 1.0,
+      "moneyTargetRecall": 1.0,
+      "clauseKeywordRecall": 1.0,
+      "findingKeywordRecall": null,
+      "actionKeywordRecall": null,
+      "summaryTargetCoverage": 1.0,
+      "forbiddenPhraseCount": 0,
+      "quoteMatchRate": 1.0,
+      "modelJudgeUnsupportedFraction": 0.0,
+      "modelJudgeSupportedFraction": 1.0,
+      "independentEvidenceSupportRate": null,
+      "semanticHallucinationRate": null,
+      "humanUsefulness": null,
+      "diagnostics": {
+        "extractionInferenceMs": 96106,
+        "inferenceBatches": [
+          {
+            "total_duration": 34471328666,
+            "load_duration": 7504208,
+            "prompt_eval_count": 458,
+            "prompt_eval_duration": 51938000,
+            "eval_count": 509,
+            "eval_duration": 34305603000
+          }
+        ],
+        "reasoningStatus": "completed",
+        "reasoningMs": 49476,
+        "supportValidationMs": 31129,
+        "supportMethod": "model-judge-v1; uncalibrated",
+        "verdictCoverage": 1.0,
+        "supportModel": "qwen3:4b",
+        "pageCount": 1,
+        "ocrConfidence": 1,
+        "supportedClaims": 11,
+        "unsupportedClaims": 0,
+        "uncertainClaims": 0,
+        "evidenceCoverage": 1.0,
+        "findingsCount": 0,
+        "actionsCount": 0,
+        "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+      },
+      "residentModels": [
+        {
+          "name": "qwen3:4b",
+          "size": 5106921635,
+          "size_vram": 5106921635,
+          "context_length": 16384
+        }
+      ],
+      "seconds": 176.74
+    },
+    {
+      "id": "columns",
+      "language": "en",
+      "layout": "columns",
+      "pageCount": 1,
+      "extractionMs": 314,
+      "valid": true,
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "classificationCorrect": true,
+      "exactFieldTargetRecall": 1.0,
+      "dateTargetRecall": null,
+      "moneyTargetRecall": 1.0,
+      "clauseKeywordRecall": 0.0,
+      "findingKeywordRecall": null,
+      "actionKeywordRecall": null,
+      "summaryTargetCoverage": 0.6,
+      "forbiddenPhraseCount": 0,
+      "quoteMatchRate": 1.0,
+      "modelJudgeUnsupportedFraction": 0.0,
+      "modelJudgeSupportedFraction": 0.8333333333333334,
+      "independentEvidenceSupportRate": null,
+      "semanticHallucinationRate": null,
+      "humanUsefulness": null,
+      "diagnostics": {
+        "extractionInferenceMs": 150614,
+        "inferenceBatches": [
+          {
+            "total_duration": 150526077166,
+            "load_duration": 4801666,
+            "prompt_eval_count": 1547,
+            "prompt_eval_duration": 110591000,
+            "eval_count": 2024,
+            "eval_duration": 149951776000
+          }
+        ],
+        "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+        "reasoningMs": 66944,
+        "supportValidationMs": 17064,
+        "supportMethod": "model-judge-v1; uncalibrated",
+        "verdictCoverage": 1.0,
+        "supportModel": "qwen3:4b",
+        "pageCount": 1,
+        "ocrConfidence": 1,
+        "supportedClaims": 5,
+        "unsupportedClaims": 0,
+        "uncertainClaims": 1,
+        "evidenceCoverage": 0.8333333333333334,
+        "findingsCount": 0,
+        "actionsCount": 0,
+        "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+      },
+      "residentModels": [
+        {
+          "name": "qwen3:4b",
+          "size": 5106921635,
+          "size_vram": 5106921635,
+          "context_length": 16384
+        }
+      ],
+      "seconds": 234.97
+    },
+    {
+      "id": "contract",
+      "language": "en",
+      "layout": "native",
+      "pageCount": 1,
+      "extractionMs": 0,
+      "valid": true,
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "classificationCorrect": true,
+      "exactFieldTargetRecall": 1.0,
+      "dateTargetRecall": 1.0,
+      "moneyTargetRecall": 1.0,
+      "clauseKeywordRecall": 1.0,
+      "findingKeywordRecall": null,
+      "actionKeywordRecall": null,
+      "summaryTargetCoverage": 1.0,
+      "forbiddenPhraseCount": 0,
+      "quoteMatchRate": 1.0,
+      "modelJudgeUnsupportedFraction": 0.0,
+      "modelJudgeSupportedFraction": 1.0,
+      "independentEvidenceSupportRate": null,
+      "semanticHallucinationRate": null,
+      "humanUsefulness": null,
+      "diagnostics": {
+        "extractionInferenceMs": 69867,
+        "inferenceBatches": [
+          {
+            "total_duration": 69672324291,
+            "load_duration": 4637583,
+            "prompt_eval_count": 435,
+            "prompt_eval_duration": 449441000,
+            "eval_count": 1060,
+            "eval_duration": 68301217999
+          }
+        ],
+        "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+        "reasoningMs": 58575,
+        "supportValidationMs": 17485,
+        "supportMethod": "model-judge-v1; uncalibrated",
+        "verdictCoverage": 1.0,
+        "supportModel": "qwen3:4b",
+        "pageCount": 1,
+        "ocrConfidence": 1,
+        "supportedClaims": 7,
+        "unsupportedClaims": 0,
+        "uncertainClaims": 0,
+        "evidenceCoverage": 1.0,
+        "findingsCount": 0,
+        "actionsCount": 0,
+        "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+      },
+      "residentModels": [
+        {
+          "name": "qwen3:4b",
+          "size": 5106921635,
+          "size_vram": 5106921635,
+          "context_length": 16384
+        }
+      ],
+      "seconds": 145.95
+    }
+  ]
+}

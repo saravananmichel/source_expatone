@@ -187,10 +187,37 @@ if (!string.IsNullOrEmpty(geminiApiKey))
     builder.Services.AddScoped<IEmergencyAssistService, EmergencyAssistService>();
 }
 
-var firebaseCredentialPath = builder.Configuration["Firebase:CredentialPath"];
-if (FirebaseApp.DefaultInstance is null)
+if (!string.IsNullOrEmpty(awsRegion) && builder.Configuration["DocumentIntelligence:Enabled"] == "true")
 {
-    if (!string.IsNullOrEmpty(firebaseCredentialPath) && File.Exists(firebaseCredentialPath))
+    builder.Services.AddScoped<IDocumentAnalysisJobs, DocumentAnalysisJobs>();
+    builder.Services.AddHttpClient<DocumentIntelligenceService>(client =>
+    {
+        var address = new Uri(builder.Configuration["DocumentIntelligence:ServiceUrl"] ?? "http://localhost:8090/");
+        if (!builder.Environment.IsDevelopment() && address.Scheme != "https" && !address.IsLoopback)
+            throw new InvalidOperationException("Document model transport must use HTTPS outside local development.");
+        client.BaseAddress = address;
+        client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
+        client.Timeout = TimeSpan.FromMinutes(16);
+    });
+    builder.Services.AddScoped<IDocumentIntelligenceService>(sp => sp.GetRequiredService<DocumentIntelligenceService>());
+    builder.Services.AddHostedService<DocumentIntelligenceWorker>();
+}
+
+var isDatabaseInitialization = args.Contains("--initialize-database");
+var isDatabaseMigration = isDatabaseInitialization || args.Contains("--migrate-database");
+var firebaseCredentialPath = builder.Configuration["Firebase:CredentialPath"];
+var firebaseCredentialJson = builder.Configuration["Firebase:CredentialJson"];
+if (!isDatabaseMigration && FirebaseApp.DefaultInstance is null)
+{
+    if (!string.IsNullOrWhiteSpace(firebaseCredentialJson))
+    {
+        FirebaseApp.Create(new AppOptions
+        {
+            Credential = GoogleCredential.FromJson(firebaseCredentialJson),
+            ProjectId = builder.Configuration["Firebase:ProjectId"]
+        });
+    }
+    else if (!string.IsNullOrEmpty(firebaseCredentialPath) && File.Exists(firebaseCredentialPath))
     {
         FirebaseApp.Create(new AppOptions
         {
@@ -256,6 +283,64 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
+
+if (isDatabaseMigration)
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+    if (isDatabaseInitialization)
+    {
+        try
+        {
+            var connection = new Npgsql.NpgsqlConnectionStringBuilder(
+                db.Database.GetConnectionString());
+            if (connection.Database != "expatone")
+                throw new InvalidOperationException("The configured database is not expatone.");
+
+            connection.Database = "postgres";
+            await using var admin = new Npgsql.NpgsqlConnection(connection.ConnectionString);
+            await admin.OpenAsync();
+            await using var exists = new Npgsql.NpgsqlCommand(
+                "SELECT EXISTS (SELECT 1 FROM pg_database WHERE datname = 'expatone')", admin);
+            var databaseExists = (bool)(await exists.ExecuteScalarAsync() ?? false);
+            if (!databaseExists)
+            {
+                await using var create = new Npgsql.NpgsqlCommand("CREATE DATABASE expatone", admin);
+                await create.ExecuteNonQueryAsync();
+                Console.WriteLine("Created the missing expatone database.");
+            }
+        }
+        catch (Exception ex)
+        {
+            var postgresError = ex as Npgsql.PostgresException
+                ?? ex.InnerException as Npgsql.PostgresException;
+            Console.Error.WriteLine($"Database initialization failed: {ex.GetType().Name}; " +
+                $"sqlstate={postgresError?.SqlState ?? "none"}. No migrations were applied.");
+            Environment.ExitCode = 1;
+            return;
+        }
+    }
+
+    try
+    {
+        await db.Database.OpenConnectionAsync();
+        await db.Database.CloseConnectionAsync();
+    }
+    catch (Exception ex)
+    {
+        var postgresError = ex as Npgsql.PostgresException
+            ?? ex.InnerException as Npgsql.PostgresException;
+        Console.Error.WriteLine($"Database connection failed: {ex.GetType().Name}; " +
+            $"inner={ex.InnerException?.GetType().Name ?? "none"}; " +
+            $"sqlstate={postgresError?.SqlState ?? "none"}. No migrations were applied.");
+        Environment.ExitCode = 1;
+        return;
+    }
+
+    await db.Database.MigrateAsync();
+    Console.WriteLine("Database migrations applied.");
+    return;
+}
 
 if (args.Contains("--seed-knowledge"))
 {

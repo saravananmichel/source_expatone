@@ -98,6 +98,7 @@ public class DocumentVersionService : IDocumentVersionService
 
         version.IsCurrent = true;
 
+        document.ExtractedMetadata = null;
         document.S3ObjectKey = version.S3ObjectKey;
         document.OriginalFileName = version.OriginalFileName;
         document.ContentType = version.ContentType;

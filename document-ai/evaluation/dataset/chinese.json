@@ -1,0 +1,23 @@
+{
+  "id": "chinese",
+  "category": "Offer Letter",
+  "pages": [
+    "录用通知书（合成测试）\n员工姓名：林示例\n职位：工程师\n月薪：RM5,000\n入职日期：2027-01-01\n试用期：六个月。"
+  ],
+  "values": [
+    "林示例",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "clauses": [
+    "probation"
+  ],
+  "forbidden": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "language": "zh",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

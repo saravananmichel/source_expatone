@@ -1,0 +1,596 @@
+{
+  "documentCategory": "Tenancy Agreement",
+  "title": "Tenancy Agreement Analysis",
+  "summary": "This is a Tenancy Agreement. Tenant: Jordan Example. Landlord: Synthetic Property Ltd. The monthly rent is RM2,000, as stated in the agreement. The security deposit amount is RM4,000, as stated in the agreement. The tenancy term begins on 1 January 2027, which is the agreed start date for the rental period. The tenancy term ends on 31 December 2027, which is the agreed end date for the rental period. The tenant must provide thirty days written notice before terminating the tenancy agreement.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [
+    {
+      "label": "Tenant",
+      "value": "Jordan Example",
+      "isExtracted": true,
+      "description": "Tenant: Jordan Example."
+    },
+    {
+      "label": "Landlord",
+      "value": "Synthetic Property Ltd",
+      "isExtracted": true,
+      "description": "Landlord: Synthetic Property Ltd."
+    },
+    {
+      "label": "Monthly rent",
+      "value": "RM2,000",
+      "isExtracted": true,
+      "description": "The monthly rent is RM2,000, as stated in the agreement."
+    },
+    {
+      "label": "Security deposit",
+      "value": "RM4,000",
+      "isExtracted": true,
+      "description": "The security deposit amount is RM4,000, as stated in the agreement."
+    },
+    {
+      "label": "Term start date",
+      "value": "2027-01-01",
+      "isExtracted": true,
+      "description": "The tenancy term begins on 1 January 2027, which is the agreed start date for the rental period."
+    },
+    {
+      "label": "Term end date",
+      "value": "2027-12-31",
+      "isExtracted": true,
+      "description": "The tenancy term ends on 31 December 2027, which is the agreed end date for the rental period."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Term start date",
+      "date": "2027-01-01",
+      "isExtracted": true,
+      "description": "The tenancy term begins on 1 January 2027, which is the agreed start date for the rental period."
+    },
+    {
+      "label": "Term end date",
+      "date": "2027-12-31",
+      "isExtracted": true,
+      "description": "The tenancy term ends on 31 December 2027, which is the agreed end date for the rental period."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person-tenant",
+      "kind": "entity",
+      "label": "Tenant",
+      "text": "Tenant: Jordan Example.",
+      "originalValue": "Jordan Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-person-landlord",
+      "kind": "entity",
+      "label": "Landlord",
+      "text": "Landlord: Synthetic Property Ltd.",
+      "originalValue": "Synthetic Property Ltd",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-amount-rent",
+      "kind": "money",
+      "label": "Monthly rent",
+      "text": "The monthly rent is RM2,000, as stated in the agreement.",
+      "originalValue": "RM2,000",
+      "normalizedValue": "MYR 2000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-amount-security-deposit",
+      "kind": "money",
+      "label": "Security deposit",
+      "text": "The security deposit amount is RM4,000, as stated in the agreement.",
+      "originalValue": "RM4,000",
+      "normalizedValue": "MYR 4000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-date-term-start",
+      "kind": "date",
+      "label": "Term start date",
+      "text": "The tenancy term begins on 1 January 2027, which is the agreed start date for the rental period.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-date-term-end",
+      "kind": "date",
+      "label": "Term end date",
+      "text": "The tenancy term ends on 31 December 2027, which is the agreed end date for the rental period.",
+      "originalValue": "2027-12-31",
+      "normalizedValue": "2027-12-31",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-clause-notice",
+      "kind": "clause",
+      "label": "Notice requirement",
+      "text": "The tenant must provide thirty days written notice before terminating the tenancy agreement.",
+      "originalValue": "The tenant must give thirty days written notice before ending the tenancy.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "TENANCY AGREEMENT\nTenant: Jordan Example\nLandlord: Synthetic Property Ltd\nMonthly rent: RM2,000\nSecurity deposit: RM4,000\nTerm: 2027-01-01 to 2027-12-31\nThe tenant must give thirty days written notice before ending the tenancy.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-person-tenant",
+        "b0-person-landlord"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-date-term-start",
+        "b0-date-term-end"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-amount-rent",
+        "b0-amount-security-deposit"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "b0-clause-notice"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [
+    "Deposit refund conditions: not found in extracted fields from the analyzed document. Check the original and any schedules."
+  ],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 195999,
+    "inferenceBatches": [
+      {
+        "total_duration": 195841374458,
+        "load_duration": 16822375,
+        "prompt_eval_count": 626,
+        "prompt_eval_duration": 61042000,
+        "eval_count": 795,
+        "eval_duration": 42022526000
+      }
+    ],
+    "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+    "reasoningMs": 150021,
+    "supportValidationMs": 43459,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 7,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 1.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "TENANCY AGREEMENT\nTenant: Jordan Example\nLandlord: Synthetic Property Ltd\nMonthly rent: RM2,000\nSecurity deposit: RM4,000\nTerm: 2027-01-01 to 2027-12-31\nThe tenant must give thirty days written notice before ending the tenancy.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Tenancy Agreement",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person-tenant",
+        "kind": "entity",
+        "label": "Tenant",
+        "text": "Tenant: Jordan Example.",
+        "originalValue": "Jordan Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-person-landlord",
+        "kind": "entity",
+        "label": "Landlord",
+        "text": "Landlord: Synthetic Property Ltd.",
+        "originalValue": "Synthetic Property Ltd",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-amount-rent",
+        "kind": "money",
+        "label": "Monthly rent",
+        "text": "The monthly rent is RM2,000, as stated in the agreement.",
+        "originalValue": "RM2,000",
+        "normalizedValue": "MYR 2000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-amount-security-deposit",
+        "kind": "money",
+        "label": "Security deposit",
+        "text": "The security deposit amount is RM4,000, as stated in the agreement.",
+        "originalValue": "RM4,000",
+        "normalizedValue": "MYR 4000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-date-term-start",
+        "kind": "date",
+        "label": "Term start date",
+        "text": "The tenancy term begins on 1 January 2027, which is the agreed start date for the rental period.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-date-term-end",
+        "kind": "date",
+        "label": "Term end date",
+        "text": "The tenancy term ends on 31 December 2027, which is the agreed end date for the rental period.",
+        "originalValue": "2027-12-31",
+        "normalizedValue": "2027-12-31",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-clause-notice",
+        "kind": "clause",
+        "label": "Notice requirement",
+        "text": "The tenant must provide thirty days written notice before terminating the tenancy agreement.",
+        "originalValue": "The tenant must give thirty days written notice before ending the tenancy.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "TENANCY AGREEMENT\nTenant: Jordan Example\nLandlord: Synthetic Property Ltd\nMonthly rent: RM2,000\nSecurity deposit: RM4,000\nTerm: 2027-01-01 to 2027-12-31\nThe tenant must give thirty days written notice before ending the tenancy.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person-tenant",
+          "kind": "entity",
+          "label": "Tenant",
+          "value": "Jordan Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-person-landlord",
+          "kind": "entity",
+          "label": "Landlord",
+          "value": "Synthetic Property Ltd",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-amount-rent",
+          "kind": "money",
+          "label": "Monthly rent",
+          "value": "RM2,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-amount-security-deposit",
+          "kind": "money",
+          "label": "Security deposit",
+          "value": "RM4,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-date-term-start",
+          "kind": "date",
+          "label": "Term start date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-date-term-end",
+          "kind": "date",
+          "label": "Term end date",
+          "value": "2027-12-31",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-clause-notice",
+          "kind": "clause",
+          "label": "Notice requirement",
+          "value": "The tenant must give thirty days written notice before ending the tenancy.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person-tenant",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-person-landlord",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-amount-rent",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-amount-security-deposit",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-date-term-start",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-date-term-end",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-clause-notice",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-person-tenant",
+        "kind": "entity",
+        "label": "Tenant",
+        "text": "Tenant: Jordan Example.",
+        "originalValue": "Jordan Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-person-landlord",
+        "kind": "entity",
+        "label": "Landlord",
+        "text": "Landlord: Synthetic Property Ltd.",
+        "originalValue": "Synthetic Property Ltd",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-amount-rent",
+        "kind": "money",
+        "label": "Monthly rent",
+        "text": "The monthly rent is RM2,000, as stated in the agreement.",
+        "originalValue": "RM2,000",
+        "normalizedValue": "MYR 2000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-amount-security-deposit",
+        "kind": "money",
+        "label": "Security deposit",
+        "text": "The security deposit amount is RM4,000, as stated in the agreement.",
+        "originalValue": "RM4,000",
+        "normalizedValue": "MYR 4000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-date-term-start",
+        "kind": "date",
+        "label": "Term start date",
+        "text": "The tenancy term begins on 1 January 2027, which is the agreed start date for the rental period.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-date-term-end",
+        "kind": "date",
+        "label": "Term end date",
+        "text": "The tenancy term ends on 31 December 2027, which is the agreed end date for the rental period.",
+        "originalValue": "2027-12-31",
+        "normalizedValue": "2027-12-31",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-clause-notice",
+        "kind": "clause",
+        "label": "Notice requirement",
+        "text": "The tenant must provide thirty days written notice before terminating the tenancy agreement.",
+        "originalValue": "The tenant must give thirty days written notice before ending the tenancy.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "medium"
+}

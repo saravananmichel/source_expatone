@@ -1,0 +1,76 @@
+{
+  "id": "scan",
+  "category": "Employment Contract",
+  "expectedValues": [
+    "Alex Example",
+    "RM12,000",
+    "Software Engineer",
+    "2027-01-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "Alex Example",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM12,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "Software Engineer",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-01-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-01-01"
+  ],
+  "money": [
+    "RM12,000"
+  ],
+  "sections": [],
+  "clauses": [
+    "notice",
+    "confidential"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "after tax",
+    "legal requirement"
+  ],
+  "summaryCoverageTargets": [
+    "Alex Example",
+    "RM12,000",
+    "Software Engineer",
+    "2027-01-01",
+    "notice",
+    "confidential"
+  ],
+  "descriptiveExplanationTargets": [
+    "notice",
+    "confidential"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

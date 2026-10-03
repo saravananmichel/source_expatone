@@ -1,0 +1,21 @@
+{
+  "id": "visa",
+  "category": "Visa",
+  "values": [
+    "Riley Example",
+    "2026-12-31"
+  ],
+  "clauses": [
+    "employment"
+  ],
+  "forbidden": [
+    "automatic renewal"
+  ],
+  "pages": [
+    "VISA\nHolder: Riley Example\nIssuing authority: Synthetic Immigration Office\nVisa number: TEST-VISA-01\nIssue date: 2026-01-01\nExpiry date: 2026-12-31\nEntries permitted: Multiple\nCondition: Employment is not permitted under this visa."
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

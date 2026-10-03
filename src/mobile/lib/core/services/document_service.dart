@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../constants/api_constants.dart';
 import '../networking/api_client.dart';
 import '../error/app_exception.dart';
@@ -286,6 +287,8 @@ class UploadUrlResponse {
 
 class DocumentService {
   final ApiClient _apiClient;
+  final _analysisProgress = StreamController<Map<String, String>>.broadcast();
+  Stream<Map<String, String>> get analysisProgress => _analysisProgress.stream;
 
   DocumentService(this._apiClient);
 
@@ -357,8 +360,26 @@ class DocumentService {
       body: {'forceReanalyze': forceReanalyze},
       timeout: ApiConstants.aiTimeout,
     );
-    return response;
+    if (response['analysisId'] == null) return response;
+    final analysisId = response['analysisId'] as String;
+    for (var attempt = 0; attempt < 180; attempt++) {
+      final job = await _apiClient.get('/documents/$documentId/analysis/status?analysisId=$analysisId');
+      final status = job['status'];
+      _analysisProgress.add({'documentId': documentId, 'status': status as String? ?? 'PROCESSING',
+        'stage': job['stage'] as String? ?? 'Understanding document'});
+      if (status == 'COMPLETED' || status == 'REQUIRES_REVIEW') {
+        return Map<String, dynamic>.from(job['analysis'] as Map);
+      }
+      if (status == 'FAILED') {
+        throw const NetworkException("We couldn't fully analyze this document. You can retry.");
+      }
+      await Future<void>.delayed(const Duration(seconds: 2));
+    }
+    throw const NetworkException('Analysis is still processing. Reopen this screen to check progress.');
   }
+
+  Future<List<Map<String, dynamic>>> getAnalysisHistory(String documentId) =>
+      _apiClient.getList('/documents/$documentId/analysis/history');
 
   Future<Map<String, dynamic>> getDocumentAnalysis(String documentId) async {
     final response = await _apiClient.get('/documents/$documentId/analysis');

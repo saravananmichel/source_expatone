@@ -1,0 +1,21 @@
+{
+  "id": "passport",
+  "category": "Passport",
+  "values": [
+    "Morgan Example",
+    "TEST000001",
+    "2034-01-01"
+  ],
+  "clauses": [],
+  "forbidden": [
+    "salary",
+    "termination"
+  ],
+  "pages": [
+    "PASSPORT\nName: Morgan Example\nNationality: Exampleland\nPassport number: TEST000001\nDate of birth: 1990-01-01\nDate of issue: 2024-01-01\nDate of expiry: 2034-01-01\nIssuing authority: Synthetic Passport Office"
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

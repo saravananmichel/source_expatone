@@ -1,0 +1,30 @@
+{
+  "id": "cross-page",
+  "category": "Employment Contract",
+  "pages": [
+    "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+    "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+    "CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information."
+  ],
+  "values": [
+    "2027-01-01",
+    "RM6,000",
+    "fourteen days",
+    "sixty days"
+  ],
+  "clauses": [
+    "probation",
+    "confirmation"
+  ],
+  "forbidden": [
+    "2027-07-01",
+    "after tax"
+  ],
+  "language": "en",
+  "layout": "multi-page",
+  "findings": [
+    "probation",
+    "notice"
+  ],
+  "actions": []
+}

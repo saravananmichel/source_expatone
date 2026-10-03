@@ -71,3 +71,14 @@ pubspec.lock
 # =========================
 *.log
 logs/
+
+# Local demo build artifacts
+artifacts/*.apk
+artifacts/*.aab
+
+# Document intelligence development runtime
+document-ai/.venv/
+**/__pycache__/
+.pytest_cache/
+
+.tools/

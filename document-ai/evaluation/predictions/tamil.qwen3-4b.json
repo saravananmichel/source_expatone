@@ -1,0 +1,305 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This document appears to be a Employment Contract. Source details: வேலை வாய்ப்புக் கடிதம்\nபெயர்: அருண் மாதிரி\nபதவி: பொறியாளர்\nமாத சம்பளம்: RM5,000\nதொடக்க தேதி: 2027-01-01. Verify important information with the relevant authority.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person_1",
+      "kind": "entity",
+      "label": "Person",
+      "text": "The employee named in this contract is Arun Matheri.",
+      "originalValue": "அருண் மாதிரி",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-role_1",
+      "kind": "entity",
+      "label": "Role",
+      "text": "The employee's role in this contract is engineer.",
+      "originalValue": "பொறியாளர்",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-salary_1",
+      "kind": "money",
+      "label": "Salary",
+      "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+      "originalValue": "மாத சம்பளம்: RM5,000",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    },
+    {
+      "id": "b0-start_date_1",
+      "kind": "date",
+      "label": "Start Date",
+      "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+      "originalValue": "தொடக்க தேதி: 2027-01-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page_1"
+      ],
+      "supportStatus": "UNCERTAIN",
+      "supportReason": "Semantic support has not been verified."
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page_1",
+      "page": 1,
+      "section": null,
+      "sourceText": "வேலை வாய்ப்புக் கடிதம்\nபெயர்: அருண் மாதிரி\nபதவி: பொறியாளர்\nமாத சம்பளம்: RM5,000\nதொடக்க தேதி: 2027-01-01",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": []
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": []
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [
+    "Termination notice: not found in extracted fields from the analyzed document. Check the original and any schedules."
+  ],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 79677,
+    "inferenceBatches": [
+      {
+        "total_duration": 79613154834,
+        "load_duration": 5721875,
+        "prompt_eval_count": 662,
+        "prompt_eval_duration": 71926000,
+        "eval_count": 589,
+        "eval_duration": 33792228000
+      }
+    ],
+    "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+    "reasoningMs": 150029,
+    "supportValidationMs": 90022,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 0.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 0,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 4,
+    "evidenceCoverage": 0.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "வேலை வாய்ப்புக் கடிதம்\nபெயர்: அருண் மாதிரி\nபதவி: பொறியாளர்\nமாத சம்பளம்: RM5,000\nதொடக்க தேதி: 2027-01-01",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page_1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person_1",
+        "kind": "entity",
+        "label": "Person",
+        "text": "The employee named in this contract is Arun Matheri.",
+        "originalValue": "அருண் மாதிரி",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-role_1",
+        "kind": "entity",
+        "label": "Role",
+        "text": "The employee's role in this contract is engineer.",
+        "originalValue": "பொறியாளர்",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-salary_1",
+        "kind": "money",
+        "label": "Salary",
+        "text": "The monthly salary is RM5,000, as stated in the compensation clause.",
+        "originalValue": "மாத சம்பளம்: RM5,000",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      },
+      {
+        "id": "b0-start_date_1",
+        "kind": "date",
+        "label": "Start Date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "தொடக்க தேதி: 2027-01-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page_1"
+        ],
+        "supportStatus": "UNCERTAIN",
+        "supportReason": "Semantic support has not been verified."
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page_1",
+        "page": 1,
+        "section": null,
+        "sourceText": "வேலை வாய்ப்புக் கடிதம்\nபெயர்: அருண் மாதிரி\nபதவி: பொறியாளர்\nமாத சம்பளம்: RM5,000\nதொடக்க தேதி: 2027-01-01",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person_1",
+          "kind": "entity",
+          "label": "Person",
+          "value": "அருண் மாதிரி",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-role_1",
+          "kind": "entity",
+          "label": "Role",
+          "value": "பொறியாளர்",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-salary_1",
+          "kind": "money",
+          "label": "Salary",
+          "value": "மாத சம்பளம்: RM5,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        },
+        {
+          "id": "b0-start_date_1",
+          "kind": "date",
+          "label": "Start Date",
+          "value": "தொடக்க தேதி: 2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNCERTAIN"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person_1",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-role_1",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-salary_1",
+          "to": "b0-page_1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-start_date_1",
+          "to": "b0-page_1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page_1": 1
+      }
+    },
+    "entities": [],
+    "facts": [],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

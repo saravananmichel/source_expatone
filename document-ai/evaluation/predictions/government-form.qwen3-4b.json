@@ -1,0 +1,673 @@
+{
+  "documentCategory": "Government Form",
+  "title": "Government Form Analysis",
+  "summary": "This document is a government form for Avery Example to submit to the test system, establishing their reference ID as TEST-FORM-01. The applicant must provide an address (currently blank) and select attachments from a checklist that includes a passport copy (checked) and proof of address (unchecked). The applicant also signs a declaration confirming the information is accurate.",
+  "plainLanguageExplanation": "The attachment checklist requires the applicant to select one or more items from a list; in this case, the passport copy is checked (selected) while proof of address is unchecked (not selected).\n\nThe declaration clause requires the applicant to confirm that all supplied information is accurate, which must be signed to be valid.",
+  "keyInformation": [
+    {
+      "label": "Applicant",
+      "value": "Avery Example",
+      "isExtracted": true,
+      "description": "The applicant named in this form is Avery Example."
+    },
+    {
+      "label": "Reference",
+      "value": "TEST-FORM-01",
+      "isExtracted": true,
+      "description": "The reference number for this form is TEST-FORM-01."
+    },
+    {
+      "label": "Address",
+      "value": "[blank]",
+      "isExtracted": true,
+      "description": "The address field is blank for this form."
+    },
+    {
+      "label": "Attachment Checklist",
+      "value": "[X] Passport copy [ ] Proof of address",
+      "isExtracted": true,
+      "description": "The attachment checklist requires a passport copy but does not require proof of address."
+    },
+    {
+      "label": "Declaration",
+      "value": "The applicant confirms the supplied information is accurate.",
+      "isExtracted": true,
+      "description": "The applicant confirms that the supplied information is accurate."
+    }
+  ],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person_1",
+      "kind": "entity",
+      "label": "Applicant",
+      "text": "The applicant named in this form is Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-reference_1",
+      "kind": "entity",
+      "label": "Reference",
+      "text": "The reference number for this form is TEST-FORM-01.",
+      "originalValue": "TEST-FORM-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-address_1",
+      "kind": "entity",
+      "label": "Address",
+      "text": "The address field is blank for this form.",
+      "originalValue": "[blank]",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-attachment_checklist_1",
+      "kind": "entity",
+      "label": "Attachment Checklist",
+      "text": "The attachment checklist requires a passport copy but does not require proof of address.",
+      "originalValue": "[X] Passport copy [ ] Proof of address",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-declaration_1",
+      "kind": "entity",
+      "label": "Declaration",
+      "text": "The applicant confirms that the supplied information is accurate.",
+      "originalValue": "The applicant confirms the supplied information is accurate.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is a government form for Avery Example to submit to the test system, establishing their reference ID as TEST-FORM-01. The applicant must provide an address (currently blank) and select attachments from a checklist that includes a passport copy (checked) and proof of address (unchecked). The applicant also signs a declaration confirming the information is accurate.",
+      "originalValue": "GOVERNMENT FORM - SYNTHETIC",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "All details match evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Attachment checklist",
+      "text": "The attachment checklist requires the applicant to select one or more items from a list; in this case, the passport copy is checked (selected) while proof of address is unchecked (not selected).",
+      "originalValue": "[X] Passport copy [ ] Proof of address",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Declaration requirement",
+      "text": "The declaration clause requires the applicant to confirm that all supplied information is accurate, which must be signed to be valid.",
+      "originalValue": "The applicant confirms the supplied information is accurate.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "warning",
+      "label": "Address field status",
+      "text": "The address field is currently blank, which may cause processing delays or rejection if the system requires a filled address.",
+      "originalValue": "[blank]",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Evidence doesn't mention processing delays"
+    },
+    {
+      "id": "global-4",
+      "kind": "action",
+      "label": "Required action for address",
+      "text": "The applicant must fill in their address before submitting the form to avoid rejection.",
+      "originalValue": "[blank]",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Evidence doesn't state address must be filled"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "GOVERNMENT FORM - SYNTHETIC\nApplicant: Avery Example\nReference: TEST-FORM-01\nAddress: [blank]\nAttachment checklist: [X] Passport copy [ ] Proof of address\nDeclaration: The applicant confirms the supplied information is accurate.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-person_1",
+        "b0-reference_1",
+        "b0-address_1",
+        "b0-attachment_checklist_1",
+        "b0-declaration_1"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-0",
+        "global-1",
+        "global-2"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 27321,
+    "inferenceBatches": [
+      {
+        "total_duration": 27282396542,
+        "load_duration": 2130417,
+        "prompt_eval_count": 701,
+        "prompt_eval_duration": 321263000,
+        "eval_count": 538,
+        "eval_duration": 26821007000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 27106,
+    "supportValidationMs": 22281,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 8,
+    "unsupportedClaims": 2,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.8,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "GOVERNMENT FORM - SYNTHETIC\nApplicant: Avery Example\nReference: TEST-FORM-01\nAddress: [blank]\nAttachment checklist: [X] Passport copy [ ] Proof of address\nDeclaration: The applicant confirms the supplied information is accurate.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Government Form",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-person_1",
+        "kind": "entity",
+        "label": "Applicant",
+        "text": "The applicant named in this form is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-reference_1",
+        "kind": "entity",
+        "label": "Reference",
+        "text": "The reference number for this form is TEST-FORM-01.",
+        "originalValue": "TEST-FORM-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-address_1",
+        "kind": "entity",
+        "label": "Address",
+        "text": "The address field is blank for this form.",
+        "originalValue": "[blank]",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-attachment_checklist_1",
+        "kind": "entity",
+        "label": "Attachment Checklist",
+        "text": "The attachment checklist requires a passport copy but does not require proof of address.",
+        "originalValue": "[X] Passport copy [ ] Proof of address",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-declaration_1",
+        "kind": "entity",
+        "label": "Declaration",
+        "text": "The applicant confirms that the supplied information is accurate.",
+        "originalValue": "The applicant confirms the supplied information is accurate.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is a government form for Avery Example to submit to the test system, establishing their reference ID as TEST-FORM-01. The applicant must provide an address (currently blank) and select attachments from a checklist that includes a passport copy (checked) and proof of address (unchecked). The applicant also signs a declaration confirming the information is accurate.",
+        "originalValue": "GOVERNMENT FORM - SYNTHETIC",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "All details match evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Attachment checklist",
+        "text": "The attachment checklist requires the applicant to select one or more items from a list; in this case, the passport copy is checked (selected) while proof of address is unchecked (not selected).",
+        "originalValue": "[X] Passport copy [ ] Proof of address",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Declaration requirement",
+        "text": "The declaration clause requires the applicant to confirm that all supplied information is accurate, which must be signed to be valid.",
+        "originalValue": "The applicant confirms the supplied information is accurate.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "warning",
+        "label": "Address field status",
+        "text": "The address field is currently blank, which may cause processing delays or rejection if the system requires a filled address.",
+        "originalValue": "[blank]",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Evidence doesn't mention processing delays"
+      },
+      {
+        "id": "global-4",
+        "kind": "action",
+        "label": "Required action for address",
+        "text": "The applicant must fill in their address before submitting the form to avoid rejection.",
+        "originalValue": "[blank]",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Evidence doesn't state address must be filled"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "GOVERNMENT FORM - SYNTHETIC\nApplicant: Avery Example\nReference: TEST-FORM-01\nAddress: [blank]\nAttachment checklist: [X] Passport copy [ ] Proof of address\nDeclaration: The applicant confirms the supplied information is accurate.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person_1",
+          "kind": "entity",
+          "label": "Applicant",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-reference_1",
+          "kind": "entity",
+          "label": "Reference",
+          "value": "TEST-FORM-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-address_1",
+          "kind": "entity",
+          "label": "Address",
+          "value": "[blank]",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-attachment_checklist_1",
+          "kind": "entity",
+          "label": "Attachment Checklist",
+          "value": "[X] Passport copy [ ] Proof of address",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-declaration_1",
+          "kind": "entity",
+          "label": "Declaration",
+          "value": "The applicant confirms the supplied information is accurate.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "GOVERNMENT FORM - SYNTHETIC",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Attachment checklist",
+          "value": "[X] Passport copy [ ] Proof of address",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Declaration requirement",
+          "value": "The applicant confirms the supplied information is accurate.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "warning",
+          "label": "Address field status",
+          "value": "[blank]",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "action",
+          "label": "Required action for address",
+          "value": "[blank]",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-reference_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-address_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-attachment_checklist_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-declaration_1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-person_1",
+        "kind": "entity",
+        "label": "Applicant",
+        "text": "The applicant named in this form is Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-reference_1",
+        "kind": "entity",
+        "label": "Reference",
+        "text": "The reference number for this form is TEST-FORM-01.",
+        "originalValue": "TEST-FORM-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-address_1",
+        "kind": "entity",
+        "label": "Address",
+        "text": "The address field is blank for this form.",
+        "originalValue": "[blank]",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-attachment_checklist_1",
+        "kind": "entity",
+        "label": "Attachment Checklist",
+        "text": "The attachment checklist requires a passport copy but does not require proof of address.",
+        "originalValue": "[X] Passport copy [ ] Proof of address",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-declaration_1",
+        "kind": "entity",
+        "label": "Declaration",
+        "text": "The applicant confirms that the supplied information is accurate.",
+        "originalValue": "The applicant confirms the supplied information is accurate.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

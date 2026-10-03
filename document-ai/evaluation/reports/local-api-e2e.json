@@ -1,0 +1,101 @@
+{
+  "baseUrl": "http://127.0.0.1:5088/api",
+  "syntheticOnly": true,
+  "results": [
+    {
+      "name": "local health",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "auth required",
+      "status": 401,
+      "passed": true
+    },
+    {
+      "name": "authenticated identity",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "document types",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "request upload",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "real private S3 upload",
+      "passed": true,
+      "uploadMs": 1790
+    },
+    {
+      "name": "complete and enqueue",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "deduplicated async analyze",
+      "status": 202,
+      "passed": true
+    },
+    {
+      "name": "duplicate uses active run",
+      "status": 202,
+      "passed": true
+    },
+    {
+      "name": "real local model worker completed",
+      "passed": true,
+      "seconds": 285.42,
+      "provider": "Local",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "diagnostics": {
+        "extractionInferenceMs": 142023,
+        "inferenceBatches": [
+          {
+            "total_duration": 141643588250,
+            "load_duration": 2426333,
+            "prompt_eval_count": 858,
+            "prompt_eval_duration": 1451471000,
+            "eval_count": 1396,
+            "eval_duration": 92714500000
+          }
+        ],
+        "reasoningStatus": "unavailable: source extraction retained without global interpretations",
+        "reasoningMs": 90040,
+        "supportValidationMs": 39942,
+        "supportMethod": "model-judge-v1; uncalibrated",
+        "verdictCoverage": 1.0,
+        "supportModel": "qwen3:4b",
+        "pageCount": 1,
+        "ocrConfidence": 0.9570967741935483,
+        "supportedClaims": 7,
+        "unsupportedClaims": 0,
+        "uncertainClaims": 0,
+        "evidenceCoverage": 1.0,
+        "findingsCount": 0,
+        "actionsCount": 0,
+        "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation",
+        "extractionMs": 6183,
+        "understandingMs": 272020,
+        "storageMs": 203,
+        "workerMs": 278595
+      }
+    },
+    {
+      "name": "persisted version history",
+      "status": 200,
+      "passed": true
+    },
+    {
+      "name": "reload exact analysis",
+      "status": 200,
+      "passed": true
+    }
+  ],
+  "limitations": "This script exercises actual local API/S3/PostgreSQL/model. Flutter is a separate device test; development API uses HTTP on local host."
+}

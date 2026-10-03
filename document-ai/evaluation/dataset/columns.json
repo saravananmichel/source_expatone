@@ -1,0 +1,24 @@
+{
+  "id": "columns",
+  "category": "Insurance Document",
+  "pages": [
+    "INSURANCE POLICY - SYNTHETIC\nPolicyholder: Avery Example\nCoverage column: Hospital treatment up to RM20,000.\nExclusions column: Cosmetic treatment is excluded.\nClaims column: Submit receipts within thirty days.\nPremium column: RM100 per month."
+  ],
+  "values": [
+    "Avery Example",
+    "RM20,000",
+    "RM100"
+  ],
+  "clauses": [
+    "excluded",
+    "receipts"
+  ],
+  "forbidden": [
+    "guaranteed payment"
+  ],
+  "language": "en",
+  "layout": "columns",
+  "findings": [],
+  "actions": [],
+  "inputFile": "columns.pdf"
+}

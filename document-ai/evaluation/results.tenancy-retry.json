@@ -1,0 +1,25 @@
+{
+  "provider": "local",
+  "syntheticCases": 1,
+  "validResults": 1,
+  "classificationAccuracy": 1.0,
+  "meanFieldRecall": 1.0,
+  "semanticHallucinationRate": null,
+  "humanUsefulness": null,
+  "analyzerVersion": "document-engine-v1",
+  "promptVersion": "grounding-v2",
+  "limitations": "Exact quote matching does not establish semantic entailment; human ratings and real scan benchmarks required.",
+  "results": [
+    {
+      "id": "tenancy",
+      "model": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 80.47
+    }
+  ]
+}

@@ -1,0 +1,935 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This Employment Contract The monthly salary is RM6,000, as stated in the compensation clause. Employment begins on 1 January 2027, which is the agreed start date. The employee serves a six-month probation period from the start date, during which either party may terminate with fourteen days written notice.",
+  "plainLanguageExplanation": "After written confirmation, either party may terminate with sixty days written notice.\n\nThe employee must protect confidential information as part of the confidentiality clause.\n\nThe notice terms depend on employment stage. EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000 PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information. Review the probation and confirmation terms together before applying either notice provision.\n\nAfter written confirmation, either party may terminate with sixty days written notice, which is longer than the fourteen days during probation.\n\nThe employee must protect confidential information as part of the contract, which is critical for maintaining trust and preventing leaks of sensitive business data.",
+  "keyInformation": [
+    {
+      "label": "Employee",
+      "value": "Avery Example",
+      "isExtracted": true,
+      "description": "Employee: Avery Example."
+    },
+    {
+      "label": "Employer",
+      "value": "Example Research",
+      "isExtracted": true,
+      "description": "The employer named in this contract is Example Research."
+    },
+    {
+      "label": "Start date",
+      "value": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    },
+    {
+      "label": "Monthly salary",
+      "value": "RM6,000",
+      "isExtracted": true,
+      "description": "The monthly salary is RM6,000, as stated in the compensation clause."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Start date",
+      "date": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-person_employee",
+      "kind": "fact",
+      "label": "Employee",
+      "text": "Employee: Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-organization_employer",
+      "kind": "fact",
+      "label": "Employer",
+      "text": "The employer named in this contract is Example Research.",
+      "originalValue": "Example Research",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-date_start_date",
+      "kind": "date",
+      "label": "Start date",
+      "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-amount_monthly_salary",
+      "kind": "money",
+      "label": "Monthly salary",
+      "text": "The monthly salary is RM6,000, as stated in the compensation clause.",
+      "originalValue": "RM6,000",
+      "normalizedValue": "MYR 6000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-clause_probation_period",
+      "kind": "clause",
+      "label": "Probation period",
+      "text": "The employee serves a six-month probation period from the start date, during which either party may terminate with fourteen days written notice.",
+      "originalValue": "The employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page2"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-clause_termination_after_probation",
+      "kind": "clause",
+      "label": "Termination after probation",
+      "text": "After written confirmation, either party may terminate with sixty days written notice.",
+      "originalValue": "After written confirmation, either party may terminate with sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page3"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-clause_confidentiality",
+      "kind": "clause",
+      "label": "Confidentiality",
+      "text": "The employee must protect confidential information as part of the confidentiality clause.",
+      "originalValue": "Confidentiality: The employee must protect confidential information.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page3"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "rule-conditional-notice",
+      "kind": "relationship",
+      "label": "Probation and confirmed employment notice",
+      "text": "The notice terms depend on employment stage. EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000 PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information. Review the probation and confirmation terms together before applying either notice provision.",
+      "originalValue": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page2",
+        "b0-page3",
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is an employment contract between Avery Example (the employee) and Example Research (the employer), establishing a monthly salary of RM6,000 starting January 1, 2027. The employee serves a six-month probation period from the start date, during which either party may terminate with fourteen days written notice. After probation, written confirmation is required before either party may terminate with sixty days written notice. The employee must also maintain confidentiality of sensitive information.",
+      "originalValue": "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds 'critical for maintaining trust' not in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Probation termination notice period",
+      "text": "During probation, either party may terminate with fourteen days written notice, but this notice period applies both during and after probation, though the length differs after confirmation.",
+      "originalValue": "During probation, either party may terminate with fourteen days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page2"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Adds 'applies both during and after probation' not in evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Post-probation termination notice period",
+      "text": "After written confirmation, either party may terminate with sixty days written notice, which is longer than the fourteen days during probation.",
+      "originalValue": "After written confirmation, either party may terminate with sixty days written notice.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page3"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Confidentiality obligation",
+      "text": "The employee must protect confidential information as part of the contract, which is critical for maintaining trust and preventing leaks of sensitive business data.",
+      "originalValue": "Confidentiality: The employee must protect confidential information.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page3"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+      "boundingBox": null
+    },
+    {
+      "id": "b0-page2",
+      "page": 2,
+      "section": null,
+      "sourceText": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+      "boundingBox": null
+    },
+    {
+      "id": "b0-page3",
+      "page": 3,
+      "section": null,
+      "sourceText": "CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-person_employee",
+        "b0-organization_employer"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-date_start_date"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-amount_monthly_salary"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "b0-clause_probation_period",
+        "b0-clause_termination_after_probation",
+        "b0-clause_confidentiality",
+        "rule-conditional-notice",
+        "global-2",
+        "global-3"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 46395,
+    "inferenceBatches": [
+      {
+        "total_duration": 46349890917,
+        "load_duration": 4889209,
+        "prompt_eval_count": 888,
+        "prompt_eval_duration": 1070415999,
+        "eval_count": 903,
+        "eval_duration": 45112732000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 55922,
+    "supportValidationMs": 63400,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 3,
+    "ocrConfidence": 1,
+    "supportedClaims": 10,
+    "unsupportedClaims": 2,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.8333333333333334,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      },
+      {
+        "page": 2,
+        "text": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      },
+      {
+        "page": 3,
+        "text": "CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1",
+      "b0-page2",
+      "b0-page3"
+    ],
+    "statements": [
+      {
+        "id": "b0-person_employee",
+        "kind": "fact",
+        "label": "Employee",
+        "text": "Employee: Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-organization_employer",
+        "kind": "fact",
+        "label": "Employer",
+        "text": "The employer named in this contract is Example Research.",
+        "originalValue": "Example Research",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-date_start_date",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-amount_monthly_salary",
+        "kind": "money",
+        "label": "Monthly salary",
+        "text": "The monthly salary is RM6,000, as stated in the compensation clause.",
+        "originalValue": "RM6,000",
+        "normalizedValue": "MYR 6000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-clause_probation_period",
+        "kind": "clause",
+        "label": "Probation period",
+        "text": "The employee serves a six-month probation period from the start date, during which either party may terminate with fourteen days written notice.",
+        "originalValue": "The employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-clause_termination_after_probation",
+        "kind": "clause",
+        "label": "Termination after probation",
+        "text": "After written confirmation, either party may terminate with sixty days written notice.",
+        "originalValue": "After written confirmation, either party may terminate with sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-clause_confidentiality",
+        "kind": "clause",
+        "label": "Confidentiality",
+        "text": "The employee must protect confidential information as part of the confidentiality clause.",
+        "originalValue": "Confidentiality: The employee must protect confidential information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "rule-conditional-notice",
+        "kind": "relationship",
+        "label": "Probation and confirmed employment notice",
+        "text": "The notice terms depend on employment stage. EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000 PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information. Review the probation and confirmation terms together before applying either notice provision.",
+        "originalValue": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page2",
+          "b0-page3",
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is an employment contract between Avery Example (the employee) and Example Research (the employer), establishing a monthly salary of RM6,000 starting January 1, 2027. The employee serves a six-month probation period from the start date, during which either party may terminate with fourteen days written notice. After probation, written confirmation is required before either party may terminate with sixty days written notice. The employee must also maintain confidentiality of sensitive information.",
+        "originalValue": "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds 'critical for maintaining trust' not in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Probation termination notice period",
+        "text": "During probation, either party may terminate with fourteen days written notice, but this notice period applies both during and after probation, though the length differs after confirmation.",
+        "originalValue": "During probation, either party may terminate with fourteen days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page2"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Adds 'applies both during and after probation' not in evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Post-probation termination notice period",
+        "text": "After written confirmation, either party may terminate with sixty days written notice, which is longer than the fourteen days during probation.",
+        "originalValue": "After written confirmation, either party may terminate with sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Confidentiality obligation",
+        "text": "The employee must protect confidential information as part of the contract, which is critical for maintaining trust and preventing leaks of sensitive business data.",
+        "originalValue": "Confidentiality: The employee must protect confidential information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+        "boundingBox": null
+      },
+      {
+        "id": "b0-page2",
+        "page": 2,
+        "section": null,
+        "sourceText": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+        "boundingBox": null
+      },
+      {
+        "id": "b0-page3",
+        "page": 3,
+        "section": null,
+        "sourceText": "CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-person_employee",
+          "kind": "fact",
+          "label": "Employee",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-organization_employer",
+          "kind": "fact",
+          "label": "Employer",
+          "value": "Example Research",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-date_start_date",
+          "kind": "date",
+          "label": "Start date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-amount_monthly_salary",
+          "kind": "money",
+          "label": "Monthly salary",
+          "value": "RM6,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-clause_probation_period",
+          "kind": "clause",
+          "label": "Probation period",
+          "value": "The employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+          "pages": [
+            2
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-clause_termination_after_probation",
+          "kind": "clause",
+          "label": "Termination after probation",
+          "value": "After written confirmation, either party may terminate with sixty days written notice.",
+          "pages": [
+            3
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-clause_confidentiality",
+          "kind": "clause",
+          "label": "Confidentiality",
+          "value": "Confidentiality: The employee must protect confidential information.",
+          "pages": [
+            3
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "rule-conditional-notice",
+          "kind": "relationship",
+          "label": "Probation and confirmed employment notice",
+          "value": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+          "pages": [
+            1,
+            2,
+            3
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Probation termination notice period",
+          "value": "During probation, either party may terminate with fourteen days written notice.",
+          "pages": [
+            2
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Post-probation termination notice period",
+          "value": "After written confirmation, either party may terminate with sixty days written notice.",
+          "pages": [
+            3
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Confidentiality obligation",
+          "value": "Confidentiality: The employee must protect confidential information.",
+          "pages": [
+            3
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-person_employee",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-organization_employer",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-date_start_date",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-amount_monthly_salary",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-clause_probation_period",
+          "to": "b0-page2",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-clause_termination_after_probation",
+          "to": "b0-page3",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-clause_confidentiality",
+          "to": "b0-page3",
+          "relation": "cites"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-page2",
+          "relation": "cites"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-page3",
+          "relation": "cites"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page2",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page3",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page3",
+          "relation": "cites"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-person_employee",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-organization_employer",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-date_start_date",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-amount_monthly_salary",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-clause_probation_period",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-clause_termination_after_probation",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "b0-clause_confidentiality",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "global-0",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "global-1",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "global-2",
+          "relation": "relates_to"
+        },
+        {
+          "from": "rule-conditional-notice",
+          "to": "global-3",
+          "relation": "relates_to"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1,
+        "b0-page2": 2,
+        "b0-page3": 3
+      }
+    },
+    "entities": [],
+    "facts": [
+      {
+        "id": "b0-person_employee",
+        "kind": "fact",
+        "label": "Employee",
+        "text": "Employee: Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-organization_employer",
+        "kind": "fact",
+        "label": "Employer",
+        "text": "The employer named in this contract is Example Research.",
+        "originalValue": "Example Research",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-date_start_date",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-amount_monthly_salary",
+        "kind": "money",
+        "label": "Monthly salary",
+        "text": "The monthly salary is RM6,000, as stated in the compensation clause.",
+        "originalValue": "RM6,000",
+        "normalizedValue": "MYR 6000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-clause_probation_period",
+        "kind": "clause",
+        "label": "Probation period",
+        "text": "The employee serves a six-month probation period from the start date, during which either party may terminate with fourteen days written notice.",
+        "originalValue": "The employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-clause_termination_after_probation",
+        "kind": "clause",
+        "label": "Termination after probation",
+        "text": "After written confirmation, either party may terminate with sixty days written notice.",
+        "originalValue": "After written confirmation, either party may terminate with sixty days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-clause_confidentiality",
+        "kind": "clause",
+        "label": "Confidentiality",
+        "text": "The employee must protect confidential information as part of the confidentiality clause.",
+        "originalValue": "Confidentiality: The employee must protect confidential information.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page3"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [
+      {
+        "id": "rule-conditional-notice",
+        "kind": "relationship",
+        "label": "Probation and confirmed employment notice",
+        "text": "The notice terms depend on employment stage. EMPLOYMENT CONTRACT - SYNTHETIC\nEmployee: Avery Example\nEmployer: Example Research\nStart date: 2027-01-01\nMonthly salary: RM6,000 PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice. CONFIRMATION\nAfter written confirmation, either party may terminate with sixty days written notice.\nConfidentiality: The employee must protect confidential information. Review the probation and confirmation terms together before applying either notice provision.",
+        "originalValue": "PROBATION\nThe employee serves a six-month probation period from the start date.\nDuring probation, either party may terminate with fourteen days written notice.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page2",
+          "b0-page3",
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

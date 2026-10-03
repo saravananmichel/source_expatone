@@ -1,0 +1,22 @@
+{
+  "id": "tenancy",
+  "category": "Tenancy Agreement",
+  "values": [
+    "Jordan Example",
+    "RM2,000",
+    "RM4,000"
+  ],
+  "clauses": [
+    "notice"
+  ],
+  "forbidden": [
+    "visa eligibility"
+  ],
+  "pages": [
+    "TENANCY AGREEMENT\nTenant: Jordan Example\nLandlord: Synthetic Property Ltd\nMonthly rent: RM2,000\nSecurity deposit: RM4,000\nTerm: 2027-01-01 to 2027-12-31\nThe tenant must give thirty days written notice before ending the tenancy."
+  ],
+  "language": "en",
+  "layout": "native",
+  "findings": [],
+  "actions": []
+}

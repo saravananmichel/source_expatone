@@ -1,0 +1,69 @@
+{
+  "id": "table",
+  "category": "Bank Statement",
+  "expectedValues": [
+    "RM1,000",
+    "RM200",
+    "RM500",
+    "RM1,300"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "RM1,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM200",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM500",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM1,300",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [],
+  "money": [
+    "RM1,000",
+    "RM200",
+    "RM500",
+    "RM1,300"
+  ],
+  "sections": [],
+  "clauses": [],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "RM1,000",
+    "RM200",
+    "RM500",
+    "RM1,300"
+  ],
+  "descriptiveExplanationTargets": [],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

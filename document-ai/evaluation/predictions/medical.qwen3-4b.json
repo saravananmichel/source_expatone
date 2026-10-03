@@ -1,0 +1,595 @@
+{
+  "documentCategory": "Medical Document",
+  "title": "Medical Document Analysis",
+  "summary": "This Medical Document Patient: Avery Example. The healthcare provider associated with this medical report is Example Clinic. This medical report was generated on 2026-09-15, which is the date of the patient's visit. This medical report was generated on 2026-09-15, which is the date of the patient's visit. The patient is Avery Example, and the provider is Example Clinic, as stated in the report.",
+  "plainLanguageExplanation": "The visit occurred on September 15, 2026, with a blood pressure reading of 120/80.\n\nThe provider instructed the patient to return for review in four weeks from the visit date.",
+  "keyInformation": [
+    {
+      "label": "Patient",
+      "value": "Avery Example",
+      "isExtracted": true,
+      "description": "Patient: Avery Example."
+    },
+    {
+      "label": "Provider",
+      "value": "Example Clinic",
+      "isExtracted": true,
+      "description": "The healthcare provider associated with this medical report is Example Clinic."
+    },
+    {
+      "label": "Visit date",
+      "value": "2026-09-15",
+      "isExtracted": true,
+      "description": "This medical report was generated on 2026-09-15, which is the date of the patient's visit."
+    },
+    {
+      "label": "Observation",
+      "value": "Blood pressure reading 120/80.",
+      "isExtracted": true,
+      "description": "The patient's blood pressure reading at the time of this visit was 120/80."
+    },
+    {
+      "label": "Instruction",
+      "value": "Return for review in four weeks.",
+      "isExtracted": true,
+      "description": "The patient is instructed to return for a follow-up review in four weeks from the date of this report."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Visit date",
+      "date": "2026-09-15",
+      "isExtracted": true,
+      "description": "This medical report was generated on 2026-09-15, which is the date of the patient's visit."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "fact",
+      "label": "Patient",
+      "text": "Patient: Avery Example.",
+      "originalValue": "Avery Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "fact",
+      "label": "Provider",
+      "text": "The healthcare provider associated with this medical report is Example Clinic.",
+      "originalValue": "Example Clinic",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "date",
+      "label": "Visit date",
+      "text": "This medical report was generated on 2026-09-15, which is the date of the patient's visit.",
+      "originalValue": "2026-09-15",
+      "normalizedValue": "2026-09-15",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement4",
+      "kind": "fact",
+      "label": "Observation",
+      "text": "The patient's blood pressure reading at the time of this visit was 120/80.",
+      "originalValue": "Blood pressure reading 120/80.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement5",
+      "kind": "fact",
+      "label": "Instruction",
+      "text": "The patient is instructed to return for a follow-up review in four weeks from the date of this report.",
+      "originalValue": "Return for review in four weeks.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Patient and provider details",
+      "text": "The patient is Avery Example, and the provider is Example Clinic, as stated in the report.",
+      "originalValue": "Patient: Avery Example\nProvider: Example Clinic",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Visit date and observation",
+      "text": "The visit occurred on September 15, 2026, with a blood pressure reading of 120/80.",
+      "originalValue": "Visit date: 2026-09-15\nObservation: Blood pressure reading 120/80.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Follow-up instruction",
+      "text": "The provider instructed the patient to return for review in four weeks from the visit date.",
+      "originalValue": "Instruction: Return for review in four weeks.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "MEDICAL REPORT - SYNTHETIC\nPatient: Avery Example\nProvider: Example Clinic\nVisit date: 2026-09-15\nObservation: Blood pressure reading 120/80.\nInstruction: Return for review in four weeks.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement1",
+        "b0-statement2",
+        "b0-statement4",
+        "b0-statement5"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-statement3"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-1",
+        "global-2",
+        "global-3"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 35655,
+    "inferenceBatches": [
+      {
+        "total_duration": 35607022541,
+        "load_duration": 6257333,
+        "prompt_eval_count": 703,
+        "prompt_eval_duration": 445325000,
+        "eval_count": 587,
+        "eval_duration": 34849344000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 27143,
+    "supportValidationMs": 20139,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 8,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 1.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "MEDICAL REPORT - SYNTHETIC\nPatient: Avery Example\nProvider: Example Clinic\nVisit date: 2026-09-15\nObservation: Blood pressure reading 120/80.\nInstruction: Return for review in four weeks.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Medical Document",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "fact",
+        "label": "Patient",
+        "text": "Patient: Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "fact",
+        "label": "Provider",
+        "text": "The healthcare provider associated with this medical report is Example Clinic.",
+        "originalValue": "Example Clinic",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "date",
+        "label": "Visit date",
+        "text": "This medical report was generated on 2026-09-15, which is the date of the patient's visit.",
+        "originalValue": "2026-09-15",
+        "normalizedValue": "2026-09-15",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "fact",
+        "label": "Observation",
+        "text": "The patient's blood pressure reading at the time of this visit was 120/80.",
+        "originalValue": "Blood pressure reading 120/80.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "fact",
+        "label": "Instruction",
+        "text": "The patient is instructed to return for a follow-up review in four weeks from the date of this report.",
+        "originalValue": "Return for review in four weeks.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Patient and provider details",
+        "text": "The patient is Avery Example, and the provider is Example Clinic, as stated in the report.",
+        "originalValue": "Patient: Avery Example\nProvider: Example Clinic",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Visit date and observation",
+        "text": "The visit occurred on September 15, 2026, with a blood pressure reading of 120/80.",
+        "originalValue": "Visit date: 2026-09-15\nObservation: Blood pressure reading 120/80.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Follow-up instruction",
+        "text": "The provider instructed the patient to return for review in four weeks from the visit date.",
+        "originalValue": "Instruction: Return for review in four weeks.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "MEDICAL REPORT - SYNTHETIC\nPatient: Avery Example\nProvider: Example Clinic\nVisit date: 2026-09-15\nObservation: Blood pressure reading 120/80.\nInstruction: Return for review in four weeks.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "fact",
+          "label": "Patient",
+          "value": "Avery Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "fact",
+          "label": "Provider",
+          "value": "Example Clinic",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "date",
+          "label": "Visit date",
+          "value": "2026-09-15",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement4",
+          "kind": "fact",
+          "label": "Observation",
+          "value": "Blood pressure reading 120/80.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement5",
+          "kind": "fact",
+          "label": "Instruction",
+          "value": "Return for review in four weeks.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Patient and provider details",
+          "value": "Patient: Avery Example\nProvider: Example Clinic",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Visit date and observation",
+          "value": "Visit date: 2026-09-15\nObservation: Blood pressure reading 120/80.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Follow-up instruction",
+          "value": "Instruction: Return for review in four weeks.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement5",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [],
+    "facts": [
+      {
+        "id": "b0-statement1",
+        "kind": "fact",
+        "label": "Patient",
+        "text": "Patient: Avery Example.",
+        "originalValue": "Avery Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "fact",
+        "label": "Provider",
+        "text": "The healthcare provider associated with this medical report is Example Clinic.",
+        "originalValue": "Example Clinic",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "date",
+        "label": "Visit date",
+        "text": "This medical report was generated on 2026-09-15, which is the date of the patient's visit.",
+        "originalValue": "2026-09-15",
+        "normalizedValue": "2026-09-15",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "fact",
+        "label": "Observation",
+        "text": "The patient's blood pressure reading at the time of this visit was 120/80.",
+        "originalValue": "Blood pressure reading 120/80.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "fact",
+        "label": "Instruction",
+        "text": "The patient is instructed to return for a follow-up review in four weeks from the date of this report.",
+        "originalValue": "Return for review in four weeks.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "medium"
+}

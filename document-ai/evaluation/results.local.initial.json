@@ -1,0 +1,94 @@
+{
+  "provider": "local",
+  "syntheticCases": 8,
+  "validResults": 7,
+  "classificationAccuracy": 0.875,
+  "meanFieldRecall": 0.875,
+  "semanticHallucinationRate": null,
+  "humanUsefulness": null,
+  "limitations": "Exact quote matching does not establish semantic entailment; human ratings and real scan benchmarks required.",
+  "results": [
+    {
+      "id": "contract",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 66.9
+    },
+    {
+      "id": "passport",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 50.62
+    },
+    {
+      "id": "statement",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 102.46
+    },
+    {
+      "id": "insurance",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 62.03
+    },
+    {
+      "id": "tenancy",
+      "valid": false,
+      "seconds": 100.44
+    },
+    {
+      "id": "visa",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 45.14
+    },
+    {
+      "id": "missing",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": null,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 45.99
+    },
+    {
+      "id": "contradiction",
+      "model": "qwen3:4b",
+      "valid": true,
+      "classificationCorrect": true,
+      "fieldRecall": 1.0,
+      "clauseRecall": 1.0,
+      "forbiddenClaims": 0,
+      "evidenceQuoteMatch": 1.0,
+      "seconds": 69.47
+    }
+  ]
+}

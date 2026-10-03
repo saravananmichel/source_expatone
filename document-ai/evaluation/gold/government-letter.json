@@ -1,0 +1,55 @@
+{
+  "id": "government-letter",
+  "category": "Government Letter",
+  "expectedValues": [
+    "TEST-APP-01",
+    "2027-02-15"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "TEST-APP-01",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-02-15",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-02-15"
+  ],
+  "money": [],
+  "sections": [],
+  "clauses": [
+    "address"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "TEST-APP-01",
+    "2027-02-15",
+    "address"
+  ],
+  "descriptiveExplanationTargets": [
+    "address"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

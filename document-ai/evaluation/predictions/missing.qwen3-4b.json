@@ -1,0 +1,583 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This document is an employment contract between Alex Example (the Employee) and Synthetic Systems (the Employer) for the position of Analyst. It establishes that compensation will be confirmed in a separate schedule, but does not include a compensation schedule itself. The Employee has no defined pay frequency, start date, probation period, conditional notice period, or other employment terms beyond what is specified in the separate schedule. This contract does not include a compensation schedule, which means the employee's pay will be determined in a separate document.",
+  "plainLanguageExplanation": "The compensation schedule for this contract will be confirmed in a separate document, as stated in the contract.\n\nThe document states that compensation will be confirmed in a separate schedule (b0-page1), but does not include the actual compensation schedule. This means the Employee's pay frequency, rate, and other financial terms are not defined here and must be found in another document.\n\nThe document explicitly states that no compensation schedule is included in this document (b0-page1), so the Employee's pay frequency, start date, probation period, and other employment terms are not defined here and must be found in the separate schedule.",
+  "keyInformation": [
+    {
+      "label": "Employee",
+      "value": "Alex Example",
+      "isExtracted": true,
+      "description": "Employee: Alex Example."
+    },
+    {
+      "label": "Employer",
+      "value": "Synthetic Systems",
+      "isExtracted": true,
+      "description": "The employer named in this contract is Synthetic Systems."
+    },
+    {
+      "label": "Position",
+      "value": "Analyst",
+      "isExtracted": true,
+      "description": "The employee's position in this contract is Analyst."
+    }
+  ],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [
+    "This contract does not include a compensation schedule, which means the employee's pay will be determined in a separate document."
+  ],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "entity",
+      "label": "Employee",
+      "text": "Employee: Alex Example.",
+      "originalValue": "Alex Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "entity",
+      "label": "Employer",
+      "text": "The employer named in this contract is Synthetic Systems.",
+      "originalValue": "Synthetic Systems",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "entity",
+      "label": "Position",
+      "text": "The employee's position in this contract is Analyst.",
+      "originalValue": "Analyst",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement4",
+      "kind": "clause",
+      "label": "Compensation Schedule",
+      "text": "The compensation schedule for this contract will be confirmed in a separate document, as stated in the contract.",
+      "originalValue": "Compensation will be confirmed in a separate schedule.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Directly stated in evidence"
+    },
+    {
+      "id": "b0-statement5",
+      "kind": "finding",
+      "label": "Compensation Status",
+      "text": "This contract does not include a compensation schedule, which means the employee's pay will be determined in a separate document.",
+      "originalValue": "No compensation schedule is included in this document.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence confirms no schedule, pay determined elsewhere"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is an employment contract between Alex Example (the Employee) and Synthetic Systems (the Employer) for the position of Analyst. It establishes that compensation will be confirmed in a separate schedule, but does not include a compensation schedule itself. The Employee has no defined pay frequency, start date, probation period, conditional notice period, or other employment terms beyond what is specified in the separate schedule.",
+      "originalValue": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "All details match evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Compensation Schedule",
+      "text": "The document states that compensation will be confirmed in a separate schedule (b0-page1), but does not include the actual compensation schedule. This means the Employee's pay frequency, rate, and other financial terms are not defined here and must be found in another document.",
+      "originalValue": "Compensation will be confirmed in a separate schedule.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence confirms separate schedule"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "No Compensation Details",
+      "text": "The document explicitly states that no compensation schedule is included in this document (b0-page1), so the Employee's pay frequency, start date, probation period, and other employment terms are not defined here and must be found in the separate schedule.",
+      "originalValue": "No compensation schedule is included in this document.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document.",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": [
+        "b0-statement5"
+      ]
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement1",
+        "b0-statement2",
+        "b0-statement3"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "b0-statement4",
+        "global-0",
+        "global-1",
+        "global-2"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [
+    "Compensation amount: not found in extracted fields from the analyzed document. Check the original and any schedules.",
+    "Termination notice: not found in extracted fields from the analyzed document. Check the original and any schedules."
+  ],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 21408,
+    "inferenceBatches": [
+      {
+        "total_duration": 21360887750,
+        "load_duration": 2727792,
+        "prompt_eval_count": 685,
+        "prompt_eval_duration": 268542000,
+        "eval_count": 546,
+        "eval_duration": 20917221000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 17509,
+    "supportValidationMs": 14138,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 8,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 1.0,
+    "findingsCount": 1,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document.",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer named in this contract is Synthetic Systems.",
+        "originalValue": "Synthetic Systems",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The employee's position in this contract is Analyst.",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "clause",
+        "label": "Compensation Schedule",
+        "text": "The compensation schedule for this contract will be confirmed in a separate document, as stated in the contract.",
+        "originalValue": "Compensation will be confirmed in a separate schedule.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Directly stated in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "finding",
+        "label": "Compensation Status",
+        "text": "This contract does not include a compensation schedule, which means the employee's pay will be determined in a separate document.",
+        "originalValue": "No compensation schedule is included in this document.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence confirms no schedule, pay determined elsewhere"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is an employment contract between Alex Example (the Employee) and Synthetic Systems (the Employer) for the position of Analyst. It establishes that compensation will be confirmed in a separate schedule, but does not include a compensation schedule itself. The Employee has no defined pay frequency, start date, probation period, conditional notice period, or other employment terms beyond what is specified in the separate schedule.",
+        "originalValue": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "All details match evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Compensation Schedule",
+        "text": "The document states that compensation will be confirmed in a separate schedule (b0-page1), but does not include the actual compensation schedule. This means the Employee's pay frequency, rate, and other financial terms are not defined here and must be found in another document.",
+        "originalValue": "Compensation will be confirmed in a separate schedule.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence confirms separate schedule"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "No Compensation Details",
+        "text": "The document explicitly states that no compensation schedule is included in this document (b0-page1), so the Employee's pay frequency, start date, probation period, and other employment terms are not defined here and must be found in the separate schedule.",
+        "originalValue": "No compensation schedule is included in this document.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document.",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "entity",
+          "label": "Employee",
+          "value": "Alex Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "entity",
+          "label": "Employer",
+          "value": "Synthetic Systems",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "entity",
+          "label": "Position",
+          "value": "Analyst",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement4",
+          "kind": "clause",
+          "label": "Compensation Schedule",
+          "value": "Compensation will be confirmed in a separate schedule.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement5",
+          "kind": "finding",
+          "label": "Compensation Status",
+          "value": "No compensation schedule is included in this document.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "EMPLOYMENT CONTRACT\nEmployee: Alex Example\nEmployer: Synthetic Systems\nPosition: Analyst\nCompensation will be confirmed in a separate schedule.\nNo compensation schedule is included in this document.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Compensation Schedule",
+          "value": "Compensation will be confirmed in a separate schedule.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "No Compensation Details",
+          "value": "No compensation schedule is included in this document.",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement5",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-statement1",
+        "kind": "entity",
+        "label": "Employee",
+        "text": "Employee: Alex Example.",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "entity",
+        "label": "Employer",
+        "text": "The employer named in this contract is Synthetic Systems.",
+        "originalValue": "Synthetic Systems",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "entity",
+        "label": "Position",
+        "text": "The employee's position in this contract is Analyst.",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-statement4",
+        "kind": "clause",
+        "label": "Compensation Schedule",
+        "text": "The compensation schedule for this contract will be confirmed in a separate document, as stated in the contract.",
+        "originalValue": "Compensation will be confirmed in a separate schedule.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Directly stated in evidence"
+      }
+    ],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": [
+      {
+        "id": "b0-statement5",
+        "kind": "finding",
+        "label": "Compensation Status",
+        "text": "This contract does not include a compensation schedule, which means the employee's pay will be determined in a separate document.",
+        "originalValue": "No compensation schedule is included in this document.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence confirms no schedule, pay determined elsewhere"
+      }
+    ]
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "medium"
+}

@@ -1,0 +1,317 @@
+{
+  "documentCategory": "Offer Letter",
+  "title": "Offer Letter Analysis",
+  "summary": "Alex Example\n\nAnalyst\n\n2027-02-01\n\n2027-03-01",
+  "plainLanguageExplanation": "Please confirm which start date applies before accepting.",
+  "keyInformation": [
+    {
+      "label": "Candidate",
+      "value": "Alex Example",
+      "isExtracted": true
+    },
+    {
+      "label": "Position",
+      "value": "Analyst",
+      "isExtracted": true
+    },
+    {
+      "label": "Start date (primary)",
+      "value": "2027-02-01",
+      "isExtracted": true
+    },
+    {
+      "label": "Start date (appendix)",
+      "value": "2027-03-01",
+      "isExtracted": true
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement_1",
+      "kind": "entity",
+      "label": "Candidate",
+      "text": "Alex Example",
+      "originalValue": "Alex Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ]
+    },
+    {
+      "id": "b0-statement_:2",
+      "kind": "entity",
+      "label": "Position",
+      "text": "Analyst",
+      "originalValue": "Analyst",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ]
+    },
+    {
+      "id": "b0-statement_3",
+      "kind": "entity",
+      "label": "Start date (primary)",
+      "text": "2027-02-01",
+      "originalValue": "2027-02-01",
+      "normalizedValue": "2027-02-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ]
+    },
+    {
+      "id": "b0-statement_4",
+      "kind": "entity",
+      "label": "Start date (appendix)",
+      "text": "2027-03-01",
+      "originalValue": "2027-03-01",
+      "normalizedValue": "2027-03-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ]
+    },
+    {
+      "id": "b0-statement_5",
+      "kind": "clause",
+      "label": "Start date clarification",
+      "text": "Please confirm which start date applies before accepting.",
+      "originalValue": "Please confirm which start date applies before accepting.",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "OFFER LETTER\nCandidate: Alex Example\nPosition: Analyst\nStart date: 2027-02-01\nAppendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+      "boundingBox": null
+    }
+  ],
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "OFFER LETTER\nCandidate: Alex Example\nPosition: Analyst\nStart date: 2027-02-01\nAppendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+        "width": 600.0,
+        "height": 800.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Offer Letter",
+    "classificationConfidence": 0.85,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement_1",
+        "kind": "entity",
+        "label": "Candidate",
+        "text": "Alex Example",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_:2",
+        "kind": "entity",
+        "label": "Position",
+        "text": "Analyst",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_3",
+        "kind": "entity",
+        "label": "Start date (primary)",
+        "text": "2027-02-01",
+        "originalValue": "2027-02-01",
+        "normalizedValue": "2027-02-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_4",
+        "kind": "entity",
+        "label": "Start date (appendix)",
+        "text": "2027-03-01",
+        "originalValue": "2027-03-01",
+        "normalizedValue": "2027-03-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_5",
+        "kind": "clause",
+        "label": "Start date clarification",
+        "text": "Please confirm which start date applies before accepting.",
+        "originalValue": "Please confirm which start date applies before accepting.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "OFFER LETTER\nCandidate: Alex Example\nPosition: Analyst\nStart date: 2027-02-01\nAppendix: The start date is 2027-03-01.\nPlease confirm which start date applies before accepting.",
+        "boundingBox": null
+      }
+    ],
+    "entities": [
+      {
+        "id": "b0-statement_1",
+        "kind": "entity",
+        "label": "Candidate",
+        "text": "Alex Example",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_:2",
+        "kind": "entity",
+        "label": "Position",
+        "text": "Analyst",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_3",
+        "kind": "entity",
+        "label": "Start date (primary)",
+        "text": "2027-02-01",
+        "originalValue": "2027-02-01",
+        "normalizedValue": "2027-02-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_4",
+        "kind": "entity",
+        "label": "Start date (appendix)",
+        "text": "2027-03-01",
+        "originalValue": "2027-03-01",
+        "normalizedValue": "2027-03-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-statement_1",
+        "kind": "entity",
+        "label": "Candidate",
+        "text": "Alex Example",
+        "originalValue": "Alex Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_:2",
+        "kind": "entity",
+        "label": "Position",
+        "text": "Analyst",
+        "originalValue": "Analyst",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_3",
+        "kind": "entity",
+        "label": "Start date (primary)",
+        "text": "2027-02-01",
+        "originalValue": "2027-02-01",
+        "normalizedValue": "2027-02-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      },
+      {
+        "id": "b0-statement_4",
+        "kind": "entity",
+        "label": "Start date (appendix)",
+        "text": "2027-03-01",
+        "originalValue": "2027-03-01",
+        "normalizedValue": "2027-03-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-statement_5",
+        "kind": "clause",
+        "label": "Start date clarification",
+        "text": "Please confirm which start date applies before accepting.",
+        "originalValue": "Please confirm which start date applies before accepting.",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ]
+      }
+    ],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v1",
+  "promptVersion": "grounding-v2",
+  "requiresReview": true,
+  "confidence": "medium"
+}

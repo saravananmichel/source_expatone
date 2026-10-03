@@ -1,0 +1,28 @@
+{
+  "synthetic": true,
+  "language": "eng",
+  "results": [
+    {
+      "id": "clean",
+      "characterErrorRate": 0.0,
+      "wordErrorRate": 0.0,
+      "rotationDegrees": 0,
+      "seconds": 0.76
+    },
+    {
+      "id": "low_quality",
+      "characterErrorRate": 0.0,
+      "wordErrorRate": 0.0,
+      "rotationDegrees": 0,
+      "seconds": 0.51
+    },
+    {
+      "id": "rotated",
+      "characterErrorRate": 0.0,
+      "wordErrorRate": 0.0,
+      "rotationDegrees": 90,
+      "seconds": 0.74
+    }
+  ],
+  "limitations": "Only three generated English scans; excludes handwriting, tables and multilingual quality."
+}

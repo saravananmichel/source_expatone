@@ -1,0 +1,14 @@
+{
+  "attempts": [
+    {
+      "stage": "emulator launch",
+      "result": "No tests ran; Android emulator became unresponsive; recovered via cold boot without wiping data"
+    },
+    {
+      "stage": "real device workflow and scroll driver",
+      "result": "Real authenticated upload, worker completion, history and analysis reload passed assertions; driver failed because multiple Scrollable widgets matched the implicit finder. Fixed with explicit document ListView finder."
+    }
+  ],
+  "finalResult": "pending retry",
+  "privateDocumentsSent": false
+}

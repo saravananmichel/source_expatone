@@ -1,0 +1,804 @@
+{
+  "documentCategory": "Bank Statement",
+  "title": "Bank Statement Analysis",
+  "summary": "This document is a bank statement from Example Bank for Taylor Example's account (TEST-ACCOUNT-01) covering the period from September 1 to September 30, 2...",
+  "plainLanguageExplanation": "The opening balance is RM1,000, which is the starting amount in the account before the statement period begins.\n\nDeposits total RM500 during the statement period, representing money added to the account.\n\nWithdrawals total RM200 during the statement period, representing money taken out of the account.\n\nThe closing balance is RM1,300, calculated as the opening balance plus deposits minus withdrawals (RM1,000 + RM500 - RM200 = RM1,300).",
+  "keyInformation": [
+    {
+      "label": "Account holder",
+      "value": "Taylor Example",
+      "isExtracted": true,
+      "description": "Account holder: Taylor Example."
+    },
+    {
+      "label": "Account identifier",
+      "value": "TEST-ACCOUNT-01",
+      "isExtracted": true,
+      "description": "The account identifier for this bank statement is TEST-ACCOUNT-01."
+    },
+    {
+      "label": "Statement period",
+      "value": "2026-09-01 to 2026-09-30",
+      "isExtracted": true,
+      "description": "This bank statement covers the period from 1 September 2026 to 30 September 2026."
+    },
+    {
+      "label": "Opening balance",
+      "value": "RM1,000",
+      "isExtracted": true,
+      "description": "The opening balance for this bank statement is RM1,000."
+    },
+    {
+      "label": "Deposits",
+      "value": "RM500",
+      "isExtracted": true,
+      "description": "The total deposits for this bank statement period are RM500."
+    },
+    {
+      "label": "Withdrawals",
+      "value": "RM200",
+      "isExtracted": true,
+      "description": "The total withdrawals for this bank statement period are RM200."
+    },
+    {
+      "label": "Closing balance",
+      "value": "RM1,300",
+      "isExtracted": true,
+      "description": "The closing balance for this bank statement is RM1,300."
+    }
+  ],
+  "importantDates": [],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "fact",
+      "label": "Account holder",
+      "text": "Account holder: Taylor Example.",
+      "originalValue": "Taylor Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "fact",
+      "label": "Account identifier",
+      "text": "The account identifier for this bank statement is TEST-ACCOUNT-01.",
+      "originalValue": "TEST-ACCOUNT-01",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "fact",
+      "label": "Statement period",
+      "text": "This bank statement covers the period from 1 September 2026 to 30 September 2026.",
+      "originalValue": "2026-09-01 to 2026-09-30",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement4",
+      "kind": "money",
+      "label": "Opening balance",
+      "text": "The opening balance for this bank statement is RM1,000.",
+      "originalValue": "RM1,000",
+      "normalizedValue": "MYR 1000",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement5",
+      "kind": "money",
+      "label": "Deposits",
+      "text": "The total deposits for this bank statement period are RM500.",
+      "originalValue": "RM500",
+      "normalizedValue": "MYR 500",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement6",
+      "kind": "fact",
+      "label": "Withdrawals",
+      "text": "The total withdrawals for this bank statement period are RM200.",
+      "originalValue": "RM200",
+      "normalizedValue": "MYR 200",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement7",
+      "kind": "money",
+      "label": "Closing balance",
+      "text": "The closing balance for this bank statement is RM1,300.",
+      "originalValue": "RM1,300",
+      "normalizedValue": "MYR 1300",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-0",
+      "kind": "interpretation",
+      "label": "Overview",
+      "text": "This document is a bank statement from Example Bank for Taylor Example's account (TEST-ACCOUNT-01) covering the period from September 1 to September 30, 2...",
+      "originalValue": "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Opening balance",
+      "text": "The opening balance is RM1,000, which is the starting amount in the account before the statement period begins.",
+      "originalValue": "Opening balance: RM1,000",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Deposits",
+      "text": "Deposits total RM500 during the statement period, representing money added to the account.",
+      "originalValue": "Deposits: RM500",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Withdrawals",
+      "text": "Withdrawals total RM200 during the statement period, representing money taken out of the account.",
+      "originalValue": "Withdrawals: RM200",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "interpretation",
+      "label": "Closing balance",
+      "text": "The closing balance is RM1,300, calculated as the opening balance plus deposits minus withdrawals (RM1,000 + RM500 - RM200 = RM1,300).",
+      "originalValue": "Closing balance: RM1,300",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Paraphrase matches evidence"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement1",
+        "b0-statement2",
+        "b0-statement3",
+        "b0-statement6"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": []
+    },
+    {
+      "title": "Financial details",
+      "statementIds": [
+        "b0-statement4",
+        "b0-statement5",
+        "b0-statement7"
+      ]
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-0",
+        "global-1",
+        "global-2",
+        "global-3",
+        "global-4"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 47919,
+    "inferenceBatches": [
+      {
+        "total_duration": 47873499459,
+        "load_duration": 3098542,
+        "prompt_eval_count": 733,
+        "prompt_eval_duration": 556794000,
+        "eval_count": 789,
+        "eval_duration": 47024833000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 36453,
+    "supportValidationMs": 32561,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 12,
+    "unsupportedClaims": 0,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 1.0,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Bank Statement",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "fact",
+        "label": "Account holder",
+        "text": "Account holder: Taylor Example.",
+        "originalValue": "Taylor Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "fact",
+        "label": "Account identifier",
+        "text": "The account identifier for this bank statement is TEST-ACCOUNT-01.",
+        "originalValue": "TEST-ACCOUNT-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "fact",
+        "label": "Statement period",
+        "text": "This bank statement covers the period from 1 September 2026 to 30 September 2026.",
+        "originalValue": "2026-09-01 to 2026-09-30",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "money",
+        "label": "Opening balance",
+        "text": "The opening balance for this bank statement is RM1,000.",
+        "originalValue": "RM1,000",
+        "normalizedValue": "MYR 1000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "money",
+        "label": "Deposits",
+        "text": "The total deposits for this bank statement period are RM500.",
+        "originalValue": "RM500",
+        "normalizedValue": "MYR 500",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement6",
+        "kind": "fact",
+        "label": "Withdrawals",
+        "text": "The total withdrawals for this bank statement period are RM200.",
+        "originalValue": "RM200",
+        "normalizedValue": "MYR 200",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement7",
+        "kind": "money",
+        "label": "Closing balance",
+        "text": "The closing balance for this bank statement is RM1,300.",
+        "originalValue": "RM1,300",
+        "normalizedValue": "MYR 1300",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-0",
+        "kind": "interpretation",
+        "label": "Overview",
+        "text": "This document is a bank statement from Example Bank for Taylor Example's account (TEST-ACCOUNT-01) covering the period from September 1 to September 30, 2...",
+        "originalValue": "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Opening balance",
+        "text": "The opening balance is RM1,000, which is the starting amount in the account before the statement period begins.",
+        "originalValue": "Opening balance: RM1,000",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Deposits",
+        "text": "Deposits total RM500 during the statement period, representing money added to the account.",
+        "originalValue": "Deposits: RM500",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Withdrawals",
+        "text": "Withdrawals total RM200 during the statement period, representing money taken out of the account.",
+        "originalValue": "Withdrawals: RM200",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "interpretation",
+        "label": "Closing balance",
+        "text": "The closing balance is RM1,300, calculated as the opening balance plus deposits minus withdrawals (RM1,000 + RM500 - RM200 = RM1,300).",
+        "originalValue": "Closing balance: RM1,300",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Paraphrase matches evidence"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "fact",
+          "label": "Account holder",
+          "value": "Taylor Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "fact",
+          "label": "Account identifier",
+          "value": "TEST-ACCOUNT-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "fact",
+          "label": "Statement period",
+          "value": "2026-09-01 to 2026-09-30",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement4",
+          "kind": "money",
+          "label": "Opening balance",
+          "value": "RM1,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement5",
+          "kind": "money",
+          "label": "Deposits",
+          "value": "RM500",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement6",
+          "kind": "fact",
+          "label": "Withdrawals",
+          "value": "RM200",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement7",
+          "kind": "money",
+          "label": "Closing balance",
+          "value": "RM1,300",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-0",
+          "kind": "interpretation",
+          "label": "Overview",
+          "value": "BANK STATEMENT\nExample Bank\nAccount holder: Taylor Example\nAccount identifier: TEST-ACCOUNT-01\nStatement period: 2026-09-01 to 2026-09-30\nOpening balance: RM1,000\nDeposits: RM500\nWithdrawals: RM200\nClosing balance: RM1,300",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Opening balance",
+          "value": "Opening balance: RM1,000",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Deposits",
+          "value": "Deposits: RM500",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Withdrawals",
+          "value": "Withdrawals: RM200",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "interpretation",
+          "label": "Closing balance",
+          "value": "Closing balance: RM1,300",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement5",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement6",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement7",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-0",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [],
+    "facts": [
+      {
+        "id": "b0-statement1",
+        "kind": "fact",
+        "label": "Account holder",
+        "text": "Account holder: Taylor Example.",
+        "originalValue": "Taylor Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "fact",
+        "label": "Account identifier",
+        "text": "The account identifier for this bank statement is TEST-ACCOUNT-01.",
+        "originalValue": "TEST-ACCOUNT-01",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "fact",
+        "label": "Statement period",
+        "text": "This bank statement covers the period from 1 September 2026 to 30 September 2026.",
+        "originalValue": "2026-09-01 to 2026-09-30",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "money",
+        "label": "Opening balance",
+        "text": "The opening balance for this bank statement is RM1,000.",
+        "originalValue": "RM1,000",
+        "normalizedValue": "MYR 1000",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "money",
+        "label": "Deposits",
+        "text": "The total deposits for this bank statement period are RM500.",
+        "originalValue": "RM500",
+        "normalizedValue": "MYR 500",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement6",
+        "kind": "fact",
+        "label": "Withdrawals",
+        "text": "The total withdrawals for this bank statement period are RM200.",
+        "originalValue": "RM200",
+        "normalizedValue": "MYR 200",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement7",
+        "kind": "money",
+        "label": "Closing balance",
+        "text": "The closing balance for this bank statement is RM1,300.",
+        "originalValue": "RM1,300",
+        "normalizedValue": "MYR 1300",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "medium"
+}

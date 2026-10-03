@@ -1,0 +1,6 @@
+{
+  "eventsScanned": 45,
+  "errorEvents": 3,
+  "knownError": "Rejected unsupported Completed reminder status in first smoke test",
+  "credentialPatternMatches": 0
+}

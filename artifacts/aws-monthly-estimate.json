@@ -1,0 +1,11 @@
+{
+  "hours": 730,
+  "rdsCompute": 16.79,
+  "rdsIo2Storage": 49.6,
+  "rdsIops": 297.0,
+  "fargate": 32.38791,
+  "alb": 16.571,
+  "ipv4Assumption3Addresses": 10.95,
+  "oneLCUAssumption": 5.84,
+  "estimatedBaseTotal": 423.29891
+}

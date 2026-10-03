@@ -1,0 +1,65 @@
+{
+  "id": "chinese",
+  "category": "Offer Letter",
+  "expectedValues": [
+    "林示例",
+    "RM5,000",
+    "2027-01-01"
+  ],
+  "entities": [],
+  "fields": [
+    {
+      "value": "林示例",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "RM5,000",
+      "evidencePages": [
+        1
+      ]
+    },
+    {
+      "value": "2027-01-01",
+      "evidencePages": [
+        1
+      ]
+    }
+  ],
+  "dates": [
+    "2027-01-01"
+  ],
+  "money": [
+    "RM5,000"
+  ],
+  "sections": [],
+  "clauses": [
+    "probation"
+  ],
+  "obligations": [],
+  "conditions": [],
+  "relationships": [],
+  "findings": [],
+  "actions": [],
+  "forbiddenClaims": [
+    "legal requirement",
+    "automatic renewal"
+  ],
+  "summaryCoverageTargets": [
+    "林示例",
+    "RM5,000",
+    "2027-01-01",
+    "probation"
+  ],
+  "descriptiveExplanationTargets": [
+    "probation"
+  ],
+  "goldCompleteness": "partial synthetic targets; independent human annotation pending",
+  "rubric": {
+    "0": "incorrect",
+    "1": "partially correct",
+    "2": "correct",
+    "3": "useful and contextual"
+  }
+}

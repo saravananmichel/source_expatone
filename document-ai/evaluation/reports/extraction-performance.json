@@ -1,0 +1,75 @@
+{
+  "results": [
+    {
+      "pages": 1,
+      "bytes": 925,
+      "extractionMs": 453,
+      "processedPages": 1,
+      "maxRssBytes": 57065472,
+      "uploadMs": null,
+      "preprocessingMs": null,
+      "inferenceMs": null,
+      "reasoningMs": null,
+      "validationMs": null,
+      "databaseMs": null,
+      "totalE2eMs": null
+    },
+    {
+      "pages": 5,
+      "bytes": 3710,
+      "extractionMs": 14,
+      "processedPages": 5,
+      "maxRssBytes": 57229312,
+      "uploadMs": null,
+      "preprocessingMs": null,
+      "inferenceMs": null,
+      "reasoningMs": null,
+      "validationMs": null,
+      "databaseMs": null,
+      "totalE2eMs": null
+    },
+    {
+      "pages": 10,
+      "bytes": 7201,
+      "extractionMs": 13,
+      "processedPages": 10,
+      "maxRssBytes": 57491456,
+      "uploadMs": null,
+      "preprocessingMs": null,
+      "inferenceMs": null,
+      "reasoningMs": null,
+      "validationMs": null,
+      "databaseMs": null,
+      "totalE2eMs": null
+    },
+    {
+      "pages": 20,
+      "bytes": 14182,
+      "extractionMs": 30,
+      "processedPages": 20,
+      "maxRssBytes": 57933824,
+      "uploadMs": null,
+      "preprocessingMs": null,
+      "inferenceMs": null,
+      "reasoningMs": null,
+      "validationMs": null,
+      "databaseMs": null,
+      "totalE2eMs": null
+    },
+    {
+      "pages": 40,
+      "bytes": 28142,
+      "extractionMs": 506,
+      "processedPages": 40,
+      "maxRssBytes": 58638336,
+      "uploadMs": null,
+      "preprocessingMs": null,
+      "inferenceMs": null,
+      "reasoningMs": null,
+      "validationMs": null,
+      "databaseMs": null,
+      "totalE2eMs": null
+    }
+  ],
+  "limitations": "Repeated synthetic native pages measure extraction only. No GPU inference, real scans or full workflow latency in this report."
+}

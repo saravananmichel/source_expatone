@@ -1,0 +1,597 @@
+{
+  "documentCategory": "Employment Contract",
+  "title": "Employment Contract Analysis",
+  "summary": "This Employment Contract Employment begins on 1 January 2027, which is the agreed start date. Employment begins on 1 January 2027, which is the agreed start date. Either party may terminate the employment by providing sixty days' notice, as stated in the termination clause. The document does not specify whether the employee is on probation or confirmed at the start date, so the reader should verify the probation status with the employer to avoid misunderstandings about termination notice requirements.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [
+    {
+      "label": "Start date",
+      "value": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Start date",
+      "date": "2027-01-01",
+      "isExtracted": true,
+      "description": "Employment begins on 1 January 2027, which is the agreed start date."
+    }
+  ],
+  "requiredActions": [
+    "The reader should confirm with the employer whether the employee is on probation at the start date to determine if the notice period differs during probation."
+  ],
+  "warnings": [
+    "The document does not specify whether the employee is on probation or confirmed at the start date, so the reader should verify the probation status with the employer to avoid misunderstandings about termination notice requirements."
+  ],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "date",
+      "label": "Start date",
+      "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+      "originalValue": "2027-01-01",
+      "normalizedValue": "2027-01-01",
+      "confidence": 0.8469607843137256,
+      "evidenceIds": [
+        "b0-page1_block0"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact date match"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "clause",
+      "label": "Termination clause",
+      "text": "Either party may terminate the employment by providing sixty days' notice, as stated in the termination clause.",
+      "originalValue": "Either party may terminate by giving sixty days",
+      "normalizedValue": null,
+      "confidence": 0.8,
+      "evidenceIds": [
+        "b0-page1_block1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match for termination notice"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "obligation",
+      "label": "Confidentiality obligation",
+      "text": "The employee is obligated to protect confidential business information as part of their employment duties.",
+      "originalValue": "The employee must protect confidential business",
+      "normalizedValue": null,
+      "confidence": 0.8,
+      "evidenceIds": [
+        "b0-page1_block2"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact obligation match"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Probation period notice period",
+      "text": "The notice period for termination during probation is not explicitly stated in the document, so the sixty-day notice period applies to the entire contract term without distinction between probation and confirmation.",
+      "originalValue": "Either party may terminate by giving sixty days",
+      "normalizedValue": null,
+      "confidence": 0.8,
+      "evidenceIds": [
+        "b0-page1_block1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Contradicts evidence on probation notice"
+    },
+    {
+      "id": "global-2",
+      "kind": "interpretation",
+      "label": "Confidentiality obligation",
+      "text": "The employee must protect confidential business information as defined in the contract, which is a key duty that could include trade secrets, client data, and internal processes.",
+      "originalValue": "The employee must protect confidential business",
+      "normalizedValue": null,
+      "confidence": 0.8,
+      "evidenceIds": [
+        "b0-page1_block2"
+      ],
+      "supportStatus": "PARTIALLY_SUPPORTED",
+      "supportReason": "Adds definition not in evidence"
+    },
+    {
+      "id": "global-3",
+      "kind": "warning",
+      "label": "Ambiguous probation status",
+      "text": "The document does not specify whether the employee is on probation or confirmed at the start date, so the reader should verify the probation status with the employer to avoid misunderstandings about termination notice requirements.",
+      "originalValue": "Start date: 2027-01-01",
+      "normalizedValue": null,
+      "confidence": 0.8,
+      "evidenceIds": [
+        "b0-page1_block0"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence confirms ambiguity"
+    },
+    {
+      "id": "global-4",
+      "kind": "action",
+      "label": "Verify probation status",
+      "text": "The reader should confirm with the employer whether the employee is on probation at the start date to determine if the notice period differs during probation.",
+      "originalValue": "Start date: 2027-01-01",
+      "normalizedValue": null,
+      "confidence": 0.8469607843137256,
+      "evidenceIds": [
+        "b0-page1_block0"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Evidence supports verification need"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1_block0",
+      "page": 1,
+      "section": null,
+      "sourceText": "Start date: 2027-01-01",
+      "boundingBox": [
+        62.0,
+        352.0,
+        306.0,
+        399.0
+      ]
+    },
+    {
+      "id": "b0-page1_block1",
+      "page": 1,
+      "section": null,
+      "sourceText": "Either party may terminate by giving sixty days",
+      "boundingBox": [
+        63.0,
+        380.0,
+        575.0,
+        442.0
+      ]
+    },
+    {
+      "id": "b0-page1_block2",
+      "page": 1,
+      "section": null,
+      "sourceText": "The employee must protect confidential business",
+      "boundingBox": [
+        64.0,
+        420.0,
+        603.0,
+        484.0
+      ]
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": [
+        "global-3"
+      ]
+    },
+    {
+      "title": "Key details",
+      "statementIds": []
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-statement1"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "b0-statement2",
+        "b0-statement3"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": [
+        "global-4"
+      ]
+    }
+  ],
+  "missingInformation": [
+    "Compensation amount: not found in extracted fields from the analyzed document. Check the original and any schedules."
+  ],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 26328,
+    "inferenceBatches": [
+      {
+        "total_duration": 26282469625,
+        "load_duration": 5980458,
+        "prompt_eval_count": 850,
+        "prompt_eval_duration": 498641000,
+        "eval_count": 549,
+        "eval_duration": 24920177000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 26953,
+    "supportValidationMs": 13259,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 0.8469607843137256,
+    "supportedClaims": 5,
+    "unsupportedClaims": 1,
+    "uncertainClaims": 1,
+    "evidenceCoverage": 0.7142857142857143,
+    "findingsCount": 0,
+    "actionsCount": 1,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "Start date: 2027-01-01\nEither party may terminate by giving sixty days\nThe employee must protect confidential business",
+        "width": 1224.0,
+        "height": 1584.0,
+        "extraction": "ocr",
+        "rotationDegrees": 0,
+        "coordinateSpace": "preprocessed_image_pixels",
+        "extractionConfidence": 0.8469607843137256,
+        "blocks": [
+          {
+            "text": "Start date: 2027-01-01",
+            "boundingBox": [
+              62.0,
+              352.0,
+              306.0,
+              399.0
+            ],
+            "kind": "key_value"
+          },
+          {
+            "text": "Either party may terminate by giving sixty days",
+            "boundingBox": [
+              63.0,
+              380.0,
+              575.0,
+              442.0
+            ],
+            "kind": "paragraph"
+          },
+          {
+            "text": "The employee must protect confidential business",
+            "boundingBox": [
+              64.0,
+              420.0,
+              603.0,
+              484.0
+            ],
+            "kind": "paragraph"
+          }
+        ]
+      }
+    ],
+    "documentCategory": "Employment Contract",
+    "classificationConfidence": 0.9,
+    "classificationEvidenceIds": [
+      "b0-page1_block0"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.8469607843137256,
+        "evidenceIds": [
+          "b0-page1_block0"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact date match"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "clause",
+        "label": "Termination clause",
+        "text": "Either party may terminate the employment by providing sixty days' notice, as stated in the termination clause.",
+        "originalValue": "Either party may terminate by giving sixty days",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match for termination notice"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "obligation",
+        "label": "Confidentiality obligation",
+        "text": "The employee is obligated to protect confidential business information as part of their employment duties.",
+        "originalValue": "The employee must protect confidential business",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact obligation match"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Probation period notice period",
+        "text": "The notice period for termination during probation is not explicitly stated in the document, so the sixty-day notice period applies to the entire contract term without distinction between probation and confirmation.",
+        "originalValue": "Either party may terminate by giving sixty days",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Contradicts evidence on probation notice"
+      },
+      {
+        "id": "global-2",
+        "kind": "interpretation",
+        "label": "Confidentiality obligation",
+        "text": "The employee must protect confidential business information as defined in the contract, which is a key duty that could include trade secrets, client data, and internal processes.",
+        "originalValue": "The employee must protect confidential business",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block2"
+        ],
+        "supportStatus": "PARTIALLY_SUPPORTED",
+        "supportReason": "Adds definition not in evidence"
+      },
+      {
+        "id": "global-3",
+        "kind": "warning",
+        "label": "Ambiguous probation status",
+        "text": "The document does not specify whether the employee is on probation or confirmed at the start date, so the reader should verify the probation status with the employer to avoid misunderstandings about termination notice requirements.",
+        "originalValue": "Start date: 2027-01-01",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block0"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence confirms ambiguity"
+      },
+      {
+        "id": "global-4",
+        "kind": "action",
+        "label": "Verify probation status",
+        "text": "The reader should confirm with the employer whether the employee is on probation at the start date to determine if the notice period differs during probation.",
+        "originalValue": "Start date: 2027-01-01",
+        "normalizedValue": null,
+        "confidence": 0.8469607843137256,
+        "evidenceIds": [
+          "b0-page1_block0"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Evidence supports verification need"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1_block0",
+        "page": 1,
+        "section": null,
+        "sourceText": "Start date: 2027-01-01",
+        "boundingBox": [
+          62.0,
+          352.0,
+          306.0,
+          399.0
+        ]
+      },
+      {
+        "id": "b0-page1_block1",
+        "page": 1,
+        "section": null,
+        "sourceText": "Either party may terminate by giving sixty days",
+        "boundingBox": [
+          63.0,
+          380.0,
+          575.0,
+          442.0
+        ]
+      },
+      {
+        "id": "b0-page1_block2",
+        "page": 1,
+        "section": null,
+        "sourceText": "The employee must protect confidential business",
+        "boundingBox": [
+          64.0,
+          420.0,
+          603.0,
+          484.0
+        ]
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "date",
+          "label": "Start date",
+          "value": "2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "clause",
+          "label": "Termination clause",
+          "value": "Either party may terminate by giving sixty days",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "obligation",
+          "label": "Confidentiality obligation",
+          "value": "The employee must protect confidential business",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Probation period notice period",
+          "value": "Either party may terminate by giving sixty days",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-2",
+          "kind": "interpretation",
+          "label": "Confidentiality obligation",
+          "value": "The employee must protect confidential business",
+          "pages": [
+            1
+          ],
+          "supportStatus": "PARTIALLY_SUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "warning",
+          "label": "Ambiguous probation status",
+          "value": "Start date: 2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "action",
+          "label": "Verify probation status",
+          "value": "Start date: 2027-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1_block0",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1_block1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1_block2",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1_block1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-2",
+          "to": "b0-page1_block2",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1_block0",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1_block0",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1_block0": 1,
+        "b0-page1_block1": 1,
+        "b0-page1_block2": 1
+      }
+    },
+    "entities": [],
+    "facts": [
+      {
+        "id": "b0-statement1",
+        "kind": "date",
+        "label": "Start date",
+        "text": "Employment begins on 1 January 2027, which is the agreed start date.",
+        "originalValue": "2027-01-01",
+        "normalizedValue": "2027-01-01",
+        "confidence": 0.8469607843137256,
+        "evidenceIds": [
+          "b0-page1_block0"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact date match"
+      }
+    ],
+    "sections": [],
+    "clauses": [
+      {
+        "id": "b0-statement2",
+        "kind": "clause",
+        "label": "Termination clause",
+        "text": "Either party may terminate the employment by providing sixty days' notice, as stated in the termination clause.",
+        "originalValue": "Either party may terminate by giving sixty days",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match for termination notice"
+      }
+    ],
+    "obligations": [
+      {
+        "id": "b0-statement3",
+        "kind": "obligation",
+        "label": "Confidentiality obligation",
+        "text": "The employee is obligated to protect confidential business information as part of their employment duties.",
+        "originalValue": "The employee must protect confidential business",
+        "normalizedValue": null,
+        "confidence": 0.8,
+        "evidenceIds": [
+          "b0-page1_block2"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact obligation match"
+      }
+    ],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

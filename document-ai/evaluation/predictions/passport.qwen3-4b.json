@@ -1,0 +1,734 @@
+{
+  "documentCategory": "Passport",
+  "title": "Passport Analysis",
+  "summary": "This Passport Name: Morgan Example. The person was born on 1 January 1990. The passport was issued on 1 January 2024. The Synthetic Passport Office is the official body responsible for issuing this passport and ensuring its legal validity.",
+  "plainLanguageExplanation": "",
+  "keyInformation": [
+    {
+      "label": "Name",
+      "value": "Morgan Example",
+      "isExtracted": true,
+      "description": "Name: Morgan Example."
+    },
+    {
+      "label": "Nationality",
+      "value": "Exampleland",
+      "isExtracted": true,
+      "description": "The person's nationality is Exampleland."
+    },
+    {
+      "label": "Passport number",
+      "value": "TEST000001",
+      "isExtracted": true,
+      "description": "The passport number is TEST000001."
+    },
+    {
+      "label": "Date of birth",
+      "value": "1990-01-01",
+      "isExtracted": true,
+      "description": "The person was born on 1 January 1990."
+    },
+    {
+      "label": "Date of issue",
+      "value": "2024-01-01",
+      "isExtracted": true,
+      "description": "The passport was issued on 1 January 2024."
+    },
+    {
+      "label": "Date of expiry",
+      "value": "2034-01-01",
+      "isExtracted": true,
+      "description": "The passport expires on 1 January 2034."
+    },
+    {
+      "label": "Issuing authority",
+      "value": "Synthetic Passport Office",
+      "isExtracted": true,
+      "description": "The passport is issued by the Synthetic Passport Office."
+    }
+  ],
+  "importantDates": [
+    {
+      "label": "Date of birth",
+      "date": "1990-01-01",
+      "isExtracted": true,
+      "description": "The person was born on 1 January 1990."
+    },
+    {
+      "label": "Date of issue",
+      "date": "2024-01-01",
+      "isExtracted": true,
+      "description": "The passport was issued on 1 January 2024."
+    },
+    {
+      "label": "Date of expiry",
+      "date": "2034-01-01",
+      "isExtracted": true,
+      "description": "The passport expires on 1 January 2034."
+    }
+  ],
+  "requiredActions": [],
+  "warnings": [],
+  "statements": [
+    {
+      "id": "b0-statement1",
+      "kind": "entity",
+      "label": "Name",
+      "text": "Name: Morgan Example.",
+      "originalValue": "Morgan Example",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement2",
+      "kind": "entity",
+      "label": "Nationality",
+      "text": "The person's nationality is Exampleland.",
+      "originalValue": "Exampleland",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement3",
+      "kind": "entity",
+      "label": "Passport number",
+      "text": "The passport number is TEST000001.",
+      "originalValue": "TEST000001",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement4",
+      "kind": "date",
+      "label": "Date of birth",
+      "text": "The person was born on 1 January 1990.",
+      "originalValue": "1990-01-01",
+      "normalizedValue": "1990-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement5",
+      "kind": "date",
+      "label": "Date of issue",
+      "text": "The passport was issued on 1 January 2024.",
+      "originalValue": "2024-01-01",
+      "normalizedValue": "2024-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement6",
+      "kind": "date",
+      "label": "Date of expiry",
+      "text": "The passport expires on 1 January 2034.",
+      "originalValue": "2034-01-01",
+      "normalizedValue": "2034-01-01",
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "b0-statement7",
+      "kind": "entity",
+      "label": "Issuing authority",
+      "text": "The passport is issued by the Synthetic Passport Office.",
+      "originalValue": "Synthetic Passport Office",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-1",
+      "kind": "interpretation",
+      "label": "Identity and purpose",
+      "text": "The passport serves as a travel identity document for Morgan Example, confirming their nationality as Exampleland and enabling international travel without visa requirements.",
+      "originalValue": "Name: Morgan Example\nNationality: Exampleland",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Evidence doesn't mention travel or visa requirements"
+    },
+    {
+      "id": "global-3",
+      "kind": "interpretation",
+      "label": "Issuing authority",
+      "text": "The Synthetic Passport Office is the official body responsible for issuing this passport and ensuring its legal validity.",
+      "originalValue": "Issuing authority: Synthetic Passport Office",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "SUPPORTED",
+      "supportReason": "Exact match in evidence"
+    },
+    {
+      "id": "global-4",
+      "kind": "warning",
+      "label": "No visa permission implied",
+      "text": "This document does not indicate visa permission for any destination, so the holder must check entry requirements for their intended travel destination.",
+      "originalValue": "Passport number: TEST000001",
+      "normalizedValue": null,
+      "confidence": 0.95,
+      "evidenceIds": [
+        "b0-page1"
+      ],
+      "supportStatus": "UNSUPPORTED",
+      "supportReason": "Evidence doesn't mention visa permissions"
+    }
+  ],
+  "evidence": [
+    {
+      "id": "b0-page1",
+      "page": 1,
+      "section": null,
+      "sourceText": "PASSPORT\nName: Morgan Example\nNationality: Exampleland\nPassport number: TEST000001\nDate of birth: 1990-01-01\nDate of issue: 2024-01-01\nDate of expiry: 2034-01-01\nIssuing authority: Synthetic Passport Office",
+      "boundingBox": null
+    }
+  ],
+  "analysisSections": [
+    {
+      "title": "What matters",
+      "statementIds": []
+    },
+    {
+      "title": "Key details",
+      "statementIds": [
+        "b0-statement1",
+        "b0-statement2",
+        "b0-statement3",
+        "b0-statement7"
+      ]
+    },
+    {
+      "title": "Dates and deadlines",
+      "statementIds": [
+        "b0-statement4",
+        "b0-statement5",
+        "b0-statement6"
+      ]
+    },
+    {
+      "title": "Financial details",
+      "statementIds": []
+    },
+    {
+      "title": "Terms and conditions",
+      "statementIds": [
+        "global-3"
+      ]
+    },
+    {
+      "title": "Suggested next steps",
+      "statementIds": []
+    }
+  ],
+  "missingInformation": [],
+  "qualityDiagnostics": {
+    "extractionInferenceMs": 45490,
+    "inferenceBatches": [
+      {
+        "total_duration": 45445038875,
+        "load_duration": 3648500,
+        "prompt_eval_count": 727,
+        "prompt_eval_duration": 511737000,
+        "eval_count": 751,
+        "eval_duration": 44739315000
+      }
+    ],
+    "reasoningStatus": "completed",
+    "reasoningMs": 41735,
+    "supportValidationMs": 26191,
+    "supportMethod": "model-judge-v1; uncalibrated",
+    "verdictCoverage": 1.0,
+    "supportModel": "qwen3:4b",
+    "pageCount": 1,
+    "ocrConfidence": 1,
+    "supportedClaims": 8,
+    "unsupportedClaims": 2,
+    "uncertainClaims": 0,
+    "evidenceCoverage": 0.8,
+    "findingsCount": 0,
+    "actionsCount": 0,
+    "confidenceCalibration": "Not calibrated; model support verdicts require human evaluation"
+  },
+  "semanticDocument": {
+    "pages": [
+      {
+        "page": 1,
+        "text": "PASSPORT\nName: Morgan Example\nNationality: Exampleland\nPassport number: TEST000001\nDate of birth: 1990-01-01\nDate of issue: 2024-01-01\nDate of expiry: 2034-01-01\nIssuing authority: Synthetic Passport Office",
+        "width": 612.0,
+        "height": 792.0,
+        "extraction": "synthetic_text",
+        "rotationDegrees": 0,
+        "coordinateSpace": "pdf_points",
+        "extractionConfidence": 1,
+        "blocks": []
+      }
+    ],
+    "documentCategory": "Passport",
+    "classificationConfidence": 0.95,
+    "classificationEvidenceIds": [
+      "b0-page1"
+    ],
+    "statements": [
+      {
+        "id": "b0-statement1",
+        "kind": "entity",
+        "label": "Name",
+        "text": "Name: Morgan Example.",
+        "originalValue": "Morgan Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "entity",
+        "label": "Nationality",
+        "text": "The person's nationality is Exampleland.",
+        "originalValue": "Exampleland",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "entity",
+        "label": "Passport number",
+        "text": "The passport number is TEST000001.",
+        "originalValue": "TEST000001",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement4",
+        "kind": "date",
+        "label": "Date of birth",
+        "text": "The person was born on 1 January 1990.",
+        "originalValue": "1990-01-01",
+        "normalizedValue": "1990-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "date",
+        "label": "Date of issue",
+        "text": "The passport was issued on 1 January 2024.",
+        "originalValue": "2024-01-01",
+        "normalizedValue": "2024-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement6",
+        "kind": "date",
+        "label": "Date of expiry",
+        "text": "The passport expires on 1 January 2034.",
+        "originalValue": "2034-01-01",
+        "normalizedValue": "2034-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement7",
+        "kind": "entity",
+        "label": "Issuing authority",
+        "text": "The passport is issued by the Synthetic Passport Office.",
+        "originalValue": "Synthetic Passport Office",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-1",
+        "kind": "interpretation",
+        "label": "Identity and purpose",
+        "text": "The passport serves as a travel identity document for Morgan Example, confirming their nationality as Exampleland and enabling international travel without visa requirements.",
+        "originalValue": "Name: Morgan Example\nNationality: Exampleland",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Evidence doesn't mention travel or visa requirements"
+      },
+      {
+        "id": "global-3",
+        "kind": "interpretation",
+        "label": "Issuing authority",
+        "text": "The Synthetic Passport Office is the official body responsible for issuing this passport and ensuring its legal validity.",
+        "originalValue": "Issuing authority: Synthetic Passport Office",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "global-4",
+        "kind": "warning",
+        "label": "No visa permission implied",
+        "text": "This document does not indicate visa permission for any destination, so the holder must check entry requirements for their intended travel destination.",
+        "originalValue": "Passport number: TEST000001",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "UNSUPPORTED",
+        "supportReason": "Evidence doesn't mention visa permissions"
+      }
+    ],
+    "evidence": [
+      {
+        "id": "b0-page1",
+        "page": 1,
+        "section": null,
+        "sourceText": "PASSPORT\nName: Morgan Example\nNationality: Exampleland\nPassport number: TEST000001\nDate of birth: 1990-01-01\nDate of issue: 2024-01-01\nDate of expiry: 2034-01-01\nIssuing authority: Synthetic Passport Office",
+        "boundingBox": null
+      }
+    ],
+    "documentGraph": {
+      "nodes": [
+        {
+          "id": "b0-statement1",
+          "kind": "entity",
+          "label": "Name",
+          "value": "Morgan Example",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement2",
+          "kind": "entity",
+          "label": "Nationality",
+          "value": "Exampleland",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement3",
+          "kind": "entity",
+          "label": "Passport number",
+          "value": "TEST000001",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement4",
+          "kind": "date",
+          "label": "Date of birth",
+          "value": "1990-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement5",
+          "kind": "date",
+          "label": "Date of issue",
+          "value": "2024-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement6",
+          "kind": "date",
+          "label": "Date of expiry",
+          "value": "2034-01-01",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "b0-statement7",
+          "kind": "entity",
+          "label": "Issuing authority",
+          "value": "Synthetic Passport Office",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-1",
+          "kind": "interpretation",
+          "label": "Identity and purpose",
+          "value": "Name: Morgan Example\nNationality: Exampleland",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        },
+        {
+          "id": "global-3",
+          "kind": "interpretation",
+          "label": "Issuing authority",
+          "value": "Issuing authority: Synthetic Passport Office",
+          "pages": [
+            1
+          ],
+          "supportStatus": "SUPPORTED"
+        },
+        {
+          "id": "global-4",
+          "kind": "warning",
+          "label": "No visa permission implied",
+          "value": "Passport number: TEST000001",
+          "pages": [
+            1
+          ],
+          "supportStatus": "UNSUPPORTED"
+        }
+      ],
+      "edges": [
+        {
+          "from": "b0-statement1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement2",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement4",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement5",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement6",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "b0-statement7",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-1",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-3",
+          "to": "b0-page1",
+          "relation": "cites"
+        },
+        {
+          "from": "global-4",
+          "to": "b0-page1",
+          "relation": "cites"
+        }
+      ],
+      "evidencePages": {
+        "b0-page1": 1
+      }
+    },
+    "entities": [
+      {
+        "id": "b0-statement1",
+        "kind": "entity",
+        "label": "Name",
+        "text": "Name: Morgan Example.",
+        "originalValue": "Morgan Example",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement2",
+        "kind": "entity",
+        "label": "Nationality",
+        "text": "The person's nationality is Exampleland.",
+        "originalValue": "Exampleland",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement3",
+        "kind": "entity",
+        "label": "Passport number",
+        "text": "The passport number is TEST000001.",
+        "originalValue": "TEST000001",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement7",
+        "kind": "entity",
+        "label": "Issuing authority",
+        "text": "The passport is issued by the Synthetic Passport Office.",
+        "originalValue": "Synthetic Passport Office",
+        "normalizedValue": null,
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "facts": [
+      {
+        "id": "b0-statement4",
+        "kind": "date",
+        "label": "Date of birth",
+        "text": "The person was born on 1 January 1990.",
+        "originalValue": "1990-01-01",
+        "normalizedValue": "1990-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement5",
+        "kind": "date",
+        "label": "Date of issue",
+        "text": "The passport was issued on 1 January 2024.",
+        "originalValue": "2024-01-01",
+        "normalizedValue": "2024-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      },
+      {
+        "id": "b0-statement6",
+        "kind": "date",
+        "label": "Date of expiry",
+        "text": "The passport expires on 1 January 2034.",
+        "originalValue": "2034-01-01",
+        "normalizedValue": "2034-01-01",
+        "confidence": 0.95,
+        "evidenceIds": [
+          "b0-page1"
+        ],
+        "supportStatus": "SUPPORTED",
+        "supportReason": "Exact match in evidence"
+      }
+    ],
+    "sections": [],
+    "clauses": [],
+    "obligations": [],
+    "conditions": [],
+    "relationships": [],
+    "findings": []
+  },
+  "provider": "Local",
+  "modelVersion": "qwen3:4b@359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+  "analyzerVersion": "document-engine-v3",
+  "promptVersion": "grounding-v4",
+  "explanationLanguage": "English",
+  "requiresReview": true,
+  "confidence": "low"
+}

@@ -1,0 +1,86 @@
+{
+  "synthetic": true,
+  "results": [
+    {
+      "id": "contract",
+      "language": "eng",
+      "quality": "clean",
+      "CER": 0.0,
+      "WER": 0.0,
+      "ocrConfidence": 0.9568145161290323,
+      "seconds": 2.81,
+      "fieldTargetRecall": 1.0
+    },
+    {
+      "id": "contract",
+      "language": "eng",
+      "quality": "low-dpi",
+      "CER": 0.0,
+      "WER": 0.0,
+      "ocrConfidence": 0.9574193548387097,
+      "seconds": 2.32,
+      "fieldTargetRecall": 1.0
+    },
+    {
+      "id": "malay",
+      "language": "msa",
+      "quality": "clean",
+      "CER": 0.0,
+      "WER": 0.0,
+      "ocrConfidence": 0.9532258064516129,
+      "seconds": 2.62,
+      "fieldTargetRecall": 1.0
+    },
+    {
+      "id": "malay",
+      "language": "msa",
+      "quality": "low-dpi",
+      "CER": 0.0,
+      "WER": 0.0,
+      "ocrConfidence": 0.9536290322580645,
+      "seconds": 1.91,
+      "fieldTargetRecall": 1.0
+    },
+    {
+      "id": "tamil",
+      "language": "tam",
+      "quality": "clean",
+      "CER": 0.1111111111111111,
+      "WER": 0.5,
+      "ocrConfidence": 0.8391836734693878,
+      "seconds": 4.66,
+      "fieldTargetRecall": 0.3333333333333333
+    },
+    {
+      "id": "tamil",
+      "language": "tam",
+      "quality": "low-dpi",
+      "CER": 0.1111111111111111,
+      "WER": 0.5,
+      "ocrConfidence": 0.8386734693877551,
+      "seconds": 2.82,
+      "fieldTargetRecall": 0.3333333333333333
+    },
+    {
+      "id": "chinese",
+      "language": "chi_sim",
+      "quality": "clean",
+      "CER": 0.22413793103448276,
+      "WER": null,
+      "ocrConfidence": 0.8629629629629629,
+      "seconds": 2.69,
+      "fieldTargetRecall": 0.6666666666666666
+    },
+    {
+      "id": "chinese",
+      "language": "chi_sim",
+      "quality": "low-dpi",
+      "CER": 0.1206896551724138,
+      "WER": null,
+      "ocrConfidence": 0.92,
+      "seconds": 1.6,
+      "fieldTargetRecall": 0.6666666666666666
+    }
+  ],
+  "limitations": "CER excludes whitespace; WER is whitespace-tokenized and is not defined for Chinese without a segmentation standard. Printed synthetic samples only; no independent human ratings."
+}

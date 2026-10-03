@@ -331,8 +331,8 @@ cd src/backend/ExpatOne.Api && dotnet run
 # Flutter (in another terminal)
 cd src/mobile && flutter run
 
-# Tests
-cd src/backend && dotnet test ExpatOne.sln
+# Tests (build first, then test with --no-build to avoid MSBuild tlog issue with space in path)
+cd src/backend && dotnet build ExpatOne.sln && dotnet test ExpatOne.sln --no-build
 cd src/mobile && flutter test
 ```
 
