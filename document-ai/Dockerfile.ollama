@@ -1,0 +1,23 @@
+FROM ollama/ollama:latest
+
+ENV OLLAMA_HOST=127.0.0.1:11434
+ENV OLLAMA_MODELS=/models
+
+RUN set -eu; \
+    ollama serve > /tmp/ollama-build.log 2>&1 & \
+    server_pid=$!; \
+    trap 'kill "$server_pid" 2>/dev/null || true' EXIT; \
+    attempts=0; \
+    until ollama list >/dev/null 2>&1; do \
+      attempts=$((attempts + 1)); \
+      if [ "$attempts" -ge 60 ]; then \
+        cat /tmp/ollama-build.log; \
+        exit 1; \
+      fi; \
+      sleep 1; \
+    done; \
+    ollama pull qwen3:4b
+
+EXPOSE 11434
+ENTRYPOINT ["/bin/ollama"]
+CMD ["serve"]
