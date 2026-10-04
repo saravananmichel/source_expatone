@@ -121,24 +121,45 @@ def extraction_schema():
 
 async def reason_batch(pages):
     model = os.environ['OLLAMA_MODEL']
-    # Scale timeout with batch page count; CPU inference can take 60-180s per page.
-    # Configurable via OLLAMA_BATCH_TIMEOUT_SECONDS; default 180s per page, minimum 300s.
+
     per_page_s = int(os.getenv('OLLAMA_BATCH_TIMEOUT_SECONDS', '180'))
     batch_timeout = max(300, per_page_s * len(pages))
-    # Scale output budget: more pages need more tokens for evidence + statements.
-    # Base 4000 tokens handles 1-2 pages; add 1500 per additional page.
     num_predict = min(8000, 4000 + max(0, len(pages) - 2) * 1500)
-    payload = {'model':model,'stream':False,'format':extraction_schema(),
-        'think':False,'options':{'temperature':0,'num_gpu':int(os.getenv('OLLAMA_NUM_GPU','-1')),'num_ctx':16384,'num_predict':num_predict},'messages':[
-            {'role':'system','content':PROMPT+' Write explanations in '+os.getenv('EXPLANATION_LANGUAGE','English')+'.'},
+
+    payload = {
+        'model': model,
+        'stream': False,
+        'format': extraction_schema(),
+        'think': False,
+        'options': {
+            'temperature': 0,
+            'num_gpu': int(os.getenv('OLLAMA_NUM_GPU', '-1')),
+            'num_ctx': 16384,
+            'num_predict': num_predict,
+        },
+        'messages': [
             {
-    'role': 'user',
-    'content': json.dumps(
-        [{'page': p.page, 'text': p.text} for p in pages],
-        ensure_ascii=False,
-        separators=(',', ':'),
-    ),
-}]}
+                'role': 'system',
+                'content': (
+                    PROMPT
+                    + ' Write explanations in '
+                    + os.getenv('EXPLANATION_LANGUAGE', 'English')
+                    + '.'
+                ),
+            },
+            {
+                'role': 'user',
+                'content': json.dumps(
+                    [{'page': p.page, 'text': p.text} for p in pages],
+                    ensure_ascii=False,
+                    separators=(',', ':'),
+                ),
+            },
+        ],
+    }
+    
+    
+    
     async with httpx.AsyncClient(timeout=ollama_timeout(batch_timeout)) as client:
         for attempt in range(2):
             response = await post_chat(client, payload)
