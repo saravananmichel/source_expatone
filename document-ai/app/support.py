@@ -41,7 +41,7 @@ IMPORTANT RULES:
 - Conditional statements ("during probation") must keep their condition — remove it → UNSUPPORTED.
 - Negations ("not permitted") must not be inverted — "is permitted" → UNSUPPORTED.
 
-Return exactly one verdict per supplied id. Do not invent new IDs. Keep reasons under 20 words. Return JSON.'''
+Return exactly one verdict per supplied id. Do not invent new IDs. Keep reasons under 8 words. Return compact JSON without indentation. Return JSON.'''
 
 async def review_support(semantic):
     started=time.monotonic()
@@ -55,16 +55,16 @@ async def review_support(semantic):
         entry={'id':s.id,'type':s.kind,'claim':s.label+': '+s.text,
             'evidence':[{'page':evidence[i].page,'quote':evidence[i].sourceText} for i in s.evidenceIds]}
         length=len(json.dumps(entry,ensure_ascii=False))
-        if current and (size+length>16000 or len(current)>=16):
+        if current and (size+length>16000 or len(current)>=4):
             groups.append(current);current=[];size=0
         current.append(entry);size+=length
     if current: groups.append(current)
-    async with httpx.AsyncClient(timeout=ollama_timeout(90)) as client:
+    async with httpx.AsyncClient(timeout=ollama_timeout(180)) as client:
         for group in groups:
             try:
                 response=await post_chat(client, {
                     'model':os.getenv('SUPPORT_MODEL',os.environ['OLLAMA_MODEL']), 'stream':False,'think':False,
-                    'format':Review.model_json_schema(), 'options':{'temperature':0,'num_gpu':int(os.getenv('OLLAMA_NUM_GPU','-1')),'num_ctx':16384,'num_predict':3000},
+                    'format':Review.model_json_schema(), 'options':{'temperature':0,'num_gpu':int(os.getenv('OLLAMA_NUM_GPU','-1')),'num_ctx':16384,'num_predict':600},
                     'messages':[{'role':'system','content':JUDGE},{'role':'user','content':json.dumps(group,ensure_ascii=False)}]})
                 response.raise_for_status()
                 review=Review.model_validate_json(response.json()['message']['content'])

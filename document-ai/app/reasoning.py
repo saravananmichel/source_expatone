@@ -81,6 +81,12 @@ STRICT RULES:
 - Statement and evidence ids must use only letters, digits, hyphens and underscores; all ids must be unique
 '''
     prompt+=STRATEGIES.get(semantic.documentCategory,'Explain purpose, explicit facts, conditions and consequences grounded only in evidence.')
+    prompt += (
+        '\nKeep the Overview within 60 words. Use one concise sentence '
+        'for each additional statement. Include additional statements only '
+        'when they add distinct information. Preserve relevant conditions '
+        'and exceptions.\n'
+    )
     try:
         async with httpx.AsyncClient(timeout=ollama_timeout(150)) as client:
             response=await post_chat(client, {
@@ -206,6 +212,12 @@ async def hierarchical_document_reasoning(semantic, pages):
     ) + STRATEGIES.get(semantic.documentCategory,
         'Explain purpose, explicit facts, conditions and consequences grounded only in the digest.')
 
+    prompt += (
+        '\nKeep the Overview within 60 words. Use one concise sentence '
+        'for each additional statement. Include additional statements only '
+        'when they add distinct information. Preserve relevant conditions '
+        'and exceptions.\n'
+    )
     try:
         async with httpx.AsyncClient(timeout=ollama_timeout(150)) as client:
             response = await post_chat(

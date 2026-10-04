@@ -39,6 +39,18 @@ QUALITY RULES:
 
 Write explanations in the language specified.'''
 
+PROMPT += '''
+OUTPUT EFFICIENCY:
+- Preserve every distinct source fact, obligation, condition and exception.
+- Write each statement explanation as one concise sentence.
+- Do not repeat the same fact in multiple statements.
+- Reuse evidence entries when statements cite the same quotation.
+- Quote the shortest exact passage sufficient to support the claim.
+- Preserve qualifiers, negations, dates, amounts and conditions.
+- Use short IDs such as s1, s2, e1, e2.
+- Avoid generic commentary and repeated boilerplate.
+'''
+
 def normalize(value):
     return ' '.join(value.split())
 
