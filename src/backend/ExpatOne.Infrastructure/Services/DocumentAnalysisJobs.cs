@@ -9,7 +9,7 @@ using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 namespace ExpatOne.Infrastructure.Services;
-public class DocumentAnalysisJobs(ExpatOneDbContext db, IConfiguration config, IStorageService? storage = null, IDocumentAuditService? audit = null) : IDocumentAnalysisJobs
+public class DocumentAnalysisJobs(ExpatOneDbContext db, IConfiguration config, ILogger<DocumentAnalysisJobs> logger, IStorageService? storage = null, IDocumentAuditService? audit = null) : IDocumentAnalysisJobs
 {
     public async Task<AnalysisJobDto> EnqueueAsync(Guid userId, Guid documentId, bool force, CancellationToken ct)
     {
@@ -60,14 +60,34 @@ public class DocumentAnalysisJobs(ExpatOneDbContext db, IConfiguration config, I
         db.DocumentAnalysisRuns.Add(run);
         audit?.Stage(documentId, userId, "analysis_queued", targetVersionId: run.DocumentVersionId,
             metadata: JsonSerializer.Serialize(new { analysisId = run.Id }));
-        try { await db.SaveChangesAsync(ct); }
-        catch (DbUpdateException)
+        try
         {
+            logger.LogInformation(
+                "Analysis enqueue INSERT: analysisId={AnalysisId}, documentId={DocumentId}, objectKey={ObjectKey}, fingerprint={Fingerprint}, contentHash={ContentHash}",
+                run.Id, documentId, document.S3ObjectKey, fingerprint, contentHash);
+
+            await db.SaveChangesAsync(ct);
+
+            logger.LogInformation(
+                "Analysis enqueue SAVE SUCCESS: analysisId={AnalysisId}, documentId={DocumentId}",
+                run.Id, documentId);
+        }
+        catch (DbUpdateException ex)
+        {
+            logger.LogWarning(
+                ex,
+                "Analysis enqueue SAVE FAILED: analysisId={AnalysisId}, documentId={DocumentId}",
+                run.Id, documentId);
+
             db.Entry(run).State = EntityState.Detached;
             if (snapshot != null) db.Entry(snapshot).State = EntityState.Detached;
-            var existing = await db.DocumentAnalysisRuns.FirstOrDefaultAsync(x => x.DocumentId == documentId &&
-                x.ObjectKey == document.S3ObjectKey && x.ConfigurationVersion == fingerprint &&
+
+            var existing = await db.DocumentAnalysisRuns.FirstOrDefaultAsync(x =>
+                x.DocumentId == documentId &&
+                x.ObjectKey == document.S3ObjectKey &&
+                x.ConfigurationVersion == fingerprint &&
                 (x.Status == "QUEUED" || x.Status == "PROCESSING"), ct);
+
             if (existing == null) throw;
             return Map(existing);
         }
