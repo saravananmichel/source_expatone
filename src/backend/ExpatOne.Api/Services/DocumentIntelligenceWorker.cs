@@ -29,6 +29,9 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
         var now = DateTime.UtcNow;
         var run = await db.DocumentAnalysisRuns.AsNoTracking().Where(x => (x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
             (x.Status == "PROCESSING" && x.LeaseUntil < now)).OrderBy(x => x.CreatedAt).FirstOrDefaultAsync(stoppingToken);
+        logger.LogInformation(
+            "Document analysis worker selected: analysisId={AnalysisId}, status={Status}, leaseUntil={LeaseUntil}, attempts={Attempts}",
+            run?.Id, run?.Status, run?.LeaseUntil, run?.Attempts);
         if (run == null) return false;
         var token = Guid.NewGuid();
         var claimed = await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && ((x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
