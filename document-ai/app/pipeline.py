@@ -214,11 +214,19 @@ async def reason(pages):
             pieces.append(text[:end]); text=text[end:]
         for piece in pieces:
             chunk=page.model_copy(update={'text':piece,'blocks':[b for b in page.blocks if b.text in piece]})
-            length=len(json.dumps(chunk.model_dump(),ensure_ascii=False).encode())
+            length=len(json.dumps(
+                {'page': chunk.page, 'text': chunk.text},
+                ensure_ascii=False, separators=(',', ':')
+            ).encode('utf-8')) + 1
             if current and (size+length>max_batch_bytes or len(current)>=max_pages_per_batch):
                 groups.append(current);current=[];size=0
             current.append(chunk);size+=length
     if current: groups.append(current)
+    logger.info(
+        "Extraction batches pages=%d chunks=%d batches=%d text_chars=%d",
+        len(pages), sum(len(g) for g in groups), len(groups),
+        sum(len(p.text) for p in pages)
+    )
     import time
     extraction_started=time.monotonic()
     failed_batch_pages=[]; results=[]; model=''
