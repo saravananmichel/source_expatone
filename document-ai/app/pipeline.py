@@ -148,8 +148,12 @@ async def reason_batch(pages):
                     previous.extractionConfidence = min(previous.extractionConfidence,
                                                         page.extractionConfidence)
             parsed = validate_grounding(parsed, list(page_map.values()))
-        except (ValueError, KeyError, TypeError):
-            logger.warning('Extraction validation failed; no automatic regeneration')
+        except (ValueError, KeyError, TypeError) as exc:
+            logger.warning(
+                'Extraction validation failed type=%s reason=%s',
+                type(exc).__name__,
+                str(exc)
+            )
             raise InferenceOutputError('invalid_model_output') from None
         parsed._inference = {key: raw.get(key) for key in
             ('total_duration', 'load_duration', 'prompt_eval_count',
