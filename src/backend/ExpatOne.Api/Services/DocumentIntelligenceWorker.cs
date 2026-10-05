@@ -36,6 +36,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
                 .SetProperty(x => x.Status, "PROCESSING").SetProperty(x => x.Stage, "Extracting and understanding")
                 .SetProperty(x => x.LeaseUntil, now.AddMinutes(18)).SetProperty(x => x.LeaseToken, token).SetProperty(x => x.UpdatedAt, now)
                 .SetProperty(x => x.Attempts, x => x.Attempts + 1), stoppingToken);
+        logger.LogInformation("Document analysis {AnalysisId} claim result: claimed={Claimed}, status={Status}, attempts={Attempts}", run.Id, claimed, run.Status, run.Attempts);
         if (claimed == 0) return true;
         var duration = Stopwatch.StartNew();
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
