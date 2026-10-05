@@ -92,6 +92,14 @@ def validate_grounding(semantic, pages):
         source = ' '.join(evidence[i].sourceText for i in statement.evidenceIds if i in evidence)
         if statement.originalValue and normalize(statement.originalValue) not in normalize(source) \
                 and _nfkc_norm(statement.originalValue) not in _nfkc_norm(source):
+            logger.warning(
+                'Unsupported originalValue statement_id=%s label=%s value=%r source=%r evidence_ids=%s',
+                statement.id,
+                statement.label,
+                statement.originalValue,
+                source,
+                statement.evidenceIds,
+            )
             raise ValueError('unsupported_value')
         # Numbers cannot silently appear in generated explanations without source support.
         # Capture standalone word-boundary numbers AND digits immediately after a currency prefix
