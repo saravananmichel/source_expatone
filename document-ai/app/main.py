@@ -11,6 +11,7 @@ from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Request
 from .schemas import Page
 from .limits import IngestionLimits
 from .pipeline import reason, render
+from .ollama import InferenceOutputError
 from .config import check_model, validate_config
 from .qa import AskRequest, ask_document
 from fastapi.exceptions import RequestValidationError
@@ -127,6 +128,13 @@ async def _analyze_impl(file, x_service_key):
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
             return result
         except HTTPException: raise
+        except InferenceOutputError as error:
+            code = str(error) if str(error) in ('output_token_limit', 'incomplete_inference', 'invalid_model_output') else 'invalid_model_output'
+            logger.warning('Analysis stopped category=%s retryable=false', code)
+            raise HTTPException(422, {'code': code, 'message': 'Analysis could not produce a complete verified result.'}) from None
+        except httpx.TimeoutException:
+            logger.warning('Analysis stopped category=inference_timeout retryable=false')
+            raise HTTPException(422, {'code': 'inference_timeout', 'message': 'Document analysis exceeded its inference time budget.'}) from None
         except httpx.HTTPError:
             raise HTTPException(503, 'Document model unavailable; retry later') from None
         except Exception:

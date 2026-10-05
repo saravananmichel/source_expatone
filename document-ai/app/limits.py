@@ -30,6 +30,10 @@ class IngestionLimits:
             async with asyncio.timeout(max(30,min(1800,int(os.getenv('DOCUMENT_AI_REQUEST_SECONDS','900'))))):
                 await self.app(scope,bounded_receive,send)
         except TimeoutError:
-            await JSONResponse({'detail':'Processing timed out'},503)(scope,receive,send)
+            # The worker retries 5xx. Repeating the same exhausted analysis budget
+            # blocks newer documents, so an analysis deadline is terminal (422).
+            status = 422 if scope.get('path') == '/analyze' else 503
+            await JSONResponse({'detail': 'Processing timed out',
+                                'code': 'analysis_budget_exceeded'}, status)(scope,receive,send)
         except (RequestTooLarge,ValueError):
             await JSONResponse({'detail':'Request too large'},413)(scope,receive,send)

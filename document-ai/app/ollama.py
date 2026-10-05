@@ -5,6 +5,17 @@ import logging
 logger = logging.getLogger("uvicorn.error")
 from .config import ollama_base_url
 
+class InferenceOutputError(ValueError):
+    """Deterministic output failure; do not retry the same request unchanged."""
+
+
+def check_completion(raw):
+    if raw.get("done_reason") == "length":
+        raise InferenceOutputError("output_token_limit")
+    if raw.get("done") is not True:
+        raise InferenceOutputError("incomplete_inference")
+
+
 async def post_chat(client, payload):
     payload = {**payload, "options": {**payload.get("options", {}), "num_thread": 4}}
     schema = payload.get('format', {})
@@ -25,6 +36,7 @@ async def post_chat(client, payload):
             speed = (raw.get("eval_count") or 0) / seconds if seconds else 0
             logger.info("Ollama speed stage=%s threads=4 tokens_per_second=%.2f",
                         stage, speed)
+            check_completion(raw)
         return response
     except BaseException as error:
         logger.warning("Ollama interrupted stage=%s error_type=%s duration_ms=%d",
@@ -49,7 +61,8 @@ async def stream_chat(client, payload, metrics=None):
                 if first_token is None: first_token = time.monotonic() - started
                 content.append(token)
             if chunk.get('done'): final = chunk
-    if final is None: raise ValueError('incomplete_inference')
+    if final is None: raise InferenceOutputError('incomplete_inference')
+    check_completion(final)
     if metrics is not None:
         metrics.append({'firstTokenMs': round(first_token * 1000) if first_token is not None else None,
             'totalMs': round((time.monotonic() - started) * 1000),
