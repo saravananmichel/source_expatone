@@ -138,7 +138,7 @@ async def reason_batch(pages):
 
     per_page_s = int(os.getenv('OLLAMA_BATCH_TIMEOUT_SECONDS', '180'))
     batch_timeout = max(300, per_page_s * len(pages))
-    num_predict = min(4000, 2000 + max(0, len(pages) - 2) * 750)
+    num_predict = min(2500, 2000 + max(0, len(pages) - 2) * 250)
 
     payload = {
         'model': model,
