@@ -46,7 +46,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
         timeout.CancelAfter(TimeSpan.FromMinutes(17));
         try
         {
-            if (run.Attempts >= 3) throw new InvalidOperationException("Retry limit.");
+            if (run.Attempts > 5) throw new InvalidOperationException("Retry limit.");
             var storage = scope.ServiceProvider.GetRequiredService<IStorageService>();
             // Bound actual storage bytes independently of upload metadata; always clean the temp file.
             var path = Path.GetTempFileName();
@@ -109,7 +109,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
         }
         catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
-            var retry = run.Attempts < 2 && IsTransientFailure(ex);
+            var retry = run.Attempts < 5 && IsTransientFailure(ex);
             await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && x.LeaseToken == token).ExecuteUpdateAsync(set => set
                 .SetProperty(x => x.Status, retry ? "QUEUED" : "FAILED").SetProperty(x => x.Stage, retry ? "Retrying" : "Failed")
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow).SetProperty(x => x.ErrorCategory, ex is OperationCanceledException ? "timeout" : "processing_failed")
