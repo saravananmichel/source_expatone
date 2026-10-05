@@ -1,6 +1,8 @@
 from .ollama import post_chat
 from .config import ollama_base_url, ollama_timeout
 import json
+import logging
+logger = logging.getLogger("uvicorn.error")
 import os
 import re
 import unicodedata
@@ -186,6 +188,8 @@ async def reason_batch(pages):
             except (ValueError, KeyError) as error:
                 allowed={'duplicate_evidence','duplicate_statement','unsupported_evidence','unsupported_value','unsupported_number','missing_evidence'}
                 category=error.args[0] if error.args and error.args[0] in allowed else 'schema_violation'
+                logger.warning("Extraction validation failed attempt=%d category=%s",
+                               attempt + 1, category)
                 if attempt: raise ValueError('invalid_model_output:'+category) from None
                 payload['messages'].append({'role':'user','content':
                     f'Validation failure: {category}. Produce a fresh fully grounded result. CRITICAL RULES: (1) Every statement id and evidence id must contain only letters, digits, hyphens and underscores — no colons, spaces or other punctuation. (2) All statement ids must be unique — never repeat an id. (3) Evidence sourceText must be the exact text block that contains the originalValue — a section heading (e.g. "CONFIRMATION") cannot serve as evidence for a clause body. (4) originalValue must be an exact substring of its evidence sourceText. (5) Every reference id must exist. (6) Every number in a statement\'s text must appear verbatim in at least one cited evidence sourceText — cite ALL blocks needed. (7) Do not cite a heading block as evidence for a clause that appears in a different block.'})

@@ -7,7 +7,7 @@ import logging
 import shutil
 from contextlib import asynccontextmanager
 import httpx
-from fastapi import FastAPI, File, UploadFile, Header, HTTPException
+from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Request
 from .schemas import Page
 from .limits import IngestionLimits
 from .pipeline import reason, render
@@ -35,7 +35,7 @@ async def lifespan(app):
 app = FastAPI(title='ExpatOne Document Intelligence', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
 app.add_middleware(IngestionLimits)
 slots = asyncio.Semaphore(1)
-logger = logging.getLogger("document-intelligence")
+logger = logging.getLogger("uvicorn.error")
 
 
 @app.get('/health')
@@ -54,7 +54,43 @@ async def ready():
         raise HTTPException(503,'Service not ready') from None
 
 @app.post('/analyze')
-async def analyze(file: UploadFile = File(...), x_service_key: str = Header(default='')):
+async def analyze(request: Request, file: UploadFile = File(...),
+                  x_service_key: str = Header(default='')):
+    # FastAPI has already consumed the multipart body before this handler runs.
+    async def wait_for_disconnect():
+        while True:
+            message = await request.receive()
+            if message['type'] == 'http.disconnect':
+                return
+
+    work = asyncio.create_task(
+        _analyze_impl(file, x_service_key),
+        name='document-analysis'
+    )
+    disconnected = asyncio.create_task(
+        wait_for_disconnect(),
+        name='document-disconnect'
+    )
+    try:
+        done, _ = await asyncio.wait(
+            {work, disconnected},
+            return_when=asyncio.FIRST_COMPLETED
+        )
+        if work in done:
+            return await work
+        # Propagate receive errors rather than silently treating them as disconnects.
+        await disconnected
+        logger.warning("Analysis client disconnected; cancelling processing")
+        raise HTTPException(499, 'Client disconnected')
+    finally:
+        for task in (work, disconnected):
+            if not task.done():
+                task.cancel()
+        await asyncio.gather(work, disconnected, return_exceptions=True)
+        await file.close()
+
+
+async def _analyze_impl(file, x_service_key):
     expected = os.getenv('DOCUMENT_AI_SERVICE_KEY','')
     if not expected or not hmac.compare_digest(x_service_key,expected):
         raise HTTPException(401,'Unauthorized')

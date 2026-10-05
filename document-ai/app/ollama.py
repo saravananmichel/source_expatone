@@ -1,10 +1,31 @@
 """Shared private Ollama transport. Never logs request or response contents."""
 import json
 import time
+import logging
+logger = logging.getLogger("uvicorn.error")
 from .config import ollama_base_url
 
 async def post_chat(client, payload):
-    return await client.post(ollama_base_url() + '/api/chat', json=payload)
+    schema = payload.get('format', {})
+    stage = schema.get('title', 'unknown') if isinstance(schema, dict) else 'unknown'
+    started = time.monotonic()
+    logger.info("Ollama start stage=%s max_tokens=%s",
+                stage, payload.get('options', {}).get('num_predict'))
+    try:
+        response = await client.post(ollama_base_url() + '/api/chat', json=payload)
+        logger.info("Ollama response stage=%s status=%s duration_ms=%d",
+                    stage, response.status_code,
+                    int((time.monotonic()-started)*1000))
+        if response.is_success:
+            raw = response.json()
+            logger.info("Ollama metrics stage=%s output_tokens=%s done_reason=%s",
+                        stage, raw.get('eval_count'), raw.get('done_reason'))
+        return response
+    except BaseException as error:
+        logger.warning("Ollama interrupted stage=%s error_type=%s duration_ms=%d",
+                       stage, type(error).__name__,
+                       int((time.monotonic()-started)*1000))
+        raise
 
 async def stream_chat(client, payload, metrics=None):
     started = time.monotonic()
