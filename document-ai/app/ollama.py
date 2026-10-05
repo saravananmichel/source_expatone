@@ -6,6 +6,7 @@ logger = logging.getLogger("uvicorn.error")
 from .config import ollama_base_url
 
 async def post_chat(client, payload):
+    payload = {**payload, "options": {**payload.get("options", {}), "num_thread": 4}}
     schema = payload.get('format', {})
     stage = schema.get('title', 'unknown') if isinstance(schema, dict) else 'unknown'
     started = time.monotonic()
@@ -20,6 +21,10 @@ async def post_chat(client, payload):
             raw = response.json()
             logger.info("Ollama metrics stage=%s output_tokens=%s done_reason=%s",
                         stage, raw.get('eval_count'), raw.get('done_reason'))
+            seconds = (raw.get("eval_duration") or 0) / 1e9
+            speed = (raw.get("eval_count") or 0) / seconds if seconds else 0
+            logger.info("Ollama speed stage=%s threads=4 tokens_per_second=%.2f",
+                        stage, speed)
         return response
     except BaseException as error:
         logger.warning("Ollama interrupted stage=%s error_type=%s duration_ms=%d",
@@ -28,6 +33,7 @@ async def post_chat(client, payload):
         raise
 
 async def stream_chat(client, payload, metrics=None):
+    payload = {**payload, "options": {**payload.get("options", {}), "num_thread": 4}}
     started = time.monotonic()
     first_token = None
     content = []
