@@ -110,7 +110,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
                 .SetProperty(x => x.Status, retry ? "QUEUED" : "FAILED").SetProperty(x => x.Stage, retry ? "Retrying" : "Failed")
                 .SetProperty(x => x.UpdatedAt, DateTime.UtcNow).SetProperty(x => x.ErrorCategory, ex is OperationCanceledException ? "timeout" : "processing_failed")
                 .SetProperty(x => x.LeaseUntil, retry ? DateTime.UtcNow.AddSeconds(30 * (run.Attempts + 1)) : (DateTime?)null), stoppingToken);
-            logger.LogWarning("Document analysis {AnalysisId} failed; retry={Retry}", run.Id, retry);
+            logger.LogWarning(ex, "Document analysis {AnalysisId} failed; retry={Retry}", run.Id, retry);
         }
         return true;
     }
