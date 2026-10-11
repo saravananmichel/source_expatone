@@ -5,6 +5,7 @@ import '../../core/theme/app_theme.dart';
 import 'add_document_screen.dart';
 import 'document_detail_screen.dart';
 import 'shared_documents_screen.dart';
+import '../family/family_screen.dart';
 
 class DocumentsScreen extends StatefulWidget {
   final DocumentService documentService;
@@ -79,8 +80,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Documents'),
+        title: const Text('Documents'),
         actions: [
+          IconButton(icon: const Icon(Icons.family_restroom), tooltip: 'Family', onPressed: () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => FamilyScreen(documentService: widget.documentService)));
+            if (mounted) _loadDocuments();
+          }),
+          IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh documents', onPressed: _loadDocuments),
           IconButton(
             icon: const Icon(Icons.folder_shared_outlined),
             tooltip: 'Shared With Me',
@@ -246,6 +252,9 @@ class _DocumentCard extends StatelessWidget {
                       document.documentType,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
+                    if (document.isSharedWithMe)
+                      Text('Family • ${document.ownerDisplayName ?? document.ownerEmail ?? "Shared"} • Read-only',
+                        style: const TextStyle(fontSize: 12)),
                     if (document.expiryDate != null) ...[
                       const SizedBox(height: 2),
                       Text(

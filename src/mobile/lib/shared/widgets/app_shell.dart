@@ -46,10 +46,11 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  int _documentRefresh = 0;
 
   void _navigateToTab(int index) {
     if (index >= 0 && index < 5) {
-      setState(() => _currentIndex = index);
+      setState(() { _currentIndex = index; if (index == 1) _documentRefresh++; });
     }
   }
 
@@ -64,12 +65,14 @@ class _AppShellState extends State<AppShell> {
         onNavigateToTab: _navigateToTab,
       ),
       DocumentsScreen(
+        key: ValueKey(_documentRefresh),
         documentService: widget.documentService,
         reminderService: widget.reminderService,
       ),
       AssistantScreen(assistantService: widget.assistantService),
       RemindersScreen(reminderService: widget.reminderService),
       MoreScreen(
+        documentService: widget.documentService,
         authService: widget.authService,
         userService: widget.userService,
         translationService: widget.translationService,
@@ -85,7 +88,7 @@ class _AppShellState extends State<AppShell> {
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
-        onDestinationSelected: (index) => setState(() => _currentIndex = index),
+        onDestinationSelected: _navigateToTab,
         backgroundColor: Colors.white,
         indicatorColor: AppTheme.primaryColor.withValues(alpha: 0.12),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,

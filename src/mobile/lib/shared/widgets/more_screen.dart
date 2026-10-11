@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/services/document_service.dart';
+import '../../features/family/family_screen.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/emergency_service.dart';
 import '../../core/services/translation_service.dart';
@@ -9,6 +11,7 @@ import '../../features/profile/profile_screen.dart';
 import '../../features/translator/translation_screen.dart';
 
 class MoreScreen extends StatelessWidget {
+  final DocumentService? documentService;
   final IAuthService authService;
   final UserService userService;
   final TranslationService translationService;
@@ -17,6 +20,7 @@ class MoreScreen extends StatelessWidget {
 
   const MoreScreen({
     super.key,
+    this.documentService,
     required this.authService,
     required this.userService,
     required this.translationService,
@@ -46,6 +50,11 @@ class MoreScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
+          if (documentService != null) _MenuTile(
+            icon: Icons.family_restroom, iconColor: AppTheme.primaryColor,
+            title: 'Family', subtitle: 'Requests and document access',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FamilyScreen(documentService: documentService!))),
+          ),
           // Standard menu items
           _MenuTile(
             icon: Icons.translate,

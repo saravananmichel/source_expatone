@@ -36,6 +36,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.document.isSharedWithMe) return;
     _loadVersions();
     _loadShares();
     _loadAuditLogs();
@@ -329,6 +330,24 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.document.isSharedWithMe) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.document.name)),
+        body: Padding(padding: const EdgeInsets.all(24), child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.folder_shared_outlined, size: 48),
+            const SizedBox(height: 16),
+            Text(widget.document.documentType),
+            Text('Shared by ${widget.document.ownerDisplayName ?? widget.document.ownerEmail ?? "family"}'),
+            const SizedBox(height: 8),
+            const Text('Read-only family document'),
+            const SizedBox(height: 24),
+            FilledButton.icon(onPressed: _isOpening ? null : _openDocument,
+              icon: const Icon(Icons.open_in_new), label: Text(_isOpening ? 'Opening…' : 'View document')),
+          ],
+        )),
+      );
+    }
     final doc = widget.document;
 
     return Scaffold(
@@ -551,6 +570,7 @@ class _ExpiryBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     final isExpired = document.isExpired;
     final color = isExpired ? AppTheme.errorColor : Colors.orange;
     final label = isExpired ? 'EXPIRED' : 'EXPIRING SOON';
@@ -592,6 +612,7 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Row(
       children: [
         Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
@@ -617,6 +638,7 @@ class _VersionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final date = version.createdAt;
     final dateStr = '${date.day} ${months[date.month - 1]} ${date.year}';
@@ -677,6 +699,7 @@ class _ShareTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: CircleAvatar(
@@ -714,6 +737,7 @@ class _AuditLogTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     final date = log.createdAt;
     final dateStr = '${date.day} ${months[date.month - 1]} ${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
@@ -762,6 +786,7 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(

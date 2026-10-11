@@ -122,6 +122,7 @@ builder.Services.AddRateLimiter(rl =>
     // General AI endpoints: translate, document-analyze, document-ask, assistant-messages
     // Limit read from config; default 20 requests per 60-second sliding window per user.
     rl.AddPolicy<string, AiRateLimitPartitioner>("ai-per-user");
+    rl.AddPolicy<string, FamilyRateLimitPartitioner>("family-per-user");
 
     // Emergency AI endpoint: separate, more generous policy (10/60s per user).
     // CALL 999 is deterministic Flutter-native and is never behind this policy.
@@ -157,6 +158,7 @@ builder.Services.AddDbContext<ExpatOneDbContext>(options =>
         npgsqlOptions => npgsqlOptions.UseVector()));
 
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<FamilyService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
 var awsRegion = builder.Configuration["Aws:Region"];

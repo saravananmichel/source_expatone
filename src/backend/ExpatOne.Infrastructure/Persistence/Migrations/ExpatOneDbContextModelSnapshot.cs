@@ -1124,6 +1124,51 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Versions");
                 });
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyRequestStatus", b =>
+            {
+                b.Property<int>("Id").HasColumnType("integer");
+                b.Property<string>("Name").IsRequired().HasMaxLength(30).HasColumnType("character varying(30)");
+                b.HasKey("Id"); b.HasIndex("Name").IsUnique(); b.ToTable("family_request_statuses");
+                b.HasData(new { Id=1, Name="Pending" }, new { Id=2, Name="Accepted" },
+                    new { Id=3, Name="Rejected" }, new { Id=4, Name="Cancelled" }, new { Id=5, Name="Revoked" });
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyRequest", b =>
+            {
+                b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
+                b.Property<Guid>("RequesterUserId").HasColumnType("uuid");
+                b.Property<Guid>("RecipientUserId").HasColumnType("uuid");
+                b.Property<int>("StatusId").HasColumnType("integer");
+                b.Property<Guid>("Revision").IsConcurrencyToken().HasColumnType("uuid");
+                b.Property<DateTime>("CreatedAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTime>("UpdatedAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("RespondedAt").HasColumnType("timestamp with time zone");
+                b.HasKey("Id"); b.HasIndex("StatusId");
+                b.HasIndex("RecipientUserId", "StatusId");
+                b.HasIndex("RequesterUserId", "RecipientUserId").IsUnique().HasFilter("\"StatusId\" IN (1, 2)");
+                b.ToTable("family_requests", t => t.HasCheckConstraint("CK_family_not_self", "\"RequesterUserId\" <> \"RecipientUserId\""));
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyDocumentGrant", b =>
+            {
+                b.Property<Guid>("FamilyRequestId").HasColumnType("uuid");
+                b.Property<Guid>("DocumentId").HasColumnType("uuid");
+                b.HasKey("FamilyRequestId", "DocumentId"); b.HasIndex("DocumentId"); b.ToTable("family_document_grants");
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyRequest", b =>
+            {
+                b.HasOne("ExpatOne.Domain.Entities.User", "Requester").WithMany().HasForeignKey("RequesterUserId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.HasOne("ExpatOne.Domain.Entities.User", "Recipient").WithMany().HasForeignKey("RecipientUserId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.HasOne("ExpatOne.Domain.Entities.FamilyRequestStatus", "Status").WithMany().HasForeignKey("StatusId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                b.Navigation("Requester"); b.Navigation("Recipient"); b.Navigation("Status");
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyDocumentGrant", b =>
+            {
+                b.HasOne("ExpatOne.Domain.Entities.FamilyRequest", "Request").WithMany("Grants").HasForeignKey("FamilyRequestId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.HasOne("ExpatOne.Domain.Entities.Document", "Document").WithMany().HasForeignKey("DocumentId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.Navigation("Request"); b.Navigation("Document");
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyRequest", b => { b.Navigation("Grants"); });
+
 #pragma warning restore 612, 618
         }
     }

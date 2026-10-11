@@ -2,6 +2,9 @@ namespace ExpatOne.Application.DTOs;
 
 public class DocumentDto
 {
+    public bool IsSharedWithMe { get; set; }
+    public string? OwnerEmail { get; set; }
+    public string? OwnerDisplayName { get; set; }
     public Guid Id { get; set; }
     public required string Name { get; set; }
     public required string DocumentType { get; set; }

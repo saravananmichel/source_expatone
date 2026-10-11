@@ -62,3 +62,14 @@ public sealed class EmergencyAiRateLimitPartitioner : IRateLimiterPolicy<string>
 
     public Func<OnRejectedContext, CancellationToken, ValueTask>? OnRejected => null;
 }
+
+public sealed class FamilyRateLimitPartitioner : IRateLimiterPolicy<string>
+{
+    public RateLimitPartition<string> GetPartition(HttpContext context) =>
+        RateLimitPartition.GetSlidingWindowLimiter(
+            context.User.FindFirstValue("firebase_uid") ?? $"ip:{context.Connection.RemoteIpAddress}",
+            _ => new SlidingWindowRateLimiterOptions {
+                PermitLimit = 60, Window = TimeSpan.FromMinutes(1), SegmentsPerWindow = 6, QueueLimit = 0
+            });
+    public Func<OnRejectedContext, CancellationToken, ValueTask>? OnRejected => null;
+}

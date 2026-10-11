@@ -12,6 +12,9 @@ public class ExpatOneDbContext : DbContext
 
     public DbSet<DocumentAnalysisRun> DocumentAnalysisRuns => Set<DocumentAnalysisRun>();
 
+    public DbSet<FamilyRequestStatus> FamilyRequestStatuses => Set<FamilyRequestStatus>();
+    public DbSet<FamilyRequest> FamilyRequests => Set<FamilyRequest>();
+    public DbSet<FamilyDocumentGrant> FamilyDocumentGrants => Set<FamilyDocumentGrant>();
     public DbSet<User> Users => Set<User>();
     public DbSet<Document> Documents => Set<Document>();
     public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();

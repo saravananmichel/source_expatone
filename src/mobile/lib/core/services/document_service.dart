@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'family_service.dart';
 import '../constants/api_constants.dart';
 import '../networking/api_client.dart';
 import '../error/app_exception.dart';
@@ -29,6 +30,8 @@ class DocumentType {
 }
 
 class DocumentItem {
+  final bool isSharedWithMe;
+  final String? ownerEmail, ownerDisplayName;
   final String id;
   final String name;
   final String documentType;
@@ -44,6 +47,9 @@ class DocumentItem {
   final int activeShareCount;
 
   const DocumentItem({
+    this.isSharedWithMe = false,
+    this.ownerEmail,
+    this.ownerDisplayName,
     required this.id,
     required this.name,
     required this.documentType,
@@ -60,6 +66,9 @@ class DocumentItem {
   });
 
   factory DocumentItem.fromJson(Map<String, dynamic> json) => DocumentItem(
+        isSharedWithMe: json['isSharedWithMe'] as bool? ?? false,
+        ownerEmail: json['ownerEmail'] as String?,
+        ownerDisplayName: json['ownerDisplayName'] as String?,
         id: json['id'] as String,
         name: json['name'] as String,
         documentType: json['documentType'] as String,
@@ -289,6 +298,7 @@ class UploadUrlResponse {
 }
 
 class DocumentService {
+  FamilyService get familyService => FamilyService(_apiClient);
   final ApiClient _apiClient;
   final _analysisProgress = StreamController<Map<String, String>>.broadcast();
   Stream<Map<String, String>> get analysisProgress => _analysisProgress.stream;

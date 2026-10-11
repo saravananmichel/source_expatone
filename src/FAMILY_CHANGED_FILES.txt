@@ -1,0 +1,26 @@
+Modified existing files:
+src/mobile/lib/features/documents/documents_screen.dart
+src/mobile/lib/features/documents/document_detail_screen.dart
+src/mobile/lib/shared/widgets/app_shell.dart
+src/mobile/lib/shared/widgets/more_screen.dart
+src/mobile/lib/core/services/document_service.dart
+src/backend/ExpatOne.Api/Program.cs
+src/backend/ExpatOne.Infrastructure/Persistence/ExpatOneDbContext.cs
+src/backend/ExpatOne.Infrastructure/Services/DocumentService.cs
+src/backend/ExpatOne.Infrastructure/Persistence/Migrations/ExpatOneDbContextModelSnapshot.cs
+src/backend/ExpatOne.Application/DTOs/DocumentDto.cs
+src/backend/ExpatOne.Api/Extensions/RateLimitPartitioners.cs
+
+New files:
+src/FAMILY_MODULE_README.md
+src/mobile/test/family_test.dart
+src/mobile/lib/features/family/family_screen.dart
+src/mobile/lib/core/services/family_service.dart
+src/backend/ExpatOne.Tests/FamilyServiceTests.cs
+src/backend/ExpatOne.Infrastructure/Services/FamilyService.cs
+src/backend/ExpatOne.Infrastructure/Persistence/Configurations/FamilyConfiguration.cs
+src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20261011020000_AddFamilySharing.Designer.cs
+src/backend/ExpatOne.Infrastructure/Persistence/Migrations/20261011020000_AddFamilySharing.cs
+src/backend/ExpatOne.Domain/Entities/FamilyRequest.cs
+src/backend/ExpatOne.Application/DTOs/FamilyDto.cs
+src/backend/ExpatOne.Api/Controllers/FamilyController.cs

@@ -95,33 +95,35 @@ public class DocumentService : IDocumentService
 
     public async Task<List<DocumentDto>> GetUserDocumentsAsync(Guid userId)
     {
-        var documents = await _dbContext.Documents
+        var documents = await ReadableDocuments(userId)
+            .Include(d => d.User)
             .Include(d => d.DocumentType)
             .Include(d => d.Versions)
             .Include(d => d.Shares)
-            .Where(d => d.UserId == userId && d.Status != DocumentStatus.PendingUpload)
+            .Where(d => d.Status != DocumentStatus.PendingUpload)
             .OrderByDescending(d => d.CreatedAt)
             .ToListAsync();
 
-        return documents.Select(MapToDto).ToList();
+        return documents.Select(d => MapForViewer(d, userId)).ToList();
     }
 
     public async Task<DocumentDto?> GetDocumentAsync(Guid userId, Guid documentId)
     {
-        var document = await _dbContext.Documents
+        var document = await ReadableDocuments(userId)
+            .Include(d => d.User)
             .Include(d => d.DocumentType)
             .Include(d => d.Versions)
             .Include(d => d.Shares)
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId
+            .FirstOrDefaultAsync(d => d.Id == documentId
                 && d.Status != DocumentStatus.PendingUpload);
 
-        return document is null ? null : MapToDto(document);
+        return document is null ? null : MapForViewer(document, userId);
     }
 
     public async Task<AccessUrlResponseDto> GetAccessUrlAsync(Guid userId, Guid documentId)
     {
-        var document = await _dbContext.Documents
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId
+        var document = await ReadableDocuments(userId)
+            .FirstOrDefaultAsync(d => d.Id == documentId
                 && d.Status != DocumentStatus.PendingUpload)
             ?? throw new KeyNotFoundException("Document not found.");
 
@@ -229,6 +231,21 @@ public class DocumentService : IDocumentService
             sanitized = sanitized[..200];
 
         return sanitized;
+    }
+
+    private IQueryable<Document> ReadableDocuments(Guid userId) => _dbContext.Documents.Where(d =>
+        d.UserId == userId || _dbContext.FamilyDocumentGrants.Any(g => g.DocumentId == d.Id &&
+            g.Request.RequesterUserId == userId && g.Request.RecipientUserId == d.UserId &&
+            g.Request.StatusId == FamilyRequestStates.Accepted));
+
+    private static DocumentDto MapForViewer(Document doc, Guid userId)
+    {
+        var dto = MapToDto(doc);
+        dto.IsSharedWithMe = doc.UserId != userId;
+        dto.OwnerEmail = doc.User?.Email;
+        dto.OwnerDisplayName = doc.User?.DisplayName;
+        if (dto.IsSharedWithMe) { dto.ActiveShareCount = 0; dto.VersionCount = 0; dto.IsAnalyzed = false; }
+        return dto;
     }
 
     private static DocumentDto MapToDto(Document doc) => new()
