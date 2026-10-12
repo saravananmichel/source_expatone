@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'family_service.dart';
+import 'visa_service.dart';
 import '../constants/api_constants.dart';
 import '../networking/api_client.dart';
 import '../error/app_exception.dart';
@@ -298,6 +299,7 @@ class UploadUrlResponse {
 }
 
 class DocumentService {
+  VisaService get visaService => VisaService(_apiClient);
   FamilyService get familyService => FamilyService(_apiClient);
   final ApiClient _apiClient;
   final _analysisProgress = StreamController<Map<String, String>>.broadcast();

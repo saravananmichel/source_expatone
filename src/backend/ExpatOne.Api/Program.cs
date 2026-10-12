@@ -159,6 +159,7 @@ builder.Services.AddDbContext<ExpatOneDbContext>(options =>
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<FamilyService>();
+builder.Services.AddHttpClient<VisaApplicationService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
 var awsRegion = builder.Configuration["Aws:Region"];

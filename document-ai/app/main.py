@@ -34,6 +34,8 @@ async def lifespan(app):
     yield
 
 app = FastAPI(title='ExpatOne Document Intelligence', docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
+from .visa_forms import router as visa_forms_router
+app.include_router(visa_forms_router)
 app.add_middleware(IngestionLimits)
 slots = asyncio.Semaphore(1)
 logger = logging.getLogger("uvicorn.error")

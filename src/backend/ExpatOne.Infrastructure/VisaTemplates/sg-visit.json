@@ -1,0 +1,1018 @@
+{
+  "id": "SG-VISIT-2026-10-12",
+  "country": "SG",
+  "purpose": "Tourism",
+  "title": "Singapore visit visa",
+  "reviewedOn": "2026-10-12",
+  "reviewUntil": "2027-01-10",
+  "readinessNationality": "India",
+  "readinessPassportType": "International Passport",
+  "fields": [
+    {
+      "key": "fullName",
+      "label": "Full name exactly as in passport",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 50,
+      "pdf": [
+        "undefined",
+        "undefined_2"
+      ]
+    },
+    {
+      "key": "alias",
+      "label": "Alias (if any)",
+      "section": "Applicant",
+      "required": false,
+      "type": "text",
+      "maxLength": 50,
+      "pdf": [
+        "undefined_3",
+        "undefined_4"
+      ]
+    },
+    {
+      "key": "birthDate",
+      "label": "Date of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10,
+      "pdf": [
+        "Date of Birth",
+        "M",
+        "Y"
+      ]
+    },
+    {
+      "key": "sex",
+      "label": "Sex as recorded in passport",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Male": "undefined_5",
+        "Female": "undefined_6"
+      },
+      "options": [
+        "Male",
+        "Female"
+      ]
+    },
+    {
+      "key": "maritalStatus",
+      "label": "Marital status",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Single": "Single",
+        "Married": "Married",
+        "Separated": "Separated",
+        "Divorced": "Divorced",
+        "Widowed": "Widowed",
+        "Cohabited": "Cohabited",
+        "Customary": "Customary"
+      },
+      "options": [
+        "Single",
+        "Married",
+        "Separated",
+        "Divorced",
+        "Widowed",
+        "Cohabited",
+        "Customary"
+      ]
+    },
+    {
+      "key": "spouseStatus",
+      "label": "Spouse nationality / residency",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Singapore Citizen": "Singapore Citizen",
+        "Singapore Permanent Resident": "Singapore Permanent Resident",
+        "Other": "Others Please Specify"
+      },
+      "options": [
+        "Singapore Citizen",
+        "Singapore Permanent Resident",
+        "Other"
+      ],
+      "when": "spouse"
+    },
+    {
+      "key": "spouseNric",
+      "label": "Spouse NRIC",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 9,
+      "pdf": [
+        "NRIC No",
+        "NRIC No_2"
+      ],
+      "when": "spouseSg"
+    },
+    {
+      "key": "spouseNationality",
+      "label": "Spouse nationality",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 100,
+      "pdf": "undefined_7",
+      "when": "spouseOther"
+    },
+    {
+      "key": "birthCountry",
+      "label": "Country/place of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "CountryPlace of Birth"
+    },
+    {
+      "key": "birthProvince",
+      "label": "State/province of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "StateProvince of Birth"
+    },
+    {
+      "key": "race",
+      "label": "Race (enter your own answer)",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "Chinese Caucasian etc"
+    },
+    {
+      "key": "nationality",
+      "label": "Nationality/citizenship",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "NationalityCitizenship"
+    },
+    {
+      "key": "passportType",
+      "label": "Travel document type",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "International Passport": "International Passport",
+        "Diplomatic Passport": "Diplomatic Passport",
+        "Official Passport": "Official Passport",
+        "Service Passport": "Service Passport",
+        "Document of Identity": "Document of Identity",
+        "Certificate of Identity": "Certificate of Identity",
+        "Other": "Others please specify"
+      },
+      "options": [
+        "International Passport",
+        "Diplomatic Passport",
+        "Official Passport",
+        "Service Passport",
+        "Document of Identity",
+        "Certificate of Identity",
+        "Other"
+      ]
+    },
+    {
+      "key": "passportTypeOther",
+      "label": "Other travel document type",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 100,
+      "pdf": "undefined_8",
+      "when": "otherPassport"
+    },
+    {
+      "key": "passportNumber",
+      "label": "Travel document number",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 15,
+      "pdf": "Travel Document No"
+    },
+    {
+      "key": "passportIssueDate",
+      "label": "Passport issue date",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10,
+      "pdf": [
+        "Travel Document",
+        "M M",
+        "Y_2"
+      ]
+    },
+    {
+      "key": "passportExpiryDate",
+      "label": "Passport expiry date",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10,
+      "pdf": [
+        "Expiry Date",
+        "M M_2",
+        "Y_3"
+      ]
+    },
+    {
+      "key": "passportIssuePlace",
+      "label": "Country/place of issue",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "CountryPlace of Issue"
+    },
+    {
+      "key": "prcId",
+      "label": "PRC identity number",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 18,
+      "pdf": "undefined_10",
+      "when": "chinese"
+    },
+    {
+      "key": "residenceCountry",
+      "label": "Country/place of residence",
+      "section": "Residence",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "CountryPlace of Origin"
+    },
+    {
+      "key": "residenceProvince",
+      "label": "State/province of residence",
+      "section": "Residence",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "DivisionStateProvince"
+    },
+    {
+      "key": "residencePrefecture",
+      "label": "Prefecture (if applicable)",
+      "section": "Residence",
+      "required": false,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "Prefecture of Origin"
+    },
+    {
+      "key": "residenceDistrict",
+      "label": "County/district (if applicable)",
+      "section": "Residence",
+      "required": false,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "CountyDistrict of Origin"
+    },
+    {
+      "key": "residenceAddress",
+      "label": "Residential address",
+      "section": "Residence",
+      "required": true,
+      "type": "text",
+      "maxLength": 120,
+      "pdf": "Address"
+    },
+    {
+      "key": "email",
+      "label": "Email address",
+      "section": "Personal details",
+      "required": true,
+      "type": "email",
+      "maxLength": 25,
+      "pdf": "undefined_11"
+    },
+    {
+      "key": "phone",
+      "label": "Contact number",
+      "section": "Personal details",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "Contact Number"
+    },
+    {
+      "key": "occupation",
+      "label": "Occupation",
+      "section": "Personal details",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "undefined_12"
+    },
+    {
+      "key": "education",
+      "label": "Highest qualification",
+      "section": "Personal details",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "No Formal Education": "No Formal Education",
+        "Primary": "Primary",
+        "Secondary": "Secondary",
+        "PreUniversity": "PreUniversity",
+        "Diploma": "Diploma",
+        "University": "University",
+        "PostGraduate": "PostGraduate"
+      },
+      "options": [
+        "No Formal Education",
+        "Primary",
+        "Secondary",
+        "PreUniversity",
+        "Diploma",
+        "University",
+        "PostGraduate"
+      ]
+    },
+    {
+      "key": "incomeSgd",
+      "label": "Annual income in SGD (enter 0 if none)",
+      "section": "Personal details",
+      "required": true,
+      "type": "number",
+      "maxLength": 15,
+      "pdf": "Singapore dollars SGD"
+    },
+    {
+      "key": "religion",
+      "label": "Religion (enter your own answer)",
+      "section": "Personal details",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "undefined_13"
+    },
+    {
+      "key": "arrivalDate",
+      "label": "Expected arrival date",
+      "section": "Trip",
+      "required": true,
+      "type": "date",
+      "maxLength": 10,
+      "pdf": [
+        "Expected Date of Arrival in Singapore",
+        "M M_3",
+        "Y_4"
+      ]
+    },
+    {
+      "key": "departureDate",
+      "label": "Expected departure date",
+      "section": "Trip",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "visaEntries",
+      "label": "Requested visa journeys",
+      "section": "Trip",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Single Journey": "Single Journey",
+        "Double Journey": "Double Journey",
+        "Triple Journey": "Triple Journey",
+        "Multiple Journey": "Multiple Journey"
+      },
+      "options": [
+        "Single Journey",
+        "Double Journey",
+        "Triple Journey",
+        "Multiple Journey"
+      ]
+    },
+    {
+      "key": "visitDetails",
+      "label": "Purpose details (tourism/social visit)",
+      "section": "Trip",
+      "required": true,
+      "type": "text",
+      "maxLength": 100,
+      "pdf": "undefined_14"
+    },
+    {
+      "key": "stayBand",
+      "label": "Intended stay (as worded on Form 14A)",
+      "section": "Trip",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Less than 30 days": "Less than 30 days",
+        "More than 30 days": "More than 30 days"
+      },
+      "options": [
+        "Less than 30 days",
+        "More than 30 days"
+      ]
+    },
+    {
+      "key": "longStayReason",
+      "label": "Reason and duration for stay over 30 days",
+      "section": "Trip",
+      "required": true,
+      "type": "text",
+      "maxLength": 200,
+      "pdf": [
+        "duration 1",
+        "duration 2"
+      ],
+      "when": "longStay"
+    },
+    {
+      "key": "accommodationType",
+      "label": "Where will you stay?",
+      "section": "Accommodation",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Next of Kin": "Next of Kins Place",
+        "Relative": "Relatives Place",
+        "Friend": "Friends Place",
+        "Hotel": "Hotel",
+        "Other": "undefined_15"
+      },
+      "options": [
+        "Next of Kin",
+        "Relative",
+        "Friend",
+        "Hotel",
+        "Other"
+      ]
+    },
+    {
+      "key": "accommodationOther",
+      "label": "Other accommodation type",
+      "section": "Accommodation",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "Others Please specify",
+      "when": "otherStay"
+    },
+    {
+      "key": "sgBlock",
+      "label": "Block/house number",
+      "section": "Accommodation",
+      "required": true,
+      "type": "text",
+      "maxLength": 5,
+      "pdf": "BlockHouse No"
+    },
+    {
+      "key": "sgFloor",
+      "label": "Floor (if applicable)",
+      "section": "Accommodation",
+      "required": false,
+      "type": "text",
+      "maxLength": 2,
+      "pdf": "Floor No"
+    },
+    {
+      "key": "sgUnit",
+      "label": "Unit (if applicable)",
+      "section": "Accommodation",
+      "required": false,
+      "type": "text",
+      "maxLength": 4,
+      "pdf": "Unit No"
+    },
+    {
+      "key": "sgPostal",
+      "label": "Postal code",
+      "section": "Accommodation",
+      "required": true,
+      "type": "text",
+      "maxLength": 6,
+      "pdf": "Postal Code"
+    },
+    {
+      "key": "sgStreet",
+      "label": "Street",
+      "section": "Accommodation",
+      "required": true,
+      "type": "text",
+      "maxLength": 20,
+      "pdf": "Street Name"
+    },
+    {
+      "key": "sgPhone",
+      "label": "Accommodation contact number",
+      "section": "Accommodation",
+      "required": true,
+      "type": "text",
+      "maxLength": 20,
+      "pdf": "Contact No"
+    },
+    {
+      "key": "sgBuilding",
+      "label": "Building/hotel name",
+      "section": "Accommodation",
+      "required": false,
+      "type": "text",
+      "maxLength": 100,
+      "pdf": "Building Name"
+    },
+    {
+      "key": "otherResidence",
+      "label": "Lived outside country of origin for at least one year in the past five years?",
+      "section": "History",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Yes": "Did you reside in other countriesplaces other than your countryplace of origin for one year or more during the last 5 years.Yes",
+        "No": "Did you reside in other countriesplaces other than your countryplace of origin for one year or more during the last 5 years.No"
+      },
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "historyCountries",
+      "label": "Countries (one per line)",
+      "section": "History",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 400,
+      "pdf": "CountryPlaceRow1",
+      "when": "history"
+    },
+    {
+      "key": "historyAddresses",
+      "label": "Addresses (matching lines)",
+      "section": "History",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 400,
+      "pdf": "AddressRow1",
+      "when": "history"
+    },
+    {
+      "key": "historyFrom",
+      "label": "From dates (matching lines)",
+      "section": "History",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 400,
+      "pdf": "FromRow1",
+      "when": "history"
+    },
+    {
+      "key": "historyTo",
+      "label": "To dates (matching lines)",
+      "section": "History",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 400,
+      "pdf": "ToRow1",
+      "when": "history"
+    },
+    {
+      "key": "airlineRepresentative",
+      "label": "Child accompanied by airline representative?",
+      "section": "Companion",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "options": [
+        "Yes",
+        "No"
+      ],
+      "when": "child"
+    },
+    {
+      "key": "companionRelationship",
+      "label": "Companion relationship",
+      "section": "Companion",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "undefined_16",
+      "when": "companion"
+    },
+    {
+      "key": "companionName",
+      "label": "Companion full name",
+      "section": "Companion",
+      "required": true,
+      "type": "text",
+      "maxLength": 50,
+      "pdf": [
+        "undefined_17",
+        "undefined_18"
+      ],
+      "when": "companion"
+    },
+    {
+      "key": "companionBirthDate",
+      "label": "Companion date of birth",
+      "section": "Companion",
+      "required": true,
+      "type": "date",
+      "maxLength": 10,
+      "pdf": [
+        "D",
+        "M_2",
+        "Y_5"
+      ],
+      "when": "companion"
+    },
+    {
+      "key": "companionSex",
+      "label": "Companion sex",
+      "section": "Companion",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Male": "Male",
+        "Female": "Check Box2"
+      },
+      "options": [
+        "Male",
+        "Female"
+      ],
+      "when": "companion"
+    },
+    {
+      "key": "companionNationality",
+      "label": "Companion nationality",
+      "section": "Companion",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "D_2",
+      "when": "companion"
+    },
+    {
+      "key": "companionPassport",
+      "label": "Companion passport number",
+      "section": "Companion",
+      "required": true,
+      "type": "text",
+      "maxLength": 15,
+      "pdf": "Travel Document_2",
+      "when": "companion"
+    },
+    {
+      "key": "localName",
+      "label": "Local contact / company / hotel name",
+      "section": "Local contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 50,
+      "pdf": [
+        "Name of Local Contact",
+        "CompanyHotel"
+      ]
+    },
+    {
+      "key": "localRelationship",
+      "label": "Relationship to applicant",
+      "section": "Local contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "Local ContactCompany"
+    },
+    {
+      "key": "localPhone",
+      "label": "Local contact phone",
+      "section": "Local contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "pdf": "Contact No_2"
+    },
+    {
+      "key": "localEmail",
+      "label": "Local contact email",
+      "section": "Local contact",
+      "required": true,
+      "type": "email",
+      "maxLength": 60,
+      "pdf": "Email Address"
+    },
+    {
+      "key": "antecedent1",
+      "label": "Ever refused entry or deported from any country?",
+      "section": "Declarations",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Yes": "Check Box3.Yes",
+        "No": "Check Box7"
+      },
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "antecedent2",
+      "label": "Ever convicted in court in any country?",
+      "section": "Declarations",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Yes": "Check Box4",
+        "No": "Check Box8"
+      },
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "antecedent3",
+      "label": "Ever prohibited from entering Singapore?",
+      "section": "Declarations",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Yes": "Check Box5",
+        "No": "Check Box9"
+      },
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "antecedent4",
+      "label": "Ever entered Singapore with different identity particulars?",
+      "section": "Declarations",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "pdf": {
+        "Yes": "Check Box6",
+        "No": "Check Box10"
+      },
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "antecedentDetails",
+      "label": "Details for every Yes answer",
+      "section": "Declarations",
+      "required": true,
+      "type": "text",
+      "maxLength": 300,
+      "pdf": [
+        "If any of the answer is YES please furnish details below 2",
+        "undefined_20",
+        "If any of the answer is YES please furnish details below 1"
+      ],
+      "when": "antecedent"
+    },
+    {
+      "key": "filingRoute",
+      "label": "Submission route",
+      "section": "Checklist setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "options": [
+        "Singapore local contact",
+        "Authorised agent / Overseas Mission"
+      ]
+    },
+    {
+      "key": "filingLocation",
+      "label": "Mission / agent / local contact handling submission",
+      "section": "Checklist setup",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "loiRequired",
+      "label": "Does your filing route require V39A?",
+      "section": "Checklist setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "translationRequired",
+      "label": "Do supporting documents need an official English translation?",
+      "section": "Checklist setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "photoDate",
+      "label": "Date photograph was taken",
+      "section": "Checklist setup",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "embarkationCountry",
+      "label": "Country/place of embarkation",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 35,
+      "when": "loi"
+    },
+    {
+      "key": "loiContactType",
+      "label": "V39A contact type",
+      "section": "V39A",
+      "required": true,
+      "type": "choice",
+      "maxLength": 100,
+      "options": [
+        "Individual",
+        "Company"
+      ],
+      "when": "loi"
+    },
+    {
+      "key": "loiNric",
+      "label": "Local contact NRIC",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 9,
+      "when": "loiIndividual"
+    },
+    {
+      "key": "loiAddress",
+      "label": "Local contact address",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 60,
+      "when": "loiIndividual"
+    },
+    {
+      "key": "loiUen",
+      "label": "Company UEN",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "when": "loiCompany"
+    },
+    {
+      "key": "loiRepresentative",
+      "label": "Representative name, NRIC and designation",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 60,
+      "when": "loiCompany"
+    },
+    {
+      "key": "loiCompanyAddress",
+      "label": "Company name and address",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 60,
+      "when": "loiCompany"
+    },
+    {
+      "key": "loiRelationship",
+      "label": "Applicant's relationship to the local contact (V39A)",
+      "section": "V39A",
+      "required": true,
+      "type": "text",
+      "maxLength": 25,
+      "when": "loi"
+    }
+  ],
+  "checks": [
+    {
+      "key": "routeReviewed",
+      "label": "Checked the current ICA nationality page and the chosen filing route requirements",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "passportCopy",
+      "label": "Passport biodata copy is clear and belongs to the applicant",
+      "needsDocument": true,
+      "role": "Passport"
+    },
+    {
+      "key": "photo",
+      "label": "Photograph meets the official photo requirements",
+      "needsDocument": true,
+      "role": "Photograph"
+    },
+    {
+      "key": "formReviewed",
+      "label": "Reviewed every active form field against its source; all details belong to this applicant",
+      "needsDocument": false
+    },
+    {
+      "key": "signed14a",
+      "label": "Applicant reviewed declarations and signed the final matching Form 14A",
+      "needsDocument": true,
+      "role": "Signed Form 14A"
+    },
+    {
+      "key": "loi",
+      "label": "Required V39A has been reviewed and signed by the local contact",
+      "needsDocument": true,
+      "role": "Signed V39A",
+      "when": "loi"
+    },
+    {
+      "key": "translation",
+      "label": "Required official English translations supplied (AI translation alone is insufficient)",
+      "needsDocument": true,
+      "role": "Official translation",
+      "when": "translation"
+    },
+    {
+      "key": "additional",
+      "label": "All extra documents requested by the mission / agent are supplied; list them or explicitly state none requested",
+      "needsDocument": false,
+      "noteRequired": true
+    }
+  ],
+  "documentRoles": [
+    "Passport",
+    "Photograph",
+    "Itinerary",
+    "Accommodation",
+    "Signed Form 14A",
+    "Signed V39A",
+    "Official translation",
+    "Other supporting document"
+  ],
+  "sources": [
+    {
+      "title": "ICA visa requirements by travel document",
+      "url": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements"
+    },
+    {
+      "title": "ICA India application requirements (initial readiness rules)",
+      "url": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore/visa_requirements/visa-detail-page/india"
+    },
+    {
+      "title": "ICA entry and travel requirements",
+      "url": "https://www.ica.gov.sg/enter-transit-depart/entering-singapore"
+    },
+    {
+      "title": "ICA photo guidelines",
+      "url": "https://www.ica.gov.sg/photo-guidelines"
+    }
+  ]
+}
