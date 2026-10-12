@@ -7,6 +7,10 @@ import os
 import re
 import unicodedata
 import httpx
+import logging
+import time
+from .compact_extraction import CompactExtraction, COMPACT_PROMPT, source_passages, expand_extraction
+logger = logging.getLogger("uvicorn.error")
 from .schemas import SemanticDocument
 from .postprocessing import enrich
 from .compact import CompactExtraction, source_passages, expand_extraction
@@ -73,13 +77,16 @@ def sanitize_ids(semantic):
     return semantic
 
 def validate_grounding(semantic, pages):
-    page_map = {p.page: p for p in pages}
+    page_map = {}
+    for p in pages:
+        page_map.setdefault(p.page, []).append(p)
     evidence = {e.id:e for e in semantic.evidence}
     if len(evidence) != len(semantic.evidence): raise ValueError('duplicate_evidence')
     if len({s.id for s in semantic.statements}) != len(semantic.statements): raise ValueError('duplicate_statement')
     for item in semantic.evidence:
-        page = page_map.get(item.page)
-        if page is None or normalize(item.sourceText) not in normalize(page.text):
+        candidates = page_map.get(item.page, [])
+        page = next((p for p in candidates if normalize(item.sourceText) in normalize(p.text)), None)
+        if page is None:
             raise ValueError('unsupported_evidence')
         # Server owns geometry. Preserve coordinates only if quote maps to a real block.
         item.boundingBox = next((b.boundingBox for b in page.blocks
@@ -87,7 +94,7 @@ def validate_grounding(semantic, pages):
     refs = list(semantic.classificationEvidenceIds)
     for statement in semantic.statements:
         refs.extend(statement.evidenceIds)
-        source_confidence=min((page_map[evidence[i].page].extractionConfidence for i in statement.evidenceIds if i in evidence),default=0)
+        source_confidence=min((min(p.extractionConfidence for p in page_map[evidence[i].page]) for i in statement.evidenceIds if i in evidence),default=0)
         statement.confidence=min(statement.confidence,source_confidence)
         source = ' '.join(evidence[i].sourceText for i in statement.evidenceIds if i in evidence)
         if statement.originalValue and normalize(statement.originalValue) not in normalize(source) \
@@ -115,12 +122,19 @@ def validate_grounding(semantic, pages):
 
 def extraction_schema():
     return CompactExtraction.model_json_schema()
+<<<<<<< HEAD
 
+=======
+>>>>>>> b23c254 (Use compact extraction for document analysis)
 
 async def reason_batch(pages):
     model = os.environ['OLLAMA_MODEL']
     passages = source_passages(pages)
+<<<<<<< HEAD
     # A single attempt per batch: repeating the same token budget is not recovery.
+=======
+
+>>>>>>> b23c254 (Use compact extraction for document analysis)
     per_page_s = int(os.getenv('OLLAMA_BATCH_TIMEOUT_SECONDS', '180'))
     batch_timeout = max(300, per_page_s * len(pages))
     num_predict = min(2500, 2000 + max(0, len(pages) - 2) * 250)
@@ -131,13 +145,34 @@ async def reason_batch(pages):
                     'num_gpu': int(os.getenv('OLLAMA_NUM_GPU', '-1')),
                     'num_ctx': 16384, 'num_predict': num_predict},
         'messages': [
+<<<<<<< HEAD
             {'role': 'system', 'content': PROMPT + ' Write explanations in '
                 + os.getenv('EXPLANATION_LANGUAGE', 'English') + '.'},
             {'role': 'user', 'content': json.dumps(passages, ensure_ascii=False,
                                                    separators=(',', ':'))},
+=======
+            {
+                'role': 'system',
+                'content': (
+                    COMPACT_PROMPT
+                    + ' Write explanations in '
+                    + os.getenv('EXPLANATION_LANGUAGE', 'English')
+                    + '.'
+                ),
+            },
+            {
+                'role': 'user',
+                'content': json.dumps(
+                    passages,
+                    ensure_ascii=False,
+                    separators=(',', ':'),
+                ),
+            },
+>>>>>>> b23c254 (Use compact extraction for document analysis)
         ],
     }
     async with httpx.AsyncClient(timeout=ollama_timeout(batch_timeout)) as client:
+<<<<<<< HEAD
         response = await post_chat(client, payload)
         response.raise_for_status()
         raw = response.json()
@@ -167,6 +202,37 @@ async def reason_batch(pages):
             ('total_duration', 'load_duration', 'prompt_eval_count',
              'prompt_eval_duration', 'eval_count', 'eval_duration')}
         return parsed, model
+=======
+        for attempt in range(2):
+            started = time.monotonic()
+            logger.info("document_ai stage=extraction event=start attempt=%d passages=%d", attempt + 1, len(passages))
+            try:
+                response = await post_chat(client, payload)
+            except httpx.HTTPError as error:
+                logger.warning("document_ai stage=extraction event=transport_failed type=%s", type(error).__name__)
+                raise
+            response.raise_for_status()
+            try:
+                raw = response.json()
+                if raw.get('done_reason') == 'length':
+                    raise ValueError('truncated_output')
+                parsed = expand_extraction(raw['message']['content'], passages)
+                parsed = sanitize_ids(parsed)
+                parsed=validate_grounding(parsed,pages)
+                raw=response.json()
+                parsed._inference={key:raw.get(key) for key in ('total_duration','load_duration','prompt_eval_count','prompt_eval_duration','eval_count','eval_duration')}
+                logger.info("document_ai stage=extraction event=completed elapsed_ms=%d claims=%d", round((time.monotonic()-started)*1000), len(parsed.statements))
+                return parsed, model
+            except (ValueError, KeyError) as error:
+                allowed={'duplicate_evidence','duplicate_statement','unsupported_evidence','unsupported_value','unsupported_number','missing_evidence'}
+                category=error.args[0] if error.args and error.args[0] in allowed else 'schema_violation'
+                if attempt: raise ValueError('invalid_model_output:'+category) from None
+                logger.warning("document_ai stage=extraction event=validation_failed category=%s", category)
+                payload['messages'].append({'role':'user','content':
+                    f'Validation failure: {category}. Return a fresh complete result. Use only supplied source IDs in refs. '
+                    'value must match cited source text exactly; preserve all conditions and numbers. Keep text concise.'})
+
+>>>>>>> b23c254 (Use compact extraction for document analysis)
 
 async def reason(pages):
     # Bound prompt size for CPU/development hardware; preserve every source page.
@@ -236,6 +302,7 @@ async def reason(pages):
     from .support import review_support
     merged=validate_grounding(enrich(merged),pages)
     started=time.monotonic()
+    logger.info("document_ai stage=reasoning event=start")
     # Use hierarchical reasoning when there are 3+ batches (long documents).
     if len(groups) >= 3:
         reasoning_status=await hierarchical_document_reasoning(merged,pages)
@@ -243,7 +310,10 @@ async def reason(pages):
         reasoning_status=await document_reasoning(merged)
     reasoning_ms=round((time.monotonic()-started)*1000)
     merged=validate_grounding(merged,pages)
+    logger.info("document_ai stage=reasoning event=completed elapsed_ms=%d", reasoning_ms)
+    logger.info("document_ai stage=support event=start")
     quality=await review_support(merged)
+    logger.info("document_ai stage=support event=completed elapsed_ms=%d", quality["supportValidationMs"])
     # Private per-result diagnostics are returned to authenticated users, never logged.
     merged_quality={'extractionInferenceMs':round((time.monotonic()-extraction_started)*1000)-reasoning_ms-quality['supportValidationMs'],
         'inferenceBatches':[getattr(r,'_inference',{}) for r in results], 'reasoningStatus':reasoning_status,'reasoningMs':reasoning_ms,**quality}
