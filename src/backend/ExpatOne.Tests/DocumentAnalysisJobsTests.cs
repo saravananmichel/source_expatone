@@ -14,7 +14,7 @@ public class DocumentAnalysisJobsTests
         var document = new Document { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), DocumentName = "Synthetic",
             S3ObjectKey = "synthetic/v1.pdf", ContentType = "application/pdf", Status = DocumentStatus.Active };
         db.Documents.Add(document); db.SaveChanges();
-        return (db, new DocumentAnalysisJobs(db, new ConfigurationBuilder().Build()), document);
+        return (db, new DocumentAnalysisJobs(db, new ConfigurationBuilder().Build(), Microsoft.Extensions.Logging.Abstractions.NullLogger<DocumentAnalysisJobs>.Instance), document);
     }
     [Fact]
     public async Task QueueIsIdempotentAndOwnerScoped()

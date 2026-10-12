@@ -6,6 +6,7 @@ import 'add_document_screen.dart';
 import 'document_detail_screen.dart';
 import 'shared_documents_screen.dart';
 import '../family/family_screen.dart';
+import '../applications/application_assistant_screen.dart';
 
 class DocumentsScreen extends StatefulWidget {
   final DocumentService documentService;
@@ -18,6 +19,7 @@ class DocumentsScreen extends StatefulWidget {
 }
 
 class _DocumentsScreenState extends State<DocumentsScreen> {
+  final Set<String> _selected = {};
   List<DocumentItem>? _documents;
   bool _isLoading = true;
   String? _error;
@@ -39,6 +41,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       if (mounted) {
         setState(() {
           _documents = docs;
+          _selected.removeWhere((id) => !docs.any((d) => d.id == id));
           _isLoading = false;
         });
       }
@@ -80,8 +83,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Documents'),
+        title: Text(_selected.isEmpty ? 'Documents' : '${_selected.length} selected'),
         actions: [
+          IconButton(icon: const Icon(Icons.assignment_outlined), tooltip: 'Prepare application', onPressed: _selected.isEmpty || _isLoading || _error != null ? null : () async {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => ApplicationAssistantScreen(documentService: widget.documentService, selectedDocumentIds: _selected.toList())));
+            if (mounted) { _loadDocuments(); }
+          }),
+          if (_selected.isEmpty) ...[
+
           IconButton(icon: const Icon(Icons.family_restroom), tooltip: 'Family', onPressed: () async {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => FamilyScreen(documentService: widget.documentService)));
             if (mounted) _loadDocuments();
@@ -101,6 +110,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             icon: const Icon(Icons.add),
             onPressed: _navigateToAdd,
           ),
+          ] else IconButton(icon: const Icon(Icons.clear), tooltip: 'Clear selection', onPressed: () => setState(_selected.clear)),
         ],
       ),
       body: _isLoading
@@ -169,10 +179,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         itemCount: _documents!.length,
         itemBuilder: (context, index) {
           final doc = _documents![index];
-          return _DocumentCard(
-            document: doc,
-            onTap: () => _navigateToDetail(doc),
-          );
+          return Row(children: [
+            Checkbox(semanticLabel: 'Select ${doc.name} for an application', value: _selected.contains(doc.id), onChanged: (value) => setState(() { if (value == true) { _selected.add(doc.id); } else { _selected.remove(doc.id); } })),
+            Expanded(child: _DocumentCard(document: doc, onTap: () => _navigateToDetail(doc))),
+          ]);
         },
       ),
     );

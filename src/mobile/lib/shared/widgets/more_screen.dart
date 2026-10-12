@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/services/document_service.dart';
 import '../../features/family/family_screen.dart';
+import '../../features/applications/application_assistant_screen.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/emergency_service.dart';
 import '../../core/services/translation_service.dart';
@@ -54,6 +55,11 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.family_restroom, iconColor: AppTheme.primaryColor,
             title: 'Family', subtitle: 'Requests and document access',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FamilyScreen(documentService: documentService!))),
+          ),
+          if (documentService != null) _MenuTile(
+            icon: Icons.assignment_outlined, iconColor: AppTheme.primaryColor,
+            title: 'Application Assistant', subtitle: 'Visa forms and readiness checklists',
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ApplicationAssistantScreen(documentService: documentService!))),
           ),
           // Standard menu items
           _MenuTile(
