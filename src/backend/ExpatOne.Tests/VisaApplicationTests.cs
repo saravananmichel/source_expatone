@@ -17,7 +17,7 @@ public class VisaApplicationTests : IDisposable
         db=new(new DbContextOptionsBuilder<ExpatOneDbContext>().UseSqlite("Data Source=:memory:").Options);
         db.Database.OpenConnection();db.Database.EnsureCreated();
         db.Users.AddRange(new User{Id=owner,Email="owner@visa.test",ExternalId="owner"},new User{Id=viewer,Email="viewer@visa.test",ExternalId="viewer"});
-        var type=new DocumentType{Id=Guid.NewGuid(),Name="Passport",HasExpiry=true};db.DocumentTypes.Add(type);
+        var type = db.DocumentTypes.Single(t => t.Name == "Passport");
         db.Documents.Add(new Document{Id=doc,UserId=owner,DocumentTypeId=type.Id,DocumentName="Synthetic passport",S3ObjectKey="private/test",DocumentNumber="A1234567",ExpiryDate=DateTime.UtcNow.AddYears(5)});
         db.SaveChanges();service=new(db,client,new ConfigurationBuilder().Build());
     }
