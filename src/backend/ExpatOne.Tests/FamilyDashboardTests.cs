@@ -20,8 +20,7 @@ public class FamilyDashboardTests : IDisposable
         db.Database.OpenConnection(); db.Database.EnsureCreated();
         foreach (var (id, email) in new[] { (owner, "owner@test.com"), (viewer, "viewer@test.com"), (stranger, "stranger@test.com") })
             db.Users.Add(new User { Id = id, Email = email, ExternalId = id.ToString() });
-        var type = new DocumentType { Id = Guid.NewGuid(), Name = "Passport", HasExpiry = true };
-        db.DocumentTypes.Add(type);
+        var type = db.DocumentTypes.Single(t => t.Name == "Passport");
         foreach (var id in new[] { document, privateDocument, pending })
             db.Documents.Add(new Document { Id = id, UserId = owner, DocumentTypeId = type.Id,
                 DocumentName = id == document ? "Shared passport" : "Private file", S3ObjectKey = $"files/{id}",
