@@ -36,12 +36,15 @@ void main() {
     final service = DocumentService(ApiClient(httpClient: client));
     await tester.pumpWidget(MaterialApp(home: FamilyScreen(documentService: service)));
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Review & accept'));
     await tester.tap(find.text('Review & accept'));
     await tester.pumpAndSettle();
     expect(find.text('Other family file'), findsNothing);
+    await tester.ensureVisible(find.text('Select all current documents'));
     await tester.tap(find.text('Select all current documents'));
     await tester.pumpAndSettle();
     expect(find.text('Accept & share (2)'), findsOneWidget);
+    await tester.ensureVisible(find.text('Visa'));
     await tester.tap(find.text('Visa'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Accept & share (1)'));
@@ -49,6 +52,7 @@ void main() {
     expect(decision!['accept'], true);
     expect(decision!['documentIds'], ['Passport']);
     expect(decision!['revision'], 'revision');
+    expect(decision!['allowExpiryReminders'], false);
   });
 
   testWidgets('Shared document detail has no owner actions or private data requests', (tester) async {

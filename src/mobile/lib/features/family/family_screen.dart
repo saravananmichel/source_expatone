@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'family_dashboard_screen.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
 
@@ -61,6 +62,18 @@ class _FamilyScreenState extends State<FamilyScreen> {
     body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.all(16), physics: const AlwaysScrollableScrollPhysics(), children: [
+        Card(child: ListTile(
+          leading: const Icon(Icons.dashboard_outlined),
+          title: const Text('Family dashboard'),
+          subtitle: const Text('Documents by member, expiry dates and alerts'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            await Navigator.push<void>(context, MaterialPageRoute(builder: (_) =>
+              FamilyDashboardScreen(documentService: widget.documentService)));
+            if (mounted) await _load();
+          },
+        )),
+        const SizedBox(height: 16),
         const Text('Request access to a family member’s documents', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
         const Text('They choose which documents to share with you. Sharing is one-way and read-only.'),
@@ -90,7 +103,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
           crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text((r.isIncoming ? r.requester : r.recipient).email, style: const TextStyle(fontWeight: FontWeight.bold)),
             Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.status}'),
-            if (r.status == 'Accepted') Text('${r.documentIds.length} document(s) shared ${r.isIncoming ? "by you" : "with you"}'),
+            if (r.status == 'Accepted' && !r.isExpired) Text('${r.documentIds.length} document(s) shared ${r.isIncoming ? "by you" : "with you"}'),
+            if (r.status == 'Accepted') Text(r.isExpired
+              ? 'Access expired — owner can renew sharing'
+              : r.accessExpiresAt == null ? 'Access: no expiry' : 'Access ends: ${_formatAccessDate(r.accessExpiresAt!)}'),
             Wrap(spacing: 8, children: [
               if (r.isIncoming && r.status == 'Pending') ...[
                 TextButton(onPressed: _busy ? null : () => _choose(r), child: const Text('Review & accept')),
@@ -99,7 +115,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 }), child: const Text('Reject')),
               ],
               if (r.isIncoming && r.status == 'Accepted')
-                TextButton(onPressed: _busy ? null : () => _choose(r), child: const Text('Manage documents')),
+                TextButton(onPressed: _busy ? null : () => _choose(r), child: Text(r.isExpired ? 'Renew sharing' : 'Manage documents')),
               if (r.status == 'Accepted' || (!r.isIncoming && r.status == 'Pending'))
                 TextButton(onPressed: _busy ? null : () => _end(r), child: Text(r.status == 'Pending' ? 'Cancel' : 'Revoke access')),
             ]),
@@ -121,39 +137,61 @@ class _GrantScreenState extends State<_GrantScreen> {
   List<DocumentItem> _docs = [];
   final Set<String> _selected = {};
   bool _loading = true, _saving = false;
+  late bool _allowExpiryReminders;
+  DateTime? _accessExpiresAt;
+  bool _expiryChanged = false;
   String? _error;
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() { super.initState(); _allowExpiryReminders = widget.request.allowExpiryReminders; _accessExpiresAt = widget.request.accessExpiresAt?.toLocal(); _load(); }
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
       final docs = (await widget.documentService.getDocuments()).where((d) => !d.isSharedWithMe).toList();
       if (mounted) {
-          setState(() {
-            _docs = docs;
-            _selected.addAll(
-              widget.request.documentIds.where(
-                (id) => docs.any((d) => d.id == id),
-              ),
-            );
-            _loading = false;
-          });
-        }
+        setState(() {
+        _docs = docs;
+        _selected.addAll(widget.request.documentIds.where((id) => docs.any((d) => d.id == id)));
+        _loading = false;
+      });
+      }
     } catch (e) { if (mounted) setState(() { _loading = false; _error = '$e'; }); }
   }
   Future<void> _save() async {
+    if (_accessExpiresAt != null && !_accessExpiresAt!.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a future deadline or turn temporary access off.')));
+      return;
+    }
     setState(() => _saving = true);
     try {
       final service = widget.documentService.familyService;
       if (widget.request.status == 'Pending') {
-        await service.respond(widget.request, true, _selected.toList());
+        await service.respond(widget.request, true, _selected.toList(), allowExpiryReminders: _allowExpiryReminders,
+          accessExpiresAt: _accessExpiresAt, updateAccessExpiry: _expiryChanged);
       } else {
-        await service.update(widget.request, _selected.toList());
+        await service.update(widget.request, _selected.toList(), allowExpiryReminders: _allowExpiryReminders,
+          accessExpiresAt: _accessExpiresAt, updateAccessExpiry: _expiryChanged);
       }
       if (mounted) Navigator.pop(context, true);
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
     } finally { if (mounted) setState(() => _saving = false); }
+  }
+  Future<void> _pickExpiry() async {
+    final now = DateTime.now();
+    final initial = _accessExpiresAt != null && _accessExpiresAt!.isAfter(now)
+        ? _accessExpiresAt! : now.add(const Duration(days: 1));
+    final date = await showDatePicker(context: context, initialDate: initial,
+      firstDate: DateTime(now.year, now.month, now.day),
+      lastDate: DateTime(initial.year > now.year + 10 ? initial.year : now.year + 10, 12, 31));
+    if (date == null || !mounted) return;
+    final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(initial));
+    if (time == null || !mounted) return;
+    final expiry = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    if (!expiry.isAfter(DateTime.now())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Choose a future date and time.')));
+      return;
+    }
+    setState(() { _accessExpiresAt = expiry; _expiryChanged = true; });
   }
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -161,21 +199,62 @@ class _GrantScreenState extends State<_GrantScreen> {
     body: _loading ? const Center(child: CircularProgressIndicator()) : _error != null
       ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [Text(_error!), TextButton(onPressed: _load, child: const Text('Retry'))]))
       : Column(children: [
-        Padding(padding: const EdgeInsets.all(16), child: Text('Grant ${widget.request.requester.email} read-only access. Select all covers current documents only. New uploads are private until selected here.')),
-        CheckboxListTile(title: const Text('Select all current documents'),
-          value: _docs.isNotEmpty && _selected.length == _docs.length,
-          onChanged: _saving ? null : (value) => setState(() {
-            _selected.clear(); if (value == true) _selected.addAll(_docs.map((d) => d.id));
-          })),
-        if (_docs.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No completed documents yet. You can accept now and grant documents later.')),
-        Expanded(child: ListView(children: _docs.map((d) => CheckboxListTile(
-          title: Text(d.name), subtitle: Text(d.documentType), value: _selected.contains(d.id),
-          onChanged: _saving ? null : (value) => setState(() { if (value == true) { _selected.add(d.id); } else { _selected.remove(d.id); } }),
-        )).toList())),
+        Expanded(child: ListView(children: [
+          Padding(padding: const EdgeInsets.all(16), child: Text('Grant ${widget.request.requester.email} read-only access. Select all covers current documents only. New uploads are private until selected here.')),
+          SwitchListTile(
+            title: const Text('Temporary access'),
+            subtitle: const Text('One deadline applies to all documents selected for this member. Access and shared expiry alerts stop automatically.'),
+            value: _accessExpiresAt != null,
+            onChanged: _saving ? null : (value) => setState(() {
+              _expiryChanged = true;
+              _accessExpiresAt = value ? DateTime.now().add(const Duration(days: 1)) : null;
+            }),
+          ),
+          if (_accessExpiresAt != null) Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('Access ends: ${_formatAccessDate(_accessExpiresAt!)}'),
+              Wrap(spacing: 8, children: [
+                for (final choice in const {'1 hour': Duration(hours: 1), '24 hours': Duration(days: 1),
+                    '7 days': Duration(days: 7), '30 days': Duration(days: 30)}.entries)
+                  ActionChip(label: Text(choice.key), onPressed: _saving ? null : () => setState(() {
+                    _accessExpiresAt = DateTime.now().add(choice.value); _expiryChanged = true;
+                  })),
+                TextButton(onPressed: _saving ? null : _pickExpiry, child: const Text('Choose date & time')),
+              ]),
+              if (!_accessExpiresAt!.isAfter(DateTime.now()))
+                const Text('This access has expired. Choose a future deadline or turn temporary access off to renew it.'),
+            ],
+          )),
+          SwitchListTile(
+            title: const Text('Allow shared expiry reminders'),
+            subtitle: const Text('This member can receive in-app alerts for selected documents after you confirm their expiry dates.'),
+            value: _allowExpiryReminders,
+            onChanged: _saving ? null : (value) => setState(() => _allowExpiryReminders = value),
+          ),
+          CheckboxListTile(title: const Text('Select all current documents'),
+            value: _docs.isNotEmpty && _selected.length == _docs.length,
+            onChanged: _saving ? null : (value) => setState(() {
+              _selected.clear(); if (value == true) _selected.addAll(_docs.map((d) => d.id));
+            })),
+          if (_docs.isEmpty) const Padding(padding: EdgeInsets.all(16), child: Text('No completed documents yet. You can accept now and grant documents later.')),
+          ..._docs.map((d) => CheckboxListTile(
+            title: Text(d.name), subtitle: Text(d.documentType), value: _selected.contains(d.id),
+            onChanged: _saving ? null : (value) => setState(() { if (value == true) { _selected.add(d.id); } else { _selected.remove(d.id); } }),
+          )),
+        ])),
         SafeArea(child: Padding(padding: const EdgeInsets.all(16), child: FilledButton(
           onPressed: _saving ? null : _save,
           child: Text(_saving ? 'Saving…' : '${widget.request.status == "Pending" ? "Accept & share" : "Save access"} (${_selected.length})'),
         ))),
       ]),
   );
+}
+
+String _formatAccessDate(DateTime value) {
+  final local = value.toLocal();
+  final offset = local.timeZoneOffset;
+  final minutes = offset.inMinutes.abs();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${local.year}-${two(local.month)}-${two(local.day)} ${two(local.hour)}:${two(local.minute)} '
+      '(UTC${offset.isNegative ? "-" : "+"}${two(minutes ~/ 60)}:${two(minutes % 60)})';
 }

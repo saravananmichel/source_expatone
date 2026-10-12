@@ -12,6 +12,8 @@ public class ExpatOneDbContext : DbContext
 
     public DbSet<DocumentAnalysisRun> DocumentAnalysisRuns => Set<DocumentAnalysisRun>();
 
+    public DbSet<FamilyExpiryConfirmation> FamilyExpiryConfirmations => Set<FamilyExpiryConfirmation>();
+    public DbSet<FamilyAlertDismissal> FamilyAlertDismissals => Set<FamilyAlertDismissal>();
     public DbSet<FamilyRequestStatus> FamilyRequestStatuses => Set<FamilyRequestStatus>();
     public DbSet<FamilyRequest> FamilyRequests => Set<FamilyRequest>();
     public DbSet<FamilyDocumentGrant> FamilyDocumentGrants => Set<FamilyDocumentGrant>();

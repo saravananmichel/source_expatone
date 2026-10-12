@@ -6,7 +6,7 @@ using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 namespace ExpatOne.Infrastructure.Services;
 
-public class FamilyService(ExpatOneDbContext db)
+public partial class FamilyService(ExpatOneDbContext db)
 {
     public async Task<FamilyUserDto> SearchAsync(Guid userId, string email)
     {
@@ -25,7 +25,8 @@ public class FamilyService(ExpatOneDbContext db)
         new(r.RequesterUserId, r.Requester.Email, r.Requester.DisplayName),
         new(r.RecipientUserId, r.Recipient.Email, r.Recipient.DisplayName),
         r.StatusId, r.StatusId switch { 1 => "Pending", 2 => "Accepted", 3 => "Rejected", 4 => "Cancelled", 5 => "Revoked", _ => "Unknown" }, r.RecipientUserId == userId, r.Revision, r.CreatedAt,
-        r.RespondedAt, r.Grants.Select(g => g.DocumentId).ToList());
+        r.RespondedAt, r.Grants.Select(g => g.DocumentId).ToList(), r.AllowExpiryReminders, r.AccessExpiresAt,
+        r.StatusId == FamilyRequestStates.Accepted && r.AccessExpiresAt.HasValue && r.AccessExpiresAt <= DateTime.UtcNow);
     public async Task<List<FamilyRequestDto>> ListAsync(Guid userId) =>
         (await Requests.AsNoTracking().Where(x => x.RequesterUserId == userId || x.RecipientUserId == userId)
             .OrderByDescending(x => x.CreatedAt).ToListAsync()).Select(x => Map(x, userId)).ToList();
@@ -68,11 +69,20 @@ public class FamilyService(ExpatOneDbContext db)
         catch (DbUpdateConcurrencyException) { throw new InvalidOperationException("This request changed. Refresh and try again."); }
         return Map(await Requests.AsNoTracking().SingleAsync(x => x.Id == r.Id), userId);
     }
+    private static DateTime? ValidateAccessExpiry(DateTimeOffset? expiry)
+    {
+        if (expiry.HasValue && expiry.Value <= DateTimeOffset.UtcNow)
+            throw new ArgumentException("Sharing expiry must be in the future.");
+        return expiry?.UtcDateTime;
+    }
     public async Task<FamilyRequestDto> RespondAsync(Guid userId, Guid id, FamilyDecisionDto dto)
     {
         var r = await FindAsync(userId, id, dto.Revision, true);
         if (r.StatusId != FamilyRequestStates.Pending) throw new InvalidOperationException("Request is no longer pending.");
+        var expiry = dto.Accept ? ValidateAccessExpiry(dto.AccessExpiresAt) : null;
         if (dto.Accept) await ReplaceGrantsAsync(r, dto.DocumentIds);
+        r.AccessExpiresAt = expiry;
+        r.AllowExpiryReminders = dto.Accept && dto.AllowExpiryReminders == true;
         r.StatusId = dto.Accept ? FamilyRequestStates.Accepted : FamilyRequestStates.Rejected;
         r.RespondedAt = DateTime.UtcNow;
         return await SaveAsync(r, userId);
@@ -81,7 +91,11 @@ public class FamilyService(ExpatOneDbContext db)
     {
         var r = await FindAsync(userId, id, dto.Revision, true);
         if (r.StatusId != FamilyRequestStates.Accepted) throw new InvalidOperationException("Request is not accepted.");
+        var changeExpiry = dto.UpdateAccessExpiry || dto.AccessExpiresAt.HasValue;
+        var expiry = changeExpiry ? ValidateAccessExpiry(dto.AccessExpiresAt) : r.AccessExpiresAt;
         await ReplaceGrantsAsync(r, dto.DocumentIds);
+        r.AccessExpiresAt = expiry;
+        if (dto.AllowExpiryReminders.HasValue) r.AllowExpiryReminders = dto.AllowExpiryReminders.Value;
         return await SaveAsync(r, userId);
     }
     public async Task<FamilyRequestDto> EndAsync(Guid userId, Guid id, Guid revision)
@@ -91,6 +105,7 @@ public class FamilyService(ExpatOneDbContext db)
             r.StatusId = FamilyRequestStates.Cancelled;
         else if (r.StatusId == FamilyRequestStates.Accepted) r.StatusId = FamilyRequestStates.Revoked;
         else throw new InvalidOperationException("This request cannot be cancelled or revoked.");
+        r.AllowExpiryReminders = false;
         db.FamilyDocumentGrants.RemoveRange(r.Grants);
         return await SaveAsync(r, userId);
     }

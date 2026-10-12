@@ -1,4 +1,5 @@
 import '../networking/api_client.dart';
+import 'family_service.dart';
 
 class ReminderItem {
   final String id;
@@ -54,6 +55,8 @@ class ReminderService {
   final ApiClient _apiClient;
 
   ReminderService(this._apiClient);
+
+  FamilyService get familyService => FamilyService(_apiClient);
 
   Future<List<ReminderItem>> getReminders() async {
     final response = await _apiClient.getList('/reminders');

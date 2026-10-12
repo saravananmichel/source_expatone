@@ -64,6 +64,18 @@ public class S3StorageService : IStorageService
         return Task.FromResult(url);
     }
 
+    public Task<string> GeneratePresignedUrlUntilAsync(string objectKey, DateTime expiresAtUtc)
+    {
+        if (expiresAtUtc.Kind != DateTimeKind.Utc || expiresAtUtc <= DateTime.UtcNow)
+            throw new ArgumentException("Download expiry must be a future UTC instant.");
+        // Absolute deadline prevents signing latency from extending temporary access.
+        var request = new GetPreSignedUrlRequest
+        {
+            BucketName = _bucketName, Key = objectKey, Expires = expiresAtUtc, Verb = HttpVerb.GET,
+        };
+        return Task.FromResult(_s3Client.GetPreSignedURL(request));
+    }
+
     public string GeneratePresignedUploadUrl(string objectKey, string contentType, TimeSpan expiry)
     {
         var request = new GetPreSignedUrlRequest

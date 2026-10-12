@@ -25,6 +25,22 @@ public class FamilyController(FamilyService family, IUserService users) : Contro
     public async Task<IActionResult> Grants(Guid id, FamilyGrantsDto dto) => Ok(await family.UpdateGrantsAsync(await UserId(), id, dto));
     [HttpPost("requests/{id:guid}/end")]
     public async Task<IActionResult> End(Guid id, FamilyRevisionDto dto) => Ok(await family.EndAsync(await UserId(), id, dto.Revision));
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> Dashboard() => Ok(await family.DashboardAsync(await UserId()));
+    [HttpGet("alerts")]
+    public async Task<IActionResult> Alerts() => Ok(await family.AlertsAsync(await UserId()));
+    [HttpPost("documents/{id:guid}/confirm-expiry")]
+    public async Task<IActionResult> ConfirmExpiry(Guid id, ConfirmFamilyExpiryDto dto)
+    {
+        await family.ConfirmExpiryAsync(await UserId(), id, dto);
+        return NoContent();
+    }
+    [HttpPost("alerts/{id}/dismiss")]
+    public async Task<IActionResult> DismissAlert(string id)
+    {
+        await family.DismissAlertAsync(await UserId(), id);
+        return NoContent();
+    }
     private async Task<Guid> UserId()
     {
         var uid = User.FindFirstValue("firebase_uid") ?? throw new UnauthorizedAccessException();
