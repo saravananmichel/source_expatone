@@ -35,6 +35,15 @@ phases:
         set -euo pipefail
         cd "$CODEBUILD_SRC_DIR"
 
+        echo "Running backend tests..."
+        docker run --rm --platform linux/amd64 \
+          -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+          -v "$CODEBUILD_SRC_DIR/src/backend:/src" \
+          -w /src \
+          mcr.microsoft.com/dotnet/sdk:8.0 \
+          dotnet test ExpatOne.Tests/ExpatOne.Tests.csproj \
+          --configuration Release --verbosity minimal
+
         echo "Building .NET API..."
         docker build --platform linux/amd64 \
           -t "$REGISTRY/expatone-api:$IMAGE_TAG" \
@@ -44,6 +53,14 @@ phases:
         docker build --platform linux/amd64 \
           -t "$REGISTRY/expatone-document-ai:$IMAGE_TAG" \
           ./document-ai
+
+        echo "Running visa PDF tests..."
+        docker run --rm --platform linux/amd64 \
+          -e PYTHONPATH=/service \
+          -v "$CODEBUILD_SRC_DIR/document-ai/tests:/tests:ro" \
+          -w /service \
+          "$REGISTRY/expatone-document-ai:$IMAGE_TAG" \
+          python -m pytest /tests/test_visa_forms.py -q -p no:cacheprovider
 
         echo "Building Ollama with qwen3:4b..."
         docker build --platform linux/amd64 \
