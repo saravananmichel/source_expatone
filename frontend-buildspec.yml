@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing Flutter stable SDK"
+      - git clone --depth 1 --branch stable https://github.com/flutter/flutter.git /tmp/flutter
+      - /tmp/flutter/bin/flutter --version
+      - /tmp/flutter/bin/flutter config --enable-web
+
+  pre_build:
+    commands:
+      - echo "Resolving frontend dependencies"
+      - /tmp/flutter/bin/flutter pub get
+
+  build:
+    commands:
+      - echo "Building ExpatOne Flutter web frontend"
+      - /tmp/flutter/bin/flutter build web --release --dart-define=API_BASE_URL=https://d38i3e3pvvjux7.cloudfront.net/api
+      - test -s build/web/index.html
+      - test -s build/web/main.dart.js
+      - grep -Fq 'd38i3e3pvvjux7.cloudfront.net/api' build/web/main.dart.js
+      - echo "Build and API URL verification passed"
+      - echo "Family Dashboard references, if present in compiled bundle:"
+      - grep -o 'family/dashboard' build/web/main.dart.js | head -5 || true
+
+  post_build:
+    commands:
+      - echo "Uploading verified build to isolated staging prefix"
+      - aws s3 sync build/web/ "s3://expatone-my-dev/staging/frontend-build/${CODEBUILD_BUILD_NUMBER}/" --region ap-southeast-5 --only-show-errors
+      - echo "Staging upload complete; live /web prefix has not been changed"
