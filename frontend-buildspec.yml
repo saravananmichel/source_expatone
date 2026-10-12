@@ -18,11 +18,7 @@ phases:
       - test -s "$CODEBUILD_SRC_DIR/src/mobile/build/web/index.html"
       - test -s "$CODEBUILD_SRC_DIR/src/mobile/build/web/main.dart.js"
       - grep -Fq 'd38i3e3pvvjux7.cloudfront.net/api' "$CODEBUILD_SRC_DIR/src/mobile/build/web/main.dart.js"
-      - echo "Frontend build and API URL verification passed"
-      - echo "Family dashboard references:"
-      - grep -o 'family/dashboard' "$CODEBUILD_SRC_DIR/src/mobile/build/web/main.dart.js" | head -5 || true
-
-  post_build:
-    commands:
+      - echo "Build and API URL verification passed"
+      - echo "Uploading verified assets to staging only"
       - aws s3 sync "$CODEBUILD_SRC_DIR/src/mobile/build/web/" "s3://expatone-my-dev/staging/frontend-build/${CODEBUILD_BUILD_NUMBER}/" --region ap-southeast-5 --only-show-errors
       - echo "Staging upload complete; live /web prefix unchanged"
