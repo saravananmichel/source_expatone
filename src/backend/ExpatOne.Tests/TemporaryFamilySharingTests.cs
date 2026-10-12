@@ -21,8 +21,7 @@ public class TemporaryFamilySharingTests : IDisposable
         db.Database.OpenConnection(); db.Database.EnsureCreated();
         db.Users.AddRange(new User { Id = owner, Email = "owner@test.com", ExternalId = "owner" },
             new User { Id = viewer, Email = "viewer@test.com", ExternalId = "viewer" });
-        var type = new DocumentType { Id = Guid.NewGuid(), Name = "Passport", HasExpiry = true };
-        db.DocumentTypes.Add(type);
+        var type = db.DocumentTypes.Single(t => t.Name == "Passport");
         db.Documents.Add(new Document { Id = docId, UserId = owner, DocumentTypeId = type.Id,
             DocumentName = "Passport", S3ObjectKey = "private/passport", ExpiryDate = DateTime.UtcNow.Date.AddDays(20) });
         db.SaveChanges(); family = new FamilyService(db);
