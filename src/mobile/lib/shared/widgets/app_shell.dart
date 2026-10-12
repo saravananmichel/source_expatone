@@ -47,10 +47,11 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
   int _documentRefresh = 0;
+  int _reminderRefresh = 0;
 
   void _navigateToTab(int index) {
     if (index >= 0 && index < 5) {
-      setState(() { _currentIndex = index; if (index == 1) _documentRefresh++; });
+      setState(() { _currentIndex = index; if (index == 1) _documentRefresh++; if (index == 3) _reminderRefresh++; });
     }
   }
 
@@ -70,7 +71,7 @@ class _AppShellState extends State<AppShell> {
         reminderService: widget.reminderService,
       ),
       AssistantScreen(assistantService: widget.assistantService),
-      RemindersScreen(reminderService: widget.reminderService),
+      RemindersScreen(key: ValueKey('reminders-$_reminderRefresh'), reminderService: widget.reminderService),
       MoreScreen(
         documentService: widget.documentService,
         authService: widget.authService,

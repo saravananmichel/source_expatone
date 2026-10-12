@@ -15,6 +15,8 @@ public class FamilyRequest : BaseEntity
     public Guid RequesterUserId { get; set; }
     public Guid RecipientUserId { get; set; }
     public int StatusId { get; set; } = FamilyRequestStates.Pending;
+    public DateTime? AccessExpiresAt { get; set; }
+    public bool AllowExpiryReminders { get; set; }
     public Guid Revision { get; set; } = Guid.NewGuid();
     public DateTime? RespondedAt { get; set; }
     public User Requester { get; set; } = null!;

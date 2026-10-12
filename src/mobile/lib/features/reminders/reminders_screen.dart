@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/services/reminder_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../family/family_alerts_panel.dart';
 
 class RemindersScreen extends StatefulWidget {
   final ReminderService reminderService;
@@ -47,16 +48,20 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Reminder Center')),
-      body: _isLoading
+    return DefaultTabController(length: 2, child: Scaffold(
+      appBar: AppBar(title: const Text('Reminder Center'), bottom: const TabBar(
+        tabs: [Tab(text: 'My reminders'), Tab(text: 'Family alerts')],
+      )),
+      body: TabBarView(children: [_isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _buildError()
               : _reminders == null || _reminders!.isEmpty
                   ? _buildEmpty()
                   : _buildList(),
-    );
+        FamilyAlertsPanel(service: widget.reminderService.familyService),
+      ]),
+    ));
   }
 
   Widget _buildError() {

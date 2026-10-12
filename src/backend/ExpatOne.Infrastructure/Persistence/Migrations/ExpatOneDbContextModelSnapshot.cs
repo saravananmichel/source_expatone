@@ -1138,6 +1138,8 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                 b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
                 b.Property<Guid>("RequesterUserId").HasColumnType("uuid");
                 b.Property<Guid>("RecipientUserId").HasColumnType("uuid");
+                b.Property<bool>("AllowExpiryReminders").HasColumnType("boolean");
+                b.Property<DateTime?>("AccessExpiresAt").HasColumnType("timestamp with time zone");
                 b.Property<int>("StatusId").HasColumnType("integer");
                 b.Property<Guid>("Revision").IsConcurrencyToken().HasColumnType("uuid");
                 b.Property<DateTime>("CreatedAt").HasColumnType("timestamp with time zone");
@@ -1168,6 +1170,32 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                 b.Navigation("Request"); b.Navigation("Document");
             });
             modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyRequest", b => { b.Navigation("Grants"); });
+
+
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyExpiryConfirmation", b =>
+            {
+                b.Property<Guid>("DocumentId").HasColumnType("uuid");
+                b.Property<string>("Fingerprint").IsRequired().IsConcurrencyToken().HasMaxLength(64).HasColumnType("character varying(64)");
+                b.Property<DateTime>("ConfirmedAt").HasColumnType("timestamp with time zone");
+                b.HasKey("DocumentId"); b.ToTable("family_expiry_confirmations");
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyAlertDismissal", b =>
+            {
+                b.Property<Guid>("UserId").HasColumnType("uuid");
+                b.Property<string>("AlertId").IsRequired().HasMaxLength(64).HasColumnType("character varying(64)");
+                b.Property<DateTime>("DismissedAt").HasColumnType("timestamp with time zone");
+                b.HasKey("UserId", "AlertId"); b.ToTable("family_alert_dismissals");
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyExpiryConfirmation", b =>
+            {
+                b.HasOne("ExpatOne.Domain.Entities.Document", "Document").WithMany().HasForeignKey("DocumentId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.Navigation("Document");
+            });
+            modelBuilder.Entity("ExpatOne.Domain.Entities.FamilyAlertDismissal", b =>
+            {
+                b.HasOne("ExpatOne.Domain.Entities.User", "User").WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.Navigation("User");
+            });
 
 #pragma warning restore 612, 618
         }

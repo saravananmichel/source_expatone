@@ -6,5 +6,6 @@ public interface IStorageService
     Task<Stream> DownloadFileAsync(string objectKey);
     Task DeleteFileAsync(string objectKey);
     Task<string> GeneratePresignedUrlAsync(string objectKey, TimeSpan expiry);
+    Task<string> GeneratePresignedUrlUntilAsync(string objectKey, DateTime expiresAtUtc);
     string GeneratePresignedUploadUrl(string objectKey, string contentType, TimeSpan expiry);
 }

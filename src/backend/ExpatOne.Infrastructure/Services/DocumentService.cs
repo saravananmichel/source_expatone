@@ -128,8 +128,28 @@ public class DocumentService : IDocumentService
             ?? throw new KeyNotFoundException("Document not found.");
 
         var expirySeconds = 300; // 5 minutes
-        var url = await _storageService.GeneratePresignedUrlAsync(
-            document.S3ObjectKey, TimeSpan.FromSeconds(expirySeconds));
+        DateTime? accessDeadline = null;
+        if (document.UserId != userId)
+        {
+            var now = DateTime.UtcNow;
+            var grants = await _dbContext.FamilyDocumentGrants.AsNoTracking()
+                .Where(g => g.DocumentId == documentId && g.Request.RequesterUserId == userId &&
+                    g.Request.RecipientUserId == document.UserId && g.Request.StatusId == FamilyRequestStates.Accepted &&
+                    (g.Request.AccessExpiresAt == null || g.Request.AccessExpiresAt > now))
+                .Select(g => g.Request.AccessExpiresAt).ToListAsync();
+            if (grants.Count == 0) throw new KeyNotFoundException("Document access expired or was revoked.");
+            if (grants.All(e => e.HasValue)) accessDeadline = grants.Max();
+        }
+        string url;
+        if (accessDeadline.HasValue)
+        {
+            var now = DateTime.UtcNow;
+            var until = accessDeadline.Value < now.AddSeconds(expirySeconds) ? accessDeadline.Value : now.AddSeconds(expirySeconds);
+            expirySeconds = (int)Math.Floor((until - now).TotalSeconds);
+            if (expirySeconds < 1) throw new KeyNotFoundException("Document access has expired.");
+            url = await _storageService.GeneratePresignedUrlUntilAsync(document.S3ObjectKey, until);
+        }
+        else url = await _storageService.GeneratePresignedUrlAsync(document.S3ObjectKey, TimeSpan.FromSeconds(expirySeconds));
 
         await _auditService.LogAsync(documentId, userId, "document_accessed");
 
@@ -233,10 +253,15 @@ public class DocumentService : IDocumentService
         return sanitized;
     }
 
-    private IQueryable<Document> ReadableDocuments(Guid userId) => _dbContext.Documents.Where(d =>
-        d.UserId == userId || _dbContext.FamilyDocumentGrants.Any(g => g.DocumentId == d.Id &&
-            g.Request.RequesterUserId == userId && g.Request.RecipientUserId == d.UserId &&
-            g.Request.StatusId == FamilyRequestStates.Accepted));
+    private IQueryable<Document> ReadableDocuments(Guid userId)
+    {
+        var now = DateTime.UtcNow;
+        return _dbContext.Documents.Where(d => d.UserId == userId ||
+            _dbContext.FamilyDocumentGrants.Any(g => g.DocumentId == d.Id &&
+                g.Request.RequesterUserId == userId && g.Request.RecipientUserId == d.UserId &&
+                g.Request.StatusId == FamilyRequestStates.Accepted &&
+                (g.Request.AccessExpiresAt == null || g.Request.AccessExpiresAt > now)));
+    }
 
     private static DocumentDto MapForViewer(Document doc, Guid userId)
     {
