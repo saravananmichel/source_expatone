@@ -10,19 +10,19 @@ phases:
 
   pre_build:
     commands:
-      - cd src/mobile && /tmp/flutter/bin/flutter pub get
+      - cd "$CODEBUILD_SRC_DIR/src/mobile" && /tmp/flutter/bin/flutter pub get
 
   build:
     commands:
-      - cd src/mobile && /tmp/flutter/bin/flutter build web --release --dart-define=API_BASE_URL=https://d38i3e3pvvjux7.cloudfront.net/api
-      - test -s src/mobile/build/web/index.html
-      - test -s src/mobile/build/web/main.dart.js
-      - grep -Fq 'd38i3e3pvvjux7.cloudfront.net/api' src/mobile/build/web/main.dart.js
+      - cd "$CODEBUILD_SRC_DIR/src/mobile" && /tmp/flutter/bin/flutter build web --release --dart-define=API_BASE_URL=https://d38i3e3pvvjux7.cloudfront.net/api
+      - test -s "$CODEBUILD_SRC_DIR/src/mobile/build/web/index.html"
+      - test -s "$CODEBUILD_SRC_DIR/src/mobile/build/web/main.dart.js"
+      - grep -Fq 'd38i3e3pvvjux7.cloudfront.net/api' "$CODEBUILD_SRC_DIR/src/mobile/build/web/main.dart.js"
       - echo "Frontend build and API URL verification passed"
       - echo "Family dashboard references:"
-      - grep -o 'family/dashboard' src/mobile/build/web/main.dart.js | head -5 || true
+      - grep -o 'family/dashboard' "$CODEBUILD_SRC_DIR/src/mobile/build/web/main.dart.js" | head -5 || true
 
   post_build:
     commands:
-      - aws s3 sync src/mobile/build/web/ "s3://expatone-my-dev/staging/frontend-build/${CODEBUILD_BUILD_NUMBER}/" --region ap-southeast-5 --only-show-errors
+      - aws s3 sync "$CODEBUILD_SRC_DIR/src/mobile/build/web/" "s3://expatone-my-dev/staging/frontend-build/${CODEBUILD_BUILD_NUMBER}/" --region ap-southeast-5 --only-show-errors
       - echo "Staging upload complete; live /web prefix unchanged"
