@@ -122,19 +122,10 @@ def validate_grounding(semantic, pages):
 
 def extraction_schema():
     return CompactExtraction.model_json_schema()
-<<<<<<< HEAD
-
-=======
->>>>>>> b23c254 (Use compact extraction for document analysis)
 
 async def reason_batch(pages):
     model = os.environ['OLLAMA_MODEL']
     passages = source_passages(pages)
-<<<<<<< HEAD
-    # A single attempt per batch: repeating the same token budget is not recovery.
-=======
-
->>>>>>> b23c254 (Use compact extraction for document analysis)
     per_page_s = int(os.getenv('OLLAMA_BATCH_TIMEOUT_SECONDS', '180'))
     batch_timeout = max(300, per_page_s * len(pages))
     num_predict = min(2500, 2000 + max(0, len(pages) - 2) * 250)
@@ -145,12 +136,6 @@ async def reason_batch(pages):
                     'num_gpu': int(os.getenv('OLLAMA_NUM_GPU', '-1')),
                     'num_ctx': 16384, 'num_predict': num_predict},
         'messages': [
-<<<<<<< HEAD
-            {'role': 'system', 'content': PROMPT + ' Write explanations in '
-                + os.getenv('EXPLANATION_LANGUAGE', 'English') + '.'},
-            {'role': 'user', 'content': json.dumps(passages, ensure_ascii=False,
-                                                   separators=(',', ':'))},
-=======
             {
                 'role': 'system',
                 'content': (
@@ -168,41 +153,9 @@ async def reason_batch(pages):
                     separators=(',', ':'),
                 ),
             },
->>>>>>> b23c254 (Use compact extraction for document analysis)
         ],
     }
     async with httpx.AsyncClient(timeout=ollama_timeout(batch_timeout)) as client:
-<<<<<<< HEAD
-        response = await post_chat(client, payload)
-        response.raise_for_status()
-        raw = response.json()
-        try:
-            compact = CompactExtraction.model_validate_json(raw['message']['content'])
-            parsed = expand_extraction(compact, passages)
-            # Multiple chunks of one page can occur in a batch. Retain them all.
-            page_map = {}
-            for page in pages:
-                if page.page not in page_map:
-                    page_map[page.page] = page.model_copy(deep=True)
-                else:
-                    previous = page_map[page.page]
-                    previous.text += page.text
-                    previous.blocks.extend(page.blocks)
-                    previous.extractionConfidence = min(previous.extractionConfidence,
-                                                        page.extractionConfidence)
-            parsed = validate_grounding(parsed, list(page_map.values()))
-        except (ValueError, KeyError, TypeError) as exc:
-            logger.warning(
-                'Extraction validation failed type=%s reason=%s',
-                type(exc).__name__,
-                str(exc)
-            )
-            raise InferenceOutputError('invalid_model_output') from None
-        parsed._inference = {key: raw.get(key) for key in
-            ('total_duration', 'load_duration', 'prompt_eval_count',
-             'prompt_eval_duration', 'eval_count', 'eval_duration')}
-        return parsed, model
-=======
         for attempt in range(2):
             started = time.monotonic()
             logger.info("document_ai stage=extraction event=start attempt=%d passages=%d", attempt + 1, len(passages))
@@ -232,7 +185,6 @@ async def reason_batch(pages):
                     f'Validation failure: {category}. Return a fresh complete result. Use only supplied source IDs in refs. '
                     'value must match cited source text exactly; preserve all conditions and numbers. Keep text concise.'})
 
->>>>>>> b23c254 (Use compact extraction for document analysis)
 
 async def reason(pages):
     # Bound prompt size for CPU/development hardware; preserve every source page.
