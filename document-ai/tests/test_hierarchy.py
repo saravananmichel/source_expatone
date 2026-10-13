@@ -193,7 +193,11 @@ def _make_ollama_response(content: str):
     """Return a mock httpx response with the given JSON message content."""
     mock_resp = MagicMock()
     mock_resp.raise_for_status = MagicMock()
-    mock_resp.json.return_value = {'message': {'content': content}}
+    mock_resp.json.return_value = {
+        'message': {'content': content},
+        'done': True,
+        'done_reason': 'stop',
+    }
     return mock_resp
 
 

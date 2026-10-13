@@ -199,13 +199,23 @@ async def _analyze_impl(file, x_service_key):
             logger.warning('Analysis stopped category=%s retryable=false', code)
             raise HTTPException(422, {'code': code, 'message': 'Analysis could not produce a complete verified result.'}) from None
         except httpx.TimeoutException:
-            logger.warning('Analysis stopped category=inference_timeout retryable=false')
-            raise HTTPException(422, {'code': 'inference_timeout', 'message': 'Document analysis exceeded its inference time budget.'}) from None
+            logger.warning('Analysis stopped category=model_timeout retryable=true')
+            raise HTTPException(503, 'Document model unavailable; retry later') from None
         except httpx.HTTPError:
             raise HTTPException(503, 'Document model unavailable; retry later') from None
+        except ValueError as error:
+            if str(error).startswith('invalid_model_output:'):
+                logger.warning('Analysis stopped category=invalid_model_output retryable=false')
+                raise HTTPException(
+                    422,
+                    {'code': 'invalid_model_output',
+                     'message': 'Analysis could not produce a complete verified result.'}
+                ) from None
+            # Do not expose parser errors or source text.
+            raise HTTPException(422, 'Document processing failed') from None
         except Exception:
             # Never return parser/model messages or source text to clients/logs.
-            raise HTTPException(422,'Document processing failed') from None
+            raise HTTPException(422, 'Document processing failed') from None
         finally:
             await file.close()
 

@@ -1,3 +1,4 @@
+from . import ollama
 from .ollama import post_chat, InferenceOutputError
 from .config import ollama_base_url, ollama_timeout
 import json
@@ -9,7 +10,6 @@ import unicodedata
 import httpx
 import logging
 import time
-from .compact_extraction import CompactExtraction, COMPACT_PROMPT, source_passages, expand_extraction
 logger = logging.getLogger("uvicorn.error")
 from .schemas import SemanticDocument
 from .postprocessing import enrich
@@ -139,7 +139,7 @@ async def reason_batch(pages):
             {
                 'role': 'system',
                 'content': (
-                    COMPACT_PROMPT
+                    PROMPT
                     + ' Write explanations in '
                     + os.getenv('EXPLANATION_LANGUAGE', 'English')
                     + '.'
@@ -169,18 +169,30 @@ async def reason_batch(pages):
                 raw = response.json()
                 if raw.get('done_reason') == 'length':
                     raise ValueError('truncated_output')
-                parsed = expand_extraction(raw['message']['content'], passages)
-                parsed = sanitize_ids(parsed)
-                parsed=validate_grounding(parsed,pages)
+                try:
+                    compact = CompactExtraction.model_validate_json(raw['message']['content'])
+                except ValueError:
+                    raise ollama.InferenceOutputError('invalid_model_output') from None
+                try:
+                    parsed = expand_extraction(compact, passages)
+                    parsed = sanitize_ids(parsed)
+                    parsed = validate_grounding(parsed, pages)
+                except ValueError:
+                    raise ollama.InferenceOutputError('invalid_model_output') from None
                 raw=response.json()
                 parsed._inference={key:raw.get(key) for key in ('total_duration','load_duration','prompt_eval_count','prompt_eval_duration','eval_count','eval_duration')}
                 logger.info("document_ai stage=extraction event=completed elapsed_ms=%d claims=%d", round((time.monotonic()-started)*1000), len(parsed.statements))
                 return parsed, model
+            except ollama.InferenceOutputError:
+                raise
             except (ValueError, KeyError) as error:
                 allowed={'duplicate_evidence','duplicate_statement','unsupported_evidence','unsupported_value','unsupported_number','missing_evidence'}
                 category=error.args[0] if error.args and error.args[0] in allowed else 'schema_violation'
                 if attempt: raise ValueError('invalid_model_output:'+category) from None
-                logger.warning("document_ai stage=extraction event=validation_failed category=%s", category)
+                logger.warning(
+                    "document_ai stage=extraction event=validation_failed category=%s",
+                    category
+                )
                 payload['messages'].append({'role':'user','content':
                     f'Validation failure: {category}. Return a fresh complete result. Use only supplied source IDs in refs. '
                     'value must match cited source text exactly; preserve all conditions and numbers. Keep text concise.'})
@@ -234,7 +246,9 @@ async def reason(pages):
             results.append(semantic)
         except InferenceOutputError:
             raise
-        except ValueError:
+        except ValueError as error:
+            if str(error).startswith('invalid_model_output:'):
+                raise
             failed_batch_pages.extend(p.page for p in group)
     if not results:
         raise ValueError('invalid_model_output:all_batches_failed')

@@ -171,7 +171,7 @@ def analyze_request():
 @pytest.mark.parametrize('mode,status,code', [
     ('length', 422, 'output_token_limit'),
     ('schema', 422, 'invalid_model_output'),
-    ('timeout', 422, 'inference_timeout'),
+    ('timeout', 503, None),
     ('connection', 503, None),
 ])
 def test_api_distinguishes_terminal_failures_from_unavailability(monkeypatch, caplog, mode, status, code):

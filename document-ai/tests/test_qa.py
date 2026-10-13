@@ -107,11 +107,20 @@ def test_analysis_ingestion_network_is_private_ollama_only(transport):
         request = httpx.Request('POST', 'http://ollama:11434/api/chat', json=payload)
         await client.send(request)
         properties = payload['format']['properties']
-        if 'documentCategory' in properties:
-            output = {'documentCategory': 'Employment Contract', 'classificationConfidence': .8, 'classificationEvidenceIds': ['e1'],
-                'evidence': [{'id': 'e1', 'page': 1, 'sourceText': 'Salary: RM12,000 per month.'}],
-                'statements': [{'id': 's1', 'kind': 'fact', 'label': 'Salary', 'text': 'The salary is RM12,000 per month.',
-                    'originalValue': 'RM12,000', 'confidence': .8, 'evidenceIds': ['e1']}]}
+        if 'category' in properties:
+            output = {
+                'category': 'Employment Contract',
+                'confidence': .8,
+                'refs': ['e0'],
+                'items': [{
+                    'k': 'fact',
+                    'l': 'Salary',
+                    't': 'The salary is RM12,000 per month.',
+                    'v': 'RM12,000',
+                    'c': .8,
+                    'e': ['e0'],
+                }],
+            }
         elif 'overview' in properties:
             output = {'overview': {'id': 'overview', 'kind': 'interpretation', 'label': 'Overview',
                 'text': 'The salary is RM12,000 per month.', 'originalValue': 'RM12,000', 'confidence': .8, 'evidenceIds': ['e1']}, 'statements': []}
