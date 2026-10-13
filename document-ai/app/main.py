@@ -41,6 +41,70 @@ slots = asyncio.Semaphore(1)
 logger = logging.getLogger("uvicorn.error")
 
 
+# Independent text extraction: deliberately separate from Ollama analysis.
+extraction_busy = False
+
+
+@app.post('/extract')
+async def extract_document(file: UploadFile = File(...),
+                           x_service_key: str = Header(default='')):
+    expected = os.getenv('DOCUMENT_AI_SERVICE_KEY', '')
+    if not expected or not hmac.compare_digest(x_service_key, expected):
+        raise HTTPException(401, 'Unauthorized')
+
+    global extraction_busy
+    if extraction_busy:
+        raise HTTPException(429, 'Extraction service busy; retry later')
+
+    extraction_busy = True
+    try:
+        try:
+            content_type = file.content_type or ''
+            if content_type not in ('application/pdf', 'image/jpeg', 'image/png'):
+                raise HTTPException(415, 'Unsupported document type')
+
+            data = await file.read(10 * 1024 * 1024 + 1)
+            if len(data) > 10 * 1024 * 1024:
+                raise HTTPException(413, 'File too large')
+
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, '-m', 'app.extract_worker', content_type,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.DEVNULL
+            )
+            try:
+                output, _ = await asyncio.wait_for(
+                    process.communicate(data), timeout=120
+                )
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                raise HTTPException(422, 'Document extraction timed out') from None
+
+            if process.returncode != 0:
+                raise HTTPException(422, 'Document text extraction failed')
+
+            import json
+            pages = json.loads(output)
+            extracted_text = '\n\n'.join(
+                page.get('text', '') for page in pages
+            )
+            return {
+                'extractedText': extracted_text,
+                'pageCount': len(pages)
+            }
+        except HTTPException:
+            raise
+        except Exception:
+            logger.warning('Independent text extraction failed')
+            raise HTTPException(422, 'Document text extraction failed') from None
+        finally:
+            await file.close()
+    finally:
+        extraction_busy = False
+
+
 @app.get('/health')
 async def health():
     return {'status':'ok','configured':bool(os.getenv('OLLAMA_MODEL') and os.getenv('DOCUMENT_AI_SERVICE_KEY'))}

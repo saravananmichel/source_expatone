@@ -21,6 +21,12 @@ public class DocumentDto
     public int ActiveShareCount { get; set; }
 }
 
+public class DocumentExtractionDto
+{
+    public string Status { get; set; } = "NOT_REQUESTED";
+    public string? ExtractedText { get; set; }
+}
+
 public class DocumentTypeDto
 {
     public Guid Id { get; set; }

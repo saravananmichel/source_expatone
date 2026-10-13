@@ -1,4 +1,5 @@
 import io
+import math
 import os
 import re
 from PIL import Image, ImageOps
@@ -97,13 +98,15 @@ def extract(data: bytes, content_type: str):
                             pages.append(Page(page=i+1,text=text,width=page.get_width(),height=page.get_height(),
                                 extraction='native',blocks=blocks))
                         else:
-                            if page.get_width()*page.get_height()*4 > 20_000_000: raise ValueError('page_dimensions')
+                            render_width = math.ceil(page.get_width() * 2)
+                            render_height = math.ceil(page.get_height() * 2)
+                            if render_width * render_height > 20_000_000:
+                                raise ValueError('page_dimensions')
                             bitmap = page.render(scale=2)
                             try: pages.append(ocr(bitmap.to_pil(),i+1))
                             finally: bitmap.close()
                     finally: textpage.close()
                 finally: page.close()
-                if sum(len(p.text) for p in pages) > MAX_TEXT: raise ValueError('text_limit')
     else:
         signatures = {'image/png': b'\x89PNG\r\n\x1a\n', 'image/jpeg': b'\xff\xd8\xff'}
         if content_type not in signatures or not data.startswith(signatures[content_type]):
@@ -111,5 +114,10 @@ def extract(data: bytes, content_type: str):
         with Image.open(io.BytesIO(data)) as image:
             if image.width*image.height>20_000_000: raise ValueError('image_dimensions')
             pages = [ocr(image,1)]
-    if not any(p.text.strip() for p in pages): raise ValueError('no_readable_text')
+    if sum(len(page.text) for page in pages) > MAX_TEXT:
+        raise ValueError('text_limit')
+
+    if not any(page.text.strip() for page in pages):
+        raise ValueError('no_readable_text')
+
     return pages

@@ -206,6 +206,29 @@ if (!string.IsNullOrEmpty(awsRegion) && builder.Configuration["DocumentIntellige
     builder.Services.AddHostedService<DocumentIntelligenceWorker>();
 }
 
+// Independent document text extraction; does not depend on Ollama analysis.
+if (!string.IsNullOrEmpty(awsRegion) &&
+    builder.Configuration["DocumentTextExtraction:Enabled"] == "true")
+{
+    builder.Services.AddHttpClient<DocumentTextExtractionClient>(client =>
+    {
+        var address = new Uri(
+            builder.Configuration["DocumentTextExtraction:ServiceUrl"]
+            ?? builder.Configuration["DocumentIntelligence:ServiceUrl"]
+            ?? "http://localhost:8090/");
+
+        if (!builder.Environment.IsDevelopment() && !address.IsLoopback)
+            throw new InvalidOperationException(
+                "Text extraction transport must use private loopback outside local development.");
+
+        client.BaseAddress = address;
+        client.Timeout = TimeSpan.FromSeconds(130);
+        client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
+    });
+
+    builder.Services.AddHostedService<DocumentTextExtractionWorker>();
+}
+
 var isDatabaseInitialization = args.Contains("--initialize-database");
 var isDatabaseMigration = isDatabaseInitialization || args.Contains("--migrate-database");
 var firebaseCredentialPath = builder.Configuration["Firebase:CredentialPath"];

@@ -18,6 +18,11 @@ public class Document : BaseEntity
     public string? DocumentNumber { get; set; }
     public DocumentStatus Status { get; set; } = DocumentStatus.Active;
     public string? ExtractedMetadata { get; set; }
+    public string? ExtractedText { get; set; }
+    public string ExtractionStatus { get; set; } = "NOT_REQUESTED";
+    public int ExtractionAttempts { get; set; }
+    public DateTime? ExtractionLeaseUntil { get; set; }
+    public Guid? ExtractionLeaseToken { get; set; }
 
     public User User { get; set; } = null!;
     public DocumentType DocumentType { get; set; } = null!;

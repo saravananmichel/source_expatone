@@ -40,6 +40,17 @@ public class DocumentConfiguration : IEntityTypeConfiguration<Document>
             .HasConversion<string>()
             .HasMaxLength(30);
 
+        builder.Property(d => d.ExtractedText)
+            .HasColumnType("text");
+
+        builder.Property(d => d.ExtractionStatus)
+            .IsRequired()
+            .HasMaxLength(30)
+            .HasDefaultValue("NOT_REQUESTED");
+
+        builder.Property(d => d.ExtractionAttempts)
+            .HasDefaultValue(0);
+
         builder.HasOne(d => d.User)
             .WithMany()
             .HasForeignKey(d => d.UserId)
