@@ -167,6 +167,25 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.Property<string>("ExtractedMetadata")
                         .HasColumnType("text");
 
+                    b.Property<string>("ExtractedText")
+                        .HasColumnType("text");
+
+                    b.Property<int>("ExtractionAttempts")
+                        .HasDefaultValue(0)
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("ExtractionLeaseToken")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("ExtractionLeaseUntil")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ExtractionStatus")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasDefaultValue("NOT_REQUESTED")
+                        .HasColumnType("character varying(30)");
+
                     b.Property<long>("FileSizeBytes")
                         .HasColumnType("bigint");
 

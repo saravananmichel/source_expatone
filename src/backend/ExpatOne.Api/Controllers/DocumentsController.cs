@@ -56,6 +56,14 @@ public class DocumentsController : ControllerBase
         return Ok(document);
     }
 
+    [HttpGet("{id:guid}/extracted-text")]
+    public async Task<IActionResult> GetExtractedText(Guid id)
+    {
+        var userId = await GetUserIdAsync();
+        var result = await _documentService.GetExtractedTextAsync(userId, id);
+        return result is null ? NotFound() : Ok(result);
+    }
+
     [HttpPost("upload-url")]
     public async Task<IActionResult> RequestUpload([FromBody] RequestUploadDto dto)
     {

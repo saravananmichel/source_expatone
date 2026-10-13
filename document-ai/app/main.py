@@ -41,6 +41,70 @@ slots = asyncio.Semaphore(1)
 logger = logging.getLogger("uvicorn.error")
 
 
+# Independent text extraction: deliberately separate from Ollama analysis.
+extraction_busy = False
+
+
+@app.post('/extract')
+async def extract_document(file: UploadFile = File(...),
+                           x_service_key: str = Header(default='')):
+    expected = os.getenv('DOCUMENT_AI_SERVICE_KEY', '')
+    if not expected or not hmac.compare_digest(x_service_key, expected):
+        raise HTTPException(401, 'Unauthorized')
+
+    global extraction_busy
+    if extraction_busy:
+        raise HTTPException(429, 'Extraction service busy; retry later')
+
+    extraction_busy = True
+    try:
+        try:
+            content_type = file.content_type or ''
+            if content_type not in ('application/pdf', 'image/jpeg', 'image/png'):
+                raise HTTPException(415, 'Unsupported document type')
+
+            data = await file.read(10 * 1024 * 1024 + 1)
+            if len(data) > 10 * 1024 * 1024:
+                raise HTTPException(413, 'File too large')
+
+            process = await asyncio.create_subprocess_exec(
+                sys.executable, '-m', 'app.extract_worker', content_type,
+                stdin=asyncio.subprocess.PIPE,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.DEVNULL
+            )
+            try:
+                output, _ = await asyncio.wait_for(
+                    process.communicate(data), timeout=120
+                )
+            except asyncio.TimeoutError:
+                process.kill()
+                await process.wait()
+                raise HTTPException(422, 'Document extraction timed out') from None
+
+            if process.returncode != 0:
+                raise HTTPException(422, 'Document text extraction failed')
+
+            import json
+            pages = json.loads(output)
+            extracted_text = '\n\n'.join(
+                page.get('text', '') for page in pages
+            )
+            return {
+                'extractedText': extracted_text,
+                'pageCount': len(pages)
+            }
+        except HTTPException:
+            raise
+        except Exception:
+            logger.warning('Independent text extraction failed')
+            raise HTTPException(422, 'Document text extraction failed') from None
+        finally:
+            await file.close()
+    finally:
+        extraction_busy = False
+
+
 @app.get('/health')
 async def health():
     return {'status':'ok','configured':bool(os.getenv('OLLAMA_MODEL') and os.getenv('DOCUMENT_AI_SERVICE_KEY'))}
@@ -135,13 +199,23 @@ async def _analyze_impl(file, x_service_key):
             logger.warning('Analysis stopped category=%s retryable=false', code)
             raise HTTPException(422, {'code': code, 'message': 'Analysis could not produce a complete verified result.'}) from None
         except httpx.TimeoutException:
-            logger.warning('Analysis stopped category=inference_timeout retryable=false')
-            raise HTTPException(422, {'code': 'inference_timeout', 'message': 'Document analysis exceeded its inference time budget.'}) from None
+            logger.warning('Analysis stopped category=model_timeout retryable=true')
+            raise HTTPException(503, 'Document model unavailable; retry later') from None
         except httpx.HTTPError:
             raise HTTPException(503, 'Document model unavailable; retry later') from None
+        except ValueError as error:
+            if str(error).startswith('invalid_model_output:'):
+                logger.warning('Analysis stopped category=invalid_model_output retryable=false')
+                raise HTTPException(
+                    422,
+                    {'code': 'invalid_model_output',
+                     'message': 'Analysis could not produce a complete verified result.'}
+                ) from None
+            # Do not expose parser errors or source text.
+            raise HTTPException(422, 'Document processing failed') from None
         except Exception:
             # Never return parser/model messages or source text to clients/logs.
-            raise HTTPException(422,'Document processing failed') from None
+            raise HTTPException(422, 'Document processing failed') from None
         finally:
             await file.close()
 

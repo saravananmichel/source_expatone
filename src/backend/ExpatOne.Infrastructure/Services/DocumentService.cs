@@ -84,6 +84,7 @@ public class DocumentService : IDocumentService
             throw new InvalidOperationException("Document is not pending upload.");
 
         document.Status = DocumentStatus.Active;
+        document.ExtractionStatus = "PENDING";
         await _dbContext.SaveChangesAsync();
 
         await _auditService.LogAsync(documentId, userId, "document_uploaded");
@@ -118,6 +119,22 @@ public class DocumentService : IDocumentService
                 && d.Status != DocumentStatus.PendingUpload);
 
         return document is null ? null : MapForViewer(document, userId);
+    }
+
+    public async Task<DocumentExtractionDto?> GetExtractedTextAsync(Guid userId, Guid documentId)
+    {
+        var document = await ReadableDocuments(userId)
+            .Where(d => d.Id == documentId && d.Status != DocumentStatus.PendingUpload)
+            .Select(d => new { d.ExtractionStatus, d.ExtractedText })
+            .FirstOrDefaultAsync();
+
+        return document is null
+            ? null
+            : new DocumentExtractionDto
+            {
+                Status = document.ExtractionStatus,
+                ExtractedText = document.ExtractedText
+            };
     }
 
     public async Task<AccessUrlResponseDto> GetAccessUrlAsync(Guid userId, Guid documentId)

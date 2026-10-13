@@ -8,7 +8,7 @@ from test_pipeline import semantic,page
 def test_unrelated_true_quote_cannot_support_salary_after_tax(monkeypatch):
     s=semantic();s.statements[0].text='RM12,000 is salary after tax.'
     async def post(*args,**kwargs):
-        return httpx.Response(200,request=httpx.Request('POST','http://test/analyze'),json={'message':{'content':'{"verdicts":[{"id":"s1","supportStatus":"UNSUPPORTED","reason":"Evidence states gross amount without tax basis."}]}'}})
+        return httpx.Response(200,request=httpx.Request('POST','http://test/analyze'),json={'done':True,'done_reason':'stop','message':{'content':'{"verdicts":[{"id":"s1","supportStatus":"UNSUPPORTED","reason":"Evidence states gross amount without tax basis."}]}'}})
     monkeypatch.setattr(httpx.AsyncClient,'post',post);monkeypatch.setenv('OLLAMA_MODEL','test')
     asyncio.run(review_support(s))
     assert s.statements[0].supportStatus=='UNSUPPORTED'
@@ -17,7 +17,7 @@ def test_unrelated_true_quote_cannot_support_salary_after_tax(monkeypatch):
 
 def test_missing_or_duplicate_verdicts_fail_closed(monkeypatch):
     async def post(*args,**kwargs):
-        return httpx.Response(200,request=httpx.Request('POST','http://test/analyze'),json={'message':{'content':'{"verdicts":[]}'}})
+        return httpx.Response(200,request=httpx.Request('POST','http://test/analyze'),json={'done':True,'done_reason':'stop','message':{'content':'{"verdicts":[]}'}})
     monkeypatch.setattr(httpx.AsyncClient,'post',post);monkeypatch.setenv('OLLAMA_MODEL','test')
     s=semantic();asyncio.run(review_support(s))
     assert s.statements[0].supportStatus=='UNCERTAIN'
@@ -105,7 +105,7 @@ def _make_mock_post(verdict_id, status, reason='Test reason.'):
     async def post(*args, **kwargs):
         payload = {'verdicts': [{'id': verdict_id, 'supportStatus': status, 'reason': reason}]}
         return httpx.Response(200, request=httpx.Request('POST', 'http://test/api/chat'),
-                              json={'message': {'content': __import__('json').dumps(payload)}})
+                              json={'done': True, 'done_reason': 'stop', 'message': {'content': __import__('json').dumps(payload)}})
     return post
 
 
