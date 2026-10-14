@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ExpatOne.Infrastructure.Persistence.Migrations;
 
-[DbContext(typeof(ExpatOneDbContext))]
-[Migration("20261013000000_AddDocumentTextExtraction")]
 public partial class AddDocumentTextExtraction : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
