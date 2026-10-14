@@ -1,0 +1,50 @@
+version: 0.2
+
+env:
+  shell: bash
+
+phases:
+  build:
+    commands:
+      - |
+        set -euo pipefail
+
+        ACCOUNT_ID="020429479243"
+        REGION="ap-southeast-1"
+        REGISTRY="${ACCOUNT_ID}.dkr.ecr.${REGION}.amazonaws.com"
+        IMAGE="${REGISTRY}/expatone-api:${CODEBUILD_RESOLVED_SOURCE_VERSION}"
+
+        echo "=== Confirm AWS account ==="
+        ACTUAL_ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
+        test "$ACTUAL_ACCOUNT" = "$ACCOUNT_ID"
+
+        echo "=== Run backend tests ==="
+        docker run --rm --platform linux/amd64 \
+          -e DOTNET_CLI_TELEMETRY_OPTOUT=1 \
+          -v "$CODEBUILD_SRC_DIR/src/backend:/src" \
+          -w /src \
+          mcr.microsoft.com/dotnet/sdk:8.0 \
+          dotnet test ExpatOne.Tests/ExpatOne.Tests.csproj \
+          --configuration Release --verbosity minimal
+
+        echo "=== Build API image ==="
+        docker build --platform linux/amd64 \
+          -t "$IMAGE" \
+          ./src/backend
+
+        echo "=== Authenticate to existing ECR registry ==="
+        aws ecr get-login-password --region "$REGION" \
+          | docker login --username AWS --password-stdin "$REGISTRY"
+
+        echo "=== Push API image only ==="
+        docker push "$IMAGE"
+
+        echo "=== Verify published API image ==="
+        aws ecr describe-images \
+          --repository-name expatone-api \
+          --image-ids imageTag="$CODEBUILD_RESOLVED_SOURCE_VERSION" \
+          --region "$REGION" \
+          --query 'imageDetails[0].{Tag:imageTags[0],Digest:imageDigest,PublishedAt:imagePushedAt}' \
+          --output json
+
+        echo "=== API image published; ECS was not changed ==="
