@@ -169,6 +169,7 @@ public sealed class DocumentTextExtractionWorker(
                     .SetProperty(d => d.UpdatedAt, failedAt), stoppingToken);
 
             logger.LogWarning(
+                ex,
                 "Text extraction failed for document {DocumentId}; retry={Retry}, attempt={Attempt}.",
                 job.Id, retry, attempts);
         }
