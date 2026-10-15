@@ -341,8 +341,6 @@ if (isDatabaseMigration)
         }
         catch (Exception ex)
         {
-            var postgresError = ex as Npgsql.PostgresException
-                ?? ex.InnerException as Npgsql.PostgresException;
             Console.Error.WriteLine($"Database initialization failed: {ex.GetType().Name}; " +
                 $"sqlstate={postgresError?.SqlState ?? "none"}. No migrations were applied.");
             Environment.ExitCode = 1;
@@ -357,11 +355,7 @@ if (isDatabaseMigration)
     }
     catch (Exception ex)
     {
-        var postgresError = ex as Npgsql.PostgresException
-            ?? ex.InnerException as Npgsql.PostgresException;
-        Console.Error.WriteLine($"Database connection failed: {ex.GetType().Name}; " +
-            $"inner={ex.InnerException?.GetType().Name ?? "none"}; " +
-            $"sqlstate={postgresError?.SqlState ?? "none"}. No migrations were applied.");
+        Console.Error.WriteLine($"Database connection failed. No migrations were applied. Full exception: {ex}");
         Environment.ExitCode = 1;
         return;
     }
