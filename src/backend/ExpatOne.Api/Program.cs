@@ -341,8 +341,7 @@ if (isDatabaseMigration)
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"Database initialization failed: {ex.GetType().Name}; " +
-                $"sqlstate={postgresError?.SqlState ?? "none"}. No migrations were applied.");
+            Console.Error.WriteLine($"Database initialization failed. No migrations were applied. Full exception: {ex}");
             Environment.ExitCode = 1;
             return;
         }
