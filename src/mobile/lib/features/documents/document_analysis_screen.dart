@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
+import '../../core/error/app_exception.dart';
 import '../../core/services/document_service.dart';
 import '../../core/theme/app_theme.dart';
 import 'document_qa_screen.dart';
@@ -94,10 +95,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
           _isAnalyzing = false;
         });
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
-          _error = 'Unable to analyze document. Please try again.';
+          _error = error is AppException
+              ? error.message
+              : 'Unable to analyze document. Please try again.';
           _isLoading = false;
           _isAnalyzing = false;
         });

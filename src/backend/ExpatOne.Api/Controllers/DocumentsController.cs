@@ -77,7 +77,6 @@ public class DocumentsController : ControllerBase
     {
         var userId = await GetUserIdAsync();
         var document = await _documentService.CompleteUploadAsync(userId, id);
-        if (_jobs != null) await _jobs.EnqueueAsync(userId, id, false, HttpContext.RequestAborted);
         return Ok(document);
     }
 

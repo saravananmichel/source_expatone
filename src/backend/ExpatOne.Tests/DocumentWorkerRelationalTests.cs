@@ -60,6 +60,7 @@ public class DocumentWorkerRelationalTests
         await db.Database.EnsureCreatedAsync();
         var user = new User { Id = Guid.NewGuid(), ExternalProvider = "test", ExternalId = "synthetic", Email = "synthetic@example.test" };
         var doc = new Document { Id = Guid.NewGuid(), UserId = user.Id,
+            ExtractionStatus = "COMPLETED",
             DocumentTypeId = Guid.Parse("10000000-0000-0000-0000-000000000001"), DocumentName = "Synthetic", S3ObjectKey = "synthetic", ContentType = "application/pdf" };
         db.Users.Add(user);
         db.Documents.Add(doc);
@@ -73,6 +74,94 @@ public class DocumentWorkerRelationalTests
         Assert.Equal(expectedStatus, (await db.DocumentAnalysisRuns.SingleAsync()).Status);
         Assert.Equal(1, handler.Calls);
     }
+    [Fact]
+    public async Task WorkerMarksQueuedAnalysisFailedWhenTextExtractionFailed()
+    {
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        connection.Open();
+
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddDbContext<ExpatOneDbContext>(
+            options => options.UseSqlite(connection));
+
+        var config = new ConfigurationBuilder().Build();
+        services.AddSingleton<IConfiguration>(config);
+
+        var storage = new Mock<IStorageService>();
+        storage.Setup(x => x.DownloadFileAsync(It.IsAny<string>()))
+            .ReturnsAsync(() => (Stream)new MemoryStream([1, 2, 3]));
+        services.AddSingleton(storage.Object);
+
+        var handler = new ModelHandler();
+        services.AddScoped(_ => new DocumentIntelligenceService(
+            new HttpClient(handler) { BaseAddress = new Uri("http://localhost/") },
+            config));
+
+        using var provider = services.BuildServiceProvider();
+        var userId = Guid.NewGuid();
+        var docId = Guid.NewGuid();
+
+        using (var scope = provider.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+            await db.Database.EnsureCreatedAsync();
+
+            var user = new User
+            {
+                Id = userId,
+                ExternalProvider = "test",
+                ExternalId = "synthetic",
+                Email = "synthetic@example.test"
+            };
+
+            var doc = new Document
+            {
+                Id = docId,
+                UserId = userId,
+                ExtractionStatus = "FAILED",
+                DocumentTypeId = Guid.Parse("10000000-0000-0000-0000-000000000001"),
+                DocumentName = "Synthetic",
+                S3ObjectKey = "synthetic",
+                ContentType = "application/pdf"
+            };
+
+            var run = new DocumentAnalysisRun
+            {
+                Id = Guid.NewGuid(),
+                DocumentId = docId,
+                UserId = userId,
+                ObjectKey = "synthetic",
+                ContentType = "application/pdf",
+                ConfigurationVersion = "v1",
+                Status = "QUEUED"
+            };
+
+            db.Users.Add(user);
+            db.Documents.Add(doc);
+            db.DocumentAnalysisRuns.Add(run);
+            await db.SaveChangesAsync();
+        }
+
+        var worker = new DocumentIntelligenceWorker(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILogger<DocumentIntelligenceWorker>>());
+
+        // Reconciliation should finish the failed run without calling the model.
+        Assert.False(await worker.ProcessOne(default));
+
+        using var verify = provider.CreateScope();
+        var context = verify.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+        var savedRun = await context.DocumentAnalysisRuns.SingleAsync();
+
+        Assert.Equal("FAILED", savedRun.Status);
+        Assert.Equal("Text extraction failed", savedRun.Stage);
+        Assert.Equal("text_extraction_failed", savedRun.ErrorCategory);
+        Assert.Null(savedRun.LeaseUntil);
+        Assert.Null(savedRun.LeaseToken);
+        Assert.Equal(0, handler.Calls);
+    }
+
     [Fact]
     public async Task WorkerClaimsPersistsAndRecoversAnExpiredLease()
     {
@@ -92,7 +181,7 @@ public class DocumentWorkerRelationalTests
             var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>(); await db.Database.EnsureCreatedAsync();
             var user = new User { Id = Guid.NewGuid(), ExternalProvider = "test", ExternalId = "synthetic", Email = "synthetic@example.test" };
             db.Users.Add(user);
-            db.Documents.Add(new Document { Id = docId, UserId = user.Id, DocumentTypeId = Guid.Parse("10000000-0000-0000-0000-000000000001"), DocumentName = "Synthetic", S3ObjectKey = "synthetic", ContentType = "application/pdf" });
+            db.Documents.Add(new Document { Id = docId, UserId = user.Id, ExtractionStatus = "COMPLETED", DocumentTypeId = Guid.Parse("10000000-0000-0000-0000-000000000001"), DocumentName = "Synthetic", S3ObjectKey = "synthetic", ContentType = "application/pdf" });
             db.DocumentAnalysisRuns.Add(new DocumentAnalysisRun { Id = runId, DocumentId = docId, UserId = user.Id, ObjectKey = "synthetic", ContentType = "application/pdf", ConfigurationVersion = "v1", Status = "PROCESSING", LeaseUntil = DateTime.UtcNow.AddMinutes(-10) });
             await db.SaveChangesAsync();
         }

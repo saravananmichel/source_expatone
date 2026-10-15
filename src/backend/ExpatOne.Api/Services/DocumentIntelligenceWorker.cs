@@ -27,15 +27,41 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
         using var scope = scopes.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
         var now = DateTime.UtcNow;
-        var run = await db.DocumentAnalysisRuns.AsNoTracking().Where(x => (x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
-            (x.Status == "PROCESSING" && x.LeaseUntil < now)).OrderBy(x => x.CreatedAt).FirstOrDefaultAsync(stoppingToken);
+        var failedExtractions = await db.DocumentAnalysisRuns
+            .Where(x => x.Status == "QUEUED" &&
+                db.Documents.Any(d =>
+                    d.Id == x.DocumentId &&
+                    d.ExtractionStatus == "FAILED"))
+            .ExecuteUpdateAsync(set => set
+                .SetProperty(x => x.Status, "FAILED")
+                .SetProperty(x => x.Stage, "Text extraction failed")
+                .SetProperty(x => x.ErrorCategory, "text_extraction_failed")
+                .SetProperty(x => x.UpdatedAt, now)
+                .SetProperty(x => x.LeaseUntil, (DateTime?)null)
+                .SetProperty(x => x.LeaseToken, (Guid?)null),
+                stoppingToken);
+
+        if (failedExtractions > 0)
+        {
+            logger.LogWarning(
+                "Marked {Count} queued analysis jobs as failed because text extraction failed.",
+                failedExtractions);
+        }
+
+        var run = await db.DocumentAnalysisRuns.AsNoTracking().Where(x =>
+            db.Documents.Any(d => d.Id == x.DocumentId && d.ExtractionStatus == "COMPLETED") &&
+            ((x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
+             (x.Status == "PROCESSING" && x.LeaseUntil < now)))
+            .OrderBy(x => x.CreatedAt).FirstOrDefaultAsync(stoppingToken);
         logger.LogInformation(
             "Document analysis worker selected: analysisId={AnalysisId}, status={Status}, leaseUntil={LeaseUntil}, attempts={Attempts}",
             run?.Id, run?.Status, run?.LeaseUntil, run?.Attempts);
         if (run == null) return false;
         var token = Guid.NewGuid();
-        var claimed = await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && ((x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
-            (x.Status == "PROCESSING" && x.LeaseUntil < now))).ExecuteUpdateAsync(set => set
+        var claimed = await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id &&
+            db.Documents.Any(d => d.Id == x.DocumentId && d.ExtractionStatus == "COMPLETED") &&
+            ((x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
+             (x.Status == "PROCESSING" && x.LeaseUntil < now))).ExecuteUpdateAsync(set => set
                 .SetProperty(x => x.Status, "PROCESSING").SetProperty(x => x.Stage, "Extracting and understanding")
                 .SetProperty(x => x.LeaseUntil, now.AddMinutes(18)).SetProperty(x => x.LeaseToken, token).SetProperty(x => x.UpdatedAt, now)
                 .SetProperty(x => x.Attempts, x => x.Attempts + 1), stoppingToken);
