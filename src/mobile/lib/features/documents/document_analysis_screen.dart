@@ -91,8 +91,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
 
     if (mounted) {
       setState(() {
-        _extractionError =
-            'Text extraction is taking longer than expected. Try refreshing this screen.';
+        _extractionError = 'Text extraction is taking longer than expected. Try refreshing this screen.';
       });
     }
   }
@@ -283,9 +282,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
                             _isAnalyzing
                                 ? 'AI analysis in progress'
                                 : 'Loading analysis',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                            ),
+                            style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 6),
                           Text(
@@ -346,13 +343,11 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
 
   Widget _buildExtractedTextSection() {
     final result = _extraction;
-    final text = result?['extractedText'] as String? ??
-        result?['text'] as String? ??
-        '';
-    final isPassport =
-        '${widget.document.documentType} ${widget.document.name}'
-            .toLowerCase()
-            .contains('passport');
+    final text =
+        result?['extractedText'] as String? ?? result?['text'] as String? ?? '';
+    final isPassport = '${widget.document.documentType} ${widget.document.name}'
+        .toLowerCase()
+        .contains('passport');
     final fields = isPassport ? _parsePassportFields(text) : <String, String>{};
 
     return Card(
@@ -466,11 +461,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
       'Sex': ['sex', 'gender'],
       'Place of birth': ['place of birth'],
       'Date of issue': ['date of issue', 'issue date', 'date issued'],
-      'Date of expiry': [
-        'date of expiry',
-        'expiry date',
-        'expiration date',
-      ],
+      'Date of expiry': ['date of expiry', 'expiry date', 'expiration date'],
       'Address': ['address', 'residential address'],
     };
 
