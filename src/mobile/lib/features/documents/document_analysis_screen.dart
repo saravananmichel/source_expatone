@@ -349,6 +349,11 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
     final text = result?['extractedText'] as String? ??
         result?['text'] as String? ??
         '';
+    final isPassport =
+        '${widget.document.documentType} ${widget.document.name}'
+            .toLowerCase()
+            .contains('passport');
+    final fields = isPassport ? _parsePassportFields(text) : <String, String>{};
 
     return Card(
       child: Padding(
@@ -371,10 +376,66 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               ],
             ),
             const SizedBox(height: 10),
-            if (text.trim().isNotEmpty)
+            if (text.trim().isNotEmpty && fields.isNotEmpty) ...[
+              Text(
+                'Passport information',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: fields.entries.map((entry) {
+                  return SizedBox(
+                    width: 140,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SelectableText(
+                          entry.value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              const Divider(),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text('View original extracted text'),
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
+                      text,
+                      style: const TextStyle(height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (text.trim().isNotEmpty)
               SelectableText(text, style: const TextStyle(height: 1.5))
             else if (_extractionStatus == 'FAILED')
-              const Text('Text extraction failed. You can still retry AI analysis.')
+              const Text(
+                'Text extraction failed. You can still retry AI analysis.',
+              )
             else if (_extractionError != null)
               Text(
                 _extractionError!,
@@ -393,6 +454,49 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         ),
       ),
     );
+  }
+
+  Map<String, String> _parsePassportFields(String text) {
+    const labels = <String, List<String>>{
+      'Passport number': ['passport number', 'passport no'],
+      'Surname': ['surname', 'family name'],
+      'Given names': ['given names', 'given name', 'first name'],
+      'Nationality': ['nationality'],
+      'Date of birth': ['date of birth', 'dob'],
+      'Sex': ['sex', 'gender'],
+      'Place of birth': ['place of birth'],
+      'Date of issue': ['date of issue', 'issue date', 'date issued'],
+      'Date of expiry': [
+        'date of expiry',
+        'expiry date',
+        'expiration date',
+      ],
+      'Address': ['address', 'residential address'],
+    };
+
+    final fields = <String, String>{};
+
+    for (final line in text.split(RegExp(r'[\r\n]+'))) {
+      final separator = line.indexOf(':');
+      if (separator <= 0) continue;
+
+      final key = line
+          .substring(0, separator)
+          .toLowerCase()
+          .replaceAll(RegExp(r'[^a-z0-9 ]'), '')
+          .trim();
+      final value = line.substring(separator + 1).trim();
+      if (value.isEmpty) continue;
+
+      for (final entry in labels.entries) {
+        if (entry.value.contains(key)) {
+          fields.putIfAbsent(entry.key, () => value);
+          break;
+        }
+      }
+    }
+
+    return fields;
   }
 
   Widget _buildAnalysisError() {
