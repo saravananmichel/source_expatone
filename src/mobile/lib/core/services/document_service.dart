@@ -369,16 +369,82 @@ class DocumentService {
     await _apiClient.delete('/documents/$documentId');
   }
 
-  Future<Map<String, dynamic>> analyzeDocument(String documentId, {bool forceReanalyze = false}) async {
-    final response = await _apiClient.post(
+  Future<Map<String, dynamic>> enqueueDocumentAnalysis(
+    String documentId, {
+    bool forceReanalyze = false,
+  }) async {
+    return _apiClient.post(
       '/documents/$documentId/analyze',
       body: {'forceReanalyze': forceReanalyze},
       timeout: ApiConstants.aiTimeout,
     );
+  }
+
+  Future<Map<String, dynamic>> getDocumentAnalysisStatus(
+    String documentId,
+    String analysisId,
+  ) async {
+    return _apiClient.get(
+      '/documents/$documentId/analysis/status',
+      queryParams: {'analysisId': analysisId},
+    );
+  }
+
+  Future<Map<String, dynamic>> analyzeDocument(String documentId, {bool forceReanalyze = false}) async {
+    // Text extraction is handled by a separate backend worker. Wait for it
+    // before enqueueing analysis so the analysis queue does not race extraction.
+    const extractionMaxAttempts = 240; // 20 minutes at 5-second intervals.
+
+    var extractionReady = false;
+    for (var attempt = 0; attempt < extractionMaxAttempts; attempt++) {
+      final extraction = await getExtractedText(documentId);
+      final status = extraction['status'] as String? ?? 'NOT_REQUESTED';
+
+      if (status == 'FAILED') {
+        throw const NetworkException(
+          "We couldn't extract text from this document. Please try again.",
+        );
+      }
+
+      if (status == 'COMPLETED') {
+        extractionReady = true;
+        break;
+      }
+
+      if (status != 'PENDING' && status != 'PROCESSING') {
+        throw const NetworkException(
+          'Text extraction has not started. Please reopen the document and try again.',
+        );
+      }
+
+      _analysisProgress.add({
+        'documentId': documentId,
+        'status': 'PROCESSING',
+        'stage': 'Extracting document text',
+      });
+
+      if (attempt < extractionMaxAttempts - 1) {
+        await Future<void>.delayed(const Duration(seconds: 5));
+      }
+    }
+
+    if (!extractionReady) {
+      throw const NetworkException(
+        'Text extraction is taking longer than expected. Reopen this screen to try again.',
+      );
+    }
+
+    final response = await enqueueDocumentAnalysis(
+      documentId,
+      forceReanalyze: forceReanalyze,
+    );
     if (response['analysisId'] == null) return response;
     final analysisId = response['analysisId'] as String;
-    for (var attempt = 0; attempt < 180; attempt++) {
-      final job = await _apiClient.get('/documents/$documentId/analysis/status', queryParams: {'analysisId': analysisId});
+    // The backend analysis worker allows up to 17 minutes per attempt.
+    // Poll for up to 20 minutes so the UI does not give up prematurely.
+    const analysisMaxAttempts = 600; // 20 minutes at 2-second intervals.
+    for (var attempt = 0; attempt < analysisMaxAttempts; attempt++) {
+      final job = await getDocumentAnalysisStatus(documentId, analysisId);
       final status = job['status'];
       _analysisProgress.add({'documentId': documentId, 'status': status as String? ?? 'PROCESSING',
         'stage': job['stage'] as String? ?? 'Understanding document'});
@@ -388,7 +454,9 @@ class DocumentService {
       if (status == 'FAILED') {
         throw const NetworkException("We couldn't fully analyze this document. You can retry.");
       }
-      await Future<void>.delayed(const Duration(seconds: 2));
+      if (attempt < analysisMaxAttempts - 1) {
+        await Future<void>.delayed(const Duration(seconds: 2));
+      }
     }
     throw const NetworkException('Analysis is still processing. Reopen this screen to check progress.');
   }
@@ -399,6 +467,10 @@ class DocumentService {
   Future<Map<String, dynamic>> getDocumentAnalysis(String documentId) async {
     final response = await _apiClient.get('/documents/$documentId/analysis');
     return response;
+  }
+
+  Future<Map<String, dynamic>> getExtractedText(String documentId) async {
+    return _apiClient.get('/documents/$documentId/extracted-text');
   }
 
   Future<DocumentAnswer> askDocument(String documentId, String question) async {
