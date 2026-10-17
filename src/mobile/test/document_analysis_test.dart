@@ -409,9 +409,13 @@ void main() {
         docService.mockAnalysis = fullAnalysis;
         const ocr = '''
 Passport No
+:::!
+Passport No
 V5073795
 Nationality
 INDIAN
+Surname
+E~ ~~II
 Surname
 MICHEL RAJ
 Given Names
@@ -459,6 +463,8 @@ Date of Expiry
         expect(find.text('V5073795'), findsOneWidget);
         expect(find.text('SARAVANAN'), findsOneWidget);
         expect(find.text('MICHEL RAJ'), findsOneWidget);
+        expect(find.text(':::!'), findsNothing);
+        expect(find.text('E~ ~~II'), findsNothing);
         expect(
           find.text('View original extracted text'),
           findsOneWidget,

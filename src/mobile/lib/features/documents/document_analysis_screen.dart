@@ -451,6 +451,19 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
     );
   }
 
+  bool _isUsablePassportValue(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return false;
+
+    // Reject symbol-only and symbol-heavy OCR fragments, while preserving
+    // normal names, identifiers, dates and values containing punctuation.
+    final characters = trimmed.replaceAll(RegExp(r'\s'), '');
+    if (characters.isEmpty) return false;
+
+    final meaningful = RegExp(r'[a-zA-Z0-9]').allMatches(characters).length;
+    return meaningful / characters.length >= 0.6;
+  }
+
   Map<String, String> _parsePassportFields(String text) {
     const labels = <String, List<String>>{
       'Passport number': ['passport number', 'passport no'],
@@ -518,7 +531,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         i = next;
       }
 
-      if (value.isNotEmpty &&
+      if (_isUsablePassportValue(value) &&
           !value.startsWith('P<') &&
           !value.contains('<<')) {
         fields[canonicalLabel] = value;
