@@ -25,6 +25,35 @@ public class VisaApplicationTests : IDisposable
     private static JsonElement J(object value)=>JsonSerializer.SerializeToElement(value,VisaRules.Json);
     private async Task<JsonElement> Create(Guid user)=>J(await service.CreateAsync(user,new VisaCreateDto{Documents=[new(){Id=doc,Role="Passport"}]}));
     private async Task<FamilyRequestDto> Share() {var f=new FamilyService(db);var r=await f.SendAsync(viewer,"owner@visa.test");return await f.RespondAsync(owner,r.Id,new FamilyDecisionDto{Revision=r.Revision,Accept=true,DocumentIds=[doc],AccessExpiresAt=DateTimeOffset.UtcNow.AddHours(1)});}
+    [Fact] public async Task PrefillUsesCompletedLabelledOcrWithoutOverwritingUserValues() {
+        var document = await db.Documents.FindAsync(doc);
+        document!.ExtractionStatus = "COMPLETED";
+        document.ExtractedText = """
+            Passport Number: OCR999999
+            Full Name: OCR TEST APPLICANT
+            Date of Birth: 15/06/1985
+            Nationality: India
+            Sex: Male
+            """;
+        await db.SaveChangesAsync();
+
+        var a = await Create(owner);
+        var id = a.GetProperty("id").GetGuid();
+        a = J(await service.UpdateAsync(owner, id, new() {
+            Revision = a.GetProperty("revision").GetGuid(),
+            Values = new() { { "passportNumber", "MANUAL123" } }
+        }));
+
+        a = J(await service.PrefillAsync(owner, id, a.GetProperty("revision").GetGuid()));
+        var values = a.GetProperty("values");
+
+        Assert.Equal("MANUAL123", values.GetProperty("passportNumber").GetString());
+        Assert.Equal("OCR TEST APPLICANT", values.GetProperty("fullName").GetString());
+        Assert.Equal("1985-06-15", values.GetProperty("birthDate").GetString());
+        Assert.Equal("India", values.GetProperty("nationality").GetString());
+        Assert.Equal("Male", values.GetProperty("sex").GetString());
+    }
+
     [Fact] public async Task OwnerScopeAndMissingDocumentAreEnforced() {
         var a=await Create(owner);var id=a.GetProperty("id").GetGuid();
         await Assert.ThrowsAsync<KeyNotFoundException>(()=>service.GetAsync(viewer,id));

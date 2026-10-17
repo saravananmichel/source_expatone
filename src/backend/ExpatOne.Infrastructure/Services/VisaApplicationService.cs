@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Domain.Entities;
 using ExpatOne.Domain.Enums;
@@ -111,6 +112,26 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         s.Checks=changed?[]:input.Checks; a.Submitted=false;
         await Save(a,s);return await GetAsync(user,id);
     }
+
+    private static string? LabelledOcrValue(string text, params string[] labels)
+    {
+        var alternatives = string.Join("|", labels.Select(Regex.Escape));
+        var pattern = $@"(?im)^\s*(?:{alternatives})\s*[:#\-]\s*(?<value>[^\r\n]{{1,100}})\s*$";
+        var match = Regex.Match(text, pattern);
+        return match.Success ? match.Groups["value"].Value.Trim() : null;
+    }
+
+    private static string? OcrDate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var formats = new[] { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy",
+                              "dd-MM-yyyy", "d-M-yyyy", "dd MMM yyyy",
+                              "d MMM yyyy", "dd MMMM yyyy", "d MMMM yyyy" };
+        return DateTime.TryParseExact(value.Trim(), formats,
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? date.ToString("yyyy-MM-dd") : null;
+    }
+
     public async Task<object> PrefillAsync(Guid user,Guid id,Guid revision) {
         var a=await Find(user,id);Revision(a,revision);var s=Read<VisaState>(a.StateJson);
         var access=await Validate(user,s) ?? throw new InvalidOperationException("Document access or content changed. Reset linked documents.");
@@ -145,6 +166,30 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
                 _=>new Dictionary<string,string>{{"hotel name","sgBuilding"},{"postal code","sgPostal"},{"street name","sgStreet"},{"contact number","sgPhone"}}
             };
             foreach(var item in analysis?.KeyInformation??[]) if(item.IsExtracted && aliases.TryGetValue(item.Label.Trim().ToLowerInvariant(),out var key)) Suggest(key,item.Value,d.Id);
+
+            // OCR is a fallback only: Suggest never overwrites a populated answer.
+            if(d.ExtractionStatus=="COMPLETED" && !string.IsNullOrWhiteSpace(d.ExtractedText)) {
+                var text = d.ExtractedText;
+                if(bound.Role=="Passport") {
+                    Suggest("passportNumber", LabelledOcrValue(text,"Passport Number","Passport No","Passport No."), d.Id);
+                    Suggest("fullName", LabelledOcrValue(text,"Full Name"), d.Id);
+                    Suggest("passportIssueDate", OcrDate(LabelledOcrValue(text,"Date of Issue","Issue Date")), d.Id);
+                    Suggest("passportExpiryDate", OcrDate(LabelledOcrValue(text,"Date of Expiry","Expiry Date","Expiration Date")), d.Id);
+                    Suggest("birthDate", OcrDate(LabelledOcrValue(text,"Date of Birth","Birth Date")), d.Id);
+                    Suggest("nationality", LabelledOcrValue(text,"Nationality"), d.Id);
+                    Suggest("sex", LabelledOcrValue(text,"Sex","Gender"), d.Id);
+                    Suggest("passportIssuePlace", LabelledOcrValue(text,"Place of Issue"), d.Id);
+                    Suggest("birthCountry", LabelledOcrValue(text,"Country of Birth"), d.Id);
+                } else if(bound.Role=="Itinerary") {
+                    Suggest("arrivalDate", OcrDate(LabelledOcrValue(text,"Arrival Date")), d.Id);
+                    Suggest("departureDate", OcrDate(LabelledOcrValue(text,"Departure Date")), d.Id);
+                } else if(bound.Role=="Accommodation") {
+                    Suggest("sgBuilding", LabelledOcrValue(text,"Hotel Name"), d.Id);
+                    Suggest("sgPostal", LabelledOcrValue(text,"Postal Code"), d.Id);
+                    Suggest("sgStreet", LabelledOcrValue(text,"Street Name"), d.Id);
+                    Suggest("sgPhone", LabelledOcrValue(text,"Contact Number","Telephone Number"), d.Id);
+                }
+            }
         }
         // No answers about race, religion, history, declarations or signature are inferred.
         if(await Validate(user,s)==null) throw new InvalidOperationException("Document sharing expired during prefilling.");
