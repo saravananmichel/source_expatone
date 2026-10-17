@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Domain.Entities;
 using ExpatOne.Domain.Enums;
@@ -111,6 +112,121 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         s.Checks=changed?[]:input.Checks; a.Submitted=false;
         await Save(a,s);return await GetAsync(user,id);
     }
+
+    private static string? LabelledOcrValue(string text, params string[] labels)
+    {
+        var alternatives = string.Join("|", labels.Select(Regex.Escape));
+        var pattern = $@"(?im)^\s*(?:{alternatives})\s*[:#\-]\s*(?<value>[^\r\n]{{1,100}})\s*$";
+        var match = Regex.Match(text, pattern);
+        return match.Success ? match.Groups["value"].Value.Trim() : null;
+    }
+
+    private static string? OcrDate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var formats = new[] { "yyyy-MM-dd", "dd/MM/yyyy", "d/M/yyyy",
+                              "dd-MM-yyyy", "d-M-yyyy", "dd MMM yyyy",
+                              "d MMM yyyy", "dd MMMM yyyy", "d MMMM yyyy" };
+        return DateTime.TryParseExact(value.Trim(), formats,
+            CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? date.ToString("yyyy-MM-dd") : null;
+    }
+
+    private static string? OcrFirstDate(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var match = Regex.Match(value, @"\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b");
+        return match.Success ? match.Value : null;
+    }
+
+
+    private static string? OcrNextLineValue(string text, string label)
+    {
+        var lines = text.Split(new[] { '\r', '\n' },
+            StringSplitOptions.RemoveEmptyEntries);
+
+        for (var i = 0; i < lines.Length - 1; i++)
+        {
+            if (lines[i].Contains(label, StringComparison.OrdinalIgnoreCase))
+            {
+                var value = lines[i + 1].Trim();
+                if (!string.IsNullOrWhiteSpace(value)) return value;
+            }
+        }
+        return null;
+    }
+
+    private static string? OcrPassportNumber(string text)
+    {
+        var labelled = LabelledOcrValue(
+            text, "Passport Number", "Passport No", "Passport No.");
+        if (!string.IsNullOrWhiteSpace(labelled)) return labelled;
+
+        var compact = Regex.Replace(text, @"\s+", "");
+        var match = Regex.Match(compact, @"([A-Z]\d{7,8})<\d",
+            RegexOptions.IgnoreCase);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    private static string? OcrPassportName(string text)
+    {
+        var labelled = LabelledOcrValue(text, "Full Name");
+        if (!string.IsNullOrWhiteSpace(labelled)) return labelled;
+
+        var surname = OcrNextLineValue(text, "Surname");
+        var given = OcrNextLineValue(text, "Given Name");
+
+        if (string.IsNullOrWhiteSpace(surname) ||
+            string.IsNullOrWhiteSpace(given)) return null;
+
+        return $"{given} {surname}".Trim();
+    }
+
+    private static string? OcrPassportDate(string text, bool expiry)
+    {
+        var labelled = OcrDate(LabelledOcrValue(text,
+            expiry ? new[] { "Date of Expiry", "Expiry Date", "Expiration Date" }
+                   : new[] { "Date of Issue", "Issue Date" }));
+        if (labelled != null) return labelled;
+
+        var lines = text.Split(new[] { '\r', '\n' },
+            StringSplitOptions.RemoveEmptyEntries);
+
+        for (var i = 0; i < lines.Length - 1; i++)
+        {
+            if (lines[i].Contains("Date of Issue", StringComparison.OrdinalIgnoreCase)
+                && lines[i].Contains("Date of Expiry", StringComparison.OrdinalIgnoreCase))
+            {
+                var dates = Regex.Matches(lines[i + 1],
+                    @"\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b");
+                var index = expiry ? 1 : 0;
+                if (dates.Count > index)
+                    return OcrDate(dates[index].Value);
+            }
+        }
+
+        return null;
+    }
+
+    private static string? OcrPassportSex(string text)
+    {
+        var labelled = LabelledOcrValue(text, "Sex", "Gender");
+        if (!string.IsNullOrWhiteSpace(labelled))
+        {
+            if (labelled.Equals("M", StringComparison.OrdinalIgnoreCase)) return "Male";
+            if (labelled.Equals("F", StringComparison.OrdinalIgnoreCase)) return "Female";
+            return labelled;
+        }
+
+        var value = OcrNextLineValue(text, "Sex");
+        var match = value == null ? Match.Empty : Regex.Match(value, @"\b([MF])\b",
+            RegexOptions.IgnoreCase);
+        if (!match.Success) return null;
+
+        return match.Groups[1].Value.Equals("M", StringComparison.OrdinalIgnoreCase)
+            ? "Male" : "Female";
+    }
+
     public async Task<object> PrefillAsync(Guid user,Guid id,Guid revision) {
         var a=await Find(user,id);Revision(a,revision);var s=Read<VisaState>(a.StateJson);
         var access=await Validate(user,s) ?? throw new InvalidOperationException("Document access or content changed. Reset linked documents.");
@@ -135,9 +251,10 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
                 try { var candidate=Read<DocumentAnalysisDto>(run.ResultJson??"null"); if(candidate?.Provider=="Local" && candidate.Evidence.Count>0) { analysis=candidate;break; } }catch(JsonException){}
             }
             if(bound.Role=="Passport") {
-                Suggest("passportNumber",analysis?.DocumentNumber??d.DocumentNumber,d.Id);
-                Suggest("passportExpiryDate",analysis?.ExpiryDate??d.ExpiryDate?.ToString("yyyy-MM-dd"),d.Id);
-                Suggest("fullName",analysis?.PersonName,d.Id);Suggest("passportIssueDate",analysis?.IssueDate,d.Id);
+                Suggest("fullName",analysis?.PersonName,d.Id);
+                Suggest("passportNumber",analysis?.DocumentNumber,d.Id);
+                Suggest("passportIssueDate",analysis?.IssueDate,d.Id);
+                Suggest("passportExpiryDate",analysis?.ExpiryDate,d.Id);
             }
             var aliases=bound.Role switch {
                 "Passport"=>new Dictionary<string,string>{{"date of birth","birthDate"},{"birth date","birthDate"},{"nationality","nationality"},{"sex","sex"},{"country of birth","birthCountry"},{"place of issue","passportIssuePlace"}},
@@ -145,6 +262,46 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
                 _=>new Dictionary<string,string>{{"hotel name","sgBuilding"},{"postal code","sgPostal"},{"street name","sgStreet"},{"contact number","sgPhone"}}
             };
             foreach(var item in analysis?.KeyInformation??[]) if(item.IsExtracted && aliases.TryGetValue(item.Label.Trim().ToLowerInvariant(),out var key)) Suggest(key,item.Value,d.Id);
+
+            // OCR is a fallback only: Suggest never overwrites a populated answer.
+            if(d.ExtractionStatus=="COMPLETED" && !string.IsNullOrWhiteSpace(d.ExtractedText)) {
+                var text = d.ExtractedText;
+                if(bound.Role=="Passport") {
+                    Suggest("passportNumber", OcrPassportNumber(text), d.Id);
+                    Suggest("fullName", OcrPassportName(text), d.Id);
+                    Suggest("passportIssueDate", OcrPassportDate(text, false), d.Id);
+                    Suggest("passportExpiryDate", OcrPassportDate(text, true), d.Id);
+                    Suggest("birthDate", OcrDate(LabelledOcrValue(text,"Date of Birth","Birth Date"))
+                        ?? OcrDate(OcrFirstDate(OcrNextLineValue(text,"Date of Birth"))), d.Id);
+
+                    var nationality = LabelledOcrValue(text,"Nationality")
+                        ?? OcrNextLineValue(text,"Nationality");
+                    if (nationality != null &&
+                        nationality.Contains("INDIAN", StringComparison.OrdinalIgnoreCase))
+                        nationality = "India";
+                    Suggest("nationality", nationality, d.Id);
+
+                    Suggest("sex", OcrPassportSex(text), d.Id);
+                    Suggest("passportIssuePlace",
+                        LabelledOcrValue(text,"Place of Issue")
+                        ?? OcrNextLineValue(text,"Place of Issue"), d.Id);
+                    Suggest("birthCountry",
+                        LabelledOcrValue(text,"Country of Birth"), d.Id);
+                } else if(bound.Role=="Itinerary") {
+                    Suggest("arrivalDate", OcrDate(LabelledOcrValue(text,"Arrival Date")), d.Id);
+                    Suggest("departureDate", OcrDate(LabelledOcrValue(text,"Departure Date")), d.Id);
+                } else if(bound.Role=="Accommodation") {
+                    Suggest("sgBuilding", LabelledOcrValue(text,"Hotel Name"), d.Id);
+                    Suggest("sgPostal", LabelledOcrValue(text,"Postal Code"), d.Id);
+                    Suggest("sgStreet", LabelledOcrValue(text,"Street Name"), d.Id);
+                    Suggest("sgPhone", LabelledOcrValue(text,"Contact Number","Telephone Number"), d.Id);
+                }
+            }
+            if (bound.Role=="Passport")
+            {
+                Suggest("passportExpiryDate",d.ExpiryDate?.ToString("yyyy-MM-dd"),d.Id);
+                Suggest("passportNumber",d.DocumentNumber,d.Id);
+            }
         }
         // No answers about race, religion, history, declarations or signature are inferred.
         if(await Validate(user,s)==null) throw new InvalidOperationException("Document sharing expired during prefilling.");
