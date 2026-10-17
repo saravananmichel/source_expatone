@@ -460,30 +460,68 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
       'Date of birth': ['date of birth', 'dob'],
       'Sex': ['sex', 'gender'],
       'Place of birth': ['place of birth'],
+      'Place of issue': ['place of issue', 'issuing authority'],
       'Date of issue': ['date of issue', 'issue date', 'date issued'],
       'Date of expiry': ['date of expiry', 'expiry date', 'expiration date'],
       'Address': ['address', 'residential address'],
     };
 
+    String normalize(String value) => value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9 ]'), '')
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ');
+
+    final labelLookup = <String, String>{};
+    for (final entry in labels.entries) {
+      for (final alias in entry.value) {
+        labelLookup[normalize(alias)] = entry.key;
+      }
+    }
+
+    final lines = text.split(RegExp(r'[\r\n]+'));
     final fields = <String, String>{};
 
-    for (final line in text.split(RegExp(r'[\r\n]+'))) {
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+
       final separator = line.indexOf(':');
-      if (separator <= 0) continue;
+      final rawKey = separator > 0 ? line.substring(0, separator) : line;
+      final canonicalLabel = labelLookup[normalize(rawKey)];
 
-      final key = line
-          .substring(0, separator)
-          .toLowerCase()
-          .replaceAll(RegExp(r'[^a-z0-9 ]'), '')
-          .trim();
-      final value = line.substring(separator + 1).trim();
-      if (value.isEmpty) continue;
+      if (canonicalLabel == null || fields.containsKey(canonicalLabel)) {
+        continue;
+      }
 
-      for (final entry in labels.entries) {
-        if (entry.value.contains(key)) {
-          fields.putIfAbsent(entry.key, () => value);
-          break;
+      var value = separator > 0 ? line.substring(separator + 1).trim() : '';
+
+      if (value.isEmpty) {
+        var next = i + 1;
+        while (next < lines.length && lines[next].trim().isEmpty) {
+          next++;
         }
+        if (next >= lines.length) continue;
+
+        final candidate = lines[next].trim();
+        final candidateKey = candidate.contains(':')
+            ? candidate.substring(0, candidate.indexOf(':'))
+            : candidate;
+
+        if (labelLookup.containsKey(normalize(candidateKey)) ||
+            candidate.startsWith('P<') ||
+            candidate.contains('<<')) {
+          continue;
+        }
+
+        value = candidate;
+        i = next;
+      }
+
+      if (value.isNotEmpty &&
+          !value.startsWith('P<') &&
+          !value.contains('<<')) {
+        fields[canonicalLabel] = value;
       }
     }
 
