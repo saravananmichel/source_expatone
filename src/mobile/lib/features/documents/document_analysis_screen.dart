@@ -412,6 +412,21 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
               ),
               const SizedBox(height: 8),
               const Divider(),
+              Text(
+                'Readable extracted text',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                _readableExtractedText(text).isEmpty
+                    ? 'No readable text could be separated from the OCR output.'
+                    : _readableExtractedText(text),
+                style: const TextStyle(height: 1.5),
+              ),
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: const Text('View original extracted text'),
@@ -449,6 +464,21 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         ),
       ),
     );
+  }
+
+  String _readableExtractedText(String text) {
+    final readableLines = text.split(RegExp(r'\r?\n')).where((line) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) return false;
+
+      final meaningful = trimmed.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+
+      // Filter obvious symbol-heavy OCR lines for display only.
+      // The original extracted text remains unchanged.
+      return meaningful.length / trimmed.length >= 0.40;
+    });
+
+    return readableLines.join('\n').trim();
   }
 
   bool _isUsablePassportValue(String value) {
