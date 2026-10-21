@@ -7,6 +7,6 @@ COPY app ./app
 RUN useradd --uid 10001 --create-home worker
 USER worker
 ENV PYTHONDONTWRITEBYTECODE=1
-HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8090/ready', timeout=4)"
+HEALTHCHECK --interval=30s --timeout=5s CMD python -c "import shutil; assert shutil.which('tesseract')"
 EXPOSE 8090
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8090", "--no-access-log"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8090} --no-access-log"]

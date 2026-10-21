@@ -10,6 +10,7 @@ using ExpatOne.Infrastructure.Persistence;
 using ExpatOne.Infrastructure.Services;
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
+using Google.Cloud.Storage.V1;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
@@ -163,20 +164,45 @@ builder.Services.AddHttpClient<VisaApplicationService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
 var awsRegion = builder.Configuration["Aws:Region"];
-if (!string.IsNullOrEmpty(awsRegion))
+var storageProvider = StorageProviderResolver.Resolve(
+    builder.Configuration["Storage:Provider"],
+    Environment.GetEnvironmentVariable("K_SERVICE"),
+    Environment.GetEnvironmentVariable("AWS_EXECUTION_ENV"),
+    Environment.GetEnvironmentVariable("ECS_CONTAINER_METADATA_URI"),
+    awsRegion);
+
+if (storageProvider == StorageProviderResolver.Aws)
 {
-    builder.Services.AddSingleton<IAmazonS3>(sp =>
+    if (string.IsNullOrWhiteSpace(awsRegion))
+        throw new InvalidOperationException("Aws:Region is required when Storage:Provider is 'aws'.");
+
+    builder.Services.AddSingleton<IAmazonS3>(_ =>
     {
-        var config = new AmazonS3Config { RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion) };
+        var config = new AmazonS3Config
+        {
+            RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(awsRegion)
+        };
         return new AmazonS3Client(config);
     });
     builder.Services.AddScoped<S3StorageService>();
     builder.Services.AddScoped<IStorageService>(sp => sp.GetRequiredService<S3StorageService>());
-    builder.Services.AddScoped<IDocumentAuditService, DocumentAuditService>();
-    builder.Services.AddScoped<IDocumentService, DocumentService>();
-    builder.Services.AddScoped<IDocumentVersionService, DocumentVersionService>();
-    builder.Services.AddScoped<IDocumentShareService, DocumentShareService>();
 }
+else
+{
+    // Cloud Run's attached service account supplies Application Default Credentials.
+    // V4 signed URLs use IAM-backed signing; no downloaded service-account key is needed.
+    builder.Services.AddSingleton<StorageClient>(_ => StorageClient.Create());
+    builder.Services.AddSingleton<UrlSigner>(_ =>
+        UrlSigner.FromCredential(GoogleCredential.GetApplicationDefault()));
+    builder.Services.AddScoped<IStorageService, GcsStorageService>();
+}
+
+// Register the shared document services regardless of the selected object-storage provider.
+// DocumentService itself depends only on IStorageService, so the AWS and GCP paths stay aligned.
+builder.Services.AddScoped<IDocumentAuditService, DocumentAuditService>();
+builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDocumentVersionService, DocumentVersionService>();
+builder.Services.AddScoped<IDocumentShareService, DocumentShareService>();
 
 var geminiApiKey = builder.Configuration["Gemini:ApiKey"];
 if (!string.IsNullOrEmpty(geminiApiKey))
@@ -189,7 +215,7 @@ if (!string.IsNullOrEmpty(geminiApiKey))
     builder.Services.AddScoped<IEmergencyAssistService, EmergencyAssistService>();
 }
 
-if (!string.IsNullOrEmpty(awsRegion) && builder.Configuration["DocumentIntelligence:Enabled"] == "true")
+if (storageProvider == StorageProviderResolver.Aws && builder.Configuration["DocumentIntelligence:Enabled"] == "true")
 {
     builder.Services.AddScoped<IDocumentAnalysisJobs, DocumentAnalysisJobs>();
     builder.Services.AddScoped<IDocumentAnalysisService, DocumentAnalysisService>();
@@ -207,8 +233,7 @@ if (!string.IsNullOrEmpty(awsRegion) && builder.Configuration["DocumentIntellige
 }
 
 // Independent document text extraction; does not depend on Ollama analysis.
-if (!string.IsNullOrEmpty(awsRegion) &&
-    builder.Configuration["DocumentTextExtraction:Enabled"] == "true")
+if (builder.Configuration["DocumentTextExtraction:Enabled"] == "true")
 {
     builder.Services.AddHttpClient<DocumentTextExtractionClient>(client =>
     {
@@ -217,9 +242,17 @@ if (!string.IsNullOrEmpty(awsRegion) &&
             ?? builder.Configuration["DocumentIntelligence:ServiceUrl"]
             ?? "http://localhost:8090/");
 
-        if (!builder.Environment.IsDevelopment() && !address.IsLoopback)
-            throw new InvalidOperationException(
-                "Text extraction transport must use private loopback outside local development.");
+        if (!builder.Environment.IsDevelopment())
+        {
+            if (storageProvider == StorageProviderResolver.Aws && !address.IsLoopback)
+                throw new InvalidOperationException(
+                    "AWS text extraction transport must use private loopback.");
+
+            if (storageProvider == StorageProviderResolver.Gcp &&
+                (address.Scheme != Uri.UriSchemeHttps || address.IsLoopback))
+                throw new InvalidOperationException(
+                    "GCP text extraction transport must use an HTTPS service URL.");
+        }
 
         client.BaseAddress = address;
         client.Timeout = TimeSpan.FromSeconds(130);
@@ -277,6 +310,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("Development", policy =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+    options.AddPolicy("Web", policy =>
+        policy.WithOrigins("https://expatone-db2ff.web.app")
+            .AllowAnyMethod()
+            .AllowAnyHeader());
 });
 
 var app = builder.Build();
@@ -305,6 +343,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseCors("Development");
+}
+else
+{
+    app.UseCors("Web");
 }
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
