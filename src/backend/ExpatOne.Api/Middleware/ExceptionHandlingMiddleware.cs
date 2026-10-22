@@ -35,6 +35,7 @@ public class ExceptionHandlingMiddleware
         var (statusCode, message) = exception switch
         {
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, "Authentication required."),
+            CorporateAuthorizationException => (HttpStatusCode.Forbidden, "You don't have permission to perform this action."),
             KeyNotFoundException => (HttpStatusCode.NotFound, "The requested resource was not found."),
             ArgumentException => (HttpStatusCode.BadRequest, exception.Message),
             InvalidOperationException => (HttpStatusCode.Conflict, exception.Message),
