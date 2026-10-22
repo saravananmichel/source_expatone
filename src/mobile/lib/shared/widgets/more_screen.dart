@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../../core/networking/api_client.dart';
+import '../../core/services/corporate_service.dart';
+import '../../features/corporate/corporate_screen.dart';
 import '../../core/services/document_service.dart';
 import '../../features/family/family_screen.dart';
 import '../../features/applications/application_assistant_screen.dart';
@@ -61,6 +64,24 @@ class MoreScreen extends StatelessWidget {
             title: 'Application Assistant', subtitle: 'Visa forms and readiness checklists',
             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ApplicationAssistantScreen(documentService: documentService!))),
           ),
+          _MenuTile(
+            icon: Icons.business_center_outlined,
+            iconColor: AppTheme.primaryColor,
+            title: 'ExpatOne Business',
+            subtitle: 'Corporate invitations, HR dashboard & employee tasks',
+            onTap: () {
+              final api = ApiClient()..setAuthService(authService);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CorporateScreen(
+                    service: CorporateService(api),
+                  ),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1, indent: 56),
           // Standard menu items
           _MenuTile(
             icon: Icons.translate,
