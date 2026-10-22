@@ -10,6 +10,10 @@ public class ExpatOneDbContext : DbContext
     {
     }
 
+    public DbSet<CorporateCompany> CorporateCompanies => Set<CorporateCompany>();
+    public DbSet<CorporateMembership> CorporateMemberships => Set<CorporateMembership>();
+    public DbSet<CorporateCase> CorporateCases => Set<CorporateCase>();
+
     public DbSet<VisaDestination> VisaDestinations => Set<VisaDestination>();
     public DbSet<VisaTemplate> VisaTemplates => Set<VisaTemplate>();
     public DbSet<VisaApplication> VisaApplications => Set<VisaApplication>();

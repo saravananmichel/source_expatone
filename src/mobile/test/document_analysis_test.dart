@@ -7,6 +7,7 @@ import 'package:expatone_app/features/documents/document_qa_screen.dart';
 
 class MockAnalysisDocumentService extends DocumentService {
   Map<String, dynamic>? mockAnalysis;
+  Map<String, dynamic>? mockExtractedText;
   bool shouldFail = false;
   bool analyzeDocumentCalled = false;
   DocumentAnswer? mockAnswer;
@@ -25,6 +26,12 @@ class MockAnalysisDocumentService extends DocumentService {
   Future<Map<String, dynamic>> getDocumentAnalysis(String documentId) async {
     if (shouldFail) throw Exception('Failed');
     return mockAnalysis ?? {};
+  }
+
+  @override
+  Future<Map<String, dynamic>> getExtractedText(String documentId) async {
+    if (shouldFail) throw Exception('Failed');
+    return mockExtractedText ?? {'status': 'NOT_REQUESTED'};
   }
 
   @override
@@ -111,7 +118,7 @@ void main() {
       ));
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Loading analysis...'), findsOneWidget);
+      expect(find.text('Loading analysis'), findsOneWidget);
     });
 
     testWidgets('shows analyzing state for unanalyzed document', (tester) async {
@@ -125,7 +132,7 @@ void main() {
       ));
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      expect(find.text('Analyzing document...'), findsOneWidget);
+      expect(find.text('AI analysis in progress'), findsOneWidget);
     });
 
     testWidgets('renders all sections with full analysis', (tester) async {
@@ -201,7 +208,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Unable to load analysis. Please try again.'), findsOneWidget);
-      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Retry analysis'), findsOneWidget);
     });
 
     testWidgets('shows error state for failed analysis', (tester) async {
@@ -216,7 +223,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Unable to analyze document. Please try again.'), findsOneWidget);
-      expect(find.text('Retry'), findsOneWidget);
+      expect(find.text('Retry analysis'), findsOneWidget);
     });
 
     testWidgets('handles empty sections gracefully', (tester) async {
@@ -392,6 +399,83 @@ void main() {
 
       expect(find.text('Document Details'), findsNothing);
     });
+  });
+
+
+  group('Passport extracted text', () {
+    testWidgets(
+      'shows structured passport fields and keeps original OCR expandable',
+      (tester) async {
+        docService.mockAnalysis = fullAnalysis;
+        const ocr = '''
+Passport No
+:::!
+Passport No
+V5073795
+Nationality
+INDIAN
+Surname
+E~ ~~II
+Surname
+MICHEL RAJ
+Given Names
+SARAVANAN
+Date of Birth
+09/11/1983
+Sex
+M
+Place of Birth
+SATTUR, TAMIL NADU
+Place of Issue
+CHENNAI
+Date of Issue
+23/12/2021
+Date of Expiry
+22/12/2031
+''';
+
+        docService.mockExtractedText = {
+          'status': 'COMPLETED',
+          'extractedText': ocr,
+        };
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: DocumentAnalysisScreen(
+              document: analyzedDoc,
+              documentService: docService,
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.scrollUntilVisible(
+          find.text('Extracted Text'),
+          200,
+          scrollable: find.descendant(
+            of: find.byType(ListView).first,
+            matching: find.byType(Scrollable),
+          ).first,
+        );
+
+        expect(find.text('Passport information'), findsOneWidget);
+        expect(find.text('Passport number'), findsOneWidget);
+        expect(find.text('V5073795'), findsOneWidget);
+        expect(find.text('SARAVANAN'), findsOneWidget);
+        expect(find.text('MICHEL RAJ'), findsOneWidget);
+        expect(find.text(':::!'), findsNothing);
+        expect(find.text('E~ ~~II'), findsNothing);
+        expect(
+          find.text('View original extracted text'),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.text('View original extracted text'));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Place of Birth'), findsOneWidget);
+      },
+    );
   });
 
   group('DocumentQAScreen', () {

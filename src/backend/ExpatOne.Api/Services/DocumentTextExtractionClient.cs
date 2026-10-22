@@ -26,9 +26,21 @@ public sealed class DocumentTextExtractionClient(
         file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
         multipart.Add(file, "file", "document");
 
+        // Buffer the complete multipart body so the HTTP request has a known
+        // Content-Length when sent through the Cloud Run HTTPS endpoint.
+        var multipartContentType = multipart.Headers.ContentType?.ToString()
+            ?? throw new InvalidOperationException(
+                "Multipart extraction request has no content type.");
+
+        var body = await multipart.ReadAsByteArrayAsync(cancellationToken);
+        using var content = new ByteArrayContent(body);
+        content.Headers.ContentType =
+            MediaTypeHeaderValue.Parse(multipartContentType);
+        content.Headers.ContentLength = body.Length;
+
         using var request = new HttpRequestMessage(HttpMethod.Post, "extract")
         {
-            Content = multipart
+            Content = content
         };
         request.Headers.TryAddWithoutValidation("X-Service-Key", key);
 

@@ -25,9 +25,12 @@ class DocumentAnalysisScreen extends StatefulWidget {
 
 class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
   Map<String, dynamic>? _analysis;
+  Map<String, dynamic>? _extraction;
   bool _isLoading = true;
   bool _isAnalyzing = false;
   String? _error;
+  String? _extractionError;
+  String _extractionStatus = 'LOADING';
   String _processingStage = 'Queued';
   StreamSubscription<Map<String, String>>? _progressSubscription;
 
@@ -43,10 +46,53 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         );
       }
     });
+    // Text extraction is independent from AI analysis. Load it separately so
+    // the user can read the extracted text even if analysis is slow or fails.
+    _loadExtractedText();
+
     if (widget.document.isAnalyzed) {
       _loadAnalysis();
     } else {
       _analyzeDocument();
+    }
+  }
+
+  Future<void> _loadExtractedText() async {
+    const maxAttempts = 240; // Match the existing 20-minute extraction window.
+
+    for (var attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        final result = await widget.documentService.getExtractedText(
+          widget.document.id,
+        );
+        if (!mounted) return;
+
+        final status = result['status'] as String? ?? 'NOT_REQUESTED';
+        setState(() {
+          _extraction = result;
+          _extractionStatus = status;
+          _extractionError = null;
+        });
+
+        if (status == 'COMPLETED' || status == 'FAILED') return;
+        if (status != 'PENDING' && status != 'PROCESSING') return;
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _extractionError = 'Unable to load extracted text.';
+        });
+        return;
+      }
+
+      if (attempt < maxAttempts - 1) {
+        await Future<void>.delayed(const Duration(seconds: 5));
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _extractionError = 'Text extraction is taking longer than expected. Try refreshing this screen.';
+      });
     }
   }
 
@@ -206,65 +252,74 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              _isAnalyzing ? 'Analyzing document...' : 'Loading analysis...',
-              style: TextStyle(color: AppTheme.textSecondary, fontSize: 14),
+    final analysis = _analysis;
+
+    if (analysis == null) {
+      return ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          _buildExtractedTextSection(),
+          const SizedBox(height: 12),
+          if (_error != null) _buildAnalysisError(),
+          if (_error == null && (_isLoading || _isAnalyzing))
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _isAnalyzing
+                                ? 'AI analysis in progress'
+                                : 'Loading analysis',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            '$_processingStage. Your extracted text remains available above.',
+                            style: TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            if (_isAnalyzing) ...[
-              const SizedBox(height: 8),
-              Text(
-                '$_processingStage · This may take a moment',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-              ),
-            ],
-          ],
-        ),
+          if (_error == null && !_isLoading && !_isAnalyzing)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Text('No analysis available yet.'),
+            ),
+        ],
       );
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
-              const SizedBox(height: 16),
-              Text(
-                _error!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => _analyzeDocument(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    if (_analysis == null) {
-      return const Center(child: Text('No analysis available'));
     }
 
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
+        _buildExtractedTextSection(),
+        if (_error != null) ...[
+          const SizedBox(height: 8),
+          _buildAnalysisError(),
+        ],
         _buildReviewNotice(),
         _buildSummarySection(),
         _buildGroundedStatements(),
-        if ((_analysis?['statements'] as List? ?? []).isEmpty) ...[
+        if ((analysis['statements'] as List? ?? []).isEmpty) ...[
           _buildStructuredFieldsSection(),
           _buildKeyInformationSection(),
           _buildImportantDatesSection(),
@@ -283,6 +338,274 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         _buildDisclaimerBanner(),
         const SizedBox(height: 24),
       ],
+    );
+  }
+
+  Widget _buildExtractedTextSection() {
+    final result = _extraction;
+    final text =
+        result?['extractedText'] as String? ?? result?['text'] as String? ?? '';
+    final isPassport = '${widget.document.documentType} ${widget.document.name}'
+        .toLowerCase()
+        .contains('passport');
+    final fields = isPassport ? _parsePassportFields(text) : <String, String>{};
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.text_snippet_outlined),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'Extracted Text',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (_extractionStatus == 'COMPLETED')
+                  const Icon(Icons.check_circle_outline, color: Colors.green),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (text.trim().isNotEmpty && fields.isNotEmpty) ...[
+              Text(
+                'Passport information',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: fields.entries.map((entry) {
+                  return SizedBox(
+                    width: 140,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          entry.key,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        SelectableText(
+                          entry.value,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 8),
+              const Divider(),
+              Text(
+                'Readable extracted text',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                _readableExtractedText(text).isEmpty
+                    ? 'No readable text could be separated from the OCR output.'
+                    : _readableExtractedText(text),
+                style: const TextStyle(height: 1.5),
+              ),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text('View original extracted text'),
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
+                      text,
+                      style: const TextStyle(height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ] else if (text.trim().isNotEmpty)
+              SelectableText(text, style: const TextStyle(height: 1.5))
+            else if (_extractionStatus == 'FAILED')
+              const Text(
+                'Text extraction failed. You can still retry AI analysis.',
+              )
+            else if (_extractionError != null)
+              Text(
+                _extractionError!,
+                style: TextStyle(color: AppTheme.warningColor),
+              )
+            else
+              Text(
+                _extractionStatus == 'PENDING' ||
+                        _extractionStatus == 'PROCESSING' ||
+                        _extractionStatus == 'LOADING'
+                    ? 'Extracting text from your document…'
+                    : 'No extracted text is available yet.',
+                style: TextStyle(color: AppTheme.textSecondary),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _readableExtractedText(String text) {
+    final readableLines = text.split(RegExp(r'\r?\n')).where((line) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty) return false;
+
+      final meaningful = trimmed.replaceAll(
+        RegExp(r'[^a-zA-Z0-9]'),
+        '',
+      );
+
+      // Filter obvious symbol-heavy OCR lines for display only.
+      // The original extracted text remains unchanged.
+      return meaningful.length / trimmed.length >= 0.40;
+    });
+
+    return readableLines.join('\n').trim();
+  }
+
+  bool _isUsablePassportValue(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return false;
+
+    // Reject symbol-only and symbol-heavy OCR fragments, while preserving
+    // normal names, identifiers, dates and values containing punctuation.
+    final characters = trimmed.replaceAll(RegExp(r'\s'), '');
+    if (characters.isEmpty) return false;
+
+    final meaningful = RegExp(r'[a-zA-Z0-9]').allMatches(characters).length;
+    return meaningful / characters.length >= 0.6;
+  }
+
+  Map<String, String> _parsePassportFields(String text) {
+    const labels = <String, List<String>>{
+      'Passport number': ['passport number', 'passport no'],
+      'Surname': ['surname', 'family name'],
+      'Given names': ['given names', 'given name', 'first name'],
+      'Nationality': ['nationality'],
+      'Date of birth': ['date of birth', 'dob'],
+      'Sex': ['sex', 'gender'],
+      'Place of birth': ['place of birth'],
+      'Place of issue': ['place of issue', 'issuing authority'],
+      'Date of issue': ['date of issue', 'issue date', 'date issued'],
+      'Date of expiry': ['date of expiry', 'expiry date', 'expiration date'],
+      'Address': ['address', 'residential address'],
+    };
+
+    String normalize(String value) => value
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9 ]'), '')
+        .trim()
+        .replaceAll(RegExp(r'\s+'), ' ');
+
+    final labelLookup = <String, String>{};
+    for (final entry in labels.entries) {
+      for (final alias in entry.value) {
+        labelLookup[normalize(alias)] = entry.key;
+      }
+    }
+
+    final lines = text.split(RegExp(r'[\r\n]+'));
+    final fields = <String, String>{};
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i].trim();
+      if (line.isEmpty) continue;
+
+      final separator = line.indexOf(':');
+      final rawKey = separator > 0 ? line.substring(0, separator) : line;
+      final canonicalLabel = labelLookup[normalize(rawKey)];
+
+      if (canonicalLabel == null || fields.containsKey(canonicalLabel)) {
+        continue;
+      }
+
+      var value = separator > 0 ? line.substring(separator + 1).trim() : '';
+
+      if (value.isEmpty) {
+        var next = i + 1;
+        while (next < lines.length && lines[next].trim().isEmpty) {
+          next++;
+        }
+        if (next >= lines.length) continue;
+
+        final candidate = lines[next].trim();
+        final candidateKey = candidate.contains(':')
+            ? candidate.substring(0, candidate.indexOf(':'))
+            : candidate;
+
+        if (labelLookup.containsKey(normalize(candidateKey)) ||
+            candidate.startsWith('P<') ||
+            candidate.contains('<<')) {
+          continue;
+        }
+
+        value = candidate;
+        i = next;
+      }
+
+      if (_isUsablePassportValue(value) &&
+          !value.startsWith('P<') &&
+          !value.contains('<<')) {
+        fields[canonicalLabel] = value;
+      }
+    }
+
+    return fields;
+  }
+
+  Widget _buildAnalysisError() {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.error_outline, color: AppTheme.errorColor),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    'AI analysis could not be completed',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(_error!, style: TextStyle(color: AppTheme.textSecondary)),
+            const SizedBox(height: 8),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: ElevatedButton(
+                onPressed: _isAnalyzing ? null : () => _analyzeDocument(),
+                child: const Text('Retry analysis'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

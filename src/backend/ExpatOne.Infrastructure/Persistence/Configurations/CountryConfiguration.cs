@@ -26,6 +26,8 @@ public class CountryConfiguration : IEntityTypeConfiguration<Country>
         builder.HasData(new Country
         {
             Id = Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890"),
+            CreatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(4070),
+            UpdatedAt = new DateTime(2026, 9, 17, 17, 20, 33, 257, DateTimeKind.Utc).AddTicks(4070),
             Code = "MY",
             Name = "Malaysia",
             IsActive = true
