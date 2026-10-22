@@ -225,4 +225,138 @@ public sealed class CorporateMobilityServiceTests : IDisposable
         await Assert.ThrowsAsync<CorporateAuthorizationException>(() =>
             service.ListMembersAsync(firstOwner.Id, secondCompany.Id));
     }
+
+[Fact]
+    public async Task AddMemberCreatesActiveMembership()
+    {
+        var admin = await AddUserAsync("admin@example.com");
+        var member = await AddUserAsync("newmember@example.com");
+        var company = await AddCompanyAsync(admin);
+        await AddMembershipAsync(company.Id, admin.Id, "Admin");
+
+        var result = await service.AddMemberAsync(
+            admin.Id,
+            company.Id,
+            new AddCorporateMemberDto
+            {
+                Email = " NEWMEMBER@example.com ",
+                Role = "Employee"
+            });
+
+        Assert.Equal(member.Id, result.UserId);
+        Assert.Equal("Employee", result.Role);
+        Assert.Equal("Active", result.Status);
+
+        Assert.True(await db.CorporateMemberships.AnyAsync(m =>
+            m.CompanyId == company.Id &&
+            m.UserId == member.Id &&
+            m.Role == "Employee" &&
+            m.Status == "Active"));
+    }
+
+    [Fact]
+    public async Task HrCannotAddAdmin()
+    {
+        var hr = await AddUserAsync("hr@example.com");
+        var target = await AddUserAsync("target@example.com");
+        var company = await AddCompanyAsync(hr);
+        await AddMembershipAsync(company.Id, hr.Id, "HR");
+
+        await Assert.ThrowsAsync<CorporateAuthorizationException>(() =>
+            service.AddMemberAsync(
+                hr.Id,
+                company.Id,
+                new AddCorporateMemberDto
+                {
+                    Email = target.Email,
+                    Role = "Admin"
+                }));
+
+        Assert.False(await db.CorporateMemberships.AnyAsync(m =>
+            m.CompanyId == company.Id && m.UserId == target.Id));
+    }
+
+    [Fact]
+    public async Task EmployeeCannotAddMember()
+    {
+        var employee = await AddUserAsync("employee@example.com");
+        var target = await AddUserAsync("target@example.com");
+        var company = await AddCompanyAsync(employee);
+        await AddMembershipAsync(company.Id, employee.Id, "Employee");
+
+        await Assert.ThrowsAsync<CorporateAuthorizationException>(() =>
+            service.AddMemberAsync(
+                employee.Id,
+                company.Id,
+                new AddCorporateMemberDto
+                {
+                    Email = target.Email,
+                    Role = "Employee"
+                }));
+
+        Assert.False(await db.CorporateMemberships.AnyAsync(m =>
+            m.CompanyId == company.Id && m.UserId == target.Id));
+    }
+
+    [Fact]
+    public async Task AdminCanUpdateMemberRoleAndStatus()
+    {
+        var admin = await AddUserAsync("admin@example.com");
+        var member = await AddUserAsync("member@example.com");
+        var company = await AddCompanyAsync(admin);
+        await AddMembershipAsync(company.Id, admin.Id, "Admin");
+        await AddMembershipAsync(company.Id, member.Id, "Employee");
+
+        var membership = await db.CorporateMemberships.SingleAsync(m =>
+            m.CompanyId == company.Id && m.UserId == member.Id);
+
+        var roleResult = await service.UpdateMemberRoleAsync(
+            admin.Id,
+            company.Id,
+            membership.Id,
+            new UpdateCorporateMemberRoleDto { Role = "Viewer" });
+
+        Assert.Equal("Viewer", roleResult.Role);
+
+        var statusResult = await service.UpdateMemberStatusAsync(
+            admin.Id,
+            company.Id,
+            membership.Id,
+            new UpdateCorporateMemberStatusDto { Status = "Suspended" });
+
+        Assert.Equal("Suspended", statusResult.Status);
+    }
+
+    [Fact]
+    public async Task LastActiveAdminCannotBeDemotedOrSuspended()
+    {
+        var admin = await AddUserAsync("admin@example.com");
+        var company = await AddCompanyAsync(admin);
+        await AddMembershipAsync(company.Id, admin.Id, "Admin");
+
+        var membership = await db.CorporateMemberships.SingleAsync(m =>
+            m.CompanyId == company.Id && m.UserId == admin.Id);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.UpdateMemberRoleAsync(
+                admin.Id,
+                company.Id,
+                membership.Id,
+                new UpdateCorporateMemberRoleDto { Role = "Employee" }));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.UpdateMemberStatusAsync(
+                admin.Id,
+                company.Id,
+                membership.Id,
+                new UpdateCorporateMemberStatusDto { Status = "Suspended" }));
+
+        db.ChangeTracker.Clear();
+
+        var unchanged = await db.CorporateMemberships.SingleAsync(m =>
+            m.CompanyId == company.Id && m.UserId == admin.Id);
+
+        Assert.Equal("Admin", unchanged.Role);
+        Assert.Equal("Active", unchanged.Status);
+    }
 }

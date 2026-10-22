@@ -32,6 +32,39 @@ public sealed class CorporateController(
     public async Task<IActionResult> ListMembers(Guid companyId)
         => Ok(await corporate.ListMembersAsync(await UserId(), companyId));
 
+
+    [HttpPost("companies/{companyId:guid}/members")]
+    public async Task<IActionResult> AddMember(
+        Guid companyId, AddCorporateMemberDto dto)
+    {
+        var member = await corporate.AddMemberAsync(
+            await UserId(), companyId, dto);
+
+        return Created(
+            $"/api/corporate/companies/{companyId}/members/{member.MembershipId}",
+            member);
+    }
+
+    [HttpPut("companies/{companyId:guid}/members/{membershipId:guid}/role")]
+    public async Task<IActionResult> UpdateMemberRole(
+        Guid companyId, Guid membershipId, UpdateCorporateMemberRoleDto dto)
+    {
+        var member = await corporate.UpdateMemberRoleAsync(
+            await UserId(), companyId, membershipId, dto);
+
+        return Ok(member);
+    }
+
+    [HttpPut("companies/{companyId:guid}/members/{membershipId:guid}/status")]
+    public async Task<IActionResult> UpdateMemberStatus(
+        Guid companyId, Guid membershipId, UpdateCorporateMemberStatusDto dto)
+    {
+        var member = await corporate.UpdateMemberStatusAsync(
+            await UserId(), companyId, membershipId, dto);
+
+        return Ok(member);
+    }
+
     private async Task<Guid> UserId()
     {
         var uid = User.FindFirstValue("firebase_uid")
