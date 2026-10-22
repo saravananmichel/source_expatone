@@ -8,8 +8,8 @@ namespace ExpatOne.Infrastructure.Services;
 
 public sealed class CorporateMobilityService(ExpatOneDbContext db)
 {
-    private static readonly string[] MemberListRoles = ["Admin", "HR", "Viewer"];
-    private static readonly string[] SupportedRoles = ["Admin", "HR", "Viewer", "Employee"];
+    private static readonly string[] MemberListRoles = ["Admin", "HR", "Viewer", "Owner"];
+    private static readonly string[] SupportedRoles = ["Admin", "HR", "Viewer", "Employee", "Owner"];
 
     public async Task<CorporateCompanyDto> CreateCompanyAsync(
         Guid userId, CreateCorporateCompanyDto dto)
@@ -181,7 +181,8 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
             throw new KeyNotFoundException("Corporate membership was not found.");
 
         if (membership.Status == "Active" &&
-            membership.Role == "Admin" && role != "Admin")
+            (membership.Role is "Admin" or "Owner") &&
+            (role is not ("Admin" or "Owner")))
         {
             await EnsureAnotherActiveAdminAsync(companyId, membership.Id);
         }
@@ -211,7 +212,8 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
             throw new KeyNotFoundException("Corporate membership was not found.");
 
         if (membership.Status == "Active" &&
-            membership.Role == "Admin" && status == "Suspended")
+            (membership.Role is "Admin" or "Owner") &&
+            status == "Suspended")
         {
             await EnsureAnotherActiveAdminAsync(companyId, membership.Id);
         }
@@ -236,7 +238,7 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
             m.UserId == userId &&
             m.Status == "Active");
 
-        if (caller is null || caller.Role is not ("Admin" or "HR"))
+        if (caller is null || caller.Role is not ("Admin" or "HR" or "Owner"))
             throw new CorporateAuthorizationException();
 
         return caller;
@@ -254,7 +256,7 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
             m.CompanyId == companyId &&
             m.UserId == userId &&
             m.Status == "Active" &&
-            m.Role == "Admin");
+            (m.Role == "Admin" || m.Role == "Owner"));
 
         if (!isAdmin)
             throw new CorporateAuthorizationException();
@@ -267,11 +269,11 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
             m.CompanyId == companyId &&
             m.Id != membershipId &&
             m.Status == "Active" &&
-            m.Role == "Admin");
+            (m.Role == "Admin" || m.Role == "Owner"));
 
         if (!otherActiveAdminExists)
             throw new InvalidOperationException(
-                "The company's last active Admin cannot be demoted or suspended.");
+                "The company's last active Admin or Owner cannot be demoted or suspended.");
     }
 
     private async Task<CorporateMemberDto> MapMemberAsync(
