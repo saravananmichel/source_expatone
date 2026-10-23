@@ -15,4 +15,9 @@ public class CorporateCase : BaseEntity
 
     public DateTime? DueAt { get; set; }
     public string? Notes { get; set; }
+    public string? CountryCode { get; set; }
+    public string? Purpose { get; set; }
+    public string Priority { get; set; } = "Normal";
+    public Guid? AssignedHrUserId { get; set; }
+
 }

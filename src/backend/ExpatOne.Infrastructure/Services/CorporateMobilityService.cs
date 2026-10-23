@@ -99,7 +99,7 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
         ).ToListAsync();
     }
 
-    private static readonly string[] SupportedStatuses = ["Active", "Suspended"];
+    private static readonly string[] SupportedStatuses = ["Active", "Inactive", "Suspended"];
 
     public async Task<CorporateMemberDto> AddMemberAsync(
         Guid userId, Guid companyId, AddCorporateMemberDto dto)
@@ -187,7 +187,9 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
             await EnsureAnotherActiveAdminAsync(companyId, membership.Id);
         }
 
+        var previousRole = membership.Role;
         membership.Role = role;
+        db.CorporateMemberAudits.Add(new CorporateMemberAudit {Id=Guid.NewGuid(),CompanyId=companyId,MembershipId=membership.Id,ActorUserId=userId,Action="RoleChanged",OldValue=previousRole,NewValue=role});
         await db.SaveChangesAsync();
 
         return await MapMemberAsync(membership);
@@ -213,12 +215,14 @@ public sealed class CorporateMobilityService(ExpatOneDbContext db)
 
         if (membership.Status == "Active" &&
             (membership.Role is "Admin" or "Owner") &&
-            status == "Suspended")
+            status is "Suspended" or "Inactive")
         {
             await EnsureAnotherActiveAdminAsync(companyId, membership.Id);
         }
 
+        var previousStatus = membership.Status;
         membership.Status = status;
+        db.CorporateMemberAudits.Add(new CorporateMemberAudit {Id=Guid.NewGuid(),CompanyId=companyId,MembershipId=membership.Id,ActorUserId=userId,Action="StatusChanged",OldValue=previousStatus,NewValue=status});
         await db.SaveChangesAsync();
 
         return await MapMemberAsync(membership);
