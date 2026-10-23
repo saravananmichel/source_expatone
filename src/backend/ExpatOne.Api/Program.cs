@@ -313,7 +313,9 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
     options.AddPolicy("Web", policy =>
-        policy.WithOrigins("https://expatone-db2ff.web.app")
+        policy.WithOrigins(
+            "https://expatone-db2ff.web.app",
+            "https://expatone-db2ff--gcp-fresh-test-01ctdnq0.web.app")
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
