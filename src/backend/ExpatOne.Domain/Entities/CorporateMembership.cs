@@ -11,6 +11,8 @@ public class CorporateMembership : BaseEntity
     // Initial supported roles: Admin, HR, Viewer, Employee.
     public string Role { get; set; } = "Employee";
 
-    // Initial supported states: Active, Suspended.
+    // Membership access states: Active, Suspended.
+    // Invitation lifecycle states: Pending, Declined.
+    // Invitation endpoints transition Pending to Active or Declined.
     public string Status { get; set; } = "Active";
 }
