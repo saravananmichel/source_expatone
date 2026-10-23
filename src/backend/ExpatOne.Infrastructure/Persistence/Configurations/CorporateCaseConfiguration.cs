@@ -16,6 +16,9 @@ public sealed class CorporateCaseConfiguration
         b.Property(x => x.Title).HasMaxLength(180).IsRequired();
         b.Property(x => x.Status).HasMaxLength(20).IsRequired();
         b.Property(x => x.Notes).HasMaxLength(2000);
+        b.Property(x => x.CountryCode).HasMaxLength(8);
+        b.Property(x => x.Purpose).HasMaxLength(80);
+        b.Property(x => x.Priority).HasMaxLength(20).HasDefaultValue("Normal");
 
         b.HasOne<CorporateCompany>()
             .WithMany()
