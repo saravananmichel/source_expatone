@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ExpatOne.Infrastructure.Persistence;
 using ExpatOne.Domain.Entities;
+using ExpatOne.Domain.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using ExpatOne.Application.DTOs;
@@ -12,9 +13,9 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace ExpatOne.Api.Controllers;
 
-public record InviteEmployeeRequest([Required, EmailAddress] string Email);
-public record CreateCorporateCaseRequest(Guid EmployeeUserId, [Required, MaxLength(180)] string Title, DateTime? DueAt, [MaxLength(2000)] string? Notes);
-public record UpdateCorporateCaseRequest([Required] string Status, DateTime? DueAt, [MaxLength(2000)] string? Notes);
+public record InviteEmployeeRequest([Required, EmailAddress] string Email, string Role = "Employee");
+public record CreateCorporateCaseRequest(Guid EmployeeUserId, [Required, MaxLength(180)] string Title, DateTime? DueAt, [MaxLength(2000)] string? Notes, string? CountryCode = null, string? Purpose = null, string Priority = "Normal", Guid? AssignedHrUserId = null);
+public record UpdateCorporateCaseRequest([Required] string Status, DateTime? DueAt, [MaxLength(2000)] string? Notes, string? Title = null, string? CountryCode = null, string? Purpose = null, string? Priority = null, Guid? AssignedHrUserId = null);
 public record LinkVisaRequest(Guid VisaApplicationId);
 
 [ApiController]
@@ -25,7 +26,7 @@ public record LinkVisaRequest(Guid VisaApplicationId);
 public sealed class CorporateController(
     CorporateMobilityService corporate,
     IUserService users,
-    ExpatOneDbContext db) : ControllerBase
+    ExpatOneDbContext db, IStorageService storage) : ControllerBase
 {
     [HttpPost("companies")]
     public async Task<IActionResult> CreateCompany(CreateCorporateCompanyDto dto)
@@ -80,7 +81,7 @@ public sealed class CorporateController(
     private async Task<bool> Hr(Guid companyId, Guid userId) =>
         await db.CorporateMemberships.AnyAsync(x =>
             x.CompanyId == companyId && x.UserId == userId &&
-            x.Status == "Active" && (x.Role == "Admin" || x.Role == "Owner"));
+            x.Status == "Active" && (x.Role == "Admin" || x.Role == "Owner" || x.Role == "HR"));
 
     private async Task<bool> Member(Guid companyId, Guid userId) =>
         await db.CorporateMemberships.AnyAsync(x =>
@@ -97,17 +98,20 @@ public sealed class CorporateController(
  public async Task<IActionResult> Invite(Guid companyId, InviteEmployeeRequest request) {
   var uid=await UserId();
   if(!await Hr(companyId,uid)) return Forbid();
+  var role=request.Role?.Trim() ?? "Viewer";
+  if(role is not ("Employee" or "Viewer" or "HR")) return BadRequest(new{message="Choose Employee, Viewer or HR."});
+  if(role=="HR" && !await db.CorporateMemberships.AnyAsync(x=>x.CompanyId==companyId && x.UserId==uid && x.Status=="Active" && (x.Role=="Admin" || x.Role=="Owner"))) return Forbid();
   var email=request.Email.Trim().ToLowerInvariant();
   var target=await db.Users.FirstOrDefaultAsync(x=>x.Email.ToLower()==email && x.IsActive);
   if(target==null) return NotFound(new{message="Employee must register with ExpatOne first."});
   if(target.Id==uid) return BadRequest(new{message="Cannot invite yourself."});
   var existing=await db.CorporateMemberships.FirstOrDefaultAsync(x=>x.CompanyId==companyId && x.UserId==target.Id);
   if(existing is not null) {
-   if(existing.Status!="Declined") return Conflict(new{message="Invitation or membership already exists."});
-   existing.Role="Employee"; existing.Status="Pending";
+   if(existing.Status!="Declined") return Conflict(new{message="Invitation or membership already exists. Edit status to reactivate inactive users."});
+   existing.Role=role; existing.Status="Pending";
    await db.SaveChangesAsync(); return Ok(new{existing.Id,existing.Status});
   }
-  var invite=new CorporateMembership{Id=Guid.NewGuid(),CompanyId=companyId,UserId=target.Id,Role="Employee",Status="Pending"};
+  var invite=new CorporateMembership{Id=Guid.NewGuid(),CompanyId=companyId,UserId=target.Id,Role=role,Status="Pending"};
   db.CorporateMemberships.Add(invite); await db.SaveChangesAsync();
   return Ok(new{invite.Id,invite.Status});
  }
@@ -129,12 +133,12 @@ public sealed class CorporateController(
  public async Task<IActionResult> Employees(Guid companyId) {
   var uid=await UserId(); if(!await Hr(companyId,uid)) return Forbid();
   return Ok(await db.CorporateMemberships.AsNoTracking().Where(x=>x.CompanyId==companyId)
-   .Join(db.Users,m=>m.UserId,u=>u.Id,(m,u)=>new{u.Id,u.DisplayName,u.Email,m.Role,m.Status}).ToListAsync());
+   .Join(db.Users,m=>m.UserId,u=>u.Id,(m,u)=>new{u.Id,u.DisplayName,u.Email,membershipId=m.Id,m.Role,m.Status}).ToListAsync());
  }
  [HttpGet("companies/{companyId:guid}/dashboard")]
  public async Task<IActionResult> Dashboard(Guid companyId) {
   var uid=await UserId(); if(!await Hr(companyId,uid)) return Forbid();
-  var active=await db.CorporateMemberships.CountAsync(x=>x.CompanyId==companyId && x.Status=="Active" && x.Role=="Employee");
+  var active=await db.CorporateMemberships.CountAsync(x=>x.CompanyId==companyId && x.Status=="Active" && (x.Role=="Employee" || x.Role=="Viewer"));
   var open=await db.CorporateCases.CountAsync(x=>x.CompanyId==companyId && x.Status!="Closed");
   var due=await db.CorporateCases.CountAsync(x=>x.CompanyId==companyId && x.Status!="Closed" && x.DueAt!=null && x.DueAt<=DateTime.UtcNow.AddDays(30));
   return Ok(new{activeEmployees=active,openCases=open,dueWithin30Days=due});
@@ -144,15 +148,16 @@ public sealed class CorporateController(
   var uid=await UserId(); if(!await Member(companyId,uid)) return Forbid();
   var query=db.CorporateCases.AsNoTracking().Where(x=>x.CompanyId==companyId);
   if(!await Hr(companyId,uid)) query=query.Where(x=>x.EmployeeUserId==uid);
-  return Ok(await query.OrderBy(x=>x.DueAt).Take(250).Select(x=>new{x.Id,x.EmployeeUserId,x.VisaApplicationId,x.Title,x.Status,x.DueAt,x.Notes}).ToListAsync());
+  return Ok(await query.OrderBy(x=>x.DueAt).Take(250).Select(x=>new{x.Id,x.EmployeeUserId,x.VisaApplicationId,x.Title,x.Status,x.DueAt,x.Notes,x.CountryCode,x.Purpose,x.Priority,x.AssignedHrUserId}).ToListAsync());
  }
  [HttpPost("companies/{companyId:guid}/cases")]
  public async Task<IActionResult> CreateCase(Guid companyId,CreateCorporateCaseRequest request) {
   var uid=await UserId(); if(!await Hr(companyId,uid)) return Forbid();
-  if(!await db.CorporateMemberships.AnyAsync(x=>x.CompanyId==companyId && x.UserId==request.EmployeeUserId && x.Role=="Employee" && x.Status=="Active"))
+  if(!await db.CorporateMemberships.AnyAsync(x=>x.CompanyId==companyId && x.UserId==request.EmployeeUserId && (x.Role=="Employee" || x.Role=="Viewer") && x.Status=="Active"))
    return BadRequest(new{message="Employee has not accepted invitation."});
   if(string.IsNullOrWhiteSpace(request.Title)) return BadRequest();
-  var item=new CorporateCase{Id=Guid.NewGuid(),CompanyId=companyId,EmployeeUserId=request.EmployeeUserId,Title=request.Title.Trim(),DueAt=request.DueAt,Notes=request.Notes};
+  if(!await ValidCatalog(request.CountryCode,request.Purpose) || !ValidPriority(request.Priority) || !await ValidHr(companyId,request.AssignedHrUserId)) return BadRequest(new{message="Invalid catalog, priority or HR assignment."});
+  var item=new CorporateCase{Id=Guid.NewGuid(),CompanyId=companyId,EmployeeUserId=request.EmployeeUserId,Title=request.Title.Trim(),DueAt=request.DueAt,Notes=request.Notes,CountryCode=request.CountryCode,Purpose=request.Purpose,Priority=request.Priority,AssignedHrUserId=request.AssignedHrUserId};
   db.CorporateCases.Add(item); await db.SaveChangesAsync(); return Ok(new{item.Id,item.Status});
  }
  [HttpPut("companies/{companyId:guid}/cases/{caseId:guid}")]
@@ -161,7 +166,15 @@ public sealed class CorporateController(
   if(!new[]{"Open","InProgress","Blocked","Closed"}.Contains(request.Status)) return BadRequest(new{message="Invalid status"});
   var item=await db.CorporateCases.FirstOrDefaultAsync(x=>x.Id==caseId && x.CompanyId==companyId);
   if(item==null) return NotFound();
-  item.Status=request.Status; if (request.DueAt.HasValue) item.DueAt=request.DueAt.Value; if (request.Notes is not null) item.Notes=request.Notes;
+  if(!await ValidCatalog(request.CountryCode,request.Purpose) || (request.Priority!=null && !ValidPriority(request.Priority)) || !await ValidHr(companyId,request.AssignedHrUserId)) return BadRequest(new{message="Invalid catalog, priority or HR assignment."});
+  item.Status=request.Status;
+  item.DueAt=request.DueAt;
+  if(request.Notes is not null) item.Notes=request.Notes;
+  if(request.Title is not null) { if(string.IsNullOrWhiteSpace(request.Title) || request.Title.Length>180) return BadRequest(); item.Title=request.Title.Trim(); }
+  if(request.CountryCode is not null) item.CountryCode=request.CountryCode;
+  if(request.Purpose is not null) item.Purpose=request.Purpose;
+  if(request.Priority is not null) item.Priority=request.Priority;
+  if(request.AssignedHrUserId is not null) item.AssignedHrUserId=request.AssignedHrUserId;
   await db.SaveChangesAsync(); return Ok(new{item.Id,item.Status});
  }
  // Only the visa application's owner can opt into sharing its reference with their employer.
@@ -183,6 +196,50 @@ public sealed class CorporateController(
   item.VisaApplicationId=null; await db.SaveChangesAsync(); return NoContent();
  }
 
+    [HttpGet("companies/{companyId:guid}/cases/{caseId:guid}/visa/documents/{documentId:guid}/access-url")]
+    public async Task<IActionResult> CorporateDocumentUrl(Guid companyId,Guid caseId,Guid documentId) {
+        var uid=await UserId(); if(!await Hr(companyId,uid)) return Forbid();
+        var item=await db.CorporateCases.AsNoTracking().FirstOrDefaultAsync(x=>x.CompanyId==companyId && x.Id==caseId && x.VisaApplicationId!=null);
+        if(item==null) return NotFound();
+        var visa=await db.VisaApplications.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==item.VisaApplicationId && x.UserId==item.EmployeeUserId);
+        if(visa==null) return NotFound();
+        using var state=System.Text.Json.JsonDocument.Parse(visa.StateJson);
+        if(!state.RootElement.TryGetProperty("documents",out var arr) || arr.ValueKind!=System.Text.Json.JsonValueKind.Array || !arr.EnumerateArray().Any(d=>d.TryGetProperty("id",out var v) && Guid.TryParse(v.ToString(),out var id) && id==documentId)) return NotFound();
+        var doc=await db.Documents.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==documentId && x.UserId==item.EmployeeUserId && x.Status!=DocumentStatus.PendingUpload);
+        if(doc==null) return NotFound();
+        var url=await storage.GeneratePresignedUrlAsync(doc.S3ObjectKey,TimeSpan.FromMinutes(5));
+        return Ok(new{url,expiresInSeconds=300});
+    }
+
+    private static bool ValidPriority(string priority) => priority is "Normal" or "High" or "Urgent";
+    private async Task<bool> ValidHr(Guid companyId, Guid? userId) => userId == null || await db.CorporateMemberships.AnyAsync(x => x.CompanyId == companyId && x.UserId == userId && x.Status == "Active" && (x.Role == "Admin" || x.Role == "Owner" || x.Role == "HR"));
+    private async Task<bool> ValidCatalog(string? country, string? purpose) {
+        if (string.IsNullOrEmpty(country) && string.IsNullOrEmpty(purpose)) return true;
+        if (string.IsNullOrEmpty(country) || string.IsNullOrEmpty(purpose)) return false;
+        return await db.VisaTemplates.AnyAsync(x=>x.CountryCode==country && x.Purpose==purpose);
+    }
+
+    // HR receives the current saved application, never write access or a frozen snapshot.
+    [HttpGet("companies/{companyId:guid}/cases/{caseId:guid}/visa")]
+    public async Task<IActionResult> CorporateVisa(Guid companyId, Guid caseId) {
+        var uid=await UserId(); if(!await Hr(companyId,uid)) return Forbid();
+        var item=await db.CorporateCases.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==caseId && x.CompanyId==companyId && x.VisaApplicationId!=null);
+        if(item==null) return NotFound();
+        var visa=await db.VisaApplications.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==item.VisaApplicationId && x.UserId==item.EmployeeUserId);
+        if(visa==null) return NotFound();
+        var state=System.Text.Json.JsonDocument.Parse(visa.StateJson);
+        using(state) {
+            var docs=new List<object>();
+            if(state.RootElement.TryGetProperty("documents",out var arr) && arr.ValueKind==System.Text.Json.JsonValueKind.Array) {
+                foreach(var doc in arr.EnumerateArray()) {
+                    if(!doc.TryGetProperty("id",out var idValue) || !Guid.TryParse(idValue.ToString(),out var docId)) continue;
+                    var record=await db.Documents.AsNoTracking().FirstOrDefaultAsync(x=>x.Id==docId && x.UserId==item.EmployeeUserId);
+                    if(record!=null) docs.Add(new {id=record.Id,name=record.DocumentName,role=doc.TryGetProperty("role",out var r)?r.ToString():""});
+                }
+            }
+            return Ok(new {visa.Id,visa.TemplateId,visa.Submitted,visa.UpdatedAt,visa.Revision,values=state.RootElement.TryGetProperty("values",out var v)?v.Clone():default(System.Text.Json.JsonElement),documents=docs,readOnly=true});
+        }
+    }
     private async Task<Guid> UserId()
     {
         var uid = User.FindFirstValue("firebase_uid")

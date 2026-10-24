@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+
+import 'widgets/destination_banner.dart';
+
 import '../../core/services/reminder_service.dart';
+import '../../core/services/destination_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../../shared/services/health_service.dart';
@@ -25,20 +29,32 @@ const _qaAssistIcon = Color(0xFF7B3FBF);
 const _qaReminderIcon = Color(0xFF2E7D32);
 const _qaEmergencyIcon = Color(0xFFD84315);
 
+enum DashboardFeature {
+  translation,
+  visaAssistant,
+  family,
+  emergency,
+  corporate,
+}
+
 class DashboardScreen extends StatefulWidget {
   final HealthService healthService;
   final UserService userService;
   final ReminderService reminderService;
+  final DestinationService? destinationService;
   final String? userName;
   final ValueChanged<int>? onNavigateToTab;
+  final ValueChanged<DashboardFeature>? onOpenFeature;
 
   const DashboardScreen({
     super.key,
     required this.healthService,
     required this.userService,
     required this.reminderService,
+    this.destinationService,
     this.userName,
     this.onNavigateToTab,
+    this.onOpenFeature,
   });
 
   @override
@@ -64,11 +80,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _healthError = null;
     });
 
-    await Future.wait([
-      _checkHealth(),
-      _loadProfile(),
-      _loadChecklist(),
-    ]);
+    await Future.wait([_checkHealth(), _loadProfile(), _loadChecklist()]);
 
     if (mounted) setState(() => _isLoading = false);
   }
@@ -121,7 +133,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               _buildHeader(),
               _buildGreeting(),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
+              if (widget.destinationService != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: DestinationBanner(
+                    service: widget.destinationService!,
+                    greeting: _timeGreeting,
+                    userId: _profile?.id,
+                    preferredCountry: _profile?.countryCode,
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
@@ -136,6 +160,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ],
                     const SizedBox(height: 28),
                     _buildQuickActions(),
+                    const SizedBox(height: 20),
+                    _buildFeatureShortcuts(),
                     const SizedBox(height: 32),
                   ],
                 ),
@@ -204,7 +230,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Align(
                   alignment: Alignment.center,
-                  child: Icon(Icons.notifications_outlined, color: _navy, size: 24),
+                  child: Icon(
+                    Icons.notifications_outlined,
+                    color: _navy,
+                    size: 24,
+                  ),
                 ),
                 Positioned(
                   right: 5,
@@ -225,7 +255,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(width: 8),
           // SOS pill button
           GestureDetector(
-            onTap: () => widget.onNavigateToTab?.call(4),
+            onTap: () {
+              final openFeature = widget.onOpenFeature;
+              if (openFeature != null) {
+                openFeature(DashboardFeature.emergency);
+              } else {
+                widget.onNavigateToTab?.call(4);
+              }
+            },
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
               decoration: BoxDecoration(
@@ -259,7 +296,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildGreeting() {
     final name = _firstName;
-    final greeting = name.isNotEmpty ? '$_timeGreeting, $name 👋' : '$_timeGreeting 👋';
+    final greeting = name.isNotEmpty
+        ? '$_timeGreeting, $name 👋'
+        : '$_timeGreeting 👋';
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
@@ -325,7 +364,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return _DashboardHealthCard(
       isLoading: false,
       label: isHealthy ? 'Backend: Healthy' : 'Backend: Degraded',
-      subtitle: isHealthy ? 'All systems operational' : 'Some services may be limited',
+      subtitle: isHealthy
+          ? 'All systems operational'
+          : 'Some services may be limited',
       bg: isHealthy ? _healthyBg : _degradedBg,
       dotColor: isHealthy ? AppTheme.successColor : AppTheme.warningColor,
       labelColor: isHealthy ? _healthyText : _degradedText,
@@ -335,7 +376,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // ─── Employment Pass card ─────────────────────────────────────────────────
 
   Widget _buildPassCard() {
-    final passLabel = _profile?.visaPassType?.replaceAllMapped(
+    final passLabel =
+        _profile?.visaPassType?.replaceAllMapped(
           RegExp(r'([a-z])([A-Z])'),
           (m) => '${m.group(1)} ${m.group(2)}',
         ) ??
@@ -359,7 +401,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   color: _accentBlue,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.description, color: Colors.white, size: 24),
+                child: const Icon(
+                  Icons.description,
+                  color: Colors.white,
+                  size: 24,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -377,7 +423,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 2),
                     const Text(
                       'Manage your visa and work documents',
-                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ],
                 ),
@@ -433,7 +482,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Text(
                   '$completed/$total completed',
-                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
                 const SizedBox(height: 5),
                 SizedBox(
@@ -495,7 +547,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 height: 26,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: item.isCompleted ? AppTheme.successColor : Colors.transparent,
+                  color: item.isCompleted
+                      ? AppTheme.successColor
+                      : Colors.transparent,
                   border: item.isCompleted
                       ? null
                       : Border.all(color: const Color(0xFFBBBBBB), width: 1.5),
@@ -514,8 +568,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
-                        color: item.isCompleted ? AppTheme.textSecondary : _navy,
-                        decoration: item.isCompleted ? TextDecoration.lineThrough : null,
+                        color: item.isCompleted
+                            ? AppTheme.textSecondary
+                            : _navy,
+                        decoration: item.isCompleted
+                            ? TextDecoration.lineThrough
+                            : null,
                         decorationColor: AppTheme.textSecondary,
                         decorationThickness: 1.5,
                       ),
@@ -534,7 +592,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               if (item.action != null) ...[
                 const SizedBox(width: 6),
-                const Icon(Icons.chevron_right, size: 18, color: AppTheme.textSecondary),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppTheme.textSecondary,
+                ),
               ],
             ],
           ),
@@ -554,6 +616,117 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ─── Quick actions ────────────────────────────────────────────────────────
+
+  Widget _buildFeatureShortcuts() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Explore ExpatOne',
+          style: TextStyle(
+            color: _navy,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: [
+            _featureTile(
+              'Translation',
+              Icons.translate_rounded,
+              const Color(0xFFE3EEFF),
+              const Color(0xFF1565C0),
+              DashboardFeature.translation,
+            ),
+            _featureTile(
+              'Visa assistance',
+              Icons.assignment_rounded,
+              const Color(0xFFEEE3FF),
+              const Color(0xFF7B3FBF),
+              DashboardFeature.visaAssistant,
+            ),
+            _featureTile(
+              'Family',
+              Icons.family_restroom_rounded,
+              const Color(0xFFE3F5EE),
+              const Color(0xFF2E7D32),
+              DashboardFeature.family,
+            ),
+            _featureTile(
+              'Emergency',
+              Icons.emergency_rounded,
+              const Color(0xFFFFF0EC),
+              const Color(0xFFD84315),
+              DashboardFeature.emergency,
+            ),
+            _featureTile(
+              'Corporate',
+              Icons.business_center_rounded,
+              const Color(0xFFFFF3E0),
+              const Color(0xFFE65100),
+              DashboardFeature.corporate,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _featureTile(
+    String label,
+    IconData icon,
+    Color background,
+    Color foreground,
+    DashboardFeature feature,
+  ) {
+    return SizedBox(
+      width: 148,
+      child: Material(
+        color: background,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            final openFeature = widget.onOpenFeature;
+            if (openFeature != null) {
+              openFeature(feature);
+            } else if (feature == DashboardFeature.emergency) {
+              widget.onNavigateToTab?.call(4);
+            } else if (feature == DashboardFeature.translation ||
+                feature == DashboardFeature.visaAssistant ||
+                feature == DashboardFeature.family ||
+                feature == DashboardFeature.corporate) {
+              widget.onNavigateToTab?.call(4);
+            }
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+            child: Row(
+              children: [
+                Icon(icon, color: foreground, size: 22),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    label,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: _navy,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildQuickActions() {
     return Row(
@@ -587,7 +760,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
           label: 'Emergency\nHelp',
           bgColor: _qaEmergencyBg,
           iconColor: _qaEmergencyIcon,
-          onTap: () => widget.onNavigateToTab?.call(4),
+          onTap: () {
+            final openFeature = widget.onOpenFeature;
+            if (openFeature != null) {
+              openFeature(DashboardFeature.emergency);
+            } else {
+              widget.onNavigateToTab?.call(4);
+            }
+          },
         ),
       ],
     );
@@ -637,7 +817,10 @@ class _DashboardHealthCard extends StatelessWidget {
             Container(
               width: 14,
               height: 14,
-              decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: dotColor,
+                shape: BoxShape.circle,
+              ),
             ),
           const SizedBox(width: 12),
           Expanded(

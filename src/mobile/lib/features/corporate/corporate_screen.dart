@@ -1,147 +1,1035 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../../core/services/corporate_service.dart';
 
 class CorporateScreen extends StatefulWidget {
   final CorporateService service;
-  const CorporateScreen({super.key,required this.service});
-  @override State<CorporateScreen> createState()=>_CorporateScreenState();
+  const CorporateScreen({super.key, required this.service});
+  @override
+  State<CorporateScreen> createState() => _CorporateScreenState();
 }
+
 class _CorporateScreenState extends State<CorporateScreen> {
-  bool loading=true;
+  bool loading = true;
   String? error;
-  List<Map<String,dynamic>> companies=[], invitations=[];
-  Map<String,dynamic>? selected, metrics;
-  List<Map<String,dynamic>> employees=[], cases=[];
-  bool get isHr => selected?['role']=='Admin'||selected?['role']=='Owner';
-  bool get isOwner => selected?['role']=='Owner';
-  String get companyId => selected?['id']?.toString()??'';
-  @override void initState(){super.initState();reload();}
+  List<Map<String, dynamic>> companies = [], invitations = [];
+  Map<String, dynamic>? selected, metrics;
+  List<Map<String, dynamic>> employees = [], cases = [];
+  bool get isHr =>
+      selected?['role'] == 'Admin' ||
+      selected?['role'] == 'Admin' ||
+      selected?['role'] == 'Owner' ||
+      selected?['role'] == 'HR';
+  bool get isOwner =>
+      selected?['role'] == 'Admin' || selected?['role'] == 'Owner';
+  String get companyId => selected?['id']?.toString() ?? '';
+  @override
+  void initState() {
+    super.initState();
+    reload();
+  }
+
   Future<void> reload() async {
-    setState((){loading=true;error=null;});
+    setState(() {
+      loading = true;
+      error = null;
+    });
     try {
-      final cs=await widget.service.companies();
-      final invites=await widget.service.invitations();
-      Map<String,dynamic>? active;
-      for(final c in cs){if(c['id']==selected?['id']){active=c;break;}}
-      active ??= cs.isNotEmpty?cs.first:null;
-      final id=active?['id']?.toString();
-      final es=id!=null && (active?['role']=='Owner'||active?['role']=='Admin')?await widget.service.employees(id):<Map<String,dynamic>>[];
-      final ks=id!=null?await widget.service.cases(id):<Map<String,dynamic>>[];
-      final ms=id!=null && (active?['role']=='Owner'||active?['role']=='Admin')?await widget.service.dashboard(id):null;
-      if(mounted)setState((){companies=cs;invitations=invites;selected=active;employees=es;cases=ks;metrics=ms;loading=false;});
-    }catch(e){if(mounted)setState((){loading=false;error=e.toString();});}
-  }
-  Future<String?> ask(String title,String label) async {
-    final c=TextEditingController();
-    try {
-      return await showDialog<String>(context:context,builder:(ctx)=>AlertDialog(
-        title:Text(title),content:TextField(controller:c,autofocus:true,decoration:InputDecoration(labelText:label)),
-        actions:[TextButton(onPressed:()=>Navigator.pop(ctx),child:const Text('Cancel')),
-          FilledButton(onPressed:()=>Navigator.pop(ctx,c.text.trim()),child:const Text('Continue'))]));
-    }finally{c.dispose();}
-  }
-  Future<void> action(Future<void> Function() fn) async {
-    try {await fn();if(mounted)await reload();}
-    catch(e){if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Action failed: $e')));}
-  }
-  Widget panel(String title,Widget child)=>Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(
-    crossAxisAlignment:CrossAxisAlignment.start,children:[Text(title,style:Theme.of(context).textTheme.titleMedium),const SizedBox(height:10),child])));
-  @override Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('ExpatOne Business'),actions:[IconButton(onPressed:reload,icon:const Icon(Icons.refresh))]),
-    body:loading?const Center(child:CircularProgressIndicator()):error!=null?
-      Center(child:Column(mainAxisSize:MainAxisSize.min,children:[Text(error!),TextButton(onPressed:reload,child:const Text('Retry'))])):
-      ListView(padding:const EdgeInsets.all(12),children:[
-        if(companies.isEmpty)panel('Individual account',Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          const Text('You have no active company membership. Your personal ExpatOne features remain private.'),
-          const SizedBox(height:8),
-          FilledButton.icon(onPressed:()=>action(() async {
-            final name=await ask('Create company','Company name');
-            if(name!=null && name.isNotEmpty)await widget.service.createCompany(name);
-          }),icon:const Icon(Icons.add_business),label:const Text('Register a company'))
-        ])),
-        if(invitations.isNotEmpty)panel('Company invitations',Column(children:invitations.map((i)=>ListTile(
-          title:Text(i['name']?.toString()??'Company'),
-          subtitle:const Text('Invitation pending — no company access until accepted'),
-          trailing:Wrap(spacing:4,children:[
-            TextButton(onPressed:()=>action(() async {await widget.service.decline(i['id'].toString());}),child:const Text('Decline')),
-            FilledButton(onPressed:()=>action(() async {await widget.service.accept(i['id'].toString());}),child:const Text('Accept'))
-          ]) )).toList())),
-        if(companies.isNotEmpty)...[
-          panel('Company & role',Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-            DropdownButtonFormField<String>(initialValue:companyId,decoration:const InputDecoration(labelText:'Company'),
-              items:companies.map((c)=>DropdownMenuItem(value:c['id'].toString(),child:Text(c['name'].toString()))).toList(),
-              onChanged:(id){setState((){selected=companies.firstWhere((c)=>c['id']==id);});reload();}),
-            const SizedBox(height:8),Text('Your access: ${selected?['role']}'),
-            if(isOwner)const Text('Company owner: corporate administration access',style:TextStyle(fontSize:12)),
-          ])),
-          if(isHr)...[
-            panel('HR Overview',Wrap(spacing:18,runSpacing:10,children:[
-              metric('Active employees',metrics?['activeEmployees']),
-              metric('Open cases',metrics?['openCases']),
-              metric('Due within 30 days',metrics?['dueWithin30Days']),
-            ])),
-            panel('Employee Management',Column(children:[
-              Align(alignment:Alignment.centerRight,child:FilledButton.icon(
-                onPressed:()=>action(() async {final email=await ask('Invite employee','Registered ExpatOne email');
-                  if(email!=null&&email.isNotEmpty)await widget.service.invite(companyId,email);}),
-                icon:const Icon(Icons.person_add_alt),label:const Text('Invite'))),
-              ...employees.map((e)=>ListTile(title:Text(e['displayName']?.toString()??e['email']?.toString()??'Employee'),
-                subtitle:Text('${e['email']} · ${e['role']} · ${e['status']}')))
-            ])),
-          ],
-          panel(isHr?'Corporate Applications & Tasks':'My Company Tasks',Column(children:[
-            if(isHr)Align(alignment:Alignment.centerRight,child:FilledButton.icon(
-              onPressed:()=>createCase(),icon:const Icon(Icons.add),label:const Text('New task'))),
-            if(cases.isEmpty)const ListTile(title:Text('No mobility cases yet')),
-            ...cases.map((c)=>Card(child:ListTile(
-              title:Text(c['title']?.toString()??'Case'),
-              subtitle:Text('Status: ${c['status']}\nDue: ${c['dueAt']??'Not set'}\nVisa reference: ${c['visaApplicationId']??'Not linked'}'),
-              isThreeLine:true,
-              trailing:PopupMenuButton<String>(
-                onSelected:(v)=>action(() async {
-                  if(v=='Link visa'){final id=await ask('Link my SG-Visa application','Application ID');
-                    if(id!=null&&id.isNotEmpty)await widget.service.linkVisa(companyId,c['id'].toString(),id);}
-                  else if(v=='Unlink visa'){
-                    await widget.service.unlinkVisa(companyId,c['id'].toString());
-                  } else {
-                    await widget.service.updateCase(companyId,c['id'].toString(),v);
-                  }
-                }),
-                itemBuilder:(_)=>[
-                  if(isHr)...['Open','InProgress','Blocked','Closed'].map((v)=>PopupMenuItem(value:v,child:Text('Set $v'))),
-                  if(!isHr)...[const PopupMenuItem(value:'Link visa',child:Text('Link my SG-Visa')),
-                    const PopupMenuItem(value:'Unlink visa',child:Text('Unlink my SG-Visa'))],
-                ],
-              ),
-            )))
-          ])),
-          panel('Privacy',const Text('HR can see corporate task records, not your personal wallet, family documents, AI conversations or SG-Visa form content. Linking a visa shares only its application reference.')),
-        ],
-      ]),
-  );
-  Widget metric(String label,dynamic value)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    Text('${value??0}',style:Theme.of(context).textTheme.headlineMedium),
-    Text(label,style:Theme.of(context).textTheme.bodySmall)]);
-  Future<void> createCase() async {
-    final active=employees.where((e)=>e['role']=='Employee'&&e['status']=='Active').toList();
-    if(active.isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Invite an employee and wait for acceptance first.')));return;}
-    String? employeeId=active.first['id']?.toString();
-    final title=TextEditingController();
-    try {
-      final result=await showDialog<bool>(context:context,builder:(ctx)=>StatefulBuilder(builder:(ctx,update)=>AlertDialog(
-        title:const Text('Create mobility task'),
-        content:Column(mainAxisSize:MainAxisSize.min,children:[
-          DropdownButtonFormField<String>(initialValue:employeeId,items:active.map((e)=>DropdownMenuItem(
-            value:e['id'].toString(),child:Text(e['displayName']?.toString()??e['email']?.toString()??'Employee'))).toList(),
-            onChanged:(v)=>update(()=>employeeId=v)),
-          TextField(controller:title,decoration:const InputDecoration(labelText:'Task title')),
-        ]),
-        actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),
-          FilledButton(onPressed:()=>Navigator.pop(ctx,true),child:const Text('Create'))],
-      )));
-      if(result==true&&employeeId!=null&&title.text.trim().isNotEmpty){
-        await action(() async {await widget.service.createCase(companyId,employeeId!,title.text.trim(),null);});
+      final cs = await widget.service.companies();
+      final invites = await widget.service.invitations();
+      Map<String, dynamic>? active;
+      for (final c in cs) {
+        if (c['id'] == selected?['id']) {
+          active = c;
+          break;
+        }
       }
-    }finally{title.dispose();}
+      active ??= cs.isNotEmpty ? cs.first : null;
+      final id = active?['id']?.toString();
+      final es =
+          id != null &&
+              (active?['role'] == 'Owner' ||
+                  active?['role'] == 'Admin' ||
+                  active?['role'] == 'HR')
+          ? await widget.service.employees(id)
+          : <Map<String, dynamic>>[];
+      final ks = id != null
+          ? await widget.service.cases(id)
+          : <Map<String, dynamic>>[];
+      final ms =
+          id != null &&
+              (active?['role'] == 'Owner' ||
+                  active?['role'] == 'Admin' ||
+                  active?['role'] == 'HR')
+          ? await widget.service.dashboard(id)
+          : null;
+      if (mounted)
+        setState(() {
+          companies = cs;
+          invitations = invites;
+          selected = active;
+          employees = es;
+          cases = ks;
+          metrics = ms;
+          loading = false;
+        });
+    } catch (e) {
+      if (mounted)
+        setState(() {
+          loading = false;
+          error = e.toString();
+        });
+    }
+  }
+
+  Future<String?> ask(String title, String label) async {
+    final c = TextEditingController();
+    try {
+      return await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: c,
+            autofocus: true,
+            decoration: InputDecoration(labelText: label),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, c.text.trim()),
+              child: const Text('Continue'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      c.dispose();
+    }
+  }
+
+  Future<void> action(Future<void> Function() fn) async {
+    try {
+      await fn();
+      if (mounted) await reload();
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Action failed: $e')));
+    }
+  }
+
+  Widget panel(String title, Widget child) => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    ),
+  );
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(
+      title: const Text('ExpatOne Business'),
+      actions: [IconButton(onPressed: reload, icon: const Icon(Icons.refresh))],
+    ),
+    body: loading
+        ? const Center(child: CircularProgressIndicator())
+        : error != null
+        ? Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(error!),
+                TextButton(onPressed: reload, child: const Text('Retry')),
+              ],
+            ),
+          )
+        : ListView(
+            padding: const EdgeInsets.all(12),
+            children: [
+              if (companies.isEmpty)
+                panel(
+                  'Individual account',
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'You have no active company membership. Your personal ExpatOne features remain private.',
+                      ),
+                      const SizedBox(height: 8),
+                      FilledButton.icon(
+                        onPressed: () => action(() async {
+                          final name = await ask(
+                            'Create company',
+                            'Company name',
+                          );
+                          if (name != null && name.isNotEmpty)
+                            await widget.service.createCompany(name);
+                        }),
+                        icon: const Icon(Icons.add_business),
+                        label: const Text('Register a company'),
+                      ),
+                    ],
+                  ),
+                ),
+              if (invitations.isNotEmpty)
+                panel(
+                  'Company invitations',
+                  Column(
+                    children: invitations
+                        .map(
+                          (i) => ListTile(
+                            title: Text(i['name']?.toString() ?? 'Company'),
+                            subtitle: const Text(
+                              'Invitation pending — no company access until accepted',
+                            ),
+                            trailing: Wrap(
+                              spacing: 4,
+                              children: [
+                                TextButton(
+                                  onPressed: () => action(() async {
+                                    await widget.service.decline(
+                                      i['id'].toString(),
+                                    );
+                                  }),
+                                  child: const Text('Decline'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => action(() async {
+                                    await widget.service.accept(
+                                      i['id'].toString(),
+                                    );
+                                  }),
+                                  child: const Text('Accept'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+              if (companies.isNotEmpty) ...[
+                panel(
+                  'Company & role',
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownButtonFormField<String>(
+                        initialValue: companyId,
+                        decoration: const InputDecoration(labelText: 'Company'),
+                        items: companies
+                            .map(
+                              (c) => DropdownMenuItem(
+                                value: c['id'].toString(),
+                                child: Text(c['name'].toString()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (id) {
+                          setState(() {
+                            selected = companies.firstWhere(
+                              (c) => c['id'] == id,
+                            );
+                          });
+                          reload();
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Your access: ${selected?['role']}'),
+                      if (isOwner)
+                        const Text(
+                          'Company owner: corporate administration access',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                    ],
+                  ),
+                ),
+                if (isHr) ...[
+                  panel(
+                    'HR Overview',
+                    Wrap(
+                      spacing: 18,
+                      runSpacing: 10,
+                      children: [
+                        metric('Active employees', metrics?['activeEmployees']),
+                        metric('Open cases', metrics?['openCases']),
+                        metric(
+                          'Due within 30 days',
+                          metrics?['dueWithin30Days'],
+                        ),
+                      ],
+                    ),
+                  ),
+                  panel(
+                    'Employee Management',
+                    Column(
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton.icon(
+                            onPressed: () => inviteMember(),
+                            icon: const Icon(Icons.person_add_alt),
+                            label: const Text('Invite'),
+                          ),
+                        ),
+                        ...employees.map(
+                          (e) => ListTile(
+                            title: Text(
+                              e['displayName']?.toString() ??
+                                  e['email']?.toString() ??
+                                  'Employee',
+                            ),
+                            subtitle: Text(
+                              '${e['email']} · ${e['role']} · ${e['status']}',
+                            ),
+                            trailing: isOwner
+                                ? IconButton(
+                                    icon: const Icon(Icons.edit),
+                                    tooltip: 'Edit role / status',
+                                    onPressed: () => editMember(e),
+                                  )
+                                : null,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                panel(
+                  isHr ? 'Corporate Applications & Tasks' : 'My Company Tasks',
+                  Column(
+                    children: [
+                      if (isHr)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FilledButton.icon(
+                            onPressed: () => createCase(),
+                            icon: const Icon(Icons.add),
+                            label: const Text('New task'),
+                          ),
+                        ),
+                      if (cases.isEmpty)
+                        const ListTile(title: Text('No mobility cases yet')),
+                      ...cases.map(
+                        (c) => Card(
+                          child: ListTile(
+                            title: Text(c['title']?.toString() ?? 'Case'),
+                            subtitle: Text(
+                              'Status: ${c['status']} · ${c['priority'] ?? 'Normal'}\n${c['countryCode'] ?? ''} ${c['purpose'] ?? ''}\nVisa: ${c['visaApplicationId'] ?? 'Not linked'}',
+                            ),
+                            isThreeLine: true,
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (v) => action(() async {
+                                if (v == 'Edit task') {
+                                  await editCase(c);
+                                } else if (v == 'View visa') {
+                                  await viewVisa(c);
+                                } else if (v == 'Link visa') {
+                                  await selectAndLinkVisa(c);
+                                } else if (v == 'Unlink visa') {
+                                  await widget.service.unlinkVisa(
+                                    companyId,
+                                    c['id'].toString(),
+                                  );
+                                } else {
+                                  await widget.service.updateCase(
+                                    companyId,
+                                    c['id'].toString(),
+                                    {
+                                      'status': v,
+                                      'dueAt': c['dueAt'],
+                                      'notes': c['notes'],
+                                    },
+                                  );
+                                }
+                              }),
+                              itemBuilder: (_) => [
+                                if (isHr)
+                                  const PopupMenuItem(
+                                    value: 'Edit task',
+                                    child: Text('Edit application'),
+                                  ),
+                                if (isHr && c['visaApplicationId'] != null)
+                                  const PopupMenuItem(
+                                    value: 'View visa',
+                                    child: Text('View linked visa (read-only)'),
+                                  ),
+                                if (isHr)
+                                  ...[
+                                    'Open',
+                                    'InProgress',
+                                    'Blocked',
+                                    'Closed',
+                                  ].map(
+                                    (v) => PopupMenuItem(
+                                      value: v,
+                                      child: Text('Set $v'),
+                                    ),
+                                  ),
+                                if (!isHr) ...[
+                                  const PopupMenuItem(
+                                    value: 'Link visa',
+                                    child: Text('Link my Visa Application'),
+                                  ),
+                                  const PopupMenuItem(
+                                    value: 'Unlink visa',
+                                    child: Text('Unlink my Visa Application'),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                panel(
+                  'Privacy',
+                  const Text(
+                    'HR can view the latest saved or submitted visa application and attachment metadata when an employee links it to a company task. HR cannot edit the visa application.',
+                  ),
+                ),
+              ],
+            ],
+          ),
+  );
+  Widget metric(String label, dynamic value) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text('${value ?? 0}', style: Theme.of(context).textTheme.headlineMedium),
+      Text(label, style: Theme.of(context).textTheme.bodySmall),
+    ],
+  );
+  Future<void> inviteMember() async {
+    final email = TextEditingController();
+    String role = 'Viewer';
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, setDialog) => AlertDialog(
+            title: const Text('Invite company member'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: email,
+                  decoration: const InputDecoration(
+                    labelText: 'Registered ExpatOne email',
+                  ),
+                ),
+                DropdownButtonFormField<String>(
+                  initialValue: role,
+                  decoration: const InputDecoration(labelText: 'Role'),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 'Viewer',
+                      child: Text('Corporate Employee'),
+                    ),
+                    if (isOwner)
+                      const DropdownMenuItem(
+                        value: 'HR',
+                        child: Text('HR Administrator'),
+                      ),
+                  ],
+                  onChanged: (v) => setDialog(() => role = v ?? 'Viewer'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Invite'),
+              ),
+            ],
+          ),
+        ),
+      );
+      if (ok == true && email.text.trim().isNotEmpty)
+        await action(() async {
+          await widget.service.invite(companyId, email.text.trim(), role);
+        });
+    } finally {
+      email.dispose();
+    }
+  }
+
+  Future<void> editMember(Map<String, dynamic> e) async {
+    String role = e['role']?.toString() ?? 'Viewer';
+    String status = e['status'] == 'Active' ? 'Active' : 'Inactive';
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: Text('Edit ${e['email']}'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                initialValue: role,
+                decoration: const InputDecoration(labelText: 'Role'),
+                items: const [
+                  DropdownMenuItem(
+                    value: 'Viewer',
+                    child: Text('Corporate Employee'),
+                  ),
+                  DropdownMenuItem(value: 'HR', child: Text('HR Admin')),
+                  DropdownMenuItem(
+                    value: 'Admin',
+                    child: Text('Company Admin'),
+                  ),
+                ],
+                onChanged: (v) => update(() => role = v ?? role),
+              ),
+              DropdownButtonFormField<String>(
+                initialValue: status,
+                decoration: const InputDecoration(labelText: 'Status'),
+                items: const [
+                  DropdownMenuItem(value: 'Active', child: Text('Active')),
+                  DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+                ],
+                onChanged: (v) => update(() => status = v ?? status),
+              ),
+              const Text(
+                'Inactive preserves membership and case records for audit.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (ok == true) {
+      final rawId = e['membershipId'] ?? e['MembershipId'];
+      final id = rawId?.toString().trim();
+
+      if (id == null || id.isEmpty || id == 'null') {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Cannot update this employee: membership ID is missing. '
+              'Refresh the employee list and try again.',
+            ),
+          ),
+        );
+        debugPrint(
+          'Corporate employee missing membershipId. '
+          'Available response fields: ${e.keys.toList()}',
+        );
+        return;
+      }
+
+      if (role == e['role'] && status == e['status']) return;
+
+      await action(() async {
+        if (role != e['role']) {
+          await widget.service.memberRole(companyId, id, role);
+        }
+        if (status != e['status']) {
+          await widget.service.memberStatus(companyId, id, status);
+        }
+      });
+    }
+  }
+
+  // Lists only applications owned by the signed-in user. The backend also
+  // validates visa ownership and corporate task assignment when linking.
+  Future<void> selectAndLinkVisa(Map<String, dynamic> corporateCase) async {
+    final applications = await widget.service.myVisaApplications();
+    if (!mounted) return;
+    if (applications.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'No visa applications found. Save one in Application Assistant first.',
+          ),
+        ),
+      );
+      return;
+    }
+    final catalog = await widget.service.catalog();
+    if (!mounted) return;
+    final templates = (catalog['templates'] as List? ?? [])
+        .whereType<Map>()
+        .toList();
+    final countries = (catalog['countries'] as List? ?? [])
+        .whereType<Map>()
+        .toList();
+
+    String labelFor(Map<String, dynamic> app) {
+      final templateId = app['templateId']?.toString() ?? '';
+      Map? template;
+      for (final t in templates) {
+        if (t['id']?.toString() == templateId) {
+          template = t;
+          break;
+        }
+      }
+      final code = template?['countryCode']?.toString() ?? '';
+      String country = code;
+      for (final c in countries) {
+        if (c['code']?.toString() == code) {
+          country = c['name']?.toString() ?? code;
+          break;
+        }
+      }
+      final purpose = template?['purpose']?.toString() ?? templateId;
+      final status = app['status']?.toString() ?? 'Saved';
+      final updated = app['updatedAt']?.toString() ?? '';
+      final date = updated.length >= 10 ? updated.substring(0, 10) : updated;
+      return '${country.isEmpty ? "Visa" : country} · $purpose · $status${date.isEmpty ? "" : " · $date"}';
+    }
+
+    final current = corporateCase['visaApplicationId']?.toString();
+    String? chosen = applications.any((a) => a['id']?.toString() == current)
+        ? current
+        : null;
+    final selectedId = await showDialog<String>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: const Text('Link My Visa Application'),
+          content: SizedBox(
+            width: 540,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Select one of your saved or submitted visa applications.',
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  isExpanded: true,
+                  initialValue: chosen,
+                  decoration: const InputDecoration(
+                    labelText: 'My Visa Applications',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: applications
+                      .map(
+                        (a) => DropdownMenuItem<String>(
+                          value: a['id'].toString(),
+                          child: Text(
+                            labelFor(a),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) => update(() => chosen = value),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'HR can view the latest saved/submitted application and its linked documents read-only.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: chosen == null
+                  ? null
+                  : () => Navigator.pop(ctx, chosen),
+              child: const Text('Link application'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (selectedId != null) {
+      await widget.service.linkVisa(
+        companyId,
+        corporateCase['id'].toString(),
+        selectedId,
+      );
+    }
+  }
+
+  Future<void> viewVisa(Map<String, dynamic> c) async {
+    try {
+      final v = await widget.service.corporateVisa(
+        companyId,
+        c['id'].toString(),
+      );
+      if (!mounted) return;
+      final values = v['values'] is Map
+          ? (v['values'] as Map).entries.toList()
+          : <MapEntry<dynamic, dynamic>>[];
+      final docs = v['documents'] is List ? v['documents'] as List : [];
+      await showDialog<void>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Latest visa application · Read only'),
+          content: SizedBox(
+            width: 540,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Text('Template: ${v['templateId']}'),
+                Text('Submitted: ${v['submitted'] == true ? 'Yes' : 'No'}'),
+                Text('Last saved: ${v['updatedAt'] ?? ''}'),
+                const Divider(),
+                const Text(
+                  'Saved form values',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                ...values.map(
+                  (x) => ListTile(
+                    dense: true,
+                    title: Text(x.key.toString()),
+                    subtitle: Text(x.value?.toString() ?? ''),
+                  ),
+                ),
+                const Divider(),
+                const Text(
+                  'Linked supporting documents',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                if (docs.isEmpty) const Text('No documents attached'),
+                ...docs.map(
+                  (d) => ListTile(
+                    dense: true,
+                    leading: const Icon(Icons.insert_drive_file_outlined),
+                    title: Text(d['name']?.toString() ?? 'Document'),
+                    subtitle: Text(d['role']?.toString() ?? ''),
+                    trailing: const Icon(Icons.open_in_new),
+                    onTap: () async {
+                      try {
+                        final result = await widget.service
+                            .corporateDocumentUrl(
+                              companyId,
+                              c['id'].toString(),
+                              d['id'].toString(),
+                            );
+                        final uri = Uri.tryParse(
+                          result['url']?.toString() ?? '',
+                        );
+                        if (uri != null &&
+                            (uri.scheme == 'https' || uri.scheme == 'http'))
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                      } catch (e) {
+                        if (mounted)
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Document unavailable: $e')),
+                          );
+                      }
+                    },
+                  ),
+                ),
+                const Text(
+                  'Documents open using short-lived authorized links. HR cannot edit or delete them.',
+                  style: TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Close'),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      if (mounted)
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Visa viewer: $e')));
+    }
+  }
+
+  Future<void> createCase() async => editCase(null);
+  Future<void> editCase(Map<String, dynamic>? existing) async {
+    final isNew = existing == null;
+    final active = employees
+        .where(
+          (e) =>
+              (e['role'] == 'Employee' || e['role'] == 'Viewer') &&
+              e['status'] == 'Active',
+        )
+        .toList();
+    if (isNew && active.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Invite a corporate employee first.')),
+      );
+      return;
+    }
+    String? employeeId = isNew
+        ? active.first['id']?.toString()
+        : existing['employeeUserId']?.toString();
+    final title = TextEditingController(
+      text: existing?['title']?.toString() ?? '',
+    );
+    final notes = TextEditingController(
+      text: existing?['notes']?.toString() ?? '',
+    );
+    String status = existing?['status']?.toString() ?? 'Open';
+    String priority = existing?['priority']?.toString() ?? 'Normal';
+    String? country = existing?['countryCode']?.toString(),
+        purpose = existing?['purpose']?.toString();
+    String? hr = existing?['assignedHrUserId']?.toString();
+    DateTime? due = DateTime.tryParse(existing?['dueAt']?.toString() ?? '');
+    try {
+      final catalog = await widget.service.catalog();
+      final templates = (catalog['templates'] as List? ?? [])
+          .whereType<Map>()
+          .toList();
+      final countries = (catalog['countries'] as List? ?? [])
+          .whereType<Map>()
+          .where((x) => x['enabled'] == true)
+          .toList();
+      final hrs = employees
+          .where(
+            (e) =>
+                e['status'] == 'Active' &&
+                ['Admin', 'Owner', 'HR'].contains(e['role']),
+          )
+          .toList();
+      if (!mounted) return;
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, update) {
+            final purposes = templates
+                .where((t) => t['countryCode'] == country)
+                .map((t) => t['purpose']?.toString() ?? '')
+                .where((v) => v.isNotEmpty)
+                .toSet()
+                .toList();
+            return AlertDialog(
+              title: Text(
+                isNew
+                    ? 'Create Corporate Application'
+                    : 'Edit Corporate Application',
+              ),
+              content: SizedBox(
+                width: 520,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (isNew)
+                        DropdownButtonFormField<String>(
+                          initialValue: employeeId,
+                          decoration: const InputDecoration(
+                            labelText: 'Employee',
+                          ),
+                          items: active
+                              .map(
+                                (e) => DropdownMenuItem(
+                                  value: e['id'].toString(),
+                                  child: Text(
+                                    e['displayName']?.toString() ??
+                                        e['email'].toString(),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) => update(() => employeeId = v),
+                        )
+                      else
+                        ListTile(
+                          title: const Text('Employee (locked)'),
+                          subtitle: Text(employeeId ?? ''),
+                        ),
+                      ListTile(
+                        title: const Text('Company (locked)'),
+                        subtitle: Text(selected?['name']?.toString() ?? ''),
+                      ),
+                      TextField(
+                        controller: title,
+                        decoration: const InputDecoration(
+                          labelText: 'Application title',
+                        ),
+                      ),
+                      DropdownButtonFormField<String>(
+                        initialValue: countries.any((x) => x['code'] == country)
+                            ? country
+                            : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Destination country',
+                        ),
+                        items: countries
+                            .map(
+                              (e) => DropdownMenuItem(
+                                value: e['code'].toString(),
+                                child: Text(e['name'].toString()),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (v) => update(() {
+                          country = v;
+                          purpose = null;
+                        }),
+                      ),
+                      DropdownButtonFormField<String>(
+                        initialValue: purposes.contains(purpose)
+                            ? purpose
+                            : null,
+                        decoration: const InputDecoration(labelText: 'Purpose'),
+                        items: purposes
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                        onChanged: (v) => update(() => purpose = v),
+                      ),
+                      DropdownButtonFormField<String>(
+                        initialValue: priority,
+                        decoration: const InputDecoration(
+                          labelText: 'Priority',
+                        ),
+                        items: ['Normal', 'High', 'Urgent']
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                        onChanged: (v) =>
+                            update(() => priority = v ?? priority),
+                      ),
+                      DropdownButtonFormField<String>(
+                        initialValue: hrs.any((e) => e['id'].toString() == hr)
+                            ? hr
+                            : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Assigned HR officer',
+                        ),
+                        items: [
+                          const DropdownMenuItem<String>(
+                            value: null,
+                            child: Text('Unassigned'),
+                          ),
+                          ...hrs.map(
+                            (e) => DropdownMenuItem(
+                              value: e['id'].toString(),
+                              child: Text(
+                                e['displayName']?.toString() ??
+                                    e['email'].toString(),
+                              ),
+                            ),
+                          ),
+                        ],
+                        onChanged: (v) => update(() => hr = v),
+                      ),
+                      DropdownButtonFormField<String>(
+                        initialValue: status,
+                        decoration: const InputDecoration(
+                          labelText: 'Corporate task status',
+                        ),
+                        items: ['Open', 'InProgress', 'Blocked', 'Closed']
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                        onChanged: (v) => update(() => status = v ?? status),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              'Due: ${due?.toLocal().toString().split(' ').first ?? 'Not set'}',
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: ctx,
+                                initialDate: due ?? DateTime.now(),
+                                firstDate: DateTime(2020),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) update(() => due = picked);
+                            },
+                            child: const Text('Choose date'),
+                          ),
+                        ],
+                      ),
+                      TextField(
+                        controller: notes,
+                        maxLines: 3,
+                        decoration: const InputDecoration(labelText: 'Notes'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        ),
+      );
+      if (ok == true && employeeId != null && title.text.trim().isNotEmpty) {
+        final data = <String, dynamic>{
+          'title': title.text.trim(),
+          'status': status,
+          'dueAt': due?.toUtc().toIso8601String(),
+          'notes': notes.text,
+          'countryCode': country,
+          'purpose': purpose,
+          'priority': priority,
+          'assignedHrUserId': hr,
+        };
+        if (isNew) data['employeeUserId'] = employeeId;
+        await action(() async {
+          if (isNew) {
+            await widget.service.createCase(companyId, data);
+          } else {
+            await widget.service.updateCase(
+              companyId,
+              existing['id'].toString(),
+              data,
+            );
+          }
+        });
+      }
+    } finally {
+      title.dispose();
+      notes.dispose();
+    }
   }
 }

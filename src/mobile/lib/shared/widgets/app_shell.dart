@@ -1,4 +1,13 @@
 import 'package:flutter/material.dart';
+
+import '../../features/translator/translation_screen.dart';
+import '../../features/family/family_screen.dart';
+import '../../features/emergency/emergency_screen.dart';
+import '../../features/corporate/corporate_screen.dart';
+import '../../features/applications/application_assistant_screen.dart';
+import '../../core/services/corporate_service.dart';
+import '../../core/services/destination_service.dart';
+import '../../core/networking/api_client.dart';
 import '../../core/services/assistant_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/document_service.dart';
@@ -51,8 +60,41 @@ class _AppShellState extends State<AppShell> {
 
   void _navigateToTab(int index) {
     if (index >= 0 && index < 5) {
-      setState(() { _currentIndex = index; if (index == 1) _documentRefresh++; if (index == 3) _reminderRefresh++; });
+      setState(() {
+        _currentIndex = index;
+        if (index == 1) _documentRefresh++;
+        if (index == 3) _reminderRefresh++;
+      });
     }
+  }
+
+  void _openDashboardFeature(DashboardFeature feature) {
+    late final Widget screen;
+
+    switch (feature) {
+      case DashboardFeature.translation:
+        screen = TranslationScreen(
+          translationService: widget.translationService,
+        );
+        break;
+      case DashboardFeature.visaAssistant:
+        screen = ApplicationAssistantScreen(
+          documentService: widget.documentService,
+        );
+        break;
+      case DashboardFeature.family:
+        screen = FamilyScreen(documentService: widget.documentService);
+        break;
+      case DashboardFeature.emergency:
+        screen = EmergencyScreen(emergencyService: widget.emergencyService);
+        break;
+      case DashboardFeature.corporate:
+        final api = ApiClient()..setAuthService(widget.authService);
+        screen = CorporateScreen(service: CorporateService(api));
+        break;
+    }
+
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
   }
 
   @override
@@ -62,8 +104,12 @@ class _AppShellState extends State<AppShell> {
         healthService: widget.healthService,
         userService: widget.userService,
         reminderService: widget.reminderService,
+        destinationService: DestinationService(
+          ApiClient()..setAuthService(widget.authService),
+        ),
         userName: widget.userName,
         onNavigateToTab: _navigateToTab,
+        onOpenFeature: _openDashboardFeature,
       ),
       DocumentsScreen(
         key: ValueKey(_documentRefresh),
@@ -71,7 +117,10 @@ class _AppShellState extends State<AppShell> {
         reminderService: widget.reminderService,
       ),
       AssistantScreen(assistantService: widget.assistantService),
-      RemindersScreen(key: ValueKey('reminders-$_reminderRefresh'), reminderService: widget.reminderService),
+      RemindersScreen(
+        key: ValueKey('reminders-$_reminderRefresh'),
+        reminderService: widget.reminderService,
+      ),
       MoreScreen(
         documentService: widget.documentService,
         authService: widget.authService,
@@ -83,10 +132,7 @@ class _AppShellState extends State<AppShell> {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _navigateToTab,

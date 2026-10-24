@@ -19,6 +19,15 @@ using Pgvector.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Destination banner weather: public weather data, authenticated app endpoints.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ExpatOne.Api.Services.Destinations.DestinationCatalog>();
+builder.Services.AddSingleton<ExpatOne.Api.Services.Destinations.DestinationWeatherService>();
+builder.Services.AddHttpClient("DestinationWeather", client =>
+    client.Timeout = TimeSpan.FromSeconds(8))
+    .RemoveAllLoggers(); // Avoid logging provider URLs containing commercial API keys.
+
+
 // ── Forwarded headers ────────────────────────────────────────────────────────
 // Production: TLS terminates at the AWS ALB, which forwards over HTTP to Kestrel
 // on a private VPC subnet. ForwardedHeadersMiddleware reads X-Forwarded-Proto and
@@ -313,7 +322,9 @@ builder.Services.AddCors(options =>
         policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
     options.AddPolicy("Web", policy =>
-        policy.WithOrigins("https://expatone-db2ff.web.app")
+        policy.WithOrigins(
+            "https://expatone-db2ff.web.app",
+            "https://expatone-db2ff--gcp-fresh-test-01ctdnq0.web.app")
             .AllowAnyMethod()
             .AllowAnyHeader());
 });
