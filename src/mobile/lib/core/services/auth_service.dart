@@ -88,30 +88,51 @@ class FirebaseAuthService implements IAuthService {
   @override
   Future<AuthUser> signInWithGoogle() async {
     try {
+      if (kIsWeb) {
+        final provider = fb.GoogleAuthProvider();
+        final result = await _auth.signInWithPopup(provider);
+        final user = result.user;
+
+        if (user == null) {
+          throw const AuthServiceException(
+            'Google sign-in did not return a user.',
+          );
+        }
+        return _mapUser(user);
+      }
+
+      // Keep the existing native Google flow for Android.
       final googleSignIn = GoogleSignIn.instance;
       await googleSignIn.initialize();
       final googleAccount = await googleSignIn.authenticate();
-
       final idToken = googleAccount.authentication.idToken;
-      final credential = fb.GoogleAuthProvider.credential(idToken: idToken);
 
-      final result = await _auth.signInWithCredential(credential);
-      return _mapUser(result.user!);
-    } on GoogleSignInException catch (e) {
-      // clientConfigurationError means the Firebase project is missing the Web
-      // OAuth client (type 3) in google-services.json — a setup issue, not a
-      // user error. Surface a useful message in debug; generic in release.
-      if (e.code == GoogleSignInExceptionCode.clientConfigurationError ||
-          e.code == GoogleSignInExceptionCode.providerConfigurationError) {
-        final detail = kDebugMode
-            ? 'Google Sign-In is not configured. Add a Web OAuth client to the Firebase project and re-download google-services.json. (${e.description})'
-            : 'Google sign-in is not available. Please sign in with email instead.';
-        throw AuthServiceException(detail);
+      if (idToken == null) {
+        throw const AuthServiceException(
+          'Google sign-in did not return an ID token.',
+        );
       }
+
+      final credential =
+          fb.GoogleAuthProvider.credential(idToken: idToken);
+      final result = await _auth.signInWithCredential(credential);
+
+      if (result.user == null) {
+        throw const AuthServiceException(
+          'Google sign-in did not return a user.',
+        );
+      }
+      return _mapUser(result.user!);
+    } on AuthServiceException {
+      rethrow;
+    } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         throw const AuthServiceException('Sign-in was cancelled.');
       }
-      throw const AuthServiceException('Google sign-in failed. Please try again.');
+      final detail = kDebugMode
+          ? 'Google sign-in failed: ${e.code} (${e.description})'
+          : 'Google sign-in failed. Please try again.';
+      throw AuthServiceException(detail);
     } on fb.FirebaseAuthException catch (e) {
       throw _mapFirebaseError(e);
     }

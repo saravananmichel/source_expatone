@@ -50,7 +50,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text,
         _nameController.text.trim(),
       );
-      if (mounted) widget.onRegisterSuccess();
+      // Firebase signs in newly registered users automatically.
+      // Best-effort sign-out so signup still returns to login if cleanup fails.
+      try {
+        await widget.authService.signOut();
+      } catch (_) {
+        // Account creation succeeded; don't present it as a registration failure.
+      }
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     } on AuthServiceException catch (e) {
       if (mounted) setState(() => _errorMessage = e.message);
     } catch (_) {
