@@ -65,8 +65,15 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         return result;
     }
     public async Task<object> CreateAsync(Guid user,VisaCreateDto input) {
-        var template=await db.VisaTemplates.AsNoTracking().SingleOrDefaultAsync(t=>t.Id==input.TemplateId && t.CountryCode=="SG" && t.Purpose=="Tourism")
+        var template = await db.VisaTemplates.AsNoTracking()
+            .SingleOrDefaultAsync(t => t.Id == input.TemplateId)
             ?? throw new ArgumentException("This country and purpose are not enabled yet.");
+
+        var destinationEnabled = await db.VisaDestinations.AsNoTracking()
+            .AnyAsync(d => d.Code == template.CountryCode && d.Enabled);
+
+        if (!destinationEnabled)
+            throw new ArgumentException("This country and purpose are not enabled yet.");
         var state=new VisaState{Documents=await Bind(user,input.Documents,Read<VisaRulePack>(template.RulesJson))};
         var a=new VisaApplication{Id=Guid.NewGuid(),UserId=user,TemplateId=template.Id,StateJson=Write(state)};
         db.VisaApplications.Add(a);await db.SaveChangesAsync();return await GetAsync(user,a.Id);
