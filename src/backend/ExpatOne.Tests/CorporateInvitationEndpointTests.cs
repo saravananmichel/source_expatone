@@ -155,6 +155,42 @@ public sealed class CorporateInvitationEndpointTests
         }
     }
 
+    [Fact]
+    public async Task CasePagination_IsStable_AndKeepsEmployeeScope()
+    {
+        using var s = await CreateScenarioAsync();
+        using (var scope = s.Factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+            db.CorporateMemberships.Add(new CorporateMembership {
+                Id = Guid.NewGuid(), CompanyId = s.CompanyId, UserId = s.EmployeeId,
+                Role = "Viewer", Status = "Active"
+            });
+            for (var i = 0; i < 251; i++)
+                db.CorporateCases.Add(new CorporateCase {
+                    Id = Guid.NewGuid(), CompanyId = s.CompanyId,
+                    EmployeeUserId = s.EmployeeId, Title = $"Task {i}",
+                    DueAt = new DateTime(2027, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+                });
+            db.CorporateCases.Add(new CorporateCase {
+                Id = Guid.NewGuid(), CompanyId = s.CompanyId,
+                EmployeeUserId = s.OwnerId, Title = "Other employee task"
+            });
+            await db.SaveChangesAsync();
+        }
+        var url = $"/api/corporate/companies/{s.CompanyId}/cases";
+        var first = await s.Employee.GetFromJsonAsync<System.Text.Json.JsonElement[]>(url);
+        var second = await s.Employee.GetFromJsonAsync<System.Text.Json.JsonElement[]>(url + "?skip=250");
+        Assert.Equal(250, first!.Length);
+        Assert.Single(second!);
+        var ids = first.Concat(second!).Select(x => x.GetProperty("id").GetGuid()).ToList();
+        Assert.Equal(251, ids.Distinct().Count());
+        Assert.All(first.Concat(second!), x => Assert.Equal(s.EmployeeId, x.GetProperty("employeeUserId").GetGuid()));
+        var ownerSecond = await s.Owner.GetFromJsonAsync<System.Text.Json.JsonElement[]>(url + "?skip=250");
+        Assert.Equal(2, ownerSecond!.Length);
+        Assert.Equal(HttpStatusCode.BadRequest, (await s.Owner.GetAsync(url + "?skip=-1")).StatusCode);
+    }
+
     private static async Task<Guid> InviteEmployeeAsync(Scenario s)
     {
         var response = await s.Owner.PostAsJsonAsync(

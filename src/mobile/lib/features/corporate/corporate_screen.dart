@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/services/corporate_service.dart';
+import 'business_dashboard.dart';
 
 class CorporateScreen extends StatefulWidget {
   final CorporateService service;
@@ -17,7 +18,6 @@ class _CorporateScreenState extends State<CorporateScreen> {
   Map<String, dynamic>? selected, metrics;
   List<Map<String, dynamic>> employees = [], cases = [];
   bool get isHr =>
-      selected?['role'] == 'Admin' ||
       selected?['role'] == 'Admin' ||
       selected?['role'] == 'Owner' ||
       selected?['role'] == 'HR';
@@ -137,7 +137,115 @@ class _CorporateScreenState extends State<CorporateScreen> {
     ),
   );
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) {
+    if (companies.isEmpty) return legacyScreen(context);
+    return BusinessDashboard(
+      companies: companies,
+      selected: selected!,
+      employees: employees,
+      tasks: cases,
+      metrics: metrics,
+      isHr: isHr,
+      isOwner: isOwner,
+      loading: loading,
+      error: error,
+      onRefresh: reload,
+      onCompany: (id) {
+        setState(() {
+          selected = companies.firstWhere((c) => c['id'].toString() == id);
+        });
+        reload();
+      },
+      onInvite: inviteMember,
+      onEditMember: editMember,
+      onNewTask: () => action(createCase),
+      taskActions: taskActions,
+      invitations: invitations
+          .map(
+            (i) => Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Invitation: ${i['name'] ?? 'Company'}'),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton(
+                          onPressed: () => action(() async {
+                            await widget.service.decline(i['id'].toString());
+                          }),
+                          child: const Text('Decline'),
+                        ),
+                        FilledButton(
+                          onPressed: () => action(() async {
+                            await widget.service.accept(i['id'].toString());
+                          }),
+                          child: const Text('Accept'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  Widget taskActions(Map<String, dynamic> c) => PopupMenuButton<String>(
+    tooltip: 'Task actions',
+    onSelected: (v) => action(() async {
+      if (v == 'Edit task') {
+        await editCase(c);
+      } else if (v == 'View visa') {
+        await viewVisa(c);
+      } else if (v == 'Link visa') {
+        await selectAndLinkVisa(c);
+      } else if (v == 'Unlink visa') {
+        await widget.service.unlinkVisa(companyId, c['id'].toString());
+      } else {
+        await widget.service.updateCase(companyId, c['id'].toString(), {
+          'status': v,
+          'dueAt': c['dueAt'],
+          'notes': c['notes'],
+        });
+      }
+    }),
+    itemBuilder: (_) => [
+      if (isHr)
+        const PopupMenuItem(
+          value: 'Edit task',
+          child: Text('Edit application'),
+        ),
+      if (isHr && c['visaApplicationId'] != null)
+        const PopupMenuItem(
+          value: 'View visa',
+          child: Text('View linked visa (read-only)'),
+        ),
+      if (isHr)
+        ...[
+          'Open',
+          'InProgress',
+          'Blocked',
+          'Closed',
+        ].map((v) => PopupMenuItem(value: v, child: Text('Set $v'))),
+      if (!isHr)
+        const PopupMenuItem(
+          value: 'Link visa',
+          child: Text('Link My Visa Application'),
+        ),
+      if (!isHr && c['visaApplicationId'] != null)
+        const PopupMenuItem(
+          value: 'Unlink visa',
+          child: Text('Unlink My Visa Application'),
+        ),
+    ],
+  );
+
+  Widget legacyScreen(BuildContext context) => Scaffold(
     appBar: AppBar(
       title: const Text('ExpatOne Business'),
       actions: [IconButton(onPressed: reload, icon: const Icon(Icons.refresh))],
@@ -219,198 +327,8 @@ class _CorporateScreenState extends State<CorporateScreen> {
                         .toList(),
                   ),
                 ),
-              if (companies.isNotEmpty) ...[
-                panel(
-                  'Company & role',
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DropdownButtonFormField<String>(
-                        initialValue: companyId,
-                        decoration: const InputDecoration(labelText: 'Company'),
-                        items: companies
-                            .map(
-                              (c) => DropdownMenuItem(
-                                value: c['id'].toString(),
-                                child: Text(c['name'].toString()),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (id) {
-                          setState(() {
-                            selected = companies.firstWhere(
-                              (c) => c['id'] == id,
-                            );
-                          });
-                          reload();
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                      Text('Your access: ${selected?['role']}'),
-                      if (isOwner)
-                        const Text(
-                          'Company owner: corporate administration access',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                    ],
-                  ),
-                ),
-                if (isHr) ...[
-                  panel(
-                    'HR Overview',
-                    Wrap(
-                      spacing: 18,
-                      runSpacing: 10,
-                      children: [
-                        metric('Active employees', metrics?['activeEmployees']),
-                        metric('Open cases', metrics?['openCases']),
-                        metric(
-                          'Due within 30 days',
-                          metrics?['dueWithin30Days'],
-                        ),
-                      ],
-                    ),
-                  ),
-                  panel(
-                    'Employee Management',
-                    Column(
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton.icon(
-                            onPressed: () => inviteMember(),
-                            icon: const Icon(Icons.person_add_alt),
-                            label: const Text('Invite'),
-                          ),
-                        ),
-                        ...employees.map(
-                          (e) => ListTile(
-                            title: Text(
-                              e['displayName']?.toString() ??
-                                  e['email']?.toString() ??
-                                  'Employee',
-                            ),
-                            subtitle: Text(
-                              '${e['email']} · ${e['role']} · ${e['status']}',
-                            ),
-                            trailing: isOwner
-                                ? IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    tooltip: 'Edit role / status',
-                                    onPressed: () => editMember(e),
-                                  )
-                                : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                panel(
-                  isHr ? 'Corporate Applications & Tasks' : 'My Company Tasks',
-                  Column(
-                    children: [
-                      if (isHr)
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FilledButton.icon(
-                            onPressed: () => createCase(),
-                            icon: const Icon(Icons.add),
-                            label: const Text('New task'),
-                          ),
-                        ),
-                      if (cases.isEmpty)
-                        const ListTile(title: Text('No mobility cases yet')),
-                      ...cases.map(
-                        (c) => Card(
-                          child: ListTile(
-                            title: Text(c['title']?.toString() ?? 'Case'),
-                            subtitle: Text(
-                              'Status: ${c['status']} · ${c['priority'] ?? 'Normal'}\n${c['countryCode'] ?? ''} ${c['purpose'] ?? ''}\nVisa: ${c['visaApplicationId'] ?? 'Not linked'}',
-                            ),
-                            isThreeLine: true,
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (v) => action(() async {
-                                if (v == 'Edit task') {
-                                  await editCase(c);
-                                } else if (v == 'View visa') {
-                                  await viewVisa(c);
-                                } else if (v == 'Link visa') {
-                                  await selectAndLinkVisa(c);
-                                } else if (v == 'Unlink visa') {
-                                  await widget.service.unlinkVisa(
-                                    companyId,
-                                    c['id'].toString(),
-                                  );
-                                } else {
-                                  await widget.service.updateCase(
-                                    companyId,
-                                    c['id'].toString(),
-                                    {
-                                      'status': v,
-                                      'dueAt': c['dueAt'],
-                                      'notes': c['notes'],
-                                    },
-                                  );
-                                }
-                              }),
-                              itemBuilder: (_) => [
-                                if (isHr)
-                                  const PopupMenuItem(
-                                    value: 'Edit task',
-                                    child: Text('Edit application'),
-                                  ),
-                                if (isHr && c['visaApplicationId'] != null)
-                                  const PopupMenuItem(
-                                    value: 'View visa',
-                                    child: Text('View linked visa (read-only)'),
-                                  ),
-                                if (isHr)
-                                  ...[
-                                    'Open',
-                                    'InProgress',
-                                    'Blocked',
-                                    'Closed',
-                                  ].map(
-                                    (v) => PopupMenuItem(
-                                      value: v,
-                                      child: Text('Set $v'),
-                                    ),
-                                  ),
-                                if (!isHr) ...[
-                                  const PopupMenuItem(
-                                    value: 'Link visa',
-                                    child: Text('Link my Visa Application'),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'Unlink visa',
-                                    child: Text('Unlink my Visa Application'),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                panel(
-                  'Privacy',
-                  const Text(
-                    'HR can view the latest saved or submitted visa application and attachment metadata when an employee links it to a company task. HR cannot edit the visa application.',
-                  ),
-                ),
-              ],
             ],
           ),
-  );
-  Widget metric(String label, dynamic value) => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text('${value ?? 0}', style: Theme.of(context).textTheme.headlineMedium),
-      Text(label, style: Theme.of(context).textTheme.bodySmall),
-    ],
   );
   Future<void> inviteMember() async {
     final email = TextEditingController();
