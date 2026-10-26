@@ -55,8 +55,27 @@ class CorporateService {
       api.get('/corporate/companies/$companyId/cases/$caseId/visa');
   Future<List<Map<String, dynamic>>> employees(String id) =>
       api.getList('/corporate/companies/$id/employees');
-  Future<List<Map<String, dynamic>>> cases(String id) =>
-      api.getList('/corporate/companies/$id/cases');
+  Future<List<Map<String, dynamic>>> cases(String id) async {
+    final result = <Map<String, dynamic>>[];
+    final seen = <String>{};
+    while (true) {
+      final page = await api.getList(
+        '/corporate/companies/$id/cases',
+        queryParams: {'skip': '${result.length}'},
+      );
+      // Older API versions ignore skip: never loop forever or claim completeness.
+      for (final row in page) {
+        if (!seen.add(row['id'].toString())) {
+          throw StateError(
+            'Task pagination is unavailable. Deploy the updated corporate API and retry.',
+          );
+        }
+        result.add(row);
+      }
+      if (page.length < 250) return result;
+    }
+  }
+
   Future<Map<String, dynamic>> createCase(
     String id,
     Map<String, dynamic> data,
