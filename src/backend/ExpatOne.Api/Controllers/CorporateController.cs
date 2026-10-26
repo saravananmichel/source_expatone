@@ -144,11 +144,12 @@ public sealed class CorporateController(
   return Ok(new{activeEmployees=active,openCases=open,dueWithin30Days=due});
  }
  [HttpGet("companies/{companyId:guid}/cases")]
- public async Task<IActionResult> Cases(Guid companyId) {
+ public async Task<IActionResult> Cases(Guid companyId, int skip = 0) {
+  if(skip < 0) return BadRequest("skip must be non-negative");
   var uid=await UserId(); if(!await Member(companyId,uid)) return Forbid();
   var query=db.CorporateCases.AsNoTracking().Where(x=>x.CompanyId==companyId);
   if(!await Hr(companyId,uid)) query=query.Where(x=>x.EmployeeUserId==uid);
-  return Ok(await query.OrderBy(x=>x.DueAt).Take(250).Select(x=>new{x.Id,x.EmployeeUserId,x.VisaApplicationId,x.Title,x.Status,x.DueAt,x.Notes,x.CountryCode,x.Purpose,x.Priority,x.AssignedHrUserId}).ToListAsync());
+  return Ok(await query.OrderBy(x=>x.DueAt).ThenBy(x=>x.Id).Skip(skip).Take(250).Select(x=>new{x.Id,x.EmployeeUserId,x.VisaApplicationId,x.Title,x.Status,x.DueAt,x.Notes,x.CountryCode,x.Purpose,x.Priority,x.AssignedHrUserId}).ToListAsync());
  }
  [HttpPost("companies/{companyId:guid}/cases")]
  public async Task<IActionResult> CreateCase(Guid companyId,CreateCorporateCaseRequest request) {
