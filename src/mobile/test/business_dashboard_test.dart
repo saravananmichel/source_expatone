@@ -117,8 +117,11 @@ void main() {
     expect(find.text('No tasks match your search or filters.'), findsOneWidget);
     await tester.tap(find.widgetWithText(ChoiceChip, 'Closed'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('View details'));
-    await tester.tap(find.text('View details'));
+    final detailsButton = find.widgetWithText(TextButton, 'View details');
+    await tester.ensureVisible(detailsButton);
+    await tester.pumpAndSettle();
+    expect(detailsButton, findsOneWidget);
+    await tester.tap(detailsButton);
     await tester.pumpAndSettle();
     expect(find.text('Employee: Bob'), findsOneWidget);
     expect(tester.takeException(), isNull);

@@ -363,22 +363,26 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                     }.entries)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
-                        child: ListTile(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          child: ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            tileColor: page == entry.key ? teal : null,
+                            textColor: Colors.white,
+                            iconColor: Colors.white,
+                            leading: Icon(
+                              [
+                                Icons.dashboard_outlined,
+                                Icons.people_outline,
+                                Icons.assignment_outlined,
+                              ][entry.key],
+                            ),
+                            title: Text(entry.value),
+                            onTap: () => go(entry.key),
                           ),
-                          tileColor: page == entry.key ? teal : null,
-                          textColor: Colors.white,
-                          iconColor: Colors.white,
-                          leading: Icon(
-                            [
-                              Icons.dashboard_outlined,
-                              Icons.people_outline,
-                              Icons.assignment_outlined,
-                            ][entry.key],
-                          ),
-                          title: Text(entry.value),
-                          onTap: () => go(entry.key),
                         ),
                       ),
                     const Spacer(),
