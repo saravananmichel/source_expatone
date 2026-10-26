@@ -7,7 +7,7 @@ public class VisaDestinationConfiguration : IEntityTypeConfiguration<VisaDestina
 {
  public void Configure(EntityTypeBuilder<VisaDestination> b) {
   b.ToTable("visa_destinations"); b.HasKey(x=>x.Code); b.Property(x=>x.Code).HasMaxLength(2); b.Property(x=>x.Name).HasMaxLength(80);
-  b.HasData(new[]{("SG","Singapore"),("MY","Malaysia"),("IN","India"),("ID","Indonesia"),("CN","China"),("AE","United Arab Emirates"),("SA","Saudi Arabia"),("QA","Qatar"),("KW","Kuwait"),("BH","Bahrain"),("OM","Oman")}.Select(x=>new VisaDestination{Code=x.Item1,Name=x.Item2,Enabled=x.Item1=="SG"}));
+  b.HasData(new[]{("SG","Singapore"),("VU","Vanuatu"),("MY","Malaysia"),("IN","India"),("ID","Indonesia"),("CN","China"),("AE","United Arab Emirates"),("SA","Saudi Arabia"),("QA","Qatar"),("KW","Kuwait"),("BH","Bahrain"),("OM","Oman")}.Select(x=>new VisaDestination{Code=x.Item1,Name=x.Item2,Enabled=new[]{"SG","MY","IN","CN","VU"}.Contains(x.Item1)}));
  }
 }
 public class VisaTemplateConfiguration : IEntityTypeConfiguration<VisaTemplate>
@@ -15,7 +15,10 @@ public class VisaTemplateConfiguration : IEntityTypeConfiguration<VisaTemplate>
  public void Configure(EntityTypeBuilder<VisaTemplate> b) {
   b.ToTable("visa_templates"); b.HasKey(x=>x.Id); b.Property(x=>x.Id).HasMaxLength(80); b.Property(x=>x.CountryCode).HasMaxLength(2); b.Property(x=>x.Purpose).HasMaxLength(40); b.Property(x=>x.RulesJson).HasColumnType("text");
   b.HasOne<VisaDestination>().WithMany().HasForeignKey(x=>x.CountryCode).OnDelete(DeleteBehavior.Restrict);
-  b.HasData(new VisaTemplate{Id="SG-VISIT-2026-10-12",CountryCode="SG",Purpose="Tourism",RulesJson=VisaRules.SeedJson()});
+  b.HasData(VisaRules.AllSeedJson().Select(json => {
+   var pack = System.Text.Json.JsonSerializer.Deserialize<VisaRulePack>(json, VisaRules.Json)!;
+   return new VisaTemplate { Id=pack.Id, CountryCode=pack.Country, Purpose=pack.Purpose, RulesJson=json };
+  }));
  }
 }
 public class VisaApplicationConfiguration : IEntityTypeConfiguration<VisaApplication>

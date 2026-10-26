@@ -25,6 +25,24 @@ public class VisaApplicationTests : IDisposable
     private static JsonElement J(object value)=>JsonSerializer.SerializeToElement(value,VisaRules.Json);
     private async Task<JsonElement> Create(Guid user)=>J(await service.CreateAsync(user,new VisaCreateDto{Documents=[new(){Id=doc,Role="Passport"}]}));
     private async Task<FamilyRequestDto> Share() {var f=new FamilyService(db);var r=await f.SendAsync(viewer,"owner@visa.test");return await f.RespondAsync(owner,r.Id,new FamilyDecisionDto{Revision=r.Revision,Accept=true,DocumentIds=[doc],AccessExpiresAt=DateTimeOffset.UtcNow.AddHours(1)});}
+    [Fact] public async Task PriorityCountryDraftsUseTheirOwnTemplateAndRejectSingaporeExport() {
+        var templates = await db.VisaTemplates.Where(t => t.CountryCode != "SG").ToListAsync();
+        Assert.Equal(12, templates.Count);
+        foreach (var template in templates) {
+            var draft = J(await service.CreateAsync(owner, new VisaCreateDto {
+                TemplateId = template.Id, Documents = [new() { Id = doc, Role = "Passport" }]
+            }));
+            Assert.Equal(template.Id, draft.GetProperty("templateId").GetString());
+            Assert.DoesNotContain("SG Arrival Card", draft.GetProperty("assessment").GetProperty("travelNote").GetString()!);
+            await Assert.ThrowsAsync<ArgumentException>(() => service.ExportAsync(owner,
+                draft.GetProperty("id").GetGuid(), draft.GetProperty("revision").GetGuid(), "14a", default));
+        }
+        (await db.VisaDestinations.FindAsync("VU"))!.Enabled = false;
+        await db.SaveChangesAsync();
+        await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(owner,
+            new VisaCreateDto { TemplateId = "VU-VISIT-2026-10-26" }));
+    }
+
     [Fact] public async Task PrefillUsesCompletedLabelledOcrWithoutOverwritingUserValues() {
         var document = await db.Documents.FindAsync(doc);
         document!.ExtractionStatus = "COMPLETED";

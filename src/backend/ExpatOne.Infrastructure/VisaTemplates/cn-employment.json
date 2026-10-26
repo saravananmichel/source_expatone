@@ -1,0 +1,494 @@
+{
+  "id": "CN-EMPLOYMENT-2026-10-26",
+  "country": "CN",
+  "purpose": "Employment",
+  "title": "China - Employment application preparation",
+  "validationProfile": "preparation-v1",
+  "reviewedOn": "2026-10-26",
+  "reviewUntil": "2027-01-24",
+  "readinessScope": "Preparation checklist only; eligibility and final requirements must be confirmed for the applicant and filing authority. Completion is not visa approval.",
+  "guidance": "Z work visa preparation includes the official work-permit notification or work permit. Confirm any residence-permit steps after arrival.",
+  "travelNote": "Z work visa preparation includes the official work-permit notification or work permit. Confirm any residence-permit steps after arrival. ExpatOne does not submit applications or grant permission to enter, reside or work.",
+  "exportForms": [],
+  "fields": [
+    {
+      "key": "fullName",
+      "label": "Full name exactly as in passport",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "birthDate",
+      "label": "Date of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "sex",
+      "label": "Sex as recorded in travel document",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Male",
+        "Female",
+        "Other / as recorded"
+      ]
+    },
+    {
+      "key": "nationality",
+      "label": "Nationality / citizenship",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "passportType",
+      "label": "Travel document type",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "International Passport",
+        "Diplomatic Passport",
+        "Official Passport",
+        "Other"
+      ]
+    },
+    {
+      "key": "passportNumber",
+      "label": "Passport / travel document number",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "passportIssueDate",
+      "label": "Passport issue date",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "passportExpiryDate",
+      "label": "Passport expiry date",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "passportIssuePlace",
+      "label": "Country / place of issue",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "birthCountry",
+      "label": "Country / place of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "email",
+      "label": "Email",
+      "section": "Contact",
+      "required": true,
+      "type": "email",
+      "maxLength": 150
+    },
+    {
+      "key": "phone",
+      "label": "Contact number including country code",
+      "section": "Contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "residenceCountry",
+      "label": "Current country of residence",
+      "section": "Contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "residenceAddress",
+      "label": "Current residential address",
+      "section": "Contact",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "filingCountry",
+      "label": "Country where application will be filed",
+      "section": "Filing route",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "filingLocation",
+      "label": "Handling embassy / visa centre / employer / authority",
+      "section": "Filing route",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "arrivalDate",
+      "label": "Intended arrival date",
+      "section": "Travel",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "departureDate",
+      "label": "Intended departure date, if known",
+      "section": "Travel",
+      "required": false,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "destinationAddress",
+      "label": "Proposed address / hotel in destination",
+      "section": "Travel",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "routeConfirmed",
+      "label": "Have you confirmed the route and nationality eligibility with the official authority?",
+      "section": "Filing route",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "translationRequired",
+      "label": "Are certified translations required?",
+      "section": "Evidence setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "lawfulStayRequired",
+      "label": "Does the filing authority require proof of lawful residence in the filing country?",
+      "section": "Evidence setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "applicationRoute",
+      "label": "Confirmed application category",
+      "section": "Filing route",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Z work visa"
+      ]
+    },
+    {
+      "key": "employerName",
+      "label": "Employer legal name",
+      "section": "Employment",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "employerRegistration",
+      "label": "Employer registration number",
+      "section": "Employment",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "employerAddress",
+      "label": "Employer address",
+      "section": "Employment",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "employerContact",
+      "label": "Employer / HR contact",
+      "section": "Employment",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "jobTitle",
+      "label": "Job title and occupation",
+      "section": "Employment",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "jobDuties",
+      "label": "Main duties",
+      "section": "Employment",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "salaryAmount",
+      "label": "Contract salary amount (basic salary where applicable)",
+      "section": "Employment",
+      "required": true,
+      "type": "number",
+      "maxLength": 150
+    },
+    {
+      "key": "salaryCurrency",
+      "label": "Salary currency",
+      "section": "Employment",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "salaryPeriod",
+      "label": "Salary payment period",
+      "section": "Employment",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Monthly",
+        "Annual"
+      ]
+    },
+    {
+      "key": "employmentStartDate",
+      "label": "Planned employment start date",
+      "section": "Employment",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "employmentEndDate",
+      "label": "Contract end date, if fixed term",
+      "section": "Employment",
+      "required": false,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "permitReference",
+      "label": "Work / position approval reference, if issued",
+      "section": "Employment",
+      "required": false,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "medicalRequired",
+      "label": "Does this route require a medical certificate?",
+      "section": "Evidence setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "policeRequired",
+      "label": "Does this route require a police clearance?",
+      "section": "Evidence setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "formerChineseCitizen",
+      "label": "Have you previously held Chinese nationality?",
+      "section": "Filing route",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "previousChinaVisa",
+      "label": "Previous Chinese visa details, if applicable",
+      "section": "Filing route",
+      "required": false,
+      "type": "text",
+      "maxLength": 150
+    }
+  ],
+  "checks": [
+    {
+      "key": "routeReviewed",
+      "label": "Record the current official checklist URL, review date and applicable nationality/filing route; resolve any visa exemption first.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "passportCopy",
+      "label": "Applicant passport copy reviewed against the current official validity and blank-page rules.",
+      "needsDocument": true,
+      "role": "Passport"
+    },
+    {
+      "key": "photo",
+      "label": "Photograph prepared to the handling authority specifications.",
+      "needsDocument": true,
+      "role": "Photograph"
+    },
+    {
+      "key": "lawfulStay",
+      "label": "Required lawful residence evidence supplied.",
+      "needsDocument": true,
+      "role": "Residence evidence",
+      "when": "eq:lawfulStayRequired:Yes"
+    },
+    {
+      "key": "translation",
+      "label": "Required certified translations supplied.",
+      "needsDocument": true,
+      "role": "Official translation",
+      "when": "translation"
+    },
+    {
+      "key": "formReviewed",
+      "label": "Applicant has checked all answers and declarations against original documents.",
+      "needsDocument": false
+    },
+    {
+      "key": "additional",
+      "label": "Record additional mission/employer requirements and confirm they are supplied, or explain why none apply.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "contract",
+      "label": "Signed employment offer / contract supplied.",
+      "needsDocument": true,
+      "role": "Employment contract"
+    },
+    {
+      "key": "employerReviewed",
+      "label": "Employer confirmed sponsoring entity, occupation, current remuneration/category rules and required approvals.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "qualifications",
+      "label": "Confirm qualifications, professional licensing and employer registration evidence required for this role.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "arrivalSteps",
+      "label": "Employer confirmed permitted work start and any post-arrival registration / residence steps.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "medical",
+      "label": "Required medical certificate supplied.",
+      "needsDocument": true,
+      "role": "Medical certificate",
+      "when": "eq:medicalRequired:Yes"
+    },
+    {
+      "key": "police",
+      "label": "Required police clearance supplied.",
+      "needsDocument": true,
+      "role": "Police clearance",
+      "when": "eq:policeRequired:Yes"
+    },
+    {
+      "key": "workPermit",
+      "label": "Work-permit notification or work permit supplied.",
+      "needsDocument": true,
+      "role": "Work approval"
+    },
+    {
+      "key": "formerNationality",
+      "label": "Review required former Chinese passport / previous visa evidence for former citizens.",
+      "needsDocument": false,
+      "noteRequired": true,
+      "when": "eq:formerChineseCitizen:Yes"
+    }
+  ],
+  "documentRoles": [
+    "Passport",
+    "Photograph",
+    "Itinerary",
+    "Accommodation",
+    "Invitation",
+    "Proof of funds",
+    "Residence evidence",
+    "Official translation",
+    "Other supporting document",
+    "Employment contract",
+    "Medical certificate",
+    "Police clearance",
+    "Work approval"
+  ],
+  "sources": [
+    {
+      "title": "Chinese Embassy Malaysia: visa guidance updated June 2026",
+      "url": "https://my.china-embassy.gov.cn/fwzc/lsyw/lszj/fhqz2024/sbqzxz/202506/t20250606_11642531.htm"
+    },
+    {
+      "title": "Chinese Embassy Malaysia: English visa guidance",
+      "url": "https://my.china-embassy.gov.cn/eng/fwzc/lsyw/qz/202506/t20250606_11642559.htm"
+    }
+  ]
+}

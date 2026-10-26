@@ -1,0 +1,442 @@
+{
+  "id": "CN-DEPENDENT-2026-10-26",
+  "country": "CN",
+  "purpose": "Dependent",
+  "title": "China - Dependant / family application preparation",
+  "validationProfile": "preparation-v1",
+  "reviewedOn": "2026-10-26",
+  "reviewUntil": "2027-01-24",
+  "readinessScope": "Preparation checklist only; eligibility and final requirements must be confirmed for the applicant and filing authority. Completion is not visa approval.",
+  "guidance": "S1/S2 cover visits to eligible foreign residents. Family of Chinese citizens or permanent residents generally needs Q-route review instead; this pack does not cover Q visas. Confirm duration and eligible relationship.",
+  "travelNote": "S1/S2 cover visits to eligible foreign residents. Family of Chinese citizens or permanent residents generally needs Q-route review instead; this pack does not cover Q visas. Confirm duration and eligible relationship. ExpatOne does not submit applications or grant permission to enter, reside or work.",
+  "exportForms": [],
+  "fields": [
+    {
+      "key": "fullName",
+      "label": "Full name exactly as in passport",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "birthDate",
+      "label": "Date of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "sex",
+      "label": "Sex as recorded in travel document",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Male",
+        "Female",
+        "Other / as recorded"
+      ]
+    },
+    {
+      "key": "nationality",
+      "label": "Nationality / citizenship",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "passportType",
+      "label": "Travel document type",
+      "section": "Applicant",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "International Passport",
+        "Diplomatic Passport",
+        "Official Passport",
+        "Other"
+      ]
+    },
+    {
+      "key": "passportNumber",
+      "label": "Passport / travel document number",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "passportIssueDate",
+      "label": "Passport issue date",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "passportExpiryDate",
+      "label": "Passport expiry date",
+      "section": "Applicant",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "passportIssuePlace",
+      "label": "Country / place of issue",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "birthCountry",
+      "label": "Country / place of birth",
+      "section": "Applicant",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "email",
+      "label": "Email",
+      "section": "Contact",
+      "required": true,
+      "type": "email",
+      "maxLength": 150
+    },
+    {
+      "key": "phone",
+      "label": "Contact number including country code",
+      "section": "Contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "residenceCountry",
+      "label": "Current country of residence",
+      "section": "Contact",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "residenceAddress",
+      "label": "Current residential address",
+      "section": "Contact",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "filingCountry",
+      "label": "Country where application will be filed",
+      "section": "Filing route",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "filingLocation",
+      "label": "Handling embassy / visa centre / employer / authority",
+      "section": "Filing route",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "arrivalDate",
+      "label": "Intended arrival date",
+      "section": "Travel",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "departureDate",
+      "label": "Intended departure date, if known",
+      "section": "Travel",
+      "required": false,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "destinationAddress",
+      "label": "Proposed address / hotel in destination",
+      "section": "Travel",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "routeConfirmed",
+      "label": "Have you confirmed the route and nationality eligibility with the official authority?",
+      "section": "Filing route",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "translationRequired",
+      "label": "Are certified translations required?",
+      "section": "Evidence setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "lawfulStayRequired",
+      "label": "Does the filing authority require proof of lawful residence in the filing country?",
+      "section": "Evidence setup",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No",
+        "Not confirmed"
+      ]
+    },
+    {
+      "key": "applicationRoute",
+      "label": "Confirmed application category",
+      "section": "Filing route",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "S1 family visit to foreign resident - over 180 days",
+        "S2 family visit to foreign resident - up to 180 days"
+      ]
+    },
+    {
+      "key": "sponsorName",
+      "label": "Principal applicant / sponsor full name",
+      "section": "Sponsor",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "sponsorNationality",
+      "label": "Sponsor nationality",
+      "section": "Sponsor",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "sponsorPassportNumber",
+      "label": "Sponsor passport number",
+      "section": "Sponsor",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "sponsorPassType",
+      "label": "Sponsor visa / pass / residence status",
+      "section": "Sponsor",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "sponsorPassNumber",
+      "label": "Sponsor visa / pass reference",
+      "section": "Sponsor",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "sponsorPassExpiry",
+      "label": "Sponsor permission expiry date",
+      "section": "Sponsor",
+      "required": true,
+      "type": "date",
+      "maxLength": 10
+    },
+    {
+      "key": "relationship",
+      "label": "Relationship to principal applicant",
+      "section": "Sponsor",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Spouse",
+        "Child",
+        "Adopted child",
+        "Parent",
+        "Parent-in-law",
+        "Other (authority review required)"
+      ]
+    },
+    {
+      "key": "sponsorAddress",
+      "label": "Sponsor address in destination",
+      "section": "Sponsor",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "sponsorContact",
+      "label": "Sponsor contact number / email",
+      "section": "Sponsor",
+      "required": true,
+      "type": "text",
+      "maxLength": 150
+    },
+    {
+      "key": "supportArrangements",
+      "label": "Financial support and accommodation arrangements",
+      "section": "Sponsor",
+      "required": true,
+      "type": "multiline",
+      "maxLength": 500
+    },
+    {
+      "key": "formerChineseCitizen",
+      "label": "Have you previously held Chinese nationality?",
+      "section": "Filing route",
+      "required": true,
+      "type": "choice",
+      "maxLength": 150,
+      "options": [
+        "Yes",
+        "No"
+      ]
+    },
+    {
+      "key": "previousChinaVisa",
+      "label": "Previous Chinese visa details, if applicable",
+      "section": "Filing route",
+      "required": false,
+      "type": "text",
+      "maxLength": 150
+    }
+  ],
+  "checks": [
+    {
+      "key": "routeReviewed",
+      "label": "Record the current official checklist URL, review date and applicable nationality/filing route; resolve any visa exemption first.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "passportCopy",
+      "label": "Applicant passport copy reviewed against the current official validity and blank-page rules.",
+      "needsDocument": true,
+      "role": "Passport"
+    },
+    {
+      "key": "photo",
+      "label": "Photograph prepared to the handling authority specifications.",
+      "needsDocument": true,
+      "role": "Photograph"
+    },
+    {
+      "key": "lawfulStay",
+      "label": "Required lawful residence evidence supplied.",
+      "needsDocument": true,
+      "role": "Residence evidence",
+      "when": "eq:lawfulStayRequired:Yes"
+    },
+    {
+      "key": "translation",
+      "label": "Required certified translations supplied.",
+      "needsDocument": true,
+      "role": "Official translation",
+      "when": "translation"
+    },
+    {
+      "key": "formReviewed",
+      "label": "Applicant has checked all answers and declarations against original documents.",
+      "needsDocument": false
+    },
+    {
+      "key": "additional",
+      "label": "Record additional mission/employer requirements and confirm they are supplied, or explain why none apply.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "sponsorPassport",
+      "label": "Sponsor passport copy supplied.",
+      "needsDocument": true,
+      "role": "Sponsor passport"
+    },
+    {
+      "key": "sponsorPermit",
+      "label": "Sponsor immigration status evidence supplied.",
+      "needsDocument": true,
+      "role": "Sponsor permission"
+    },
+    {
+      "key": "relationshipEvidence",
+      "label": "Marriage / birth / adoption / other accepted relationship evidence supplied.",
+      "needsDocument": true,
+      "role": "Relationship evidence"
+    },
+    {
+      "key": "familyEligibility",
+      "label": "Confirm eligible relationship, age/dependency rules, sponsor permission and intended duration under the chosen route.",
+      "needsDocument": false,
+      "noteRequired": true
+    },
+    {
+      "key": "invitation",
+      "label": "Invitation from the foreign resident supplied.",
+      "needsDocument": true,
+      "role": "Invitation"
+    },
+    {
+      "key": "formerNationality",
+      "label": "Review required former Chinese passport / previous visa evidence for former citizens.",
+      "needsDocument": false,
+      "noteRequired": true,
+      "when": "eq:formerChineseCitizen:Yes"
+    }
+  ],
+  "documentRoles": [
+    "Passport",
+    "Photograph",
+    "Itinerary",
+    "Accommodation",
+    "Invitation",
+    "Proof of funds",
+    "Residence evidence",
+    "Official translation",
+    "Other supporting document",
+    "Sponsor passport",
+    "Sponsor permission",
+    "Relationship evidence"
+  ],
+  "sources": [
+    {
+      "title": "Chinese Embassy Malaysia: visa guidance updated June 2026",
+      "url": "https://my.china-embassy.gov.cn/fwzc/lsyw/lszj/fhqz2024/sbqzxz/202506/t20250606_11642531.htm"
+    },
+    {
+      "title": "Chinese Embassy Malaysia: English visa guidance",
+      "url": "https://my.china-embassy.gov.cn/eng/fwzc/lsyw/qz/202506/t20250606_11642559.htm"
+    }
+  ]
+}

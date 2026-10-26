@@ -319,7 +319,9 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         var a=await Find(user,id);Revision(a,revision);var s=Read<VisaState>(a.StateJson);
         if(await Validate(user,s)==null) throw new InvalidOperationException("Document access or content changed. Export is blocked.");
         if(form=="v39a" && s.Values.GetValueOrDefault("loiRequired")!="Yes") throw new ArgumentException("Enable V39A in the checklist setup first.");
-        var pack=await Pack(a);var values=s.Values.Where(v=>pack.Fields.Any(f=>f.Key==v.Key && VisaRules.Active(f.When,s.Values,Today))).ToDictionary(x=>x.Key,x=>x.Value);
+        var pack=await Pack(a);
+        if (!pack.IsSingaporeVisit) throw new ArgumentException("Official PDF export is not available for this template. Use the linked official filing portal.");
+        var values=s.Values.Where(v=>pack.Fields.Any(f=>f.Key==v.Key && VisaRules.Active(f.When,s.Values,Today))).ToDictionary(x=>x.Key,x=>x.Value);
         var uri=new Uri(config["DocumentIntelligence:ServiceUrl"]??"http://localhost:8090/");
         if(!uri.IsLoopback) throw new InvalidOperationException("Form export requires the private local document service.");
         using var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct);timeout.CancelAfter(TimeSpan.FromSeconds(30));ct=timeout.Token;

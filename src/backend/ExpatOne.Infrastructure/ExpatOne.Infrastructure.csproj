@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <ItemGroup><EmbeddedResource Include="VisaTemplates/sg-visit.json" LogicalName="ExpatOne.SgVisitRules" /></ItemGroup>
+  <ItemGroup><EmbeddedResource Include="VisaTemplates/sg-visit.json" LogicalName="ExpatOne.SgVisitRules" />  <EmbeddedResource Include="VisaTemplates/*.json" Exclude="VisaTemplates/sg-visit.json" LogicalName="ExpatOne.VisaTemplates.%(Filename)%(Extension)" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ExpatOne.Application\ExpatOne.Application.csproj" />

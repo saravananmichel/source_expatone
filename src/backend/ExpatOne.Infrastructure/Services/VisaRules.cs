@@ -26,6 +26,11 @@ public class VisaCheck
 public class VisaRulePack
 {
     public string Id { get; set; } = "";
+    public string Country { get; set; } = "";
+    public string Purpose { get; set; } = "";
+    public string ValidationProfile { get; set; } = "singapore-visit-v1";
+    public string TravelNote { get; set; } = "";
+    public bool IsSingaporeVisit => Id == "SG-VISIT-2026-10-12" && ValidationProfile == "singapore-visit-v1";
     public string ReviewUntil { get; set; } = "";
     public string ReadinessNationality { get; set; } = "";
     public string ReadinessPassportType { get; set; } = "";
@@ -56,9 +61,27 @@ public static class VisaRules
         using var stream = typeof(VisaRules).Assembly.GetManifestResourceStream("ExpatOne.SgVisitRules")!;
         using var reader = new StreamReader(stream); return reader.ReadToEnd();
     }
+    public static IEnumerable<string> AllSeedJson()
+    {
+        yield return SeedJson();
+        var assembly = typeof(VisaRules).Assembly;
+        foreach (var name in assembly.GetManifestResourceNames()
+            .Where(n => n.StartsWith("ExpatOne.VisaTemplates.", StringComparison.Ordinal))
+            .OrderBy(n => n, StringComparer.Ordinal))
+        {
+            using var stream = assembly.GetManifestResourceStream(name)!;
+            using var reader = new StreamReader(stream);
+            yield return reader.ReadToEnd();
+        }
+    }
     public static bool Active(string? condition, IDictionary<string,string> v, DateOnly today)
     {
         string V(string k) => v.TryGetValue(k,out var x) ? x : "";
+        if (condition?.StartsWith("eq:", StringComparison.Ordinal) == true)
+        {
+            var parts = condition.Split(':', 3);
+            return parts.Length == 3 && parts[1].Length > 0 && V(parts[1]) == parts[2];
+        }
         var child = DateOnly.TryParseExact(V("birthDate"),"yyyy-MM-dd",CultureInfo.InvariantCulture,DateTimeStyles.None,out var dob) && dob <= today && dob.AddYears(13)>today;
         return condition switch {
             null => true,
@@ -90,25 +113,45 @@ public static class VisaRules
             if(f.Type=="number" && (!decimal.TryParse(value,NumberStyles.Number,CultureInfo.InvariantCulture,out var n) || n<0)) blockers.Add("Invalid amount: "+f.Label);
             if(f.Type=="email" && !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(value)) blockers.Add("Invalid email: "+f.Label);
         }
-        if(!V("nationality").Equals(pack.ReadinessNationality,StringComparison.OrdinalIgnoreCase) && !V("nationality").Equals("Indian",StringComparison.OrdinalIgnoreCase)) blockers.Add("Readiness rules currently cover Indian ordinary-passport holders only. Other applicants can prepare drafts, but need a reviewed nationality-specific rule pack.");
-        if(V("passportType")!=pack.ReadinessPassportType) blockers.Add("This travel-document type requires a separate eligibility review.");
-        if(!DateOnly.TryParse(pack.ReviewUntil,out var reviewUntil) || today>reviewUntil) blockers.Add("The official requirement rules need to be reviewed and republished.");
-        if(D("arrivalDate") is { } arrival)
+        if (!DateOnly.TryParse(pack.ReviewUntil, out var reviewUntil) || today > reviewUntil)
+            blockers.Add("The official requirement rules need to be reviewed and republished.");
+        if (D("birthDate") is { } birth && birth > today) blockers.Add("Birth date is in the future.");
+        if (D("passportIssueDate") is { } issue && (issue > today || D("passportExpiryDate") is { } exp && exp <= issue))
+            blockers.Add("Passport issue / expiry dates are inconsistent.");
+        if (D("arrivalDate") is { } arrival)
         {
-            if(arrival<today) blockers.Add("Arrival date is in the past.");
-            if(arrival>today.AddDays(30)) blockers.Add("ICA advises applying within 30 days before arrival. Review closer to departure.");
-            if(D("passportExpiryDate") is not { } expiry || expiry<arrival.AddMonths(6)) blockers.Add("Passport needs at least six months validity from entry.");
-            if(D("departureDate") is { } departure) {
-                var nights=departure.DayNumber-arrival.DayNumber;
-                if(nights<0) blockers.Add("Departure precedes arrival.");
-                if(nights==30) blockers.Add("The form's stay categories omit exactly 30 days; confirm the correct selection with your filing contact.");
-                if(nights>30 && V("stayBand")!="More than 30 days" || nights>=0 && nights<30 && V("stayBand")!="Less than 30 days") blockers.Add("Stay category does not match travel dates.");
-            }
+            if (arrival < today) blockers.Add("Arrival date is in the past.");
+            if (D("departureDate") is { } departure && departure < arrival) blockers.Add("Departure precedes arrival.");
         }
-        if(D("birthDate") is { } birth && birth>today) blockers.Add("Birth date is in the future.");
-        if(D("passportIssueDate") is { } issue && (issue>today || D("passportExpiryDate") is { } exp && exp<=issue)) blockers.Add("Passport issue / expiry dates are inconsistent.");
-        if(D("photoDate") is not { } photo || photo>today || photo<today.AddMonths(-3)) blockers.Add("Photograph must have been taken within the past three months.");
-        if(V("loiRequired")=="Not confirmed" || V("translationRequired")=="Not confirmed") blockers.Add("Resolve the introduction-letter and translation requirements with the filing contact.");
+        if (pack.IsSingaporeVisit)
+        {
+            if (!V("nationality").Equals(pack.ReadinessNationality, StringComparison.OrdinalIgnoreCase) && !V("nationality").Equals("Indian", StringComparison.OrdinalIgnoreCase))
+                blockers.Add("Readiness rules currently cover Indian ordinary-passport holders only. Other applicants can prepare drafts, but need a reviewed nationality-specific rule pack.");
+            if (V("passportType") != pack.ReadinessPassportType) blockers.Add("This travel-document type requires a separate eligibility review.");
+            if (D("arrivalDate") is { } sgArrival)
+            {
+                if (sgArrival > today.AddDays(30)) blockers.Add("ICA advises applying within 30 days before arrival. Review closer to departure.");
+                if (D("passportExpiryDate") is not { } expiry || expiry < sgArrival.AddMonths(6)) blockers.Add("Passport needs at least six months validity from entry.");
+                if (D("departureDate") is { } sgDeparture)
+                {
+                    var nights = sgDeparture.DayNumber - sgArrival.DayNumber;
+                    if (nights == 30) blockers.Add("The form's stay categories omit exactly 30 days; confirm the correct selection with your filing contact.");
+                    if (nights > 30 && V("stayBand") != "More than 30 days" || nights >= 0 && nights < 30 && V("stayBand") != "Less than 30 days") blockers.Add("Stay category does not match travel dates.");
+                }
+            }
+            if (D("photoDate") is not { } photo || photo > today || photo < today.AddMonths(-3)) blockers.Add("Photograph must have been taken within the past three months.");
+            if (V("loiRequired") == "Not confirmed" || V("translationRequired") == "Not confirmed") blockers.Add("Resolve the introduction-letter and translation requirements with the filing contact.");
+        }
+        else if (pack.ValidationProfile == "preparation-v1")
+        {
+            if (V("routeConfirmed") != "Yes") blockers.Add("Confirm nationality eligibility and the filing route with the official authority.");
+            foreach (var f in pack.Fields.Where(f => Active(f.When, v, today) && V(f.Key) == "Not confirmed"))
+                blockers.Add("Resolve with the filing authority: " + f.Label);
+            if (D("passportExpiryDate") is { } expiry && expiry <= (D("arrivalDate") ?? today)) blockers.Add("Passport must be valid on the intended arrival date; confirm any additional validity period with the filing authority.");
+            if (D("employmentStartDate") is { } start && D("employmentEndDate") is { } end && end < start) blockers.Add("Contract end precedes its start.");
+            if (D("sponsorPassExpiry") is { } sponsorExpiry && sponsorExpiry < (D("arrivalDate") ?? today)) blockers.Add("Sponsor permission expires before the intended arrival; resolve the applicable renewal or family route.");
+        }
+        else blockers.Add("Unsupported validation profile; this template needs review.");
         if(!state.Documents.Any(d=>d.Role=="Passport")) blockers.Add("Link the applicant's passport.");
         var results = new List<VisaCheckResult>();
         foreach(var c in pack.Checks.Where(c=>Active(c.When,v,today))) {
@@ -119,6 +162,6 @@ public static class VisaRules
             if(!valid) blockers.Add(c.Label);
         }
         var status=blockers.Count==0?"ChecklistComplete":state.Values.Count==0?"Draft":"InProgress";
-        return new(status,blockers,results,"Travel checks are separate: onward travel, sufficient funds, next-destination entry permission and any applicable health requirements. Submit SG Arrival Card within three days including arrival day. This checklist is not visa approval or permission to enter.");
+        return new(status,blockers,results,pack.IsSingaporeVisit ? "Travel checks are separate: onward travel, sufficient funds, next-destination entry permission and any applicable health requirements. Submit SG Arrival Card within three days including arrival day. This checklist is not visa approval or permission to enter." : pack.TravelNote);
     }
 }
