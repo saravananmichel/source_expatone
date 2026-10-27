@@ -277,6 +277,11 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
         icon: Icon(Icons.assignment_outlined),
         label: 'Tasks',
       ),
+      if (widget.isHr)
+        const NavigationDestination(
+          icon: Icon(Icons.badge_outlined),
+          label: 'Workforce & Visa',
+        ),
     ];
     final index = widget.isHr ? page : (page == 2 ? 1 : 0);
     final theme = Theme.of(context).copyWith(
@@ -360,6 +365,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                       0: 'Overview',
                       if (widget.isHr) 1: 'Employees',
                       2: 'Applications & Tasks',
+                      if (widget.isHr) 3: 'Workforce & Visa',
                     }.entries)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
@@ -378,6 +384,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                                 Icons.dashboard_outlined,
                                 Icons.people_outline,
                                 Icons.assignment_outlined,
+                                Icons.badge_outlined,
                               ][entry.key],
                             ),
                             title: Text(entry.value),
@@ -456,6 +463,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                           if (page == 0) ...overview(wide),
                           if (page == 1 && widget.isHr) employeeSection(),
                           if (page == 2) taskSection(),
+                          if (page == 3 && widget.isHr) workforceVisaSection(),
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12),
                             child: Text(
@@ -473,6 +481,70 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Counts linked application records, not issued visas or valid permits.
+  /// Visa expiry requires a separately verified permit expiry date.
+  Widget workforceVisaSection() {
+    final active = widget.employees.where((e) => e['status'] == 'Active').toList();
+    final linked = widget.tasks.where((t) =>
+        t['visaApplicationId'] != null &&
+        t['visaApplicationId'].toString().isNotEmpty).toList();
+    final peopleWithLinks = linked.map((t) => t['employeeUserId'].toString()).toSet();
+    final unlinked = widget.tasks.where((t) =>
+        t['visaApplicationId'] == null ||
+        t['visaApplicationId'].toString().isEmpty).length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        heading('Workforce & Visa'),
+        const Text(
+          'Company workforce and linked visa applications. A linked application '
+          'does not confirm that a visa or work permit has been issued.',
+          style: TextStyle(color: Colors.blueGrey),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('${active.length}'),
+              subtitle: const Text('Active memberships'),
+            ))),
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('${peopleWithLinks.length}'),
+              subtitle: const Text('Employees with linked applications'),
+            ))),
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('${linked.length}'),
+              subtitle: const Text('Linked corporate tasks'),
+            ))),
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('$unlinked'),
+              subtitle: const Text('Tasks without linked applications'),
+            ))),
+          ],
+        ),
+        card(const ListTile(
+          leading: Icon(Icons.info_outline),
+          title: Text('Visa validity and expiry are not yet available'),
+          subtitle: Text('Expiry alerts will require verified permit details. '
+              'Task due dates are not visa expiry dates.'),
+        )),
+        heading('Linked application records'),
+        if (linked.isEmpty)
+          card(const Text('No corporate tasks have linked visa applications yet.')),
+        for (final task in linked)
+          card(ListTile(
+            title: Text(str(task, 'title', 'Corporate application')),
+            subtitle: Text(
+              'Employee: ${assignee(task)} · Task status: ${str(task, 'status', 'Unknown')}',
+            ),
+            trailing: const Icon(Icons.link),
+          )),
+      ],
     );
   }
 
