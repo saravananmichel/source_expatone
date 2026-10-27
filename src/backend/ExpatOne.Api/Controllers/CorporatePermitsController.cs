@@ -40,6 +40,40 @@ public sealed class CorporatePermitsController(ExpatOneDbContext db, IUserServic
             m.UserId == uid && m.Status == "Active" &&
             (m.Role == "Owner" || m.Role == "Admin" || m.Role == "HR"));
 
+    [HttpGet("alerts")]
+    public async Task<IActionResult> Alerts(Guid companyId)
+    {
+        var uid = await UserId();
+        if (!await IsHr(companyId, uid)) return Forbid();
+        var alerts = await (
+            from a in db.CorporatePermitAlerts.AsNoTracking()
+            join p in db.CorporateIssuedPermits.AsNoTracking() on a.PermitId equals p.Id
+            where a.CompanyId == companyId && p.CompanyId == companyId &&
+                a.AcknowledgedAt == null && p.Status == "Active" &&
+                a.ExpiryDate == p.ExpiresOn
+            orderby a.CreatedAt descending
+            select new {
+                a.Id, a.PermitId, a.ThresholdDays, a.ExpiryDate, a.CreatedAt,
+                p.EmployeeUserId, p.CountryCode, p.PermitType
+            }).Take(200).ToListAsync(HttpContext.RequestAborted);
+        return Ok(alerts);
+    }
+
+    [HttpPost("alerts/{alertId:guid}/acknowledge")]
+    public async Task<IActionResult> AcknowledgeAlert(Guid companyId, Guid alertId)
+    {
+        var uid = await UserId();
+        if (!await IsHr(companyId, uid)) return Forbid();
+        var changed = await db.CorporatePermitAlerts
+            .Where(a => a.CompanyId == companyId && a.Id == alertId && a.AcknowledgedAt == null)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(a => a.AcknowledgedAt, DateTime.UtcNow)
+                .SetProperty(a => a.AcknowledgedByUserId, uid)
+                .SetProperty(a => a.UpdatedAt, DateTime.UtcNow), HttpContext.RequestAborted);
+        if (changed == 1) return NoContent();
+        return NotFound();
+    }
+
     [HttpGet]
     public async Task<IActionResult> List(Guid companyId, [FromQuery] int days = 90)
     {
