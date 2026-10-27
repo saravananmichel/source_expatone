@@ -177,15 +177,44 @@ class _CorporateScreenState extends State<CorporateScreen> {
       onEditMember: editMember,
       onDraftOffer: (employee) async {
         final name = employee['displayName']?.toString().trim();
+        final employeeId = employee['id']?.toString() ?? '';
+        if (employeeId.isEmpty || companyId.isEmpty) return;
+        final offers = await widget.service.companyOffers(companyId);
+        if (!mounted) return;
+        final pending = offers.where((o) =>
+          o['employeeUserId']?.toString() == employeeId &&
+          o['status'] == 'Issued').toList();
+        Map<String, dynamic>? previous;
+        if (pending.isNotEmpty) {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Replace pending offer?'),
+              content: const Text('Issuing a new version will supersede the unanswered offer.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Replace offer')),
+              ],
+            ),
+          );
+          if (confirm != true || !mounted) return;
+          previous = pending.first;
+        }
+
         await showDialog<void>(
           context: context,
           builder: (ctx) => OfferLetterDraftDialog(
+            replacementVersion: previous == null ? null :
+                ((previous['version'] as num?)?.toInt() ?? 1) + 1,
             onIssue: (renderedText) async {
               final employeeId = employee['id']?.toString() ?? '';
               if (employeeId.isEmpty || companyId.isEmpty) {
                 throw StateError('Employee or company ID is missing.');
               }
-              await widget.service.issueOffer(companyId, employeeId, renderedText);
+              await widget.service.issueOffer(companyId, employeeId, renderedText,
+                replacesOfferId: previous?['id']?.toString());
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Offer issued to employee Document Wallet')),
