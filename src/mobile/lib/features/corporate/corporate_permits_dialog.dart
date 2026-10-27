@@ -109,6 +109,32 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
     }
   }
 
+  Future<void> changeStatus(Map<String, dynamic> permit, String status) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('$status issued permit?'),
+        content: Text('This action retains the record for audit history. '
+            'The permit cannot be reactivated from this screen.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep active')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true),
+              child: Text(status)),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    try {
+      await widget.service.changePermitStatus(
+          widget.companyId, permit['id'].toString(), status);
+      await refresh();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Unable to update permit: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AlertDialog(
     title: const Text('Issued visas & passes'),
@@ -116,7 +142,15 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
       loading ? const Center(child: CircularProgressIndicator()) :
       error != null ? Text('Unable to load permits: $error') :
       permits.isEmpty ? const Text('No issued permits recorded.') :
-      ListView.builder(
+      Column(children: [
+        Builder(builder: (ctx) {
+          final overdue = permits.where((p) => p['expiryCategory'] == 'Overdue').length;
+          final due = permits.where((p) => p['expiryCategory'] == 'DueSoon').length;
+          return Padding(padding: const EdgeInsets.only(bottom: 8),
+            child: Text('Expiry alerts: $overdue overdue • $due due within 90 days',
+              style: Theme.of(ctx).textTheme.titleSmall));
+        }),
+        Expanded(child: ListView.builder(
         itemCount: permits.length,
         itemBuilder: (ctx, i) {
           final p = permits[i];
@@ -129,10 +163,21 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
           return ListTile(
             title: Text('$name • ${p["permitType"]}'),
             subtitle: Text('${p["countryCode"]} • Expires ${p["expiresOn"]?.toString().split("T").first}'),
-            trailing: Text(category),
+            trailing: p['status'] == 'Active'
+              ? PopupMenuButton<String>(
+                  tooltip: 'Permit actions',
+                  onSelected: (value) => changeStatus(p, value),
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'Cancelled', child: Text('Cancel permit')),
+                    PopupMenuItem(value: 'Superseded', child: Text('Mark superseded')),
+                  ],
+                  child: Chip(label: Text(category)),
+                )
+              : Chip(label: Text(p['status']?.toString() ?? category)),
           );
         },
       )),
+      ]),
     actions: [
       TextButton(onPressed: loading ? null : refresh, child: const Text('Refresh')),
       FilledButton.icon(onPressed: addPermit, icon: const Icon(Icons.add),
