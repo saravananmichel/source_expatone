@@ -82,7 +82,8 @@ public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserServi
                 x.City, x.State, x.PostalCode, x.CountryCode, x.ContactNumber,
                 x.ContactEmail, x.Website, x.TemplateVersion, HasLogo = x.LogoObjectKey != null })
             .FirstOrDefaultAsync();
-        return Ok(result ?? new { companyId, hasLogo = false });
+        if (result == null) return Ok(new { companyId, hasLogo = false });
+        return Ok(result);
     }
 
     [HttpPut("profile")]
