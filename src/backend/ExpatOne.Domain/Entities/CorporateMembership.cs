@@ -15,4 +15,10 @@ public class CorporateMembership : BaseEntity
     // Invitation lifecycle states: Pending, Declined.
     // Invitation endpoints transition Pending to Active or Declined.
     public string Status { get; set; } = "Active";
+
+    // Company-specific employment metadata; never inferred from nationality.
+    public string WorkforceClassification { get; set; } = "Unknown";
+    public string? Nationality { get; set; }
+    public string? EmploymentCountry { get; set; }
+    public DateTime? EmploymentStartDate { get; set; }
 }
