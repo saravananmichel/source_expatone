@@ -1,4 +1,10 @@
 using System.Security.Claims;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
+using ExpatOne.Domain.Entities;
+using ExpatOne.Domain.Enums;
+using ExpatOne.Api.Services;
+using ExpatOne.Infrastructure.Services;
 using ExpatOne.Application.Interfaces;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +19,9 @@ namespace ExpatOne.Api.Controllers;
 [Route("api/corporate/offers")]
 [EnableRateLimiting("family-per-user")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService users) : ControllerBase
+public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService users,
+    CorporateOfferPdfStorage pdfStorage, IStorageService storage,
+    IDocumentAuditService audit) : ControllerBase
 {
     private async Task<Guid> UserId()
     {
@@ -23,6 +31,83 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         var name = User.FindFirstValue(ClaimTypes.Name);
         var user = await users.FindOrCreateByExternalIdentityAsync("firebase", firebaseUid, email, name);
         return user.Id;
+    }
+
+    [HttpPost("companies/{companyId:guid}/issue")]
+    public async Task<IActionResult> Issue(Guid companyId, [FromBody] IssueCorporateOfferRequest request)
+    {
+        var uid = await UserId();
+        var allowed = await db.CorporateMemberships.AnyAsync(m =>
+            m.CompanyId == companyId && m.UserId == uid && m.Status == "Active" &&
+            (m.Role == "Admin" || m.Role == "Owner" || m.Role == "HR"));
+        if (!allowed) return Forbid();
+        var employee = await db.CorporateMemberships.AnyAsync(m =>
+            m.CompanyId == companyId && m.UserId == request.EmployeeUserId &&
+            m.Status == "Active" && (m.Role == "Employee" || m.Role == "Viewer"));
+        if (!employee) return BadRequest(new { message = "Employee must be an active company employee." });
+        var text = request.RenderedText?.Trim() ?? "";
+        if (text.Length < 50 || text.Length > 20000 || text.Contains("{{", StringComparison.Ordinal))
+            return BadRequest(new { message = "Provide a complete reviewed offer (50–20,000 characters) with no unresolved placeholders." });
+        var documentTypeId = await db.DocumentTypes.AsNoTracking()
+            .Where(x => x.Name == "Employment Contract")
+            .Select(x => x.Id).FirstOrDefaultAsync();
+        if (documentTypeId == Guid.Empty)
+            return StatusCode(503, new { message = "Employment Contract document type is not configured." });
+
+        byte[] pdf;
+        try { pdf = CorporateOfferPdfRenderer.Render(text); }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        { return BadRequest(new { message = "Unable to render offer PDF." }); }
+
+        var documentId = Guid.NewGuid();
+        string? objectKey = null;
+        try
+        {
+            objectKey = await pdfStorage.UploadAsync(companyId, request.EmployeeUserId, documentId,
+                pdf, HttpContext.RequestAborted);
+            var offer = new CorporateOfferLetter
+            {
+                Id = Guid.NewGuid(),
+                CompanyId = companyId,
+                EmployeeUserId = request.EmployeeUserId,
+                CreatedByUserId = uid,
+                Status = "Issued",
+                Version = 1,
+                TemplateDataJson = JsonSerializer.Serialize(new { text }),
+                DocumentId = documentId,
+                IssuedAt = DateTime.UtcNow
+            };
+            var walletDocument = new Document
+            {
+                Id = documentId,
+                UserId = request.EmployeeUserId,
+                DocumentTypeId = documentTypeId,
+                DocumentName = "Employment Offer Letter",
+                OriginalFileName = "employment-offer.pdf",
+                S3ObjectKey = objectKey,
+                FileSizeBytes = pdf.Length,
+                ContentType = "application/pdf",
+                Status = DocumentStatus.Active,
+                ExtractionStatus = "NOT_REQUESTED"
+            };
+            db.Documents.Add(walletDocument);
+            db.CorporateOfferLetters.Add(offer);
+            await db.SaveChangesAsync(HttpContext.RequestAborted);
+            await audit.LogAsync(documentId, uid, "corporate_offer_issued");
+            return Created($"/api/corporate/offers/{offer.Id}",
+                new { offer.Id, offer.CompanyId, offer.EmployeeUserId,
+                    offer.DocumentId, offer.Status, offer.IssuedAt });
+        }
+        catch
+        {
+            // A failed database write must not leave an untracked PDF in GCS.
+            if (objectKey != null)
+            {
+                try { await storage.DeleteFileAsync(objectKey); }
+                catch { /* Preserve the original error; orphan cleanup needs monitoring. */ }
+            }
+            throw;
+        }
     }
 
     [HttpGet("mine")]
@@ -85,3 +170,5 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
 }
 
 public sealed record OfferResponseRequest(string Response);
+
+public sealed record IssueCorporateOfferRequest([Required] Guid EmployeeUserId, [Required] string RenderedText);
