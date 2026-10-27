@@ -212,9 +212,15 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         byte[] signature;
         try { signature = Convert.FromBase64String(request.SignaturePngBase64 ?? ""); }
         catch (FormatException) { return BadRequest(new { message = "Invalid signature image." }); }
+        // The signature pad exports a fixed 480 x 200 PNG. Reject unexpected
+        // dimensions before passing untrusted image data to the PDF renderer.
         if (signature.Length < 100 || signature.Length > 150000 ||
-            !signature.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }))
-            return BadRequest(new { message = "A valid PNG signature under 150 KB is required." });
+            !signature.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) ||
+            signature.Length < 24 ||
+            !signature.AsSpan(12, 4).SequenceEqual("IHDR"u8) ||
+            System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(signature.AsSpan(16, 4)) != 480 ||
+            System.Buffers.Binary.BinaryPrimitives.ReadUInt32BigEndian(signature.AsSpan(20, 4)) != 200)
+            return BadRequest(new { message = "Signature must be a 480 x 200 PNG under 150 KB." });
 
         var original = await db.Documents.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == offer.DocumentId && x.UserId == uid);
