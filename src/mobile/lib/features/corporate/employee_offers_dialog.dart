@@ -169,10 +169,6 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                                     icon: const Icon(Icons.draw_outlined),
                                     label: const Text('Sign and accept'),
                                   ),
-                                  FilledButton(
-                                    onPressed: busy ? null : () => respond(id, 'Accepted'),
-                                    child: const Text('Accept'),
-                                  ),
                                   OutlinedButton(
                                     onPressed: busy ? null : () => respond(id, 'Declined'),
                                     child: const Text('Decline'),
