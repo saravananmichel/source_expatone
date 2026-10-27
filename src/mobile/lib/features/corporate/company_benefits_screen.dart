@@ -127,7 +127,7 @@ class _CompanyBenefitsScreenState extends State<CompanyBenefitsScreen> {
     }
   }
 
-  Future<void> deactivate(Map<String, dynamic> benefit) async {
+  Future<void> deactivateBenefit(Map<String, dynamic> benefit) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -185,12 +185,12 @@ class _CompanyBenefitsScreenState extends State<CompanyBenefitsScreen> {
                   title: Text((benefit['name'] ?? '').toString()),
                   subtitle: Text('${benefit['category'] ?? ''}\n${benefit['description'] ?? ''}'),
                   isThreeLine: true,
-                  trailing: Wrap(mainAxisSize: MainAxisSize.min, children: [
+                  trailing: Wrap(children: [
                     if (!active) const Chip(label: Text('Inactive')),
                     IconButton(icon: const Icon(Icons.edit_outlined),
                       tooltip: 'Edit', onPressed: () => edit(benefit)),
                     if (active) IconButton(icon: const Icon(Icons.delete_outline),
-                      tooltip: 'Deactivate', onPressed: () => deactivate(benefit)),
+                      tooltip: 'Deactivate', onPressed: () => deactivateBenefit(benefit)),
                   ]),
                 );
               },

@@ -85,8 +85,8 @@ class CorporateService {
         {'renderedText': renderedText, 'benefitIds': benefitIds});
 
   Future<Map<String, dynamic>> saveOfferDraft(
-    String companyId, String employeeId, String text, {String? draftId},
-  ) => api.post('/corporate/offer-drafts/companies/$companyId', body: {
+  String companyId, String employeeId, String text, {String? draftId}) =>
+      api.post('/corporate/offer-drafts/companies/$companyId', body: {
     'employeeUserId': employeeId,
     'renderedText': text,
     'draftId': draftId,

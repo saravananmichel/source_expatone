@@ -64,6 +64,8 @@ void main() {
       onNewTask: () async {},
       onMyOffers: () async {},
       onPermits: () async {},
+      onOfferSettings: () async {},
+      onBenefits: () async {},
       onEditMember: (_) async {},
       onDraftOffer: (_) async {},
       taskActions: (_) => const Icon(Icons.more_vert),

@@ -81,22 +81,25 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
 
   Future<void> pickLogo() async {
     try {
-      final selected = await FilePicker.platform.pickFiles(
+      final selected = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['png', 'jpg', 'jpeg'],
         withData: true,
+        withReadStream: false,
       );
-      if (selected == null || selected.files.isEmpty) return;
-      final file = selected.files.single;
-      final bytes = file.bytes;
-      if (bytes == null || bytes.isEmpty || bytes.length > 2000000) {
+      if (selected == null || selected.isEmpty) return;
+      final file = selected.single;
+      final bytes = file.xFile;
+      final data = await bytes.readAsBytes();
+
+      if (data.isEmpty || data.length > 2000000) {
         throw StateError('Choose a PNG or JPEG logo under 2 MB.');
       }
       final extension = file.extension?.toLowerCase();
       final contentType = extension == 'png' ? 'image/png' : 'image/jpeg';
       setState(() { saving = true; error = null; });
       await widget.service.uploadCompanyLogo(
-        widget.companyId, bytes, file.name, contentType);
+        widget.companyId, data, file.name, contentType);
       if (mounted) {
         await load();
         ScaffoldMessenger.of(context).showSnackBar(
