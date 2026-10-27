@@ -3,7 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
-import 'offer_letter_draft_dialog.dart';
+import 'company_offer_dialog_launcher.dart';
+import 'company_offer_settings_screen.dart';
+import 'company_benefits_screen.dart';
 import 'employee_offers_dialog.dart';
 import 'corporate_permits_dialog.dart';
 
@@ -156,6 +158,23 @@ class _CorporateScreenState extends State<CorporateScreen> {
       loading: loading,
       error: error,
       onRefresh: reload,
+      onOfferSettings: () async {
+        if (!isHr) return;
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => CompanyOfferSettingsScreen(
+            companyId: companyId, service: widget.service,
+            companyName: selected?['name']?.toString() ?? '',
+            canRename: isOwner),
+        ));
+        if (mounted) await reload();
+      },
+      onBenefits: () async {
+        if (!isHr) return;
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => CompanyBenefitsScreen(
+            companyId: companyId, service: widget.service),
+        ));
+      },
       onPermits: () async {
         if (!isHr) return;
         await showDialog<void>(
@@ -216,18 +235,21 @@ class _CorporateScreenState extends State<CorporateScreen> {
           previous = pending.first;
         }
         if (!context.mounted) return;
-        await showDialog<void>(
+        await showCompanyOfferDialog(
           context: context,
-          builder: (ctx) => OfferLetterDraftDialog(
+          service: widget.service,
+          companyId: companyId,
+          employeeId: employeeId,
             replacementVersion: previous == null ? null :
                 ((previous['version'] as num?)?.toInt() ?? 1) + 1,
-            onIssue: (renderedText) async {
+            onIssue: (renderedText, benefitIds) async {
               final employeeId = employee['id']?.toString() ?? '';
               if (employeeId.isEmpty || companyId.isEmpty) {
                 throw StateError('Employee or company ID is missing.');
               }
               await widget.service.issueOffer(companyId, employeeId, renderedText,
-                replacesOfferId: previous?['id']?.toString());
+                replacesOfferId: previous?['id']?.toString(),
+                benefitIds: benefitIds);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Offer issued to employee Document Wallet')),
@@ -240,7 +262,6 @@ class _CorporateScreenState extends State<CorporateScreen> {
             companyName: selected?['name']?.toString() ?? '',
             employmentCountry: employee['employmentCountry']?.toString() ?? '',
             startDate: employee['employmentStartDate']?.toString(),
-          ),
         );
       },
       onNewTask: () => action(createCase),

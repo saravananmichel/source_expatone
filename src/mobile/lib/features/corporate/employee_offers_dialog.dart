@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
+import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/services/corporate_service.dart';
 
@@ -54,6 +57,40 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
     }
   }
 
+  Future<void> signOffer(String offerId) async {
+    final signature = await showDialog<Uint8List>(
+      context: context, builder: (_) => const EmployeeSignaturePad());
+    if (!mounted || signature == null) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm signing this offer'),
+        content: const Text('Your drawn signature will be included in a separate acknowledgement PDF referencing the original offer. '
+          'The original issued PDF remains unchanged. Your offer will be marked Accepted. '
+          'Please review the offer before confirming.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sign and accept')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => respondingId = offerId);
+    try {
+      await widget.service.signOffer(offerId, base64Encode(signature));
+      await refresh();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signed acknowledgement saved in your Document Wallet.')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signing failed: $e')));
+    } finally {
+      if (mounted) setState(() => respondingId = null);
+    }
+  }
+
   Future<void> respond(String id, String response) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -102,6 +139,7 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                         final offer = offers[index];
                         final id = offer['id']?.toString() ?? '';
                         final documentId = offer['documentId']?.toString() ?? '';
+                        final signedDocumentId = offer['signedDocumentId']?.toString() ?? '';
                         final status = offer['status']?.toString() ?? 'Unknown';
                         final issuedAt = offer['issuedAt']?.toString().split('T').first ?? '';
                         final busy = respondingId != null;
@@ -119,10 +157,17 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                                   icon: const Icon(Icons.picture_as_pdf_outlined),
                                   label: const Text('View PDF'),
                                 ),
+                                if (signedDocumentId.isNotEmpty)
+                                  OutlinedButton.icon(
+                                    onPressed: () => openPdf(signedDocumentId),
+                                    icon: const Icon(Icons.verified_outlined),
+                                    label: const Text('View signed acknowledgement'),
+                                  ),
                                 if (status == 'Issued') ...[
-                                  FilledButton(
-                                    onPressed: busy ? null : () => respond(id, 'Accepted'),
-                                    child: const Text('Accept'),
+                                  OutlinedButton.icon(
+                                    onPressed: busy ? null : () => signOffer(id),
+                                    icon: const Icon(Icons.draw_outlined),
+                                    label: const Text('Sign and accept'),
                                   ),
                                   OutlinedButton(
                                     onPressed: busy ? null : () => respond(id, 'Declined'),
@@ -141,4 +186,95 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
       TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
     ],
   );
+}
+
+class EmployeeSignaturePad extends StatefulWidget {
+  const EmployeeSignaturePad({super.key});
+
+  @override
+  State<EmployeeSignaturePad> createState() => _EmployeeSignaturePadState();
+}
+
+class _EmployeeSignaturePadState extends State<EmployeeSignaturePad> {
+  final List<Offset?> points = [];
+  final GlobalKey padKey = GlobalKey();
+
+  Future<void> finish() async {
+    if (points.whereType<Offset>().length < 3) return;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    const size = Size(480, 200);
+    canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
+    final pen = Paint()..color = Colors.black..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    for (var i = 1; i < points.length; i++) {
+      final a = points[i - 1], b = points[i];
+      if (a != null && b != null) canvas.drawLine(a, b, pen);
+    }
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(480, 200);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    picture.dispose();
+    image.dispose();
+    if (!mounted || data == null) return;
+    Navigator.pop(context, data.buffer.asUint8List());
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Draw your signature'),
+    content: SizedBox(width: 480, child: Column(
+      mainAxisSize: MainAxisSize.min, children: [
+        const Text('Draw using your finger or mouse. Your signature will be submitted only after confirmation.'),
+        const SizedBox(height: 12),
+        Container(
+          height: 200, width: 480,
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+          child: LayoutBuilder(builder: (context, constraints) {
+            Offset scaled(Offset local) => Offset(
+              local.dx * 480 / constraints.maxWidth,
+              local.dy * 200 / constraints.maxHeight);
+            return GestureDetector(
+              onPanStart: (details) => setState(() =>
+                points.add(scaled(details.localPosition))),
+              onPanUpdate: (details) => setState(() =>
+                points.add(scaled(details.localPosition))),
+              onPanEnd: (_) => setState(() => points.add(null)),
+              child: CustomPaint(painter: _SignaturePainter(points),
+                size: Size.infinite),
+            );
+          }),
+        ),
+      ],
+    )),
+    actions: [
+      TextButton(onPressed: () => setState(points.clear),
+        child: const Text('Clear')),
+      TextButton(onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel')),
+      FilledButton(onPressed: points.whereType<Offset>().length < 3 ? null : finish,
+        child: const Text('Continue')),
+    ],
+  );
+}
+
+class _SignaturePainter extends CustomPainter {
+  final List<Offset?> points;
+  const _SignaturePainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pen = Paint()..color = Colors.black..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    for (var i = 1; i < points.length; i++) {
+      final a = points[i - 1], b = points[i];
+      if (a != null && b != null) {
+        canvas.drawLine(Offset(a.dx * size.width / 480, a.dy * size.height / 200),
+          Offset(b.dx * size.width / 480, b.dy * size.height / 200), pen);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SignaturePainter oldDelegate) => true;
 }

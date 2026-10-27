@@ -3,6 +3,48 @@ import '../networking/api_client.dart';
 class CorporateService {
   final ApiClient api;
   CorporateService(this.api);
+  Future<Map<String, dynamic>> companyOfferTemplate(String companyId) =>
+      api.get('/corporate/companies/$companyId/settings/offer-template');
+  Future<Map<String, dynamic>> saveCompanyOfferTemplate(
+    String companyId, Map<String, dynamic> template,
+  ) => api.put('/corporate/companies/$companyId/settings/offer-template',
+      body: {'template': template});
+  // Phase 3.1: offer catalogs and company HR settings.
+  Future<List<Map<String, dynamic>>> offerCountries() =>
+      api.getList('/corporate/offer-catalog/countries');
+  Future<List<Map<String, dynamic>>> offerCurrencies() =>
+      api.getList('/corporate/offer-catalog/currencies');
+  Future<List<Map<String, dynamic>>> companyBenefits(String companyId, {
+    bool includeInactive = false,
+  }) => api.getList('/corporate/companies/$companyId/settings/benefits',
+      queryParams: {'includeInactive': '$includeInactive'});
+  Future<Map<String, dynamic>> uploadCompanyLogo(
+    String companyId, List<int> bytes, String fileName, String contentType,
+  ) => api.uploadFile('/corporate/companies/$companyId/settings/logo',
+      bytes: bytes, fileName: fileName, contentType: contentType);
+  Future<Map<String, dynamic>> companyLogoUrl(String companyId) =>
+      api.get('/corporate/companies/$companyId/settings/logo/access-url');
+  Future<Map<String, dynamic>> renameCompany(String companyId, String name) =>
+      api.put('/corporate/companies/$companyId/settings/company-name',
+          body: {'name': name});
+  Future<Map<String, dynamic>> companyProfile(String companyId) =>
+      api.get('/corporate/companies/$companyId/settings/profile');
+  Future<Map<String, dynamic>> saveCompanyProfile(
+    String companyId, Map<String, dynamic> values,
+  ) => api.put('/corporate/companies/$companyId/settings/profile', body: values);
+  Future<Map<String, dynamic>> createCompanyBenefit(
+    String companyId, Map<String, dynamic> values,
+  ) => api.post('/corporate/companies/$companyId/settings/benefits', body: values);
+  Future<Map<String, dynamic>> updateCompanyBenefit(
+    String companyId, String benefitId, Map<String, dynamic> values,
+  ) => api.put('/corporate/companies/$companyId/settings/benefits/$benefitId',
+      body: values);
+  Future<void> deactivateCompanyBenefit(String companyId, String benefitId) async {
+    await api.delete('/corporate/companies/$companyId/settings/benefits/$benefitId');
+  }
+  Future<List<Map<String, dynamic>>> offerSignatories(String companyId) =>
+      api.getList('/corporate/companies/$companyId/settings/signatories');
+
   Future<List<Map<String, dynamic>>> companies() =>
       api.getList('/corporate/companies');
   Future<List<Map<String, dynamic>>> issuedPermits(String companyId) =>
@@ -26,11 +68,34 @@ class CorporateService {
   Future<Map<String, dynamic>> issueOffer(
     String companyId, String employeeUserId, String renderedText, {
     String? replacesOfferId,
+    List<String> benefitIds = const [],
   }) => api.post(
     '/corporate/offers/companies/$companyId/issue',
     body: {'employeeUserId': employeeUserId, 'renderedText': renderedText,
-      'replacesOfferId': ?replacesOfferId},
+      'replacesOfferId': ?replacesOfferId,
+      'benefitIds': benefitIds},
   );
+
+  Future<Map<String, dynamic>> signOffer(String offerId, String signatureBase64) =>
+      api.post('/corporate/offers/$offerId/signature',
+        body: {'signaturePngBase64': signatureBase64, 'confirm': true});
+
+  Future<List<int>> previewOfferPdf(String companyId, String renderedText, List<String> benefitIds) =>
+      api.postPdf('/corporate/offer-preview/companies/$companyId',
+        {'renderedText': renderedText, 'benefitIds': benefitIds});
+
+  Future<Map<String, dynamic>> saveOfferDraft(
+    String companyId, String employeeId, String text, {String? draftId},
+  ) => api.post('/corporate/offer-drafts/companies/$companyId', body: {
+    'employeeUserId': employeeId,
+    'renderedText': text,
+    'draftId': draftId,
+  });
+
+  Future<List<Map<String, dynamic>>> offerDrafts(
+    String companyId, String employeeId,
+  ) => api.getList('/corporate/offer-drafts/companies/$companyId',
+    queryParams: {'employeeUserId': employeeId});
 
   Future<List<Map<String, dynamic>>> companyOffers(String companyId) =>
       api.getList('/corporate/offers/companies/$companyId');

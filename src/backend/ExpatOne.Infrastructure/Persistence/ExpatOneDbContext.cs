@@ -10,6 +10,11 @@ public class ExpatOneDbContext : DbContext
     {
     }
 
+    public DbSet<CorporateCompanyProfile> CorporateCompanyProfiles => Set<CorporateCompanyProfile>();
+    public DbSet<CorporateOfferSignature> CorporateOfferSignatures => Set<CorporateOfferSignature>();
+    public DbSet<CorporateOfferBenefit> CorporateOfferBenefits => Set<CorporateOfferBenefit>();
+    public DbSet<CorporateBenefit> CorporateBenefits => Set<CorporateBenefit>();
+    public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<CorporateCompany> CorporateCompanies => Set<CorporateCompany>();
     public DbSet<CorporateIssuedPermit> CorporateIssuedPermits => Set<CorporateIssuedPermit>();
     public DbSet<CorporatePermitAlert> CorporatePermitAlerts => Set<CorporatePermitAlert>();
@@ -51,6 +56,42 @@ public class ExpatOneDbContext : DbContext
         {
             modelBuilder.HasPostgresExtension("vector");
         }
+
+        modelBuilder.Entity<CorporateCompanyProfile>(e =>
+        {
+            e.ToTable("corporate_company_profiles");
+            e.HasKey(x => x.CompanyId);
+            e.Property(x => x.OfferTemplateJson).HasColumnType("jsonb");
+            e.HasOne<CorporateCompany>().WithOne().HasForeignKey<CorporateCompanyProfile>(x => x.CompanyId);
+        });
+        modelBuilder.Entity<CorporateBenefit>(e =>
+        {
+            e.ToTable("corporate_benefits");
+            e.HasKey(x => x.Id);
+            e.HasOne<CorporateCompany>().WithMany().HasForeignKey(x => x.CompanyId);
+        });
+        modelBuilder.Entity<CorporateOfferSignature>(e =>
+        {
+            e.ToTable("corporate_offer_signatures");
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => x.OfferId).IsUnique();
+            e.HasOne<CorporateOfferLetter>().WithMany().HasForeignKey(x => x.OfferId);
+            e.HasOne<Document>().WithMany().HasForeignKey(x => x.SignedDocumentId);
+        });
+        modelBuilder.Entity<CorporateOfferBenefit>(e =>
+        {
+            e.ToTable("corporate_offer_benefits");
+            e.HasKey(x => new { x.OfferId, x.Position });
+            e.HasOne<CorporateOfferLetter>().WithMany().HasForeignKey(x => x.OfferId);
+            e.HasOne<CorporateBenefit>().WithMany().HasForeignKey(x => x.BenefitId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+        modelBuilder.Entity<Currency>(e =>
+        {
+            e.ToTable("currencies");
+            e.HasKey(x => x.Code);
+            e.Property(x => x.Code).HasColumnType("char(3)");
+        });
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ExpatOneDbContext).Assembly);
 
