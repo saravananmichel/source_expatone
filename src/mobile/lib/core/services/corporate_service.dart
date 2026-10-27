@@ -13,11 +13,16 @@ class CorporateService {
   ) => api.post('/corporate/companies/$companyId/permits', body: payload);
 
   Future<Map<String, dynamic>> issueOffer(
-    String companyId, String employeeUserId, String renderedText,
-  ) => api.post(
+    String companyId, String employeeUserId, String renderedText, {
+    String? replacesOfferId,
+  }) => api.post(
     '/corporate/offers/companies/$companyId/issue',
-    body: {'employeeUserId': employeeUserId, 'renderedText': renderedText},
+    body: {'employeeUserId': employeeUserId, 'renderedText': renderedText,
+      if (replacesOfferId != null) 'replacesOfferId': replacesOfferId},
   );
+
+  Future<List<Map<String, dynamic>>> companyOffers(String companyId) =>
+      api.getList('/corporate/offers/companies/$companyId');
 
   Future<List<Map<String, dynamic>>> myOffers() =>
       api.getList('/corporate/offers/mine');
