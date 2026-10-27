@@ -177,7 +177,7 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
           );
         },
       )),
-      ]),
+      ])),
     actions: [
       TextButton(onPressed: loading ? null : refresh, child: const Text('Refresh')),
       FilledButton.icon(onPressed: addPermit, icon: const Icon(Icons.add),
