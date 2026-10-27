@@ -25,6 +25,8 @@ Future<void> showCompanyOfferDialog({
     service.companyOfferTemplate(companyId),
   ]);
   if (!context.mounted) return;
+  final drafts = await service.offerDrafts(companyId, employeeId);
+  if (!context.mounted) return;
   final template = results[4] as Map<String, dynamic>;
   final definition = template['template'];
   final body = definition is Map ? definition['body']?.toString() : null;
@@ -38,6 +40,10 @@ Future<void> showCompanyOfferDialog({
       startDate: startDate,
       replacementVersion: replacementVersion,
       onIssue: onIssue,
+      savedDrafts: drafts,
+      onUpdateDraft: (id, text) async {
+        await service.saveOfferDraft(companyId, employeeId, text, draftId: id);
+      },
       onSaveDraft: (text) async {
         await service.saveOfferDraft(companyId, employeeId, text);
       },
