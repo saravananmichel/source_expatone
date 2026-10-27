@@ -91,7 +91,9 @@ public static class CorporateOfferPdfRenderer
                     {
                         signature.Item().Text("EMPLOYEE ACCEPTANCE").Bold().FontSize(10);
                         signature.Item().PaddingTop(8).Text(
-                            "I have reviewed this offer and acknowledge the terms presented.");
+                            employeeSignature is { Length: > 0 }
+                                ? "I acknowledge and accept the original issued offer identified above by SHA-256. This acknowledgement does not replace the original PDF."
+                                : "I have reviewed this offer and acknowledge the terms presented.");
                         if (employeeSignature is { Length: > 0 })
                             signature.Item().PaddingTop(12).Height(70).Image(employeeSignature).FitArea();
                         else
