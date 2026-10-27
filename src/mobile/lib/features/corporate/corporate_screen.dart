@@ -67,7 +67,7 @@ class _CorporateScreenState extends State<CorporateScreen> {
                   active?['role'] == 'HR')
           ? await widget.service.dashboard(id)
           : null;
-      if (mounted)
+      if (mounted) {
         setState(() {
           companies = cs;
           invitations = invites;
@@ -77,12 +77,14 @@ class _CorporateScreenState extends State<CorporateScreen> {
           metrics = ms;
           loading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           loading = false;
           error = e.toString();
         });
+      }
     }
   }
 
@@ -120,9 +122,10 @@ class _CorporateScreenState extends State<CorporateScreen> {
       await fn();
       if (mounted) await reload();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Action failed: $e')));
+      }
     }
   }
 
@@ -209,7 +212,7 @@ class _CorporateScreenState extends State<CorporateScreen> {
               ],
             ),
           );
-          if (confirm != true || !mounted) return;
+          if (confirm != true || !context.mounted) return;
           previous = pending.first;
         }
 
