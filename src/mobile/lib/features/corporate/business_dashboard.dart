@@ -9,9 +9,10 @@ class BusinessDashboard extends StatefulWidget {
   final BusinessRecord? metrics;
   final bool isHr, isOwner, loading;
   final String? error;
-  final Future<void> Function() onRefresh, onInvite, onNewTask;
+  final Future<void> Function() onRefresh, onInvite, onNewTask, onMyOffers, onPermits;
   final ValueChanged<String> onCompany;
   final Future<void> Function(BusinessRecord) onEditMember;
+  final Future<void> Function(BusinessRecord) onDraftOffer;
   final Widget Function(BusinessRecord) taskActions;
   final List<Widget> invitations;
   const BusinessDashboard({
@@ -26,10 +27,13 @@ class BusinessDashboard extends StatefulWidget {
     required this.loading,
     this.error,
     required this.onRefresh,
+    required this.onMyOffers,
+    required this.onPermits,
     required this.onCompany,
     required this.onInvite,
     required this.onNewTask,
     required this.onEditMember,
+    required this.onDraftOffer,
     required this.taskActions,
     this.invitations = const [],
   });
@@ -192,7 +196,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
             color: navy,
           ),
         ),
-        if (action != null) action,
+        ?action,
       ],
     ),
   );
@@ -277,6 +281,11 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
         icon: Icon(Icons.assignment_outlined),
         label: 'Tasks',
       ),
+      if (widget.isHr)
+        const NavigationDestination(
+          icon: Icon(Icons.badge_outlined),
+          label: 'Workforce & Visa',
+        ),
     ];
     final index = widget.isHr ? page : (page == 2 ? 1 : 0);
     final theme = Theme.of(context).copyWith(
@@ -316,6 +325,17 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
             style: TextStyle(fontWeight: FontWeight.w700),
           ),
           actions: [
+            if (widget.isHr)
+              IconButton(
+                tooltip: 'Issued visas and pass expiry',
+                onPressed: widget.onPermits,
+                icon: const Icon(Icons.event_available_outlined),
+              ),
+            IconButton(
+              tooltip: 'My employment offers',
+              onPressed: widget.onMyOffers,
+              icon: const Icon(Icons.mark_email_unread_outlined),
+            ),
             IconButton(
               tooltip: 'Refresh',
               onPressed: widget.loading ? null : widget.onRefresh,
@@ -360,6 +380,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                       0: 'Overview',
                       if (widget.isHr) 1: 'Employees',
                       2: 'Applications & Tasks',
+                      if (widget.isHr) 3: 'Workforce & Visa',
                     }.entries)
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
@@ -378,6 +399,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                                 Icons.dashboard_outlined,
                                 Icons.people_outline,
                                 Icons.assignment_outlined,
+                                Icons.badge_outlined,
                               ][entry.key],
                             ),
                             title: Text(entry.value),
@@ -456,6 +478,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                           if (page == 0) ...overview(wide),
                           if (page == 1 && widget.isHr) employeeSection(),
                           if (page == 2) taskSection(),
+                          if (page == 3 && widget.isHr) workforceVisaSection(),
                           const Padding(
                             padding: EdgeInsets.symmetric(vertical: 12),
                             child: Text(
@@ -473,6 +496,111 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
           ],
         ),
       ),
+    );
+  }
+
+  /// Counts linked application records, not issued visas or valid permits.
+  /// Visa expiry requires a separately verified permit expiry date.
+  Widget workforceVisaSection() {
+    final active = widget.employees.where((e) =>
+        e['status'] == 'Active' &&
+        (e['role'] == 'Employee' || e['role'] == 'Viewer')).toList();
+    final linked = widget.tasks.where((t) =>
+        t['visaApplicationId'] != null &&
+        t['visaApplicationId'].toString().isNotEmpty).toList();
+    final peopleWithLinks = linked.map((t) => t['employeeUserId'].toString()).toSet();
+    final unlinked = widget.tasks.where((t) =>
+        t['visaApplicationId'] == null ||
+        t['visaApplicationId'].toString().isEmpty).length;
+    final local = active.where((e) => e['workforceClassification'] == 'Local').length;
+    final foreign = active.where((e) => e['workforceClassification'] == 'Foreign').length;
+    final unknown = active.length - local - foreign;
+    final classified = local + foreign;
+    final localPercent = classified == 0 ? null : (local * 100 / classified);
+    final foreignPercent = classified == 0 ? null : (foreign * 100 / classified);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        heading('Workforce & Visa'),
+        const Text(
+          'Company workforce and linked visa applications. A linked application '
+          'does not confirm that a visa or work permit has been issued.',
+          style: TextStyle(color: Colors.blueGrey),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('${active.length}'),
+              subtitle: const Text('Active memberships'),
+            ))),
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('${peopleWithLinks.length}'),
+              subtitle: const Text('Employees with linked applications'),
+            ))),
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('${linked.length}'),
+              subtitle: const Text('Linked corporate tasks'),
+            ))),
+            card(SizedBox(width: 190, child: ListTile(
+              title: Text('$unlinked'),
+              subtitle: const Text('Tasks without linked applications'),
+            ))),
+          ],
+        ),
+        card(const ListTile(
+          leading: Icon(Icons.info_outline),
+          title: Text('Visa validity and expiry are not yet available'),
+          subtitle: Text('Expiry alerts will require verified permit details. '
+              'Task due dates are not visa expiry dates.'),
+        )),
+        heading('Workforce classification'),
+        card(Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              classified == 0
+                  ? 'No employees classified yet'
+                  : 'Local ${localPercent!.toStringAsFixed(1)}% · Foreign ${foreignPercent!.toStringAsFixed(1)}%',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            if (classified > 0)
+              LinearProgressIndicator(
+                value: local / classified,
+                minHeight: 10,
+                backgroundColor: Colors.orange.shade100,
+                color: teal,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            const SizedBox(height: 10),
+            Wrap(spacing: 16, runSpacing: 8, children: [
+              pill('Local: $local'),
+              pill('Foreign: $foreign', Colors.deepOrange),
+              pill('Unknown: $unknown', Colors.blueGrey),
+            ]),
+            const SizedBox(height: 8),
+            const Text(
+              'Percentages exclude Unknown classifications. These are company-provided '
+              'workforce categories, not immigration or nationality determinations.',
+              style: TextStyle(fontSize: 12, color: Colors.blueGrey),
+            ),
+          ],
+        )),
+        heading('Linked application records'),
+        if (linked.isEmpty)
+          card(const Text('No corporate tasks have linked visa applications yet.')),
+        for (final task in linked)
+          card(ListTile(
+            title: Text(str(task, 'title', 'Corporate application')),
+            subtitle: Text(
+              'Employee: ${assignee(task)} · Task status: ${str(task, 'status', 'Unknown')}',
+            ),
+            trailing: const Icon(Icons.link),
+          )),
+      ],
     );
   }
 
@@ -672,6 +800,13 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                       ),
                     ),
                   ),
+                  if (widget.isHr && e['status'] == 'Active' &&
+                      (e['role'] == 'Employee' || e['role'] == 'Viewer'))
+                    IconButton(
+                      tooltip: 'Draft offer letter',
+                      onPressed: () => widget.onDraftOffer(e),
+                      icon: const Icon(Icons.description_outlined, size: 20),
+                    ),
                   if (widget.isOwner)
                     IconButton(
                       tooltip: 'Edit role / status',

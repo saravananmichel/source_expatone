@@ -5,10 +5,63 @@ class CorporateService {
   CorporateService(this.api);
   Future<List<Map<String, dynamic>>> companies() =>
       api.getList('/corporate/companies');
+  Future<List<Map<String, dynamic>>> issuedPermits(String companyId) =>
+      api.getList('/corporate/companies/$companyId/permits');
+
+  Future<List<Map<String, dynamic>>> permitAlerts(String companyId) =>
+      api.getList('/corporate/companies/$companyId/permits/alerts');
+
+  Future<void> acknowledgePermitAlert(String companyId, String alertId) =>
+      api.postVoid('/corporate/companies/$companyId/permits/alerts/$alertId/acknowledge');
+
+  Future<Map<String, dynamic>> recordIssuedPermit(
+    String companyId, Map<String, dynamic> payload,
+  ) => api.post('/corporate/companies/$companyId/permits', body: payload);
+
+  Future<Map<String, dynamic>> changePermitStatus(
+    String companyId, String permitId, String status,
+  ) => api.put('/corporate/companies/$companyId/permits/$permitId/status',
+      body: {'status': status});
+
+  Future<Map<String, dynamic>> issueOffer(
+    String companyId, String employeeUserId, String renderedText, {
+    String? replacesOfferId,
+  }) => api.post(
+    '/corporate/offers/companies/$companyId/issue',
+    body: {'employeeUserId': employeeUserId, 'renderedText': renderedText,
+      'replacesOfferId': ?replacesOfferId},
+  );
+
+  Future<List<Map<String, dynamic>>> companyOffers(String companyId) =>
+      api.getList('/corporate/offers/companies/$companyId');
+
+  Future<List<Map<String, dynamic>>> myOffers() =>
+      api.getList('/corporate/offers/mine');
+
+  Future<Map<String, dynamic>> offerDocumentUrl(String documentId) =>
+      api.get('/documents/$documentId/access-url');
+
+  Future<Map<String, dynamic>> respondToOffer(String offerId, String response) =>
+      api.post('/corporate/offers/$offerId/respond', body: {'response': response});
+
   Future<List<Map<String, dynamic>>> invitations() =>
       api.getList('/corporate/invitations');
   Future<Map<String, dynamic>> createCompany(String name) =>
       api.post('/corporate/companies', body: {'name': name});
+  /// HR-only, bounded search for registered users not already in the company.
+  /// The API requires at least three characters and returns at most 10 matches.
+  Future<List<Map<String, dynamic>>> searchRegisteredEmployees(
+    String companyId,
+    String query,
+  ) {
+    final term = query.trim();
+    if (term.length < 3) return Future.value([]);
+    return api.getList(
+      '/corporate/companies/$companyId/employee-search',
+      queryParams: {'q': term},
+    );
+  }
+
   Future<Map<String, dynamic>> invite(
     String companyId,
     String email,
@@ -36,6 +89,23 @@ class CorporateService {
     '/corporate/companies/$companyId/members/$membershipId/role',
     body: {'role': role},
   );
+  Future<Map<String, dynamic>> updateWorkforce(
+    String companyId,
+    String membershipId, {
+    required String classification,
+    String? nationality,
+    String? employmentCountry,
+    DateTime? employmentStartDate,
+  }) => api.put(
+    '/corporate/companies/$companyId/members/$membershipId/workforce',
+    body: {
+      'workforceClassification': classification,
+      'nationality': nationality,
+      'employmentCountry': employmentCountry,
+      'employmentStartDate': employmentStartDate?.toIso8601String(),
+    },
+  );
+
   Future<Map<String, dynamic>> memberStatus(
     String companyId,
     String membershipId,

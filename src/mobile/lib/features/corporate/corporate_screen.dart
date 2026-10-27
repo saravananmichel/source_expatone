@@ -3,6 +3,9 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
+import 'offer_letter_draft_dialog.dart';
+import 'employee_offers_dialog.dart';
+import 'corporate_permits_dialog.dart';
 
 class CorporateScreen extends StatefulWidget {
   final CorporateService service;
@@ -64,7 +67,7 @@ class _CorporateScreenState extends State<CorporateScreen> {
                   active?['role'] == 'HR')
           ? await widget.service.dashboard(id)
           : null;
-      if (mounted)
+      if (mounted) {
         setState(() {
           companies = cs;
           invitations = invites;
@@ -74,12 +77,14 @@ class _CorporateScreenState extends State<CorporateScreen> {
           metrics = ms;
           loading = false;
         });
+      }
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           loading = false;
           error = e.toString();
         });
+      }
     }
   }
 
@@ -117,9 +122,10 @@ class _CorporateScreenState extends State<CorporateScreen> {
       await fn();
       if (mounted) await reload();
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Action failed: $e')));
+      }
     }
   }
 
@@ -150,6 +156,20 @@ class _CorporateScreenState extends State<CorporateScreen> {
       loading: loading,
       error: error,
       onRefresh: reload,
+      onPermits: () async {
+        if (!isHr) return;
+        await showDialog<void>(
+          context: context,
+          builder: (_) => CorporatePermitsDialog(
+            service: widget.service, companyId: companyId, employees: employees),
+        );
+      },
+      onMyOffers: () async {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => EmployeeOffersDialog(service: widget.service),
+        );
+      },
       onCompany: (id) {
         setState(() {
           selected = companies.firstWhere((c) => c['id'].toString() == id);
@@ -158,6 +178,71 @@ class _CorporateScreenState extends State<CorporateScreen> {
       },
       onInvite: inviteMember,
       onEditMember: editMember,
+      onDraftOffer: (employee) async {
+        final name = employee['displayName']?.toString().trim();
+        final employeeId = employee['id']?.toString() ?? '';
+        if (employeeId.isEmpty || companyId.isEmpty) return;
+        List<Map<String, dynamic>> offers;
+        try {
+          offers = await widget.service.companyOffers(companyId);
+        } catch (e) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not check offer history: $e')),
+            );
+          }
+          return;
+        }
+        if (!context.mounted) return;
+        final pending = offers.where((o) =>
+          o['employeeUserId']?.toString() == employeeId &&
+          o['status'] == 'Issued').toList();
+        Map<String, dynamic>? previous;
+        if (pending.isNotEmpty) {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Replace pending offer?'),
+              content: const Text('Issuing a new version will supersede the unanswered offer.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Replace offer')),
+              ],
+            ),
+          );
+          if (confirm != true || !context.mounted) return;
+          previous = pending.first;
+        }
+        if (!context.mounted) return;
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => OfferLetterDraftDialog(
+            replacementVersion: previous == null ? null :
+                ((previous['version'] as num?)?.toInt() ?? 1) + 1,
+            onIssue: (renderedText) async {
+              final employeeId = employee['id']?.toString() ?? '';
+              if (employeeId.isEmpty || companyId.isEmpty) {
+                throw StateError('Employee or company ID is missing.');
+              }
+              await widget.service.issueOffer(companyId, employeeId, renderedText,
+                replacesOfferId: previous?['id']?.toString());
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Offer issued to employee Document Wallet')),
+                );
+              }
+            },
+            employeeName: name == null || name.isEmpty
+                ? (employee['email']?.toString() ?? '')
+                : name,
+            companyName: selected?['name']?.toString() ?? '',
+            employmentCountry: employee['employmentCountry']?.toString() ?? '',
+            startDate: employee['employmentStartDate']?.toString(),
+          ),
+        );
+      },
       onNewTask: () => action(createCase),
       taskActions: taskActions,
       invitations: invitations
@@ -281,8 +366,9 @@ class _CorporateScreenState extends State<CorporateScreen> {
                             'Create company',
                             'Company name',
                           );
-                          if (name != null && name.isNotEmpty)
+                          if (name != null && name.isNotEmpty) {
                             await widget.service.createCompany(name);
+                          }
                         }),
                         icon: const Icon(Icons.add_business),
                         label: const Text('Register a company'),
@@ -333,38 +419,104 @@ class _CorporateScreenState extends State<CorporateScreen> {
   Future<void> inviteMember() async {
     final email = TextEditingController();
     String role = 'Viewer';
+    List<Map<String, dynamic>> matches = [];
+    bool searching = false;
+    String? searchError;
     try {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setDialog) => AlertDialog(
             title: const Text('Invite company member'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: email,
-                  decoration: const InputDecoration(
-                    labelText: 'Registered ExpatOne email',
-                  ),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: role,
-                  decoration: const InputDecoration(labelText: 'Role'),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'Viewer',
-                      child: Text('Corporate Employee'),
-                    ),
-                    if (isOwner)
-                      const DropdownMenuItem(
-                        value: 'HR',
-                        child: Text('HR Administrator'),
+            content: SizedBox(
+              width: 460,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Search name or enter full email',
+                        helperText: 'Search registered users using 3+ characters',
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: searching ? null : () async {
+                          final term = email.text.trim();
+                          if (term.length < 3) {
+                            setDialog(() => searchError = 'Enter at least 3 characters.');
+                            return;
+                          }
+                          setDialog(() {
+                            searching = true;
+                            searchError = null;
+                            matches = [];
+                          });
+                          try {
+                            final results = await widget.service
+                                .searchRegisteredEmployees(companyId, term);
+                            if (!ctx.mounted) return;
+                            setDialog(() => matches = results);
+                          } catch (_) {
+                            if (!ctx.mounted) return;
+                            setDialog(() => searchError =
+                                'Search failed. You can still invite using a full email.');
+                          } finally {
+                            if (ctx.mounted) setDialog(() => searching = false);
+                          }
+                        },
+                        icon: const Icon(Icons.search),
+                        label: Text(searching ? 'Searching...' : 'Find employee'),
+                      ),
+                    ),
+                    if (searchError != null)
+                      Text(searchError!, style: const TextStyle(color: Colors.red)),
+                    if (matches.isNotEmpty)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 190),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: matches.length,
+                          itemBuilder: (context, index) {
+                            final match = matches[index];
+                            final candidate = match['email']?.toString() ?? '';
+                            return ListTile(
+                              dense: true,
+                              title: Text(match['displayName']?.toString() ?? candidate),
+                              subtitle: Text(candidate),
+                              onTap: () => setDialog(() {
+                                email.text = candidate;
+                                matches = [];
+                              }),
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: role,
+                      decoration: const InputDecoration(labelText: 'Role'),
+                      items: [
+                        const DropdownMenuItem(
+                          value: 'Viewer',
+                          child: Text('Corporate Employee'),
+                        ),
+                        if (isOwner)
+                          const DropdownMenuItem(
+                            value: 'HR',
+                            child: Text('HR Administrator'),
+                          ),
+                      ],
+                      onChanged: (v) => setDialog(() => role = v ?? 'Viewer'),
+                    ),
                   ],
-                  onChanged: (v) => setDialog(() => role = v ?? 'Viewer'),
                 ),
-              ],
+              ),
             ),
             actions: [
               TextButton(
@@ -379,10 +531,11 @@ class _CorporateScreenState extends State<CorporateScreen> {
           ),
         ),
       );
-      if (ok == true && email.text.trim().isNotEmpty)
+      if (ok == true && email.text.trim().isNotEmpty) {
         await action(() async {
           await widget.service.invite(companyId, email.text.trim(), role);
         });
+      }
     } finally {
       email.dispose();
     }
@@ -391,81 +544,132 @@ class _CorporateScreenState extends State<CorporateScreen> {
   Future<void> editMember(Map<String, dynamic> e) async {
     String role = e['role']?.toString() ?? 'Viewer';
     String status = e['status'] == 'Active' ? 'Active' : 'Inactive';
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, update) => AlertDialog(
-          title: Text('Edit ${e['email']}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: role,
-                decoration: const InputDecoration(labelText: 'Role'),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Viewer',
-                    child: Text('Corporate Employee'),
-                  ),
-                  DropdownMenuItem(value: 'HR', child: Text('HR Admin')),
-                  DropdownMenuItem(
-                    value: 'Admin',
-                    child: Text('Company Admin'),
-                  ),
-                ],
-                onChanged: (v) => update(() => role = v ?? role),
+    String classification = e['workforceClassification']?.toString() ?? 'Unknown';
+    if (!['Local', 'Foreign', 'Unknown'].contains(classification)) {
+      classification = 'Unknown';
+    }
+    final nationality = TextEditingController(
+      text: e['nationality']?.toString() ?? '',
+    );
+    final employmentCountry = TextEditingController(
+      text: e['employmentCountry']?.toString() ?? '',
+    );
+    DateTime? startDate = DateTime.tryParse(
+      e['employmentStartDate']?.toString() ?? '',
+    );
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, update) => AlertDialog(
+            title: Text('Edit ${e['email']}'),
+            content: SizedBox(
+              width: 460,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: role,
+                      decoration: const InputDecoration(labelText: 'Corporate role'),
+                      items: const [
+                        DropdownMenuItem(value: 'Viewer', child: Text('Corporate Employee')),
+                        DropdownMenuItem(value: 'HR', child: Text('HR Admin')),
+                        DropdownMenuItem(value: 'Admin', child: Text('Company Admin')),
+                      ],
+                      onChanged: (v) => update(() => role = v ?? role),
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: status,
+                      decoration: const InputDecoration(labelText: 'Status'),
+                      items: const [
+                        DropdownMenuItem(value: 'Active', child: Text('Active')),
+                        DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+                      ],
+                      onChanged: (v) => update(() => status = v ?? status),
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: classification,
+                      decoration: const InputDecoration(labelText: 'Workforce classification'),
+                      items: const [
+                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
+                        DropdownMenuItem(value: 'Local', child: Text('Local')),
+                        DropdownMenuItem(value: 'Foreign', child: Text('Foreign')),
+                      ],
+                      onChanged: (v) => update(() => classification = v ?? classification),
+                    ),
+                    TextField(
+                      controller: nationality,
+                      maxLength: 100,
+                      decoration: const InputDecoration(labelText: 'Nationality (optional)'),
+                    ),
+                    TextField(
+                      controller: employmentCountry,
+                      maxLength: 100,
+                      decoration: const InputDecoration(labelText: 'Employment country (optional)'),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Employment start date'),
+                      subtitle: Text(startDate == null
+                          ? 'Not set'
+                          : '${startDate!.year}-${startDate!.month.toString().padLeft(2, '0')}-${startDate!.day.toString().padLeft(2, '0')}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        onPressed: () async {
+                          final selected = await showDatePicker(
+                            context: ctx,
+                            initialDate: startDate ?? DateTime.now(),
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime(2200),
+                          );
+                          if (selected != null) update(() => startDate = selected);
+                        },
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => update(() => startDate = null),
+                      child: const Text('Clear start date'),
+                    ),
+                    const Text(
+                      'Inactive preserves membership and case records for audit.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-              DropdownButtonFormField<String>(
-                initialValue: status,
-                decoration: const InputDecoration(labelText: 'Status'),
-                items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
-                ],
-                onChanged: (v) => update(() => status = v ?? status),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
               ),
-              const Text(
-                'Inactive preserves membership and case records for audit.',
-                style: TextStyle(fontSize: 12),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Save'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Save'),
-            ),
-          ],
         ),
-      ),
-    );
-    if (ok == true) {
-      final rawId = e['membershipId'] ?? e['MembershipId'];
-      final id = rawId?.toString().trim();
-
+      );
+      if (ok != true) return;
+      final id = (e['membershipId'] ?? e['MembershipId'])?.toString().trim();
       if (id == null || id.isEmpty || id == 'null') {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Cannot update this employee: membership ID is missing. '
-              'Refresh the employee list and try again.',
-            ),
-          ),
-        );
-        debugPrint(
-          'Corporate employee missing membershipId. '
-          'Available response fields: ${e.keys.toList()}',
+          const SnackBar(content: Text('Membership ID missing. Refresh and try again.')),
         );
         return;
       }
-
-      if (role == e['role'] && status == e['status']) return;
-
+      final previousDate = DateTime.tryParse(e['employmentStartDate']?.toString() ?? '');
+      final workforceChanged =
+          classification != (e['workforceClassification'] ?? 'Unknown') ||
+          nationality.text.trim() != (e['nationality'] ?? '') ||
+          employmentCountry.text.trim() != (e['employmentCountry'] ?? '') ||
+          startDate?.year != previousDate?.year ||
+          startDate?.month != previousDate?.month ||
+          startDate?.day != previousDate?.day;
+      if (role == e['role'] && status == e['status'] && !workforceChanged) return;
       await action(() async {
         if (role != e['role']) {
           await widget.service.memberRole(companyId, id, role);
@@ -473,7 +677,19 @@ class _CorporateScreenState extends State<CorporateScreen> {
         if (status != e['status']) {
           await widget.service.memberStatus(companyId, id, status);
         }
+        if (workforceChanged) {
+          await widget.service.updateWorkforce(
+            companyId, id,
+            classification: classification,
+            nationality: nationality.text.trim(),
+            employmentCountry: employmentCountry.text.trim(),
+            employmentStartDate: startDate,
+          );
+        }
       });
+    } finally {
+      nationality.dispose();
+      employmentCountry.dispose();
     }
   }
 
@@ -656,16 +872,18 @@ class _CorporateScreenState extends State<CorporateScreen> {
                           result['url']?.toString() ?? '',
                         );
                         if (uri != null &&
-                            (uri.scheme == 'https' || uri.scheme == 'http'))
+                            (uri.scheme == 'https' || uri.scheme == 'http')) {
                           await launchUrl(
                             uri,
                             mode: LaunchMode.externalApplication,
                           );
+                        }
                       } catch (e) {
-                        if (mounted)
+                        if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Document unavailable: $e')),
                           );
+                        }
                       }
                     },
                   ),
@@ -686,9 +904,10 @@ class _CorporateScreenState extends State<CorporateScreen> {
         ),
       );
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Visa viewer: $e')));
+      }
     }
   }
 

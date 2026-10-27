@@ -15,6 +15,10 @@ public sealed class CorporateMembershipConfiguration
         b.Property(x => x.Id).ValueGeneratedNever();
         b.Property(x => x.Role).HasMaxLength(20).IsRequired();
         b.Property(x => x.Status).HasMaxLength(20).IsRequired();
+        b.Property(x => x.WorkforceClassification).HasMaxLength(20).HasDefaultValue("Unknown").IsRequired();
+        b.Property(x => x.Nationality).HasMaxLength(100);
+        b.Property(x => x.EmploymentCountry).HasMaxLength(100);
+        b.Property(x => x.EmploymentStartDate).HasColumnType("date");
 
         b.HasOne<CorporateCompany>()
             .WithMany()

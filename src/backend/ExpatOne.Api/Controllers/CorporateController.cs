@@ -17,6 +17,7 @@ public record InviteEmployeeRequest([Required, EmailAddress] string Email, strin
 public record CreateCorporateCaseRequest(Guid EmployeeUserId, [Required, MaxLength(180)] string Title, DateTime? DueAt, [MaxLength(2000)] string? Notes, string? CountryCode = null, string? Purpose = null, string Priority = "Normal", Guid? AssignedHrUserId = null);
 public record UpdateCorporateCaseRequest([Required] string Status, DateTime? DueAt, [MaxLength(2000)] string? Notes, string? Title = null, string? CountryCode = null, string? Purpose = null, string? Priority = null, Guid? AssignedHrUserId = null);
 public record LinkVisaRequest(Guid VisaApplicationId);
+public record UpdateEmployeeWorkforceRequest([Required] string WorkforceClassification, string? Nationality, string? EmploymentCountry, DateTime? EmploymentStartDate);
 
 [ApiController]
 [Authorize]
@@ -94,6 +95,29 @@ public sealed class CorporateController(
   return Ok(await db.CorporateMemberships.AsNoTracking().Where(x=>x.UserId==uid && x.Status=="Pending")
    .Join(db.CorporateCompanies,m=>m.CompanyId,c=>c.Id,(m,c)=>new{m.Id,m.CompanyId,c.Name,m.Role}).ToListAsync());
  }
+ [HttpGet("companies/{companyId:guid}/employee-search")]
+ public async Task<IActionResult> SearchRegisteredEmployees(Guid companyId, [FromQuery] string? q) {
+  var uid = await UserId();
+  if (!await Hr(companyId, uid)) return Forbid();
+  var term = (q ?? "").Trim();
+  if (term.Length < 3 || term.Length > 100)
+   return BadRequest(new { message = "Enter 3 to 100 characters to search." });
+  // Never return the full user directory; exclude current company members
+  // and the requesting user, and cap the response to 10 matches.
+  var pattern = "%" + term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+  var members = db.CorporateMemberships.AsNoTracking()
+   .Where(m => m.CompanyId == companyId && m.Status != "Declined")
+   .Select(m => m.UserId);
+  var matches = await db.Users.AsNoTracking()
+   .Where(u => u.IsActive && u.Id != uid && !members.Contains(u.Id)
+    && (EF.Functions.ILike(u.Email, pattern, "\\")
+      || (u.DisplayName != null && EF.Functions.ILike(u.DisplayName, pattern, "\\"))))
+   .OrderBy(u => u.DisplayName).ThenBy(u => u.Email)
+   .Take(10)
+   .Select(u => new { u.DisplayName, u.Email })
+   .ToListAsync();
+  return Ok(matches);
+ }
  [HttpPost("companies/{companyId:guid}/invite")]
  public async Task<IActionResult> Invite(Guid companyId, InviteEmployeeRequest request) {
   var uid=await UserId();
@@ -129,11 +153,37 @@ public sealed class CorporateController(
   if(invite==null) return NotFound();
   invite.Status="Declined"; await db.SaveChangesAsync(); return Ok(new{invite.Id,invite.Status});
  }
+ [HttpPut("companies/{companyId:guid}/members/{membershipId:guid}/workforce")]
+ public async Task<IActionResult> UpdateEmployeeWorkforce(
+  Guid companyId, Guid membershipId, UpdateEmployeeWorkforceRequest request) {
+  var uid = await UserId();
+  if (!await Hr(companyId, uid)) return Forbid();
+  var classification = request.WorkforceClassification?.Trim();
+  if (classification is not ("Local" or "Foreign" or "Unknown"))
+   return BadRequest(new { message = "Classification must be Local, Foreign or Unknown." });
+  if (request.Nationality?.Length > 100 || request.EmploymentCountry?.Length > 100)
+   return BadRequest(new { message = "Country fields must be 100 characters or less." });
+  if (request.EmploymentStartDate is { } date &&
+      (date.Year < 1900 || date.Year > 2200))
+   return BadRequest(new { message = "Invalid employment start date." });
+  var member = await db.CorporateMemberships.FirstOrDefaultAsync(m =>
+   m.CompanyId == companyId && m.Id == membershipId);
+  if (member == null) return NotFound();
+  member.WorkforceClassification = classification!;
+  member.Nationality = string.IsNullOrWhiteSpace(request.Nationality)
+   ? null : request.Nationality.Trim();
+  member.EmploymentCountry = string.IsNullOrWhiteSpace(request.EmploymentCountry)
+   ? null : request.EmploymentCountry.Trim();
+  member.EmploymentStartDate = request.EmploymentStartDate?.Date;
+  await db.SaveChangesAsync();
+  return Ok(new { member.Id, member.WorkforceClassification, member.Nationality,
+   member.EmploymentCountry, member.EmploymentStartDate });
+ }
  [HttpGet("companies/{companyId:guid}/employees")]
  public async Task<IActionResult> Employees(Guid companyId) {
   var uid=await UserId(); if(!await Hr(companyId,uid)) return Forbid();
   return Ok(await db.CorporateMemberships.AsNoTracking().Where(x=>x.CompanyId==companyId)
-   .Join(db.Users,m=>m.UserId,u=>u.Id,(m,u)=>new{u.Id,u.DisplayName,u.Email,membershipId=m.Id,m.Role,m.Status}).ToListAsync());
+   .Join(db.Users,m=>m.UserId,u=>u.Id,(m,u)=>new{u.Id,u.DisplayName,u.Email,membershipId=m.Id,m.Role,m.Status,m.WorkforceClassification,m.Nationality,m.EmploymentCountry,m.EmploymentStartDate}).ToListAsync());
  }
  [HttpGet("companies/{companyId:guid}/dashboard")]
  public async Task<IActionResult> Dashboard(Guid companyId) {
