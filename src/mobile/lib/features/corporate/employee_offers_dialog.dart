@@ -65,7 +65,7 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirm signing this offer'),
-        content: const Text('Your drawn signature will be attached to a new signed PDF. '
+        content: const Text('Your drawn signature will be included in a separate acknowledgement PDF referencing the original offer. '
           'The original issued PDF remains unchanged. Your offer will be marked Accepted. '
           'Please review the offer before confirming.'),
         actions: [
@@ -82,7 +82,7 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
       await widget.service.signOffer(offerId, base64Encode(signature));
       await refresh();
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Signed PDF saved in your Document Wallet.')));
+        const SnackBar(content: Text('Signed acknowledgement saved in your Document Wallet.')));
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Signing failed: $e')));
@@ -161,7 +161,7 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                                   OutlinedButton.icon(
                                     onPressed: () => openPdf(signedDocumentId),
                                     icon: const Icon(Icons.verified_outlined),
-                                    label: const Text('View signed PDF'),
+                                    label: const Text('View signed acknowledgement'),
                                   ),
                                 if (status == 'Issued') ...[
                                   OutlinedButton.icon(
