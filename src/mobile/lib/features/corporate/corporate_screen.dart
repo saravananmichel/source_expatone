@@ -5,6 +5,7 @@ import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
 import 'offer_letter_draft_dialog.dart';
 import 'employee_offers_dialog.dart';
+import 'corporate_permits_dialog.dart';
 
 class CorporateScreen extends StatefulWidget {
   final CorporateService service;
@@ -152,6 +153,14 @@ class _CorporateScreenState extends State<CorporateScreen> {
       loading: loading,
       error: error,
       onRefresh: reload,
+      onPermits: () async {
+        if (!isHr) return;
+        await showDialog<void>(
+          context: context,
+          builder: (_) => CorporatePermitsDialog(
+            service: widget.service, companyId: companyId, employees: employees),
+        );
+      },
       onMyOffers: () async {
         await showDialog<void>(
           context: context,
