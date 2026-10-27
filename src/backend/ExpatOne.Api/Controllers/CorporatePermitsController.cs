@@ -64,7 +64,7 @@ public sealed class CorporatePermitsController(ExpatOneDbContext db, IUserServic
         }));
     }
 
-    [HttpPatch("{permitId:guid}/status")]
+    [HttpPut("{permitId:guid}/status")]
     public async Task<IActionResult> UpdateStatus(
         Guid companyId, Guid permitId, [FromBody] ChangePermitStatusRequest request)
     {
