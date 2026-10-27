@@ -6,7 +6,7 @@ import 'offer_letter_template.dart';
 
 /// HR-only offer preview and explicit issuance into the employee wallet.
 class OfferLetterDraftDialog extends StatefulWidget {
-  final Future<void> Function(String renderedText) onIssue;
+  final Future<void> Function(String renderedText, List<String> benefitIds) onIssue;
   final Future<List<int>> Function(String renderedText)? onPreviewPdf;
   final Future<void> Function(String renderedText)? onSaveDraft;
   final Future<void> Function(String draftId, String renderedText)? onUpdateDraft;
@@ -313,7 +313,7 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     if (approved != true || !mounted) return;
     setState(() { issuing = true; error = null; });
     try {
-      await widget.onIssue(current);
+      await widget.onIssue(current, selectedBenefits.toList());
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) setState(() => error = 'Could not issue offer: $e');
