@@ -9,6 +9,20 @@ class CorporateService {
       api.getList('/corporate/invitations');
   Future<Map<String, dynamic>> createCompany(String name) =>
       api.post('/corporate/companies', body: {'name': name});
+  /// HR-only, bounded search for registered users not already in the company.
+  /// The API requires at least three characters and returns at most 10 matches.
+  Future<List<Map<String, dynamic>>> searchRegisteredEmployees(
+    String companyId,
+    String query,
+  ) {
+    final term = query.trim();
+    if (term.length < 3) return Future.value([]);
+    return api.getList(
+      '/corporate/companies/$companyId/employee-search',
+      queryParams: {'q': term},
+    );
+  }
+
   Future<Map<String, dynamic>> invite(
     String companyId,
     String email,
