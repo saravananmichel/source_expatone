@@ -162,8 +162,11 @@ class _CorporateScreenState extends State<CorporateScreen> {
         if (!isHr) return;
         await Navigator.of(context).push(MaterialPageRoute<void>(
           builder: (_) => CompanyOfferSettingsScreen(
-            companyId: companyId, service: widget.service),
+            companyId: companyId, service: widget.service,
+            companyName: selected?['name']?.toString() ?? '',
+            canRename: isOwner),
         ));
+        if (mounted) await reload();
       },
       onBenefits: () async {
         if (!isHr) return;
