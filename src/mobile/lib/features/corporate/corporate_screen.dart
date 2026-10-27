@@ -458,81 +458,132 @@ class _CorporateScreenState extends State<CorporateScreen> {
   Future<void> editMember(Map<String, dynamic> e) async {
     String role = e['role']?.toString() ?? 'Viewer';
     String status = e['status'] == 'Active' ? 'Active' : 'Inactive';
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, update) => AlertDialog(
-          title: Text('Edit ${e['email']}'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              DropdownButtonFormField<String>(
-                initialValue: role,
-                decoration: const InputDecoration(labelText: 'Role'),
-                items: const [
-                  DropdownMenuItem(
-                    value: 'Viewer',
-                    child: Text('Corporate Employee'),
-                  ),
-                  DropdownMenuItem(value: 'HR', child: Text('HR Admin')),
-                  DropdownMenuItem(
-                    value: 'Admin',
-                    child: Text('Company Admin'),
-                  ),
-                ],
-                onChanged: (v) => update(() => role = v ?? role),
+    String classification = e['workforceClassification']?.toString() ?? 'Unknown';
+    if (!['Local', 'Foreign', 'Unknown'].contains(classification)) {
+      classification = 'Unknown';
+    }
+    final nationality = TextEditingController(
+      text: e['nationality']?.toString() ?? '',
+    );
+    final employmentCountry = TextEditingController(
+      text: e['employmentCountry']?.toString() ?? '',
+    );
+    DateTime? startDate = DateTime.tryParse(
+      e['employmentStartDate']?.toString() ?? '',
+    );
+    try {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (ctx, update) => AlertDialog(
+            title: Text('Edit ${e['email']}'),
+            content: SizedBox(
+              width: 460,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    DropdownButtonFormField<String>(
+                      initialValue: role,
+                      decoration: const InputDecoration(labelText: 'Corporate role'),
+                      items: const [
+                        DropdownMenuItem(value: 'Viewer', child: Text('Corporate Employee')),
+                        DropdownMenuItem(value: 'HR', child: Text('HR Admin')),
+                        DropdownMenuItem(value: 'Admin', child: Text('Company Admin')),
+                      ],
+                      onChanged: (v) => update(() => role = v ?? role),
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: status,
+                      decoration: const InputDecoration(labelText: 'Status'),
+                      items: const [
+                        DropdownMenuItem(value: 'Active', child: Text('Active')),
+                        DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+                      ],
+                      onChanged: (v) => update(() => status = v ?? status),
+                    ),
+                    DropdownButtonFormField<String>(
+                      initialValue: classification,
+                      decoration: const InputDecoration(labelText: 'Workforce classification'),
+                      items: const [
+                        DropdownMenuItem(value: 'Unknown', child: Text('Unknown')),
+                        DropdownMenuItem(value: 'Local', child: Text('Local')),
+                        DropdownMenuItem(value: 'Foreign', child: Text('Foreign')),
+                      ],
+                      onChanged: (v) => update(() => classification = v ?? classification),
+                    ),
+                    TextField(
+                      controller: nationality,
+                      maxLength: 100,
+                      decoration: const InputDecoration(labelText: 'Nationality (optional)'),
+                    ),
+                    TextField(
+                      controller: employmentCountry,
+                      maxLength: 100,
+                      decoration: const InputDecoration(labelText: 'Employment country (optional)'),
+                    ),
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Employment start date'),
+                      subtitle: Text(startDate == null
+                          ? 'Not set'
+                          : '${startDate!.year}-${startDate!.month.toString().padLeft(2, '0')}-${startDate!.day.toString().padLeft(2, '0')}'),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        onPressed: () async {
+                          final selected = await showDatePicker(
+                            context: ctx,
+                            initialDate: startDate ?? DateTime.now(),
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime(2200),
+                          );
+                          if (selected != null) update(() => startDate = selected);
+                        },
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => update(() => startDate = null),
+                      child: const Text('Clear start date'),
+                    ),
+                    const Text(
+                      'Inactive preserves membership and case records for audit.',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-              DropdownButtonFormField<String>(
-                initialValue: status,
-                decoration: const InputDecoration(labelText: 'Status'),
-                items: const [
-                  DropdownMenuItem(value: 'Active', child: Text('Active')),
-                  DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
-                ],
-                onChanged: (v) => update(() => status = v ?? status),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
               ),
-              const Text(
-                'Inactive preserves membership and case records for audit.',
-                style: TextStyle(fontSize: 12),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Save'),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Save'),
-            ),
-          ],
         ),
-      ),
-    );
-    if (ok == true) {
-      final rawId = e['membershipId'] ?? e['MembershipId'];
-      final id = rawId?.toString().trim();
-
+      );
+      if (ok != true) return;
+      final id = (e['membershipId'] ?? e['MembershipId'])?.toString().trim();
       if (id == null || id.isEmpty || id == 'null') {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Cannot update this employee: membership ID is missing. '
-              'Refresh the employee list and try again.',
-            ),
-          ),
-        );
-        debugPrint(
-          'Corporate employee missing membershipId. '
-          'Available response fields: ${e.keys.toList()}',
+          const SnackBar(content: Text('Membership ID missing. Refresh and try again.')),
         );
         return;
       }
-
-      if (role == e['role'] && status == e['status']) return;
-
+      final previousDate = DateTime.tryParse(e['employmentStartDate']?.toString() ?? '');
+      final workforceChanged =
+          classification != (e['workforceClassification'] ?? 'Unknown') ||
+          nationality.text.trim() != (e['nationality'] ?? '') ||
+          employmentCountry.text.trim() != (e['employmentCountry'] ?? '') ||
+          startDate?.year != previousDate?.year ||
+          startDate?.month != previousDate?.month ||
+          startDate?.day != previousDate?.day;
+      if (role == e['role'] && status == e['status'] && !workforceChanged) return;
       await action(() async {
         if (role != e['role']) {
           await widget.service.memberRole(companyId, id, role);
@@ -540,7 +591,19 @@ class _CorporateScreenState extends State<CorporateScreen> {
         if (status != e['status']) {
           await widget.service.memberStatus(companyId, id, status);
         }
+        if (workforceChanged) {
+          await widget.service.updateWorkforce(
+            companyId, id,
+            classification: classification,
+            nationality: nationality.text.trim(),
+            employmentCountry: employmentCountry.text.trim(),
+            employmentStartDate: startDate,
+          );
+        }
       });
+    } finally {
+      nationality.dispose();
+      employmentCountry.dispose();
     }
   }
 
