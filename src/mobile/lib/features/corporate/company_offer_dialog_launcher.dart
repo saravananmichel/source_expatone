@@ -13,7 +13,7 @@ Future<void> showCompanyOfferDialog({
   required String employeeName,
   required String companyName,
   required String employmentCountry,
-  required Future<void> Function(String renderedText) onIssue,
+  required Future<void> Function(String renderedText, List<String> benefitIds) onIssue,
   String? startDate,
   int? replacementVersion,
 }) async {
@@ -39,7 +39,7 @@ Future<void> showCompanyOfferDialog({
       employmentCountry: employmentCountry,
       startDate: startDate,
       replacementVersion: replacementVersion,
-      onIssue: onIssue,
+      onIssue: (text) => onIssue(text, const []),
       onPreviewPdf: (text) => service.previewOfferPdf(companyId, text),
       savedDrafts: drafts,
       onUpdateDraft: (id, text) async {
