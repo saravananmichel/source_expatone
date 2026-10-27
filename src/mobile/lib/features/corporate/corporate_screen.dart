@@ -239,6 +239,7 @@ class _CorporateScreenState extends State<CorporateScreen> {
           context: context,
           service: widget.service,
           companyId: companyId,
+          employeeId: employeeId,
             replacementVersion: previous == null ? null :
                 ((previous['version'] as num?)?.toInt() ?? 1) + 1,
             onIssue: (renderedText) async {
