@@ -495,6 +495,12 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
     final unlinked = widget.tasks.where((t) =>
         t['visaApplicationId'] == null ||
         t['visaApplicationId'].toString().isEmpty).length;
+    final local = active.where((e) => e['workforceClassification'] == 'Local').length;
+    final foreign = active.where((e) => e['workforceClassification'] == 'Foreign').length;
+    final unknown = active.length - local - foreign;
+    final classified = local + foreign;
+    final localPercent = classified == 0 ? null : (local * 100 / classified);
+    final foreignPercent = classified == 0 ? null : (foreign * 100 / classified);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -532,6 +538,39 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
           title: Text('Visa validity and expiry are not yet available'),
           subtitle: Text('Expiry alerts will require verified permit details. '
               'Task due dates are not visa expiry dates.'),
+        )),
+        heading('Workforce classification'),
+        card(Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              classified == 0
+                  ? 'No employees classified yet'
+                  : 'Local ${localPercent!.toStringAsFixed(1)}% · Foreign ${foreignPercent!.toStringAsFixed(1)}%',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 10),
+            if (classified > 0)
+              LinearProgressIndicator(
+                value: local / classified,
+                minHeight: 10,
+                backgroundColor: Colors.orange.shade100,
+                color: teal,
+                borderRadius: BorderRadius.circular(8),
+              ),
+            const SizedBox(height: 10),
+            Wrap(spacing: 16, runSpacing: 8, children: [
+              pill('Local: $local'),
+              pill('Foreign: $foreign', Colors.deepOrange),
+              pill('Unknown: $unknown', Colors.blueGrey),
+            ]),
+            const SizedBox(height: 8),
+            const Text(
+              'Percentages exclude Unknown classifications. These are company-provided '
+              'workforce categories, not immigration or nationality determinations.',
+              style: TextStyle(fontSize: 12, color: Colors.blueGrey),
+            ),
+          ],
         )),
         heading('Linked application records'),
         if (linked.isEmpty)
