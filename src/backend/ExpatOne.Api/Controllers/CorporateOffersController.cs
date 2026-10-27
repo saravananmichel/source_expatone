@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using ExpatOne.Domain.Entities;
@@ -196,6 +197,107 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         }
     }
 
+    [HttpPost("{offerId:guid}/signature")]
+    [RequestSizeLimit(300000)]
+    public async Task<IActionResult> Sign(Guid offerId, [FromBody] OfferSignatureRequest request)
+    {
+        var uid = await UserId();
+        var offer = await db.CorporateOfferLetters.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == offerId && x.EmployeeUserId == uid);
+        if (offer == null) return NotFound();
+        if (offer.Status != "Issued" || offer.DocumentId == null)
+            return Conflict(new { message = "Only an unanswered issued offer can be signed." });
+        if (!request.Confirm)
+            return BadRequest(new { message = "Explicit signature confirmation is required." });
+        byte[] signature;
+        try { signature = Convert.FromBase64String(request.SignaturePngBase64 ?? ""); }
+        catch (FormatException) { return BadRequest(new { message = "Invalid signature image." }); }
+        if (signature.Length < 100 || signature.Length > 150000 ||
+            !signature.AsSpan().StartsWith(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }))
+            return BadRequest(new { message = "A valid PNG signature under 150 KB is required." });
+
+        var original = await db.Documents.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == offer.DocumentId && x.UserId == uid);
+        if (original == null) return NotFound();
+        var text = JsonDocument.Parse(offer.TemplateDataJson).RootElement
+            .GetProperty("text").GetString() ?? "";
+        var company = await db.CorporateCompanies.AsNoTracking()
+            .Where(x => x.Id == offer.CompanyId).Select(x => x.Name).SingleAsync();
+        var benefits = await db.CorporateOfferBenefits.AsNoTracking()
+            .Where(x => x.OfferId == offerId).OrderBy(x => x.Position)
+            .Select(x => new { x.CategorySnapshot, x.NameSnapshot, x.DescriptionSnapshot })
+            .ToListAsync();
+        var signedAt = DateTime.UtcNow;
+        byte[] signedPdf;
+        try
+        {
+            signedPdf = CorporateOfferPdfRenderer.Render(text, company, null, null,
+                benefits.Select(b => (b.CategorySnapshot, b.NameSnapshot, b.DescriptionSnapshot)).ToList(),
+                signature, signedAt);
+        }
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
+        { return BadRequest(new { message = "Unable to render signed offer." }); }
+
+        string? signatureKey = null;
+        string? signedPdfKey = null;
+        try
+        {
+            await using (var stream = new MemoryStream(signature))
+                signatureKey = await storage.UploadFileAsync(stream, "signature.png", "image/png",
+                    $"corporate-offers/{offer.CompanyId}/{offerId}/signatures");
+            await using (var stream = new MemoryStream(signedPdf))
+                signedPdfKey = await storage.UploadFileAsync(stream, "signed-offer.pdf", "application/pdf",
+                    $"corporate-offers/{offer.CompanyId}/{offerId}/signed");
+            var signedDocumentId = Guid.NewGuid();
+            await using var tx = await db.Database.BeginTransactionAsync(HttpContext.RequestAborted);
+            var changed = await db.CorporateOfferLetters.Where(x => x.Id == offerId &&
+                x.EmployeeUserId == uid && x.Status == "Issued")
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.Status, "Accepted")
+                    .SetProperty(x => x.Response, "Accepted")
+                    .SetProperty(x => x.RespondedAt, signedAt)
+                    .SetProperty(x => x.UpdatedAt, signedAt), HttpContext.RequestAborted);
+            if (changed != 1)
+            {
+                await tx.RollbackAsync(HttpContext.RequestAborted);
+                return Conflict(new { message = "Offer status changed while signing." });
+            }
+            db.Documents.Add(new Document
+            {
+                Id = signedDocumentId, UserId = uid,
+                DocumentTypeId = original.DocumentTypeId,
+                DocumentName = "Signed Employment Offer Letter",
+                OriginalFileName = "signed-employment-offer.pdf",
+                S3ObjectKey = signedPdfKey!, FileSizeBytes = signedPdf.Length,
+                ContentType = "application/pdf", Status = DocumentStatus.Active,
+                ExtractionStatus = "NOT_REQUESTED"
+            });
+            db.CorporateOfferSignatures.Add(new CorporateOfferSignature
+            {
+                Id = Guid.NewGuid(), OfferId = offerId, EmployeeUserId = uid,
+                SignatureObjectKey = signatureKey!, SignedDocumentId = signedDocumentId,
+                SignedAt = signedAt, OfferVersion = offer.Version
+            });
+            audit.Stage(signedDocumentId, uid, "corporate_offer_signed",
+                metadata: JsonSerializer.Serialize(new { offerId, offer.Version,
+                    originalDocumentId = offer.DocumentId, signedDocumentId, signedAt,
+                    method = "Drawn" }));
+            await db.SaveChangesAsync(HttpContext.RequestAborted);
+            await tx.CommitAsync(HttpContext.RequestAborted);
+            signatureKey = null;
+            signedPdfKey = null;
+            return Ok(new { offerId, status = "Accepted", signedDocumentId, signedAt,
+                message = "Drawn signature recorded; legal enforceability depends on applicable law." });
+        }
+        finally
+        {
+            if (signatureKey != null)
+                try { await storage.DeleteFileAsync(signatureKey); } catch { }
+            if (signedPdfKey != null)
+                try { await storage.DeleteFileAsync(signedPdfKey); } catch { }
+        }
+    }
+
     [HttpGet("mine")]
     public async Task<IActionResult> Mine()
     {
@@ -266,3 +368,5 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
 public sealed record OfferResponseRequest(string Response);
 
 public sealed record IssueCorporateOfferRequest([Required] Guid EmployeeUserId, [Required] string RenderedText, Guid? ReplacesOfferId = null, Guid[]? BenefitIds = null);
+
+public sealed record OfferSignatureRequest(string? SignaturePngBase64, bool Confirm);
