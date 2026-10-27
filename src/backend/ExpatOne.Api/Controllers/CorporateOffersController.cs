@@ -153,6 +153,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             return BadRequest(new { message = "Response must be Accepted or Declined." });
         var uid = await UserId();
         var now = DateTime.UtcNow;
+        await using var tx = await db.Database.BeginTransactionAsync(HttpContext.RequestAborted);
         // Atomic transition: prevents double acknowledgements from concurrent requests.
         var changed = await db.CorporateOfferLetters
             .Where(x => x.Id == offerId && x.EmployeeUserId == uid &&
@@ -161,15 +162,22 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
                 .SetProperty(x => x.Status, request.Response)
                 .SetProperty(x => x.Response, request.Response)
                 .SetProperty(x => x.RespondedAt, now)
-                .SetProperty(x => x.UpdatedAt, now));
+                .SetProperty(x => x.UpdatedAt, now), HttpContext.RequestAborted);
         if (changed == 0)
         {
             var exists = await db.CorporateOfferLetters.AsNoTracking()
-                .AnyAsync(x => x.Id == offerId && x.EmployeeUserId == uid);
+                .AnyAsync(x => x.Id == offerId && x.EmployeeUserId == uid, HttpContext.RequestAborted);
             return exists
                 ? Conflict(new { message = "Only an issued, unanswered offer can receive a response." })
                 : NotFound();
         }
+        var documentId = await db.CorporateOfferLetters.AsNoTracking()
+            .Where(x => x.Id == offerId && x.EmployeeUserId == uid)
+            .Select(x => x.DocumentId).SingleAsync(HttpContext.RequestAborted);
+        audit.Stage(documentId!.Value, uid, "corporate_offer_responded",
+            metadata: JsonSerializer.Serialize(new { offerId, response = request.Response }));
+        await db.SaveChangesAsync(HttpContext.RequestAborted);
+        await tx.CommitAsync(HttpContext.RequestAborted);
         return Ok(new { id = offerId, status = request.Response,
             respondedAt = now, message = "Response recorded; this is not an electronic signature." });
     }
