@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../core/services/corporate_service.dart';
 
 /// Company profile and offer template editor for authorized HR staff.
@@ -30,6 +31,7 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
   bool saving = false;
   String? error;
   int templateVersion = 0;
+  String? logoUrl;
 
   @override
   void initState() {
@@ -51,6 +53,13 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
     try {
       final profile = await widget.service.companyProfile(widget.companyId);
       final template = await widget.service.companyOfferTemplate(widget.companyId);
+      String? nextLogoUrl;
+      if (profile['hasLogo'] == true) {
+        try {
+          final result = await widget.service.companyLogoUrl(widget.companyId);
+          nextLogoUrl = result['url']?.toString();
+        } catch (_) { /* Logo preview is optional. */ }
+      }
       if (!mounted) return;
       for (final entry in fields.entries) {
         entry.value.text = (profile[entry.key] ?? '').toString();
@@ -59,11 +68,44 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
       if (definition is Map) {
         templateBody.text = (definition['body'] ?? '').toString();
       }
-      setState(() => templateVersion = (template['version'] as num?)?.toInt() ?? 0);
+      setState(() {
+        templateVersion = (template['version'] as num?)?.toInt() ?? 0;
+        logoUrl = nextLogoUrl;
+      });
     } catch (e) {
       if (mounted) setState(() => error = 'Unable to load company settings: $e');
     } finally {
       if (mounted) setState(() => loading = false);
+    }
+  }
+
+  Future<void> pickLogo() async {
+    try {
+      final selected = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['png', 'jpg', 'jpeg'],
+        withData: true,
+      );
+      if (selected == null || selected.files.isEmpty) return;
+      final file = selected.files.single;
+      final bytes = file.bytes;
+      if (bytes == null || bytes.isEmpty || bytes.length > 2000000) {
+        throw StateError('Choose a PNG or JPEG logo under 2 MB.');
+      }
+      final extension = file.extension?.toLowerCase();
+      final contentType = extension == 'png' ? 'image/png' : 'image/jpeg';
+      setState(() { saving = true; error = null; });
+      await widget.service.uploadCompanyLogo(
+        widget.companyId, bytes, file.name, contentType);
+      if (mounted) {
+        await load();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Company logo uploaded')));
+      }
+    } catch (e) {
+      if (mounted) setState(() => error = 'Logo upload failed: $e');
+    } finally {
+      if (mounted) setState(() => saving = false);
     }
   }
 
@@ -117,6 +159,26 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
                     border: OutlineInputBorder())),
                 const SizedBox(height: 14),
               ],
+              const Text('Company branding',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 10),
+              if (logoUrl != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Image.network(logoUrl!, height: 80,
+                    alignment: Alignment.centerLeft,
+                    errorBuilder: (_, __, ___) =>
+                        const Text('Logo preview unavailable; refresh to retry.')),
+                ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton.icon(
+                  onPressed: saving ? null : pickLogo,
+                  icon: const Icon(Icons.upload_file),
+                  label: const Text('Upload company logo (PNG/JPEG, 2 MB max)'),
+                ),
+              ),
+              const SizedBox(height: 20),
               const Text('Company contact information',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
