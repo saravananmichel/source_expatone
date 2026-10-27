@@ -12,6 +12,11 @@ class CorporateService {
     String companyId, Map<String, dynamic> payload,
   ) => api.post('/corporate/companies/$companyId/permits', body: payload);
 
+  Future<Map<String, dynamic>> changePermitStatus(
+    String companyId, String permitId, String status,
+  ) => api.patch('/corporate/companies/$companyId/permits/$permitId/status',
+      body: {'status': status});
+
   Future<Map<String, dynamic>> issueOffer(
     String companyId, String employeeUserId, String renderedText, {
     String? replacesOfferId,
