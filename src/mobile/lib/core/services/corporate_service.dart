@@ -74,6 +74,10 @@ class CorporateService {
       'replacesOfferId': ?replacesOfferId},
   );
 
+  Future<List<int>> previewOfferPdf(String companyId, String renderedText) =>
+      api.postPdf('/corporate/offer-preview/companies/$companyId',
+        {'renderedText': renderedText});
+
   Future<Map<String, dynamic>> saveOfferDraft(
     String companyId, String employeeId, String text, {String? draftId},
   ) => api.post('/corporate/offer-drafts/companies/$companyId', body: {
