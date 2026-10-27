@@ -4,10 +4,13 @@ import '../../core/services/corporate_service.dart';
 /// Company profile and offer template editor for authorized HR staff.
 class CompanyOfferSettingsScreen extends StatefulWidget {
   final String companyId;
+  final String companyName;
+  final bool canRename;
   final CorporateService service;
 
   const CompanyOfferSettingsScreen({
     super.key, required this.companyId, required this.service,
+    required this.companyName, this.canRename = false,
   });
 
   @override
@@ -22,6 +25,7 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
     ]) key: TextEditingController(),
   };
   final templateBody = TextEditingController();
+  late final companyName = TextEditingController(text: widget.companyName);
   bool loading = true;
   bool saving = false;
   String? error;
@@ -39,6 +43,7 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
       field.dispose();
     }
     templateBody.dispose();
+    companyName.dispose();
     super.dispose();
   }
 
@@ -66,6 +71,9 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
     if (saving) return;
     setState(() { saving = true; error = null; });
     try {
+      if (widget.canRename && companyName.text.trim() != widget.companyName.trim()) {
+        await widget.service.renameCompany(widget.companyId, companyName.text.trim());
+      }
       await widget.service.saveCompanyProfile(widget.companyId, {
         for (final entry in fields.entries) entry.key: entry.value.text.trim(),
       });
@@ -103,6 +111,12 @@ class _CompanyOfferSettingsScreenState extends State<CompanyOfferSettingsScreen>
       appBar: AppBar(title: const Text('Company Offer Settings')),
       body: loading ? const Center(child: CircularProgressIndicator())
           : ListView(padding: const EdgeInsets.all(20), children: [
+              if (widget.canRename) ...[
+                TextField(controller: companyName,
+                  decoration: const InputDecoration(labelText: 'Registered company name',
+                    border: OutlineInputBorder())),
+                const SizedBox(height: 14),
+              ],
               const Text('Company contact information',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
