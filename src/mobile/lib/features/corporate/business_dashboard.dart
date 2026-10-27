@@ -9,7 +9,7 @@ class BusinessDashboard extends StatefulWidget {
   final BusinessRecord? metrics;
   final bool isHr, isOwner, loading;
   final String? error;
-  final Future<void> Function() onRefresh, onInvite, onNewTask, onMyOffers, onPermits;
+  final Future<void> Function() onRefresh, onInvite, onNewTask, onMyOffers, onPermits, onOfferSettings, onBenefits;
   final ValueChanged<String> onCompany;
   final Future<void> Function(BusinessRecord) onEditMember;
   final Future<void> Function(BusinessRecord) onDraftOffer;
@@ -29,6 +29,8 @@ class BusinessDashboard extends StatefulWidget {
     required this.onRefresh,
     required this.onMyOffers,
     required this.onPermits,
+    required this.onOfferSettings,
+    required this.onBenefits,
     required this.onCompany,
     required this.onInvite,
     required this.onNewTask,
@@ -325,6 +327,18 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
             style: TextStyle(fontWeight: FontWeight.w700),
           ),
           actions: [
+            if (widget.isHr)
+              IconButton(
+                tooltip: 'Company offer settings',
+                onPressed: widget.onOfferSettings,
+                icon: const Icon(Icons.business_outlined),
+              ),
+            if (widget.isHr)
+              IconButton(
+                tooltip: 'Manage company benefits',
+                onPressed: widget.onBenefits,
+                icon: const Icon(Icons.volunteer_activism_outlined),
+              ),
             if (widget.isHr)
               IconButton(
                 tooltip: 'Issued visas and pass expiry',
