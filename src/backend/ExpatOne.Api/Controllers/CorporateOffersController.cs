@@ -61,6 +61,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
 
         var documentId = Guid.NewGuid();
         string? objectKey = null;
+        var persisted = false;
         try
         {
             objectKey = await pdfStorage.UploadAsync(companyId, request.EmployeeUserId, documentId,
@@ -93,6 +94,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             db.Documents.Add(walletDocument);
             db.CorporateOfferLetters.Add(offer);
             await db.SaveChangesAsync(HttpContext.RequestAborted);
+            persisted = true;
             await audit.LogAsync(documentId, uid, "corporate_offer_issued");
             return Created($"/api/corporate/offers/{offer.Id}",
                 new { offer.Id, offer.CompanyId, offer.EmployeeUserId,
@@ -101,7 +103,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         catch
         {
             // A failed database write must not leave an untracked PDF in GCS.
-            if (objectKey != null)
+            if (objectKey != null && !persisted)
             {
                 try { await storage.DeleteFileAsync(objectKey); }
                 catch { /* Preserve the original error; orphan cleanup needs monitoring. */ }
