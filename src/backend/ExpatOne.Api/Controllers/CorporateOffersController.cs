@@ -234,6 +234,9 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
                 return BadRequest(new { message = "Original offer PDF exceeds signing size limit." });
             originalPdf = buffer.ToArray();
         }
+        if (originalPdf.Length < 8 ||
+            !originalPdf.AsSpan(0, 5).SequenceEqual("%PDF-"u8))
+            return Conflict(new { message = "Original issued offer is not a valid PDF." });
         var originalPdfSha256 = Convert.ToHexString(SHA256.HashData(originalPdf));
         var text = JsonDocument.Parse(offer.TemplateDataJson).RootElement
             .GetProperty("text").GetString() ?? "";
