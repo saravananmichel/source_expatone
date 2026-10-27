@@ -4,6 +4,7 @@ import 'offer_letter_template.dart';
 /// HR-only offer preview and explicit issuance into the employee wallet.
 class OfferLetterDraftDialog extends StatefulWidget {
   final Future<void> Function(String renderedText) onIssue;
+  final int? replacementVersion;
   final String employeeName;
   final String companyName;
   final String employmentCountry;
@@ -12,6 +13,7 @@ class OfferLetterDraftDialog extends StatefulWidget {
   const OfferLetterDraftDialog({
     super.key,
     required this.employeeName,
+    this.replacementVersion,
     required this.onIssue,
     required this.companyName,
     required this.employmentCountry,
@@ -112,7 +114,9 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Employment offer — review and issue'),
+    title: Text(widget.replacementVersion == null
+        ? 'Employment offer — review and issue'
+        : 'Replacement offer v${widget.replacementVersion} — review and issue'),
     content: SizedBox(
       width: 620,
       child: SingleChildScrollView(
