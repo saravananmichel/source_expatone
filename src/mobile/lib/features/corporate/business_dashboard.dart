@@ -196,7 +196,7 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
             color: navy,
           ),
         ),
-        if (action != null) action,
+        ?action,
       ],
     ),
   );
