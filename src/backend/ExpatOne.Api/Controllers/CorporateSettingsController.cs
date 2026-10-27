@@ -102,7 +102,9 @@ public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserServi
         if (file.ContentType is not ("image/png" or "image/jpeg"))
             return BadRequest(new { message = "Only PNG and JPEG logos are supported." });
 
-        await using var input = file.OpenReadStream();
+        await using var input = new MemoryStream();
+        await file.CopyToAsync(input, HttpContext.RequestAborted);
+        input.Position = 0;
         var header = new byte[8];
         if (await input.ReadAsync(header.AsMemory(0, header.Length)) < 8)
             return BadRequest(new { message = "Invalid image file." });
