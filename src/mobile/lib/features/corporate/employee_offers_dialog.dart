@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:ui' as ui;
+import 'dart:typed_data';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/services/corporate_service.dart';
 
@@ -141,4 +143,95 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
       TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
     ],
   );
+}
+
+class EmployeeSignaturePad extends StatefulWidget {
+  const EmployeeSignaturePad({super.key});
+
+  @override
+  State<EmployeeSignaturePad> createState() => _EmployeeSignaturePadState();
+}
+
+class _EmployeeSignaturePadState extends State<EmployeeSignaturePad> {
+  final List<Offset?> points = [];
+  final GlobalKey padKey = GlobalKey();
+
+  Future<void> finish() async {
+    if (points.whereType<Offset>().length < 3) return;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    const size = Size(480, 200);
+    canvas.drawRect(Offset.zero & size, Paint()..color = Colors.white);
+    final pen = Paint()..color = Colors.black..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    for (var i = 1; i < points.length; i++) {
+      final a = points[i - 1], b = points[i];
+      if (a != null && b != null) canvas.drawLine(a, b, pen);
+    }
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(480, 200);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    picture.dispose();
+    image.dispose();
+    if (!mounted || data == null) return;
+    Navigator.pop(context, data.buffer.asUint8List());
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: const Text('Draw your signature'),
+    content: SizedBox(width: 480, child: Column(
+      mainAxisSize: MainAxisSize.min, children: [
+        const Text('Draw using your finger or mouse. Your signature will be submitted only after confirmation.'),
+        const SizedBox(height: 12),
+        Container(
+          height: 200, width: 480,
+          decoration: BoxDecoration(border: Border.all(color: Colors.grey)),
+          child: LayoutBuilder(builder: (context, constraints) {
+            Offset scaled(Offset local) => Offset(
+              local.dx * 480 / constraints.maxWidth,
+              local.dy * 200 / constraints.maxHeight);
+            return GestureDetector(
+              onPanStart: (details) => setState(() =>
+                points.add(scaled(details.localPosition))),
+              onPanUpdate: (details) => setState(() =>
+                points.add(scaled(details.localPosition))),
+              onPanEnd: (_) => setState(() => points.add(null)),
+              child: CustomPaint(painter: _SignaturePainter(points),
+                size: Size.infinite),
+            );
+          }),
+        ),
+      ],
+    )),
+    actions: [
+      TextButton(onPressed: () => setState(points.clear),
+        child: const Text('Clear')),
+      TextButton(onPressed: () => Navigator.pop(context),
+        child: const Text('Cancel')),
+      FilledButton(onPressed: points.whereType<Offset>().length < 3 ? null : finish,
+        child: const Text('Continue')),
+    ],
+  );
+}
+
+class _SignaturePainter extends CustomPainter {
+  final List<Offset?> points;
+  const _SignaturePainter(this.points);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final pen = Paint()..color = Colors.black..strokeWidth = 2.5
+      ..strokeCap = StrokeCap.round..style = PaintingStyle.stroke;
+    for (var i = 1; i < points.length; i++) {
+      final a = points[i - 1], b = points[i];
+      if (a != null && b != null) {
+        canvas.drawLine(Offset(a.dx * size.width / 480, a.dy * size.height / 200),
+          Offset(b.dx * size.width / 480, b.dy * size.height / 200), pen);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _SignaturePainter oldDelegate) => true;
 }
