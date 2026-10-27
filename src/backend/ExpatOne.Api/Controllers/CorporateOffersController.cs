@@ -88,7 +88,13 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
                         .SetProperty(x => x.Status, "Superseded")
                         .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), HttpContext.RequestAborted);
                 if (replaced != 1)
+                {
+                    // The upload already happened: remove it before returning a conflict.
+                    await tx.RollbackAsync(HttpContext.RequestAborted);
+                    await storage.DeleteFileAsync(objectKey!);
+                    objectKey = null;
                     return Conflict(new { message = "Previous offer has already changed." });
+                }
             }
             var offer = new CorporateOfferLetter
             {
