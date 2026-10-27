@@ -3,6 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
+import 'offer_letter_draft_dialog.dart';
 
 class CorporateScreen extends StatefulWidget {
   final CorporateService service;
@@ -158,6 +159,20 @@ class _CorporateScreenState extends State<CorporateScreen> {
       },
       onInvite: inviteMember,
       onEditMember: editMember,
+      onDraftOffer: (employee) async {
+        final name = employee['displayName']?.toString().trim();
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => OfferLetterDraftDialog(
+            employeeName: name == null || name.isEmpty
+                ? (employee['email']?.toString() ?? '')
+                : name,
+            companyName: selected?['name']?.toString() ?? '',
+            employmentCountry: employee['employmentCountry']?.toString() ?? '',
+            startDate: employee['employmentStartDate']?.toString(),
+          ),
+        );
+      },
       onNewTask: () => action(createCase),
       taskActions: taskActions,
       invitations: invitations
