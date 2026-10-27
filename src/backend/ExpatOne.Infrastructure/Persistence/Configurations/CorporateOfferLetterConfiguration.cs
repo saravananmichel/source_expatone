@@ -19,5 +19,7 @@ public sealed class CorporateOfferLetterConfiguration : IEntityTypeConfiguration
         b.HasOne<User>().WithMany().HasForeignKey(x => x.CreatedByUserId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne<Document>().WithMany().HasForeignKey(x => x.DocumentId).OnDelete(DeleteBehavior.Restrict);
         b.HasIndex(x => new { x.CompanyId, x.EmployeeUserId, x.CreatedAt });
+        b.HasIndex(x => x.ReplacesOfferId).IsUnique();
+        b.HasOne<CorporateOfferLetter>().WithMany().HasForeignKey(x => x.ReplacesOfferId).OnDelete(DeleteBehavior.Restrict);
     }
 }
