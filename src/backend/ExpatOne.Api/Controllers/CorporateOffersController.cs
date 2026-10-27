@@ -219,6 +219,16 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         var original = await db.Documents.AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == offer.DocumentId && x.UserId == uid);
         if (original == null) return NotFound();
+        byte[] originalPdf;
+        await using (var originalStream = await storage.DownloadFileAsync(original.S3ObjectKey))
+        {
+            using var buffer = new MemoryStream();
+            await originalStream.CopyToAsync(buffer, HttpContext.RequestAborted);
+            if (buffer.Length > 10_000_000)
+                return BadRequest(new { message = "Original offer PDF exceeds signing size limit." });
+            originalPdf = buffer.ToArray();
+        }
+        var originalPdfSha256 = Convert.ToHexString(SHA256.HashData(originalPdf));
         var text = JsonDocument.Parse(offer.TemplateDataJson).RootElement
             .GetProperty("text").GetString() ?? "";
         var company = await db.CorporateCompanies.AsNoTracking()
@@ -255,6 +265,8 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         { return BadRequest(new { message = "Unable to render signed offer." }); }
 
+        var signedPdfSha256 = Convert.ToHexString(SHA256.HashData(signedPdf));
+        var signatureSha256 = Convert.ToHexString(SHA256.HashData(signature));
         string? signatureKey = null;
         string? signedPdfKey = null;
         try
@@ -298,7 +310,8 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             audit.Stage(signedDocumentId, uid, "corporate_offer_signed",
                 metadata: JsonSerializer.Serialize(new { offerId, offer.Version,
                     originalDocumentId = offer.DocumentId, signedDocumentId, signedAt,
-                    method = "Drawn" }));
+                    method = "Drawn", originalPdfSha256, signedPdfSha256,
+                    signatureSha256 }));
             await db.SaveChangesAsync(HttpContext.RequestAborted);
             await tx.CommitAsync(HttpContext.RequestAborted);
             signatureKey = null;
