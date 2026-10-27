@@ -127,6 +127,12 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             // Persist the audit entry in the same DB save as the offer and wallet record.
             audit.Stage(documentId, uid, "corporate_offer_issued",
                 metadata: JsonSerializer.Serialize(new { offerId = offer.Id, companyId }));
+            if (previous?.DocumentId is Guid predecessorDocumentId)
+                audit.Stage(predecessorDocumentId, uid, "corporate_offer_superseded",
+                    metadata: JsonSerializer.Serialize(new {
+                        oldOfferId = previous.Id, replacementOfferId = offer.Id,
+                        companyId, replacementVersion = offer.Version
+                    }));
             await db.SaveChangesAsync(HttpContext.RequestAborted);
             await tx.CommitAsync(HttpContext.RequestAborted);
             persisted = true;
