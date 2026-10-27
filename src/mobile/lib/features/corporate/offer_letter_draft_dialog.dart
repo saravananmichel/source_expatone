@@ -9,6 +9,7 @@ class OfferLetterDraftDialog extends StatefulWidget {
   final String companyName;
   final String employmentCountry;
   final String? startDate;
+  final String? companyTemplateBody;
   final List<Map<String, dynamic>> countries;
   final List<Map<String, dynamic>> currencies;
   final List<Map<String, dynamic>> benefits;
@@ -22,6 +23,7 @@ class OfferLetterDraftDialog extends StatefulWidget {
     required this.companyName,
     required this.employmentCountry,
     this.startDate,
+    this.companyTemplateBody,
     this.countries = const [],
     this.currencies = const [],
     this.benefits = const [],
@@ -179,7 +181,8 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
       'StartDate': widget.startDate?.split('T').first ?? '',
     };
     fields = {
-      for (final key in OfferLetterTemplate.placeholders(OfferLetterTemplate.defaultTemplate))
+      for (final key in OfferLetterTemplate.placeholders(widget.companyTemplateBody?.trim().isNotEmpty == true
+          ? widget.companyTemplateBody! : OfferLetterTemplate.defaultTemplate))
         key: TextEditingController(text: defaults[key] ?? ''),
     };
   }
@@ -201,7 +204,11 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
         throw ArgumentError('Basic salary and allowance must be non-negative numbers.');
       }
       setState(() {
-        preview = OfferLetterTemplate.render(OfferLetterTemplate.defaultTemplate, values);
+        preview = OfferLetterTemplate.render(
+          widget.companyTemplateBody?.trim().isNotEmpty == true
+              ? widget.companyTemplateBody! : OfferLetterTemplate.defaultTemplate,
+          values,
+        );
         error = null;
       });
     } catch (e) {
@@ -215,6 +222,18 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
   Future<void> issue() async {
     final current = preview;
     if (current == null || issuing) return;
+    final approved = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm offer issuance'),
+        content: const Text('The reviewed offer PDF will be issued to the employee wallet. This action cannot be treated as an employee signature. Continue?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Review again')),
+          FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Issue offer')),
+        ],
+      ),
+    );
+    if (approved != true || !mounted) return;
     setState(() { issuing = true; error = null; });
     try {
       await widget.onIssue(current);
