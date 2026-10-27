@@ -277,11 +277,12 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         string? signedPdfKey = null;
         try
         {
+            var signingAttemptId = Guid.NewGuid();
             await using (var stream = new MemoryStream(signature))
-                signatureKey = await storage.UploadFileAsync(stream, "signature.png", "image/png",
+                signatureKey = await storage.UploadFileAsync(stream, $"{signingAttemptId:N}-signature.png", "image/png",
                     $"corporate-offers/{offer.CompanyId}/{offerId}/signatures");
             await using (var stream = new MemoryStream(signedPdf))
-                signedPdfKey = await storage.UploadFileAsync(stream, "signed-offer.pdf", "application/pdf",
+                signedPdfKey = await storage.UploadFileAsync(stream, $"{signingAttemptId:N}-signed-offer.pdf", "application/pdf",
                     $"corporate-offers/{offer.CompanyId}/{offerId}/signed");
             var signedDocumentId = Guid.NewGuid();
             await using var tx = await db.Database.BeginTransactionAsync(HttpContext.RequestAborted);
