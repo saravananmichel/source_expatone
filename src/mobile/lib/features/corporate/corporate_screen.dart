@@ -179,7 +179,17 @@ class _CorporateScreenState extends State<CorporateScreen> {
         final name = employee['displayName']?.toString().trim();
         final employeeId = employee['id']?.toString() ?? '';
         if (employeeId.isEmpty || companyId.isEmpty) return;
-        final offers = await widget.service.companyOffers(companyId);
+        List<Map<String, dynamic>> offers;
+        try {
+          offers = await widget.service.companyOffers(companyId);
+        } catch (e) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Could not check offer history: $e')),
+            );
+          }
+          return;
+        }
         if (!mounted) return;
         final pending = offers.where((o) =>
           o['employeeUserId']?.toString() == employeeId &&
