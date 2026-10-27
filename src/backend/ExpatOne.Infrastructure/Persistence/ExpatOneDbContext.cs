@@ -83,7 +83,8 @@ public class ExpatOneDbContext : DbContext
             e.ToTable("corporate_offer_benefits");
             e.HasKey(x => new { x.OfferId, x.Position });
             e.HasOne<CorporateOfferLetter>().WithMany().HasForeignKey(x => x.OfferId);
-            e.HasOne<CorporateBenefit>().WithMany().HasForeignKey(x => x.BenefitId);
+            e.HasOne<CorporateBenefit>().WithMany().HasForeignKey(x => x.BenefitId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
         modelBuilder.Entity<Currency>(e =>
         {
