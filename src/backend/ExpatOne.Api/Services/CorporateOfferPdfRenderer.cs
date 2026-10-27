@@ -44,8 +44,15 @@ public static class CorporateOfferPdfRenderer
                 });
                 page.Content().PaddingVertical(18).Column(column =>
                 {
-                    column.Item().Text(text).LineHeight(1.45f);
-                    if (benefits is { Count: > 0 })
+                    if (employeeSignature is { Length: > 0 })
+                    {
+                        column.Item().Text("I confirm that I reviewed and accept the original issued employment offer identified by the SHA-256 fingerprint below. The original PDF, not this acknowledgement, contains the governing offer terms.").LineHeight(1.45f);
+                    }
+                    else
+                    {
+                        column.Item().Text(text).LineHeight(1.45f);
+                    }
+                    if (employeeSignature is not { Length: > 0 } && benefits is { Count: > 0 })
                     {
                         column.Item().PaddingTop(18).Text("SELECTED EMPLOYEE BENEFITS").Bold();
                         column.Item().PaddingTop(8).Table(table =>
