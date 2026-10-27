@@ -3,6 +3,33 @@ import '../networking/api_client.dart';
 class CorporateService {
   final ApiClient api;
   CorporateService(this.api);
+  // Phase 3.1: offer catalogs and company HR settings.
+  Future<List<Map<String, dynamic>>> offerCountries() =>
+      api.getList('/corporate/offer-catalog/countries');
+  Future<List<Map<String, dynamic>>> offerCurrencies() =>
+      api.getList('/corporate/offer-catalog/currencies');
+  Future<List<Map<String, dynamic>>> companyBenefits(String companyId, {
+    bool includeInactive = false,
+  }) => api.getList('/corporate/companies/$companyId/settings/benefits',
+      queryParams: {'includeInactive': '$includeInactive'});
+  Future<Map<String, dynamic>> companyProfile(String companyId) =>
+      api.get('/corporate/companies/$companyId/settings/profile');
+  Future<Map<String, dynamic>> saveCompanyProfile(
+    String companyId, Map<String, dynamic> values,
+  ) => api.put('/corporate/companies/$companyId/settings/profile', body: values);
+  Future<Map<String, dynamic>> createCompanyBenefit(
+    String companyId, Map<String, dynamic> values,
+  ) => api.post('/corporate/companies/$companyId/settings/benefits', body: values);
+  Future<Map<String, dynamic>> updateCompanyBenefit(
+    String companyId, String benefitId, Map<String, dynamic> values,
+  ) => api.put('/corporate/companies/$companyId/settings/benefits/$benefitId',
+      body: values);
+  Future<void> deactivateCompanyBenefit(String companyId, String benefitId) async {
+    await api.delete('/corporate/companies/$companyId/settings/benefits/$benefitId');
+  }
+  Future<List<Map<String, dynamic>>> offerSignatories(String companyId) =>
+      api.getList('/corporate/companies/$companyId/settings/signatories');
+
   Future<List<Map<String, dynamic>>> companies() =>
       api.getList('/corporate/companies');
   Future<List<Map<String, dynamic>>> issuedPermits(String companyId) =>
