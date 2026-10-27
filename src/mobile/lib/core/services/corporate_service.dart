@@ -15,6 +15,9 @@ class CorporateService {
   Future<List<Map<String, dynamic>>> myOffers() =>
       api.getList('/corporate/offers/mine');
 
+  Future<Map<String, dynamic>> offerDocumentUrl(String documentId) =>
+      api.get('/documents/$documentId/access-url');
+
   Future<Map<String, dynamic>> respondToOffer(String offerId, String response) =>
       api.post('/corporate/offers/$offerId/respond', body: {'response': response});
 
