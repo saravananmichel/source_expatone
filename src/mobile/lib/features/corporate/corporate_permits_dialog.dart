@@ -104,8 +104,10 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
       });
       await refresh();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to record permit: $e')));
+      }
     } finally {
       country.dispose(); type.dispose(); reference.dispose();
     }
@@ -132,8 +134,10 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
           widget.companyId, permit['id'].toString(), status);
       await refresh();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Unable to update permit: $e')));
+      }
     }
   }
 
@@ -169,8 +173,10 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
                         widget.companyId, a['id'].toString());
                       await refresh();
                     } catch (e) {
-                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                      if (ctx.mounted) {
+        ScaffoldMessenger.of(ctx).showSnackBar(
                         SnackBar(content: Text('Unable to acknowledge: $e')));
+      }
                     }
                   },
                   child: const Text('Acknowledge'),
