@@ -186,14 +186,14 @@ class _CorporateScreenState extends State<CorporateScreen> {
         try {
           offers = await widget.service.companyOffers(companyId);
         } catch (e) {
-          if (mounted) {
+          if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Could not check offer history: $e')),
             );
           }
           return;
         }
-        if (!mounted) return;
+        if (!context.mounted) return;
         final pending = offers.where((o) =>
           o['employeeUserId']?.toString() == employeeId &&
           o['status'] == 'Issued').toList();
@@ -215,7 +215,7 @@ class _CorporateScreenState extends State<CorporateScreen> {
           if (confirm != true || !context.mounted) return;
           previous = pending.first;
         }
-
+        if (!context.mounted) return;
         await showDialog<void>(
           context: context,
           builder: (ctx) => OfferLetterDraftDialog(
@@ -228,7 +228,7 @@ class _CorporateScreenState extends State<CorporateScreen> {
               }
               await widget.service.issueOffer(companyId, employeeId, renderedText,
                 replacesOfferId: previous?['id']?.toString());
-              if (mounted) {
+              if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Offer issued to employee Document Wallet')),
                 );
@@ -366,8 +366,9 @@ class _CorporateScreenState extends State<CorporateScreen> {
                             'Create company',
                             'Company name',
                           );
-                          if (name != null && name.isNotEmpty)
+                          if (name != null && name.isNotEmpty) {
                             await widget.service.createCompany(name);
+                          }
                         }),
                         icon: const Icon(Icons.add_business),
                         label: const Text('Register a company'),
@@ -871,16 +872,18 @@ class _CorporateScreenState extends State<CorporateScreen> {
                           result['url']?.toString() ?? '',
                         );
                         if (uri != null &&
-                            (uri.scheme == 'https' || uri.scheme == 'http'))
+                            (uri.scheme == 'https' || uri.scheme == 'http')) {
                           await launchUrl(
                             uri,
                             mode: LaunchMode.externalApplication,
                           );
+                        }
                       } catch (e) {
-                        if (mounted)
+                        if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Document unavailable: $e')),
                           );
+                        }
                       }
                     },
                   ),
@@ -901,9 +904,10 @@ class _CorporateScreenState extends State<CorporateScreen> {
         ),
       );
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         ScaffoldMessenger.of(context)
             .showSnackBar(SnackBar(content: Text('Visa viewer: $e')));
+      }
     }
   }
 
