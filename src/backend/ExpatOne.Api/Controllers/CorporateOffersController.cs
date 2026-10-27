@@ -238,8 +238,18 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             !originalPdf.AsSpan(0, 5).SequenceEqual("%PDF-"u8))
             return Conflict(new { message = "Original issued offer is not a valid PDF." });
         var originalPdfSha256 = Convert.ToHexString(SHA256.HashData(originalPdf));
-        var text = JsonDocument.Parse(offer.TemplateDataJson).RootElement
-            .GetProperty("text").GetString() ?? "";
+        string text;
+        try
+        {
+            using var template = JsonDocument.Parse(offer.TemplateDataJson);
+            text = template.RootElement.GetProperty("text").GetString() ?? "";
+            if (text.Length < 50 || text.Length > 20000)
+                return Conflict(new { message = "Issued offer content is invalid." });
+        }
+        catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException)
+        {
+            return Conflict(new { message = "Issued offer content cannot be recovered." });
+        }
         var company = await db.CorporateCompanies.AsNoTracking()
             .Where(x => x.Id == offer.CompanyId).Select(x => x.Name).SingleAsync();
         var profile = await db.CorporateCompanyProfiles.AsNoTracking()
