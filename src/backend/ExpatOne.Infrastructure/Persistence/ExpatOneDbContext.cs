@@ -11,6 +11,7 @@ public class ExpatOneDbContext : DbContext
     }
 
     public DbSet<CorporateCompanyProfile> CorporateCompanyProfiles => Set<CorporateCompanyProfile>();
+    public DbSet<CorporateOfferBenefit> CorporateOfferBenefits => Set<CorporateOfferBenefit>();
     public DbSet<CorporateBenefit> CorporateBenefits => Set<CorporateBenefit>();
     public DbSet<Currency> Currencies => Set<Currency>();
     public DbSet<CorporateCompany> CorporateCompanies => Set<CorporateCompany>();
@@ -67,6 +68,13 @@ public class ExpatOneDbContext : DbContext
             e.ToTable("corporate_benefits");
             e.HasKey(x => x.Id);
             e.HasOne<CorporateCompany>().WithMany().HasForeignKey(x => x.CompanyId);
+        });
+        modelBuilder.Entity<CorporateOfferBenefit>(e =>
+        {
+            e.ToTable("corporate_offer_benefits");
+            e.HasKey(x => new { x.OfferId, x.Position });
+            e.HasOne<CorporateOfferLetter>().WithMany().HasForeignKey(x => x.OfferId);
+            e.HasOne<CorporateBenefit>().WithMany().HasForeignKey(x => x.BenefitId);
         });
         modelBuilder.Entity<Currency>(e =>
         {
