@@ -11,7 +11,8 @@ public static class CorporateOfferPdfRenderer
 
     /// <summary>Render with an optional company branding snapshot.</summary>
     public static byte[] Render(string text, string? companyName,
-        string? companyContactLine, byte[]? logoBytes)
+        string? companyContactLine, byte[]? logoBytes,
+        IReadOnlyList<(string Category, string Name, string? Description)>? benefits = null)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 20000)
             throw new ArgumentException("Offer text must contain 1 to 20,000 characters.");
@@ -40,6 +41,31 @@ public static class CorporateOfferPdfRenderer
                 page.Content().PaddingVertical(18).Column(column =>
                 {
                     column.Item().Text(text).LineHeight(1.45f);
+                    if (benefits is { Count: > 0 })
+                    {
+                        column.Item().PaddingTop(18).Text("SELECTED EMPLOYEE BENEFITS").Bold();
+                        column.Item().PaddingTop(8).Table(table =>
+                        {
+                            table.ColumnsDefinition(columns =>
+                            {
+                                columns.RelativeColumn(2);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(5);
+                            });
+                            table.Header(header =>
+                            {
+                                header.Cell().BorderBottom(1).Padding(5).Text("Category").Bold();
+                                header.Cell().BorderBottom(1).Padding(5).Text("Benefit").Bold();
+                                header.Cell().BorderBottom(1).Padding(5).Text("Terms").Bold();
+                            });
+                            foreach (var benefit in benefits)
+                            {
+                                table.Cell().Padding(5).Text(benefit.Category);
+                                table.Cell().Padding(5).Text(benefit.Name);
+                                table.Cell().Padding(5).Text(benefit.Description ?? "");
+                            }
+                        });
+                    }
                     column.Item().PaddingTop(28).AlignRight().Width(230).Column(signature =>
                     {
                         signature.Item().Text("EMPLOYEE ACCEPTANCE").Bold().FontSize(10);
