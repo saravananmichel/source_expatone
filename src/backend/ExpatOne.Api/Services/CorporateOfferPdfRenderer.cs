@@ -7,7 +7,11 @@ namespace ExpatOne.Api.Services;
 /// <summary>Renders plain-text HR-reviewed offer drafts into a readable PDF.</summary>
 public static class CorporateOfferPdfRenderer
 {
-    public static byte[] Render(string text)
+    public static byte[] Render(string text) => Render(text, null, null, null);
+
+    /// <summary>Render with an optional company branding snapshot.</summary>
+    public static byte[] Render(string text, string? companyName,
+        string? companyContactLine, byte[]? logoBytes)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 20000)
             throw new ArgumentException("Offer text must contain 1 to 20,000 characters.");
@@ -20,8 +24,19 @@ public static class CorporateOfferPdfRenderer
                 page.Size(PageSizes.A4);
                 page.Margin(42);
                 page.DefaultTextStyle(x => x.FontSize(10));
-                page.Header().Text("EMPLOYMENT OFFER — DRAFT SUBJECT TO LEGAL REVIEW")
-                    .Bold().FontSize(13);
+                page.Header().Column(header =>
+                {
+                    if (logoBytes is { Length: > 0 })
+                        header.Item().Height(60).AlignLeft().Image(logoBytes).FitArea();
+                    if (!string.IsNullOrWhiteSpace(companyName))
+                        header.Item().PaddingTop(6).Text(companyName).Bold().FontSize(15);
+                    if (!string.IsNullOrWhiteSpace(companyContactLine))
+                        header.Item().PaddingTop(3).Text(companyContactLine)
+                            .FontSize(8).FontColor(Colors.Grey.Darken2);
+                    header.Item().PaddingTop(12).Text(
+                        "EMPLOYMENT OFFER — DRAFT SUBJECT TO LEGAL REVIEW")
+                        .Bold().FontSize(13);
+                });
                 page.Content().PaddingVertical(18).Column(column =>
                 {
                     column.Item().Text(text).LineHeight(1.45f);
