@@ -8,6 +8,12 @@ class CorporateService {
   Future<List<Map<String, dynamic>>> issuedPermits(String companyId) =>
       api.getList('/corporate/companies/$companyId/permits');
 
+  Future<List<Map<String, dynamic>>> permitAlerts(String companyId) =>
+      api.getList('/corporate/companies/$companyId/permits/alerts');
+
+  Future<void> acknowledgePermitAlert(String companyId, String alertId) =>
+      api.postVoid('/corporate/companies/$companyId/permits/alerts/$alertId/acknowledge');
+
   Future<Map<String, dynamic>> recordIssuedPermit(
     String companyId, Map<String, dynamic> payload,
   ) => api.post('/corporate/companies/$companyId/permits', body: payload);
