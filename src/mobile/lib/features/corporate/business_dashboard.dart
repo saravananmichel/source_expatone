@@ -487,7 +487,9 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
   /// Counts linked application records, not issued visas or valid permits.
   /// Visa expiry requires a separately verified permit expiry date.
   Widget workforceVisaSection() {
-    final active = widget.employees.where((e) => e['status'] == 'Active').toList();
+    final active = widget.employees.where((e) =>
+        e['status'] == 'Active' &&
+        (e['role'] == 'Employee' || e['role'] == 'Viewer')).toList();
     final linked = widget.tasks.where((t) =>
         t['visaApplicationId'] != null &&
         t['visaApplicationId'].toString().isNotEmpty).toList();
