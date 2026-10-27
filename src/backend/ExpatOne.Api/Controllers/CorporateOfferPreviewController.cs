@@ -30,6 +30,14 @@ public sealed class CorporateOfferPreviewController(
         if (text.Length < 50 || text.Length > 20000 ||
             text.Contains("{{", StringComparison.Ordinal))
             return BadRequest(new { message = "Complete all offer fields before PDF preview." });
+        var benefitIds = request.BenefitIds ?? Array.Empty<Guid>();
+        if (benefitIds.Length > 30 || benefitIds.Distinct().Count() != benefitIds.Length)
+            return BadRequest(new { message = "Invalid benefit selection." });
+        var benefits = await db.CorporateBenefits.AsNoTracking()
+            .Where(x => x.CompanyId == companyId && x.IsActive && benefitIds.Contains(x.Id))
+            .ToListAsync(HttpContext.RequestAborted);
+        if (benefits.Count != benefitIds.Length)
+            return BadRequest(new { message = "Invalid or inactive company benefit." });
         var company = await db.CorporateCompanies.AsNoTracking()
             .Where(x => x.Id == companyId).Select(x => x.Name).FirstOrDefaultAsync();
         if (company == null) return NotFound();
@@ -52,7 +60,9 @@ public sealed class CorporateOfferPreviewController(
         }
         try
         {
-            var pdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo);
+            var pdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo,
+                benefitIds.Select(id => benefits.Single(b => b.Id == id))
+                    .Select(b => (b.Category, b.Name, b.Description)).ToList());
             Response.Headers.CacheControl = "no-store";
             return File(pdf, "application/pdf", "offer-preview.pdf");
         }
@@ -63,4 +73,4 @@ public sealed class CorporateOfferPreviewController(
     }
 }
 
-public sealed record PreviewOfferRequest(string? RenderedText);
+public sealed record PreviewOfferRequest(string? RenderedText, Guid[]? BenefitIds = null);
