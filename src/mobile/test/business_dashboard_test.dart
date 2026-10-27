@@ -62,7 +62,10 @@ void main() {
       onCompany: (_) {},
       onInvite: () async {},
       onNewTask: () async {},
+      onMyOffers: () async {},
+      onPermits: () async {},
       onEditMember: (_) async {},
+      onDraftOffer: (_) async {},
       taskActions: (_) => const Icon(Icons.more_vert),
     ),
   );
