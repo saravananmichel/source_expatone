@@ -3,6 +3,12 @@ import '../networking/api_client.dart';
 class CorporateService {
   final ApiClient api;
   CorporateService(this.api);
+  Future<Map<String, dynamic>> companyOfferTemplate(String companyId) =>
+      api.get('/corporate/companies/$companyId/settings/offer-template');
+  Future<Map<String, dynamic>> saveCompanyOfferTemplate(
+    String companyId, Map<String, dynamic> template,
+  ) => api.put('/corporate/companies/$companyId/settings/offer-template',
+      body: {'template': template});
   // Phase 3.1: offer catalogs and company HR settings.
   Future<List<Map<String, dynamic>>> offerCountries() =>
       api.getList('/corporate/offer-catalog/countries');
