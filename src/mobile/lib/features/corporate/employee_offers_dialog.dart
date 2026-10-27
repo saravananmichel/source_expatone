@@ -106,7 +106,7 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Employment offer • $status',
+                              Text('Employment offer v${offer['version'] ?? 1} • $status',
                                   style: Theme.of(context).textTheme.titleSmall),
                               Text('Issued: $issuedAt'),
                               Wrap(spacing: 8, children: [
