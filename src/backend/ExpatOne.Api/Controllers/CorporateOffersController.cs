@@ -57,7 +57,29 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             return StatusCode(503, new { message = "Employment Contract document type is not configured." });
 
         byte[] pdf;
-        try { pdf = CorporateOfferPdfRenderer.Render(text); }
+        try
+        {
+            var company = await db.CorporateCompanies.AsNoTracking()
+                .Where(x => x.Id == companyId).Select(x => x.Name).SingleAsync();
+            var profile = await db.CorporateCompanyProfiles.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.CompanyId == companyId);
+            var contact = profile == null ? null : string.Join(" | ",
+                new[] { profile.AddressLine1, profile.AddressLine2, profile.City,
+                    profile.State, profile.PostalCode, profile.CountryCode,
+                    profile.ContactNumber, profile.ContactEmail, profile.Website }
+                .Where(x => !string.IsNullOrWhiteSpace(x)));
+            byte[]? logo = null;
+            if (!string.IsNullOrWhiteSpace(profile?.LogoObjectKey))
+            {
+                await using var stream = await storage.DownloadFileAsync(profile.LogoObjectKey);
+                using var buffer = new MemoryStream();
+                await stream.CopyToAsync(buffer, HttpContext.RequestAborted);
+                if (buffer.Length > 2_000_000)
+                    return BadRequest(new { message = "Company logo is too large." });
+                logo = buffer.ToArray();
+            }
+            pdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo);
+        }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         { return BadRequest(new { message = "Unable to render offer PDF." }); }
 
