@@ -164,6 +164,18 @@ class _CorporateScreenState extends State<CorporateScreen> {
         await showDialog<void>(
           context: context,
           builder: (ctx) => OfferLetterDraftDialog(
+            onIssue: (renderedText) async {
+              final employeeId = employee['id']?.toString() ?? '';
+              if (employeeId.isEmpty || companyId.isEmpty) {
+                throw StateError('Employee or company ID is missing.');
+              }
+              await widget.service.issueOffer(companyId, employeeId, renderedText);
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Offer issued to employee Document Wallet')),
+                );
+              }
+            },
             employeeName: name == null || name.isEmpty
                 ? (employee['email']?.toString() ?? '')
                 : name,
