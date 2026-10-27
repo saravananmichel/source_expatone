@@ -9,6 +9,10 @@ class OfferLetterDraftDialog extends StatefulWidget {
   final String companyName;
   final String employmentCountry;
   final String? startDate;
+  final List<Map<String, dynamic>> countries;
+  final List<Map<String, dynamic>> currencies;
+  final List<Map<String, dynamic>> benefits;
+  final List<Map<String, dynamic>> signatories;
 
   const OfferLetterDraftDialog({
     super.key,
@@ -18,6 +22,10 @@ class OfferLetterDraftDialog extends StatefulWidget {
     required this.companyName,
     required this.employmentCountry,
     this.startDate,
+    this.countries = const [],
+    this.currencies = const [],
+    this.benefits = const [],
+    this.signatories = const [],
   });
 
   @override
@@ -29,6 +37,112 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
   String? preview;
   String? error;
   bool issuing = false;
+  final Set<String> selectedBenefits = {};
+
+  static const employmentTypes = ['Permanent', 'Fixed-term Contract',
+    'Temporary', 'Part-time', 'Internship', 'Consultant'];
+  static const payFrequencies = ['Weekly', 'Bi-Weekly', 'Monthly'];
+
+  void updateField(String key, String value) {
+    fields[key]?.text = value;
+    if (preview != null) setState(() => preview = null);
+  }
+
+  Future<void> chooseDate(String key) async {
+    final initial = DateTime.tryParse(fields[key]?.text ?? '') ?? DateTime.now();
+    final date = await showDatePicker(
+      context: context, initialDate: initial,
+      firstDate: DateTime(1900), lastDate: DateTime(2200),
+    );
+    if (date == null || !mounted) return;
+    updateField(key, '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}');
+    setState(() {});
+  }
+
+  Widget offerInput(String key, TextEditingController controller) {
+    if (key == 'OfferDate' || key == 'StartDate') {
+      return TextField(
+        controller: controller, readOnly: true,
+        decoration: InputDecoration(labelText: labels[key],
+          border: const OutlineInputBorder(), suffixIcon: const Icon(Icons.calendar_month)),
+        onTap: () => chooseDate(key),
+      );
+    }
+    List<Map<String, dynamic>>? catalog;
+    if (key == 'EmploymentCountry' || key == 'WorkLocation') catalog = widget.countries;
+    if (key == 'Currency') catalog = widget.currencies;
+    if (key == 'SignatoryName') catalog = widget.signatories;
+    if (catalog != null && catalog.isNotEmpty) {
+      final options = catalog;
+      final values = options.map((row) => key == 'SignatoryName'
+          ? (row['name'] ?? '').toString()
+          : (row['code'] ?? '').toString()).where((v) => v.isNotEmpty).toSet().toList();
+      final current = values.contains(controller.text) ? controller.text : null;
+      return DropdownButtonFormField<String>(
+        initialValue: current,
+        decoration: InputDecoration(labelText: labels[key], border: const OutlineInputBorder()),
+        items: options.where((row) => values.contains(key == 'SignatoryName'
+            ? (row['name'] ?? '').toString() : (row['code'] ?? '').toString()))
+          .map((row) {
+            final value = key == 'SignatoryName' ? (row['name'] ?? '').toString()
+                : (row['code'] ?? '').toString();
+            final label = key == 'SignatoryName' ? value
+                : '${row['name'] ?? value} ($value)';
+            return DropdownMenuItem(value: value, child: Text(label, overflow: TextOverflow.ellipsis));
+          }).toList(),
+        onChanged: (value) {
+          if (value == null) return;
+          updateField(key, value);
+          if (key == 'SignatoryName') {
+            final row = options.firstWhere((item) => item['name'] == value);
+            updateField('SignatoryTitle', (row['title'] ?? '').toString());
+          }
+          setState(() {});
+        },
+      );
+    }
+    if (key == 'EmploymentType' || key == 'PayFrequency') {
+      final choices = key == 'EmploymentType' ? employmentTypes : payFrequencies;
+      return DropdownButtonFormField<String>(
+        initialValue: choices.contains(controller.text) ? controller.text : null,
+        decoration: InputDecoration(labelText: labels[key], border: const OutlineInputBorder()),
+        items: choices.map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+        onChanged: (value) { if (value != null) { updateField(key, value); setState(() {}); } },
+      );
+    }
+    if (key == 'Benefits' && widget.benefits.isNotEmpty) {
+      return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        const Text('Select company benefits'),
+        ...widget.benefits.map((benefit) {
+          final id = (benefit['id'] ?? '').toString();
+          final name = (benefit['name'] ?? '').toString();
+          return CheckboxListTile(
+            dense: true, title: Text(name),
+            subtitle: Text((benefit['description'] ?? '').toString()),
+            value: selectedBenefits.contains(id),
+            onChanged: (checked) {
+              setState(() {
+                if (checked == true) { selectedBenefits.add(id); }
+                else { selectedBenefits.remove(id); }
+                updateField('Benefits', widget.benefits
+                  .where((b) => selectedBenefits.contains((b['id'] ?? '').toString()))
+                  .map((b) => '${b['name']}: ${b['description'] ?? ''}').join('; '));
+              });
+            },
+          );
+        }),
+      ]);
+    }
+    return TextField(
+      controller: controller,
+      readOnly: key == 'SignatoryTitle' && widget.signatories.isNotEmpty,
+      maxLines: key == 'Benefits' || key == 'BonusTerms' ? 2 : 1,
+      decoration: InputDecoration(labelText: labels[key] ?? key,
+        border: const OutlineInputBorder()),
+      onChanged: (_) { if (preview != null) setState(() => preview = null); },
+    );
+  }
+
 
   static const labels = <String, String>{
     'OfferDate': 'Offer date',
@@ -129,17 +243,7 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
             for (final entry in fields.entries)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: TextField(
-                  controller: entry.value,
-                  maxLines: entry.key == 'Benefits' || entry.key == 'BonusTerms' ? 2 : 1,
-                  decoration: InputDecoration(
-                    labelText: labels[entry.key] ?? entry.key,
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: (_) {
-                    if (preview != null) setState(() => preview = null);
-                  },
-                ),
+                child: offerInput(entry.key, entry.value),
               ),
             if (error != null)
               Text(error!, style: const TextStyle(color: Colors.red)),
