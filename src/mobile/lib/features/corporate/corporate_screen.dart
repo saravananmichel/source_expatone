@@ -333,38 +333,104 @@ class _CorporateScreenState extends State<CorporateScreen> {
   Future<void> inviteMember() async {
     final email = TextEditingController();
     String role = 'Viewer';
+    List<Map<String, dynamic>> matches = [];
+    bool searching = false;
+    String? searchError;
     try {
       final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => StatefulBuilder(
           builder: (ctx, setDialog) => AlertDialog(
             title: const Text('Invite company member'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: email,
-                  decoration: const InputDecoration(
-                    labelText: 'Registered ExpatOne email',
-                  ),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: role,
-                  decoration: const InputDecoration(labelText: 'Role'),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'Viewer',
-                      child: Text('Corporate Employee'),
-                    ),
-                    if (isOwner)
-                      const DropdownMenuItem(
-                        value: 'HR',
-                        child: Text('HR Administrator'),
+            content: SizedBox(
+              width: 460,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: email,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Search name or enter full email',
+                        helperText: 'Search registered users using 3+ characters',
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: searching ? null : () async {
+                          final term = email.text.trim();
+                          if (term.length < 3) {
+                            setDialog(() => searchError = 'Enter at least 3 characters.');
+                            return;
+                          }
+                          setDialog(() {
+                            searching = true;
+                            searchError = null;
+                            matches = [];
+                          });
+                          try {
+                            final results = await widget.service
+                                .searchRegisteredEmployees(companyId, term);
+                            if (!ctx.mounted) return;
+                            setDialog(() => matches = results);
+                          } catch (_) {
+                            if (!ctx.mounted) return;
+                            setDialog(() => searchError =
+                                'Search failed. You can still invite using a full email.');
+                          } finally {
+                            if (ctx.mounted) setDialog(() => searching = false);
+                          }
+                        },
+                        icon: const Icon(Icons.search),
+                        label: Text(searching ? 'Searching...' : 'Find employee'),
+                      ),
+                    ),
+                    if (searchError != null)
+                      Text(searchError!, style: const TextStyle(color: Colors.red)),
+                    if (matches.isNotEmpty)
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 190),
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: matches.length,
+                          itemBuilder: (context, index) {
+                            final match = matches[index];
+                            final candidate = match['email']?.toString() ?? '';
+                            return ListTile(
+                              dense: true,
+                              title: Text(match['displayName']?.toString() ?? candidate),
+                              subtitle: Text(candidate),
+                              onTap: () => setDialog(() {
+                                email.text = candidate;
+                                matches = [];
+                              }),
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      initialValue: role,
+                      decoration: const InputDecoration(labelText: 'Role'),
+                      items: [
+                        const DropdownMenuItem(
+                          value: 'Viewer',
+                          child: Text('Corporate Employee'),
+                        ),
+                        if (isOwner)
+                          const DropdownMenuItem(
+                            value: 'HR',
+                            child: Text('HR Administrator'),
+                          ),
+                      ],
+                      onChanged: (v) => setDialog(() => role = v ?? 'Viewer'),
+                    ),
                   ],
-                  onChanged: (v) => setDialog(() => role = v ?? 'Viewer'),
                 ),
-              ],
+              ),
             ),
             actions: [
               TextButton(
@@ -379,10 +445,11 @@ class _CorporateScreenState extends State<CorporateScreen> {
           ),
         ),
       );
-      if (ok == true && email.text.trim().isNotEmpty)
+      if (ok == true && email.text.trim().isNotEmpty) {
         await action(() async {
           await widget.service.invite(companyId, email.text.trim(), role);
         });
+      }
     } finally {
       email.dispose();
     }
