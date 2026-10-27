@@ -136,9 +136,10 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
               setState(() {
                 if (checked == true) { selectedBenefits.add(id); }
                 else { selectedBenefits.remove(id); }
-                updateField('Benefits', widget.benefits
+                fields['Benefits']?.text = widget.benefits
                   .where((b) => selectedBenefits.contains((b['id'] ?? '').toString()))
-                  .map((b) => '${b['name']}: ${b['description'] ?? ''}').join('; '));
+                  .map((b) => '${b['name']}: ${b['description'] ?? ''}').join('; ');
+                preview = null;
               });
             },
           );
@@ -218,6 +219,9 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     }
     try {
       final values = fields.map((key, value) => MapEntry(key, value.text.trim()));
+      if (fields.containsKey('Benefits') && (values['Benefits'] ?? '').isEmpty) {
+        values['Benefits'] = 'None';
+      }
       final salary = double.tryParse(values['BasicSalary'] ?? '');
       final allowance = double.tryParse(values['Allowance'] ?? '');
       if (salary == null || salary < 0 || allowance == null || allowance < 0) {
