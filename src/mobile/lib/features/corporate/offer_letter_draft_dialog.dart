@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'offer_letter_template.dart';
 
-/// HR-only preview. Does not issue, sign, persist or deliver a letter.
+/// HR-only offer preview and explicit issuance into the employee wallet.
 class OfferLetterDraftDialog extends StatefulWidget {
+  final Future<void> Function(String renderedText) onIssue;
   final String employeeName;
   final String companyName;
   final String employmentCountry;
@@ -11,6 +12,7 @@ class OfferLetterDraftDialog extends StatefulWidget {
   const OfferLetterDraftDialog({
     super.key,
     required this.employeeName,
+    required this.onIssue,
     required this.companyName,
     required this.employmentCountry,
     this.startDate,
@@ -24,6 +26,7 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
   late final Map<String, TextEditingController> fields;
   String? preview;
   String? error;
+  bool issuing = false;
 
   static const labels = <String, String>{
     'OfferDate': 'Offer date',
@@ -93,9 +96,23 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     }
   }
 
+  Future<void> issue() async {
+    final current = preview;
+    if (current == null || issuing) return;
+    setState(() { issuing = true; error = null; });
+    try {
+      await widget.onIssue(current);
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) setState(() => error = 'Could not issue offer: $e');
+    } finally {
+      if (mounted) setState(() => issuing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: const Text('Draft employment offer — preview only'),
+    title: const Text('Employment offer — review and issue'),
     content: SizedBox(
       width: 620,
       child: SingleChildScrollView(
@@ -103,8 +120,7 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Complete all fields before preview. This draft is not issued, '
-                'legally reviewed, signed, saved or sent to the employee.'),
+            const Text('Complete all fields and review the preview carefully. Issuing stores a PDF in the employee Document Wallet. This generic draft is not legal advice or an electronic signature.'),
             const SizedBox(height: 12),
             for (final entry in fields.entries)
               Padding(
@@ -135,14 +151,20 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     ),
     actions: [
       TextButton(
-        onPressed: () => Navigator.pop(context),
+        onPressed: issuing ? null : () => Navigator.pop(context),
         child: const Text('Close'),
       ),
       FilledButton.icon(
-        onPressed: generatePreview,
+        onPressed: issuing ? null : generatePreview,
         icon: const Icon(Icons.preview_outlined),
         label: const Text('Preview draft'),
       ),
+      if (preview != null)
+        FilledButton.icon(
+          onPressed: issuing ? null : issue,
+          icon: const Icon(Icons.send_outlined),
+          label: Text(issuing ? 'Issuing…' : 'Issue to employee wallet'),
+        ),
     ],
   );
 }
