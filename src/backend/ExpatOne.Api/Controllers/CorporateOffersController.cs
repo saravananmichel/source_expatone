@@ -323,7 +323,9 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             .Where(x => x.EmployeeUserId == uid && x.Status != "Draft")
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => new { x.Id, x.CompanyId, x.Version, x.Status, x.DocumentId,
-                x.IssuedAt, x.RespondedAt, x.Response, x.ReplacesOfferId })
+                x.IssuedAt, x.RespondedAt, x.Response, x.ReplacesOfferId,
+                SignedDocumentId = db.CorporateOfferSignatures.Where(sig => sig.OfferId == x.Id)
+                    .Select(sig => sig.SignedDocumentId).FirstOrDefault() })
             .ToListAsync();
         return Ok(offers);
     }
