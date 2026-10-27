@@ -74,6 +74,19 @@ class CorporateService {
       'replacesOfferId': ?replacesOfferId},
   );
 
+  Future<Map<String, dynamic>> saveOfferDraft(
+    String companyId, String employeeId, String text, {String? draftId},
+  ) => api.post('/corporate/offer-drafts/companies/$companyId', body: {
+    'employeeUserId': employeeId,
+    'renderedText': text,
+    'draftId': draftId,
+  });
+
+  Future<List<Map<String, dynamic>>> offerDrafts(
+    String companyId, String employeeId,
+  ) => api.getList('/corporate/offer-drafts/companies/$companyId',
+    queryParams: {'employeeUserId': employeeId});
+
   Future<List<Map<String, dynamic>>> companyOffers(String companyId) =>
       api.getList('/corporate/offers/companies/$companyId');
 
