@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart' as parser;
 import '../constants/api_constants.dart';
 import '../error/app_exception.dart';
 import '../services/auth_service.dart';
@@ -85,6 +86,28 @@ class ApiClient {
       return decoded.cast<Map<String, dynamic>>();
     }
     return [];
+  }
+
+  Future<Map<String, dynamic>> uploadFile(
+    String path, {
+    required List<int> bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    final uri = _buildUri(path);
+    final headers = await _getHeaders();
+    final request = http.MultipartRequest('POST', uri);
+    if (headers.containsKey('Authorization')) {
+      request.headers['Authorization'] = headers['Authorization']!;
+    }
+    request.files.add(http.MultipartFile.fromBytes(
+      'file', bytes, filename: fileName,
+      contentType: parser.MediaType.parse(contentType),
+    ));
+    final streamed = await _httpClient.send(request)
+        .timeout(ApiConstants.connectTimeout);
+    final response = await http.Response.fromStream(streamed);
+    return _handleResponse(response);
   }
 
   Future<Map<String, dynamic>> delete(String path) async {
