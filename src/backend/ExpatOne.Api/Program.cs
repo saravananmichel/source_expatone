@@ -307,6 +307,7 @@ if (!isDatabaseMigration && FirebaseApp.DefaultInstance is null)
 
 builder.Services.AddScoped<IReminderService, ReminderService>();
 builder.Services.AddHostedService<ReminderProcessorService>();
+builder.Services.AddHostedService<ExpatOne.Api.Services.CorporatePermitAlertWorker>();
 
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)
     .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>(
