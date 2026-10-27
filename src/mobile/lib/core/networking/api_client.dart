@@ -41,6 +41,14 @@ class ApiClient {
     return _handleResponse(response);
   }
 
+  Future<List<int>> postPdf(String path, Map<String, dynamic> body) async {
+    final response = await _httpClient.post(_buildUri(path),
+      headers: await _getHeaders(), body: jsonEncode(body))
+      .timeout(ApiConstants.connectTimeout);
+    _checkStatus(response);
+    return response.bodyBytes;
+  }
+
   Future<Map<String, dynamic>> post(String path,
       {Map<String, dynamic>? body, Duration? timeout}) async {
     final uri = _buildUri(path);
