@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/services/corporate_service.dart';
 
@@ -56,12 +57,38 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
     }
   }
 
-  Future<void> trySignaturePad() async {
+  Future<void> signOffer(String offerId) async {
     final signature = await showDialog<Uint8List>(
       context: context, builder: (_) => const EmployeeSignaturePad());
     if (!mounted || signature == null) return;
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-      content: Text('Signature captured locally for preview only. Not submitted or attached to the offer.')));
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm signing this offer'),
+        content: const Text('Your drawn signature will be attached to a new signed PDF. '
+          'The original issued PDF remains unchanged. Your offer will be marked Accepted. '
+          'Please review the offer before confirming.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Sign and accept')),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => respondingId = offerId);
+    try {
+      await widget.service.signOffer(offerId, base64Encode(signature));
+      await refresh();
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signed PDF saved in your Document Wallet.')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signing failed: $e')));
+    } finally {
+      if (mounted) setState(() => respondingId = null);
+    }
   }
 
   Future<void> respond(String id, String response) async {
@@ -131,9 +158,9 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                                 ),
                                 if (status == 'Issued') ...[
                                   OutlinedButton.icon(
-                                    onPressed: busy ? null : trySignaturePad,
+                                    onPressed: busy ? null : () => signOffer(id),
                                     icon: const Icon(Icons.draw_outlined),
-                                    label: const Text('Try signature pad'),
+                                    label: const Text('Sign and accept'),
                                   ),
                                   FilledButton(
                                     onPressed: busy ? null : () => respond(id, 'Accepted'),
