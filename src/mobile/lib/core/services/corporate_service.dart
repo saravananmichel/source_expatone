@@ -14,7 +14,7 @@ class CorporateService {
 
   Future<Map<String, dynamic>> changePermitStatus(
     String companyId, String permitId, String status,
-  ) => api.patch('/corporate/companies/$companyId/permits/$permitId/status',
+  ) => api.put('/corporate/companies/$companyId/permits/$permitId/status',
       body: {'status': status});
 
   Future<Map<String, dynamic>> issueOffer(
