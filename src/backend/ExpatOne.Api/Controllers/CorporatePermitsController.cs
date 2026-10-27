@@ -64,6 +64,28 @@ public sealed class CorporatePermitsController(ExpatOneDbContext db, IUserServic
         }));
     }
 
+    [HttpPatch("{permitId:guid}/status")]
+    public async Task<IActionResult> UpdateStatus(
+        Guid companyId, Guid permitId, [FromBody] ChangePermitStatusRequest request)
+    {
+        var uid = await UserId();
+        if (!await IsHr(companyId, uid)) return Forbid();
+        if (request.Status is not ("Cancelled" or "Superseded"))
+            return BadRequest(new { message = "Only cancellation or superseding is supported." });
+        var affected = await db.CorporateIssuedPermits
+            .Where(p => p.CompanyId == companyId && p.Id == permitId && p.Status == "Active")
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(p => p.Status, request.Status)
+                .SetProperty(p => p.UpdatedAt, DateTime.UtcNow),
+                HttpContext.RequestAborted);
+        if (affected == 1) return Ok(new { id = permitId, status = request.Status });
+        var exists = await db.CorporateIssuedPermits.AsNoTracking()
+            .AnyAsync(p => p.CompanyId == companyId && p.Id == permitId);
+        return exists
+            ? Conflict(new { message = "Permit is already inactive." })
+            : NotFound();
+    }
+
     [HttpPost]
     public async Task<IActionResult> Record(Guid companyId, [FromBody] RecordIssuedPermitRequest request)
     {
@@ -95,3 +117,5 @@ public sealed class CorporatePermitsController(ExpatOneDbContext db, IUserServic
         });
     }
 }
+
+public sealed record ChangePermitStatusRequest([Required] string Status);
