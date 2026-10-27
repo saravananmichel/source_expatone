@@ -17,6 +17,7 @@ class CorporatePermitsDialog extends StatefulWidget {
 
 class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
   List<Map<String, dynamic>> permits = [];
+  List<Map<String, dynamic>> alerts = [];
   bool loading = true;
   String? error;
   @override
@@ -26,7 +27,8 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
     setState(() { loading = true; error = null; });
     try {
       final result = await widget.service.issuedPermits(widget.companyId);
-      if (mounted) setState(() => permits = result);
+      final notices = await widget.service.permitAlerts(widget.companyId);
+      if (mounted) setState(() { permits = result; alerts = notices; });
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
     } finally {
@@ -150,6 +152,32 @@ class _CorporatePermitsDialogState extends State<CorporatePermitsDialog> {
             child: Text('Expiry alerts: $overdue overdue • $due due within 90 days',
               style: Theme.of(ctx).textTheme.titleSmall));
         }),
+        if (alerts.isNotEmpty)
+          SizedBox(height: 112, child: ListView.builder(
+            itemCount: alerts.length,
+            itemBuilder: (ctx, i) {
+              final a = alerts[i];
+              return ListTile(
+                dense: true,
+                leading: const Icon(Icons.notifications_active_outlined),
+                title: Text('Expiry alert: ${a['permitType']} (${a['countryCode']})'),
+                subtitle: Text('Expires ${a['expiryDate']?.toString().split('T').first} • ${a['thresholdDays']}-day milestone'),
+                trailing: TextButton(
+                  onPressed: () async {
+                    try {
+                      await widget.service.acknowledgePermitAlert(
+                        widget.companyId, a['id'].toString());
+                      await refresh();
+                    } catch (e) {
+                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Unable to acknowledge: $e')));
+                    }
+                  },
+                  child: const Text('Acknowledge'),
+                ),
+              );
+            },
+          )),
         Expanded(child: ListView.builder(
         itemCount: permits.length,
         itemBuilder: (ctx, i) {
