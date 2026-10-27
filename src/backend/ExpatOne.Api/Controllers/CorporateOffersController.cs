@@ -370,8 +370,10 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
     [HttpPost("{offerId:guid}/respond")]
     public async Task<IActionResult> Respond(Guid offerId, [FromBody] OfferResponseRequest request)
     {
-        if (request.Response is not ("Accepted" or "Declined"))
-            return BadRequest(new { message = "Response must be Accepted or Declined." });
+        if (request.Response == "Accepted")
+            return Conflict(new { message = "Accept this offer using the Sign and accept action." });
+        if (request.Response != "Declined")
+            return BadRequest(new { message = "Response must be Declined." });
         var uid = await UserId();
         var now = DateTime.UtcNow;
         await using var tx = await db.Database.BeginTransactionAsync(HttpContext.RequestAborted);
