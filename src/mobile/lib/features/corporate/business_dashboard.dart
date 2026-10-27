@@ -12,6 +12,7 @@ class BusinessDashboard extends StatefulWidget {
   final Future<void> Function() onRefresh, onInvite, onNewTask;
   final ValueChanged<String> onCompany;
   final Future<void> Function(BusinessRecord) onEditMember;
+  final Future<void> Function(BusinessRecord) onDraftOffer;
   final Widget Function(BusinessRecord) taskActions;
   final List<Widget> invitations;
   const BusinessDashboard({
@@ -30,6 +31,7 @@ class BusinessDashboard extends StatefulWidget {
     required this.onInvite,
     required this.onNewTask,
     required this.onEditMember,
+    required this.onDraftOffer,
     required this.taskActions,
     this.invitations = const [],
   });
@@ -785,6 +787,13 @@ class _BusinessDashboardState extends State<BusinessDashboard> {
                       ),
                     ),
                   ),
+                  if (widget.isHr && e['status'] == 'Active' &&
+                      (e['role'] == 'Employee' || e['role'] == 'Viewer'))
+                    IconButton(
+                      tooltip: 'Draft offer letter',
+                      onPressed: () => widget.onDraftOffer(e),
+                      icon: const Icon(Icons.description_outlined, size: 20),
+                    ),
                   if (widget.isOwner)
                     IconButton(
                       tooltip: 'Edit role / status',
