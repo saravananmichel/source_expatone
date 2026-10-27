@@ -68,10 +68,12 @@ class CorporateService {
   Future<Map<String, dynamic>> issueOffer(
     String companyId, String employeeUserId, String renderedText, {
     String? replacesOfferId,
+    List<String> benefitIds = const [],
   }) => api.post(
     '/corporate/offers/companies/$companyId/issue',
     body: {'employeeUserId': employeeUserId, 'renderedText': renderedText,
-      'replacesOfferId': ?replacesOfferId},
+      'replacesOfferId': ?replacesOfferId,
+      'benefitIds': benefitIds},
   );
 
   Future<List<int>> previewOfferPdf(String companyId, String renderedText) =>
