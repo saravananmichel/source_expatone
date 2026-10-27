@@ -39,7 +39,7 @@ Future<void> showCompanyOfferDialog({
       employmentCountry: employmentCountry,
       startDate: startDate,
       replacementVersion: replacementVersion,
-      onIssue: (text) => onIssue(text, const []),
+      onIssue: onIssue,
       onPreviewPdf: (text) => service.previewOfferPdf(companyId, text),
       savedDrafts: drafts,
       onUpdateDraft: (id, text) async {
