@@ -47,8 +47,10 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
         throw StateError('Unable to open PDF.');
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Unable to open offer: $e')));
+      }
     }
   }
 
@@ -73,8 +75,10 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
       await widget.service.respondToOffer(id, response);
       await refresh();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not record response: $e')));
+      }
     } finally {
       if (mounted) setState(() => respondingId = null);
     }
