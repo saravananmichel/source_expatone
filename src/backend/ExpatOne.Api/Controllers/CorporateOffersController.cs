@@ -223,6 +223,23 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             .GetProperty("text").GetString() ?? "";
         var company = await db.CorporateCompanies.AsNoTracking()
             .Where(x => x.Id == offer.CompanyId).Select(x => x.Name).SingleAsync();
+        var profile = await db.CorporateCompanyProfiles.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.CompanyId == offer.CompanyId);
+        var contact = profile == null ? null : string.Join(" | ",
+            new[] { profile.AddressLine1, profile.AddressLine2, profile.City,
+                profile.State, profile.PostalCode, profile.CountryCode,
+                profile.ContactNumber, profile.ContactEmail, profile.Website }
+            .Where(x => !string.IsNullOrWhiteSpace(x)));
+        byte[]? logo = null;
+        if (!string.IsNullOrWhiteSpace(profile?.LogoObjectKey))
+        {
+            await using var logoStream = await storage.DownloadFileAsync(profile.LogoObjectKey);
+            using var logoBuffer = new MemoryStream();
+            await logoStream.CopyToAsync(logoBuffer, HttpContext.RequestAborted);
+            if (logoBuffer.Length > 2_000_000)
+                return BadRequest(new { message = "Company logo is too large." });
+            logo = logoBuffer.ToArray();
+        }
         var benefits = await db.CorporateOfferBenefits.AsNoTracking()
             .Where(x => x.OfferId == offerId).OrderBy(x => x.Position)
             .Select(x => new { x.CategorySnapshot, x.NameSnapshot, x.DescriptionSnapshot })
@@ -231,7 +248,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         byte[] signedPdf;
         try
         {
-            signedPdf = CorporateOfferPdfRenderer.Render(text, company, null, null,
+            signedPdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo,
                 benefits.Select(b => (b.CategorySnapshot, b.NameSnapshot, b.DescriptionSnapshot)).ToList(),
                 signature, signedAt);
         }
