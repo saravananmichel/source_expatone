@@ -56,6 +56,24 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         if (documentTypeId == Guid.Empty)
             return StatusCode(503, new { message = "Employment Contract document type is not configured." });
 
+        CorporateOfferLetter? previous = null;
+        if (request.ReplacesOfferId.HasValue)
+        {
+            previous = await db.CorporateOfferLetters.AsNoTracking().FirstOrDefaultAsync(x =>
+                x.Id == request.ReplacesOfferId.Value && x.CompanyId == companyId &&
+                x.EmployeeUserId == request.EmployeeUserId);
+            if (previous == null) return NotFound(new { message = "Previous offer not found." });
+            if (previous.Status != "Issued")
+                return Conflict(new { message = "Only a pending issued offer can be replaced." });
+        }
+        var selectedBenefitIds = request.BenefitIds ?? Array.Empty<Guid>();
+        if (selectedBenefitIds.Length > 30 || selectedBenefitIds.Distinct().Count() != selectedBenefitIds.Length)
+            return BadRequest(new { message = "Choose up to 30 unique benefits." });
+        var selectedBenefits = await db.CorporateBenefits.AsNoTracking()
+            .Where(x => x.CompanyId == companyId && x.IsActive && selectedBenefitIds.Contains(x.Id))
+            .ToListAsync(HttpContext.RequestAborted);
+        if (selectedBenefits.Count != selectedBenefitIds.Length)
+            return BadRequest(new { message = "One or more benefits are inactive or belong to another company." });
         byte[] pdf;
         try
         {
@@ -78,29 +96,13 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
                     return BadRequest(new { message = "Company logo is too large." });
                 logo = buffer.ToArray();
             }
-            pdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo);
+            pdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo,
+                selectedBenefitIds.Select(id => selectedBenefits.Single(b => b.Id == id))
+                    .Select(b => (b.Category, b.Name, b.Description)).ToList());
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         { return BadRequest(new { message = "Unable to render offer PDF." }); }
 
-        CorporateOfferLetter? previous = null;
-        if (request.ReplacesOfferId.HasValue)
-        {
-            previous = await db.CorporateOfferLetters.AsNoTracking().FirstOrDefaultAsync(x =>
-                x.Id == request.ReplacesOfferId.Value && x.CompanyId == companyId &&
-                x.EmployeeUserId == request.EmployeeUserId);
-            if (previous == null) return NotFound(new { message = "Previous offer not found." });
-            if (previous.Status != "Issued")
-                return Conflict(new { message = "Only a pending issued offer can be replaced." });
-        }
-        var selectedBenefitIds = request.BenefitIds ?? Array.Empty<Guid>();
-        if (selectedBenefitIds.Length > 30 || selectedBenefitIds.Distinct().Count() != selectedBenefitIds.Length)
-            return BadRequest(new { message = "Choose up to 30 unique benefits." });
-        var selectedBenefits = await db.CorporateBenefits.AsNoTracking()
-            .Where(x => x.CompanyId == companyId && x.IsActive && selectedBenefitIds.Contains(x.Id))
-            .ToListAsync(HttpContext.RequestAborted);
-        if (selectedBenefits.Count != selectedBenefitIds.Length)
-            return BadRequest(new { message = "One or more benefits are inactive or belong to another company." });
         var documentId = Guid.NewGuid();
         string? objectKey = null;
         var persisted = false;
