@@ -9,6 +9,7 @@ Future<void> showCompanyOfferDialog({
   required BuildContext context,
   required CorporateService service,
   required String companyId,
+  required String employeeId,
   required String employeeName,
   required String companyName,
   required String employmentCountry,
@@ -37,6 +38,9 @@ Future<void> showCompanyOfferDialog({
       startDate: startDate,
       replacementVersion: replacementVersion,
       onIssue: onIssue,
+      onSaveDraft: (text) async {
+        await service.saveOfferDraft(companyId, employeeId, text);
+      },
       countries: results[0] as List<Map<String, dynamic>>,
       currencies: results[1] as List<Map<String, dynamic>>,
       benefits: results[2] as List<Map<String, dynamic>>,
