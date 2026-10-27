@@ -337,6 +337,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             signatureKey = null;
             signedPdfKey = null;
             return Ok(new { offerId, status = "Accepted", signedDocumentId, signedAt,
+                originalDocumentId = offer.DocumentId, originalPdfSha256, signedPdfSha256,
                 message = "Drawn signature recorded; legal enforceability depends on applicable law." });
         }
         finally
