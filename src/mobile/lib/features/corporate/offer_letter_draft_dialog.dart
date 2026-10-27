@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'offer_letter_template.dart';
 
@@ -5,6 +6,8 @@ import 'offer_letter_template.dart';
 class OfferLetterDraftDialog extends StatefulWidget {
   final Future<void> Function(String renderedText) onIssue;
   final Future<void> Function(String renderedText)? onSaveDraft;
+  final Future<void> Function(String draftId, String renderedText)? onUpdateDraft;
+  final List<Map<String, dynamic>> savedDrafts;
   final int? replacementVersion;
   final String employeeName;
   final String companyName;
@@ -22,6 +25,8 @@ class OfferLetterDraftDialog extends StatefulWidget {
     this.replacementVersion,
     required this.onIssue,
     this.onSaveDraft,
+    this.onUpdateDraft,
+    this.savedDrafts = const [],
     required this.companyName,
     required this.employmentCountry,
     this.startDate,
@@ -39,6 +44,9 @@ class OfferLetterDraftDialog extends StatefulWidget {
 class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
   late final Map<String, TextEditingController> fields;
   String? preview;
+  String? editingDraftId;
+  bool editingSavedText = false;
+  late final TextEditingController savedText;
   String? error;
   bool issuing = false;
   final Set<String> selectedBenefits = {};
@@ -182,6 +190,7 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
       'EmploymentCountry': widget.employmentCountry,
       'StartDate': widget.startDate?.split('T').first ?? '',
     };
+    savedText = TextEditingController();
     fields = {
       for (final key in OfferLetterTemplate.placeholders(widget.companyTemplateBody?.trim().isNotEmpty == true
           ? widget.companyTemplateBody! : OfferLetterTemplate.defaultTemplate))
@@ -194,10 +203,19 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     for (final field in fields.values) {
       field.dispose();
     }
+    savedText.dispose();
     super.dispose();
   }
 
   void generatePreview() {
+    if (editingSavedText) {
+      if (savedText.text.trim().isEmpty) {
+        setState(() { error = 'Draft text cannot be empty.'; preview = null; });
+      } else {
+        setState(() { preview = savedText.text.trim(); error = null; });
+      }
+      return;
+    }
     try {
       final values = fields.map((key, value) => MapEntry(key, value.text.trim()));
       final salary = double.tryParse(values['BasicSalary'] ?? '');
@@ -228,7 +246,11 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     if (current == null) return;
     setState(() { issuing = true; error = null; });
     try {
-      await widget.onSaveDraft!(current);
+      if (editingDraftId != null && widget.onUpdateDraft != null) {
+        await widget.onUpdateDraft!(editingDraftId!, current);
+      } else {
+        await widget.onSaveDraft!(current);
+      }
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Offer draft saved to server.')));
@@ -280,7 +302,44 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
           children: [
             const Text('Complete all fields and review the preview carefully. Issuing stores a PDF in the employee Document Wallet. This generic draft is not legal advice or an electronic signature.'),
             const SizedBox(height: 12),
-            for (final entry in fields.entries)
+            if (widget.savedDrafts.isNotEmpty) ...[
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Resume a saved draft',
+                  border: OutlineInputBorder()),
+                items: widget.savedDrafts.map((row) => DropdownMenuItem<String>(
+                  value: row['id'].toString(),
+                  child: Text('Saved ${row['updatedAt'] ?? row['createdAt'] ?? row['id']}'),
+                )).toList(),
+                onChanged: (id) {
+                  if (id == null) return;
+                  final draft = widget.savedDrafts.firstWhere((row) => row['id'].toString() == id);
+                  try {
+                    final json = jsonDecode(draft['templateDataJson'].toString());
+                    final text = json is Map ? (json['text'] ?? '').toString() : '';
+                    setState(() {
+                      editingDraftId = id;
+                      editingSavedText = true;
+                      savedText.text = text;
+                      preview = null;
+                      error = null;
+                    });
+                  } catch (_) {
+                    setState(() => error = 'Saved draft could not be loaded.');
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
+            ],
+            if (editingSavedText) ...[
+              const Text('Editing saved offer text. Review all terms before issuing.'),
+              TextField(controller: savedText, minLines: 10, maxLines: 18,
+                decoration: const InputDecoration(border: OutlineInputBorder(),
+                  labelText: 'Saved offer text'),
+                onChanged: (_) => setState(() => preview = null)),
+              TextButton(onPressed: () => setState(() {
+                editingSavedText = false; editingDraftId = null; preview = null;
+              }), child: const Text('Start a new offer')),
+            ] else for (final entry in fields.entries)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),
                 child: offerInput(entry.key, entry.value),
