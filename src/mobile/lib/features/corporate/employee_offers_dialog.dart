@@ -56,6 +56,14 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
     }
   }
 
+  Future<void> trySignaturePad() async {
+    final signature = await showDialog<Uint8List>(
+      context: context, builder: (_) => const EmployeeSignaturePad());
+    if (!mounted || signature == null) return;
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Signature captured locally for preview only. Not submitted or attached to the offer.')));
+  }
+
   Future<void> respond(String id, String response) async {
     final confirm = await showDialog<bool>(
       context: context,
@@ -122,6 +130,11 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                                   label: const Text('View PDF'),
                                 ),
                                 if (status == 'Issued') ...[
+                                  OutlinedButton.icon(
+                                    onPressed: busy ? null : trySignaturePad,
+                                    icon: const Icon(Icons.draw_outlined),
+                                    label: const Text('Try signature pad'),
+                                  ),
                                   FilledButton(
                                     onPressed: busy ? null : () => respond(id, 'Accepted'),
                                     child: const Text('Accept'),
