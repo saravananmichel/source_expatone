@@ -50,3 +50,16 @@ public sealed class CorporateOfferBenefit
     public string NameSnapshot { get; set; } = "";
     public string? DescriptionSnapshot { get; set; }
 }
+
+public sealed class CorporateOfferSignature
+{
+    public Guid Id { get; set; }
+    public Guid OfferId { get; set; }
+    public Guid EmployeeUserId { get; set; }
+    public string SignatureObjectKey { get; set; } = "";
+    public Guid? SignedDocumentId { get; set; }
+    public DateTime SignedAt { get; set; }
+    public string SignatureMethod { get; set; } = "Drawn";
+    public int OfferVersion { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
