@@ -34,7 +34,7 @@ public sealed record SaveCompanyBenefitRequest(
 [Route("api/corporate/companies/{companyId:guid}/settings")]
 [EnableRateLimiting("family-per-user")]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserService users) : ControllerBase
+public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserService users, IStorageService storage) : ControllerBase
 {
     private async Task<Guid> UserId()
     {
@@ -88,6 +88,70 @@ public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserServi
         profile.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return Ok(new { profile.CompanyId });
+    }
+
+    [HttpPost("logo")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(2_200_000)]
+    public async Task<IActionResult> UploadLogo(Guid companyId, IFormFile file)
+    {
+        if (!await CanManage(companyId, await UserId())) return Forbid();
+        if (!await db.CorporateCompanies.AnyAsync(x => x.Id == companyId)) return NotFound();
+        if (file == null || file.Length == 0 || file.Length > 2_000_000)
+            return BadRequest(new { message = "Logo must be between 1 byte and 2 MB." });
+        if (file.ContentType is not ("image/png" or "image/jpeg"))
+            return BadRequest(new { message = "Only PNG and JPEG logos are supported." });
+
+        await using var input = file.OpenReadStream();
+        var header = new byte[8];
+        if (await input.ReadAsync(header.AsMemory(0, header.Length)) < 8)
+            return BadRequest(new { message = "Invalid image file." });
+        var isPng = header.AsSpan().SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 });
+        var isJpeg = header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF;
+        if (!(isPng && file.ContentType == "image/png") &&
+            !(isJpeg && file.ContentType == "image/jpeg"))
+            return BadRequest(new { message = "Image contents do not match the file type." });
+        input.Position = 0;
+        var extension = isPng ? ".png" : ".jpg";
+        var folder = $"corporate/{companyId:N}/branding";
+        var objectKey = await storage.UploadFileAsync(input, $"{Guid.NewGuid():N}{extension}",
+            file.ContentType, folder);
+        try
+        {
+            var profile = await db.CorporateCompanyProfiles.FindAsync(companyId);
+            if (profile == null)
+            {
+                profile = new ExpatOne.Domain.Entities.CorporateCompanyProfile { CompanyId = companyId };
+                db.CorporateCompanyProfiles.Add(profile);
+            }
+            var oldKey = profile.LogoObjectKey;
+            profile.LogoObjectKey = objectKey;
+            profile.UpdatedAt = DateTime.UtcNow;
+            await db.SaveChangesAsync();
+            if (!string.IsNullOrEmpty(oldKey) && oldKey != objectKey)
+            {
+                try { await storage.DeleteFileAsync(oldKey); }
+                catch { /* Stale logo cleanup can be retried separately. */ }
+            }
+            return Ok(new { hasLogo = true });
+        }
+        catch
+        {
+            try { await storage.DeleteFileAsync(objectKey); } catch { }
+            throw;
+        }
+    }
+
+    [HttpGet("logo/access-url")]
+    public async Task<IActionResult> LogoAccessUrl(Guid companyId)
+    {
+        if (!await CanManage(companyId, await UserId())) return Forbid();
+        var objectKey = await db.CorporateCompanyProfiles.AsNoTracking()
+            .Where(x => x.CompanyId == companyId).Select(x => x.LogoObjectKey)
+            .FirstOrDefaultAsync();
+        if (string.IsNullOrEmpty(objectKey)) return NotFound();
+        var url = await storage.GeneratePresignedUrlAsync(objectKey, TimeSpan.FromMinutes(5));
+        return Ok(new { url });
     }
 
     [HttpGet("offer-template")]
