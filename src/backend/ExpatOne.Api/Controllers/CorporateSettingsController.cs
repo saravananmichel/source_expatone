@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ExpatOne.Api.Controllers;
 
+public sealed record RenameCompanyRequest([Required, MinLength(2), MaxLength(160)] string Name);
+
 public sealed record SaveCompanyProfileRequest(
     [MaxLength(250)] string? AddressLine1,
     [MaxLength(250)] string? AddressLine2,
@@ -49,6 +51,26 @@ public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserServi
         db.CorporateMemberships.AnyAsync(x => x.CompanyId == companyId &&
             x.UserId == userId && x.Status == "Active" &&
             (x.Role == "Owner" || x.Role == "Admin" || x.Role == "HR"));
+
+    // Company identity is restricted to Owner/Admin; HR may maintain contact details.
+    [HttpPut("company-name")]
+    public async Task<IActionResult> RenameCompany(Guid companyId, RenameCompanyRequest request)
+    {
+        var uid = await UserId();
+        var authorized = await db.CorporateMemberships.AnyAsync(x =>
+            x.CompanyId == companyId && x.UserId == uid && x.Status == "Active" &&
+            (x.Role == "Owner" || x.Role == "Admin"));
+        if (!authorized) return Forbid();
+        var name = request.Name?.Trim() ?? "";
+        if (name.Length < 2 || name.Length > 160)
+            return BadRequest(new { message = "Company name must contain 2–160 characters." });
+        var company = await db.CorporateCompanies.FirstOrDefaultAsync(x => x.Id == companyId);
+        if (company == null) return NotFound();
+        company.Name = name;
+        company.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return Ok(new { company.Id, company.Name });
+    }
 
     [HttpGet("profile")]
     public async Task<IActionResult> Profile(Guid companyId)
