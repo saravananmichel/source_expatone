@@ -3,7 +3,7 @@
 /// producing or storing a PDF. Never use this for access-control decisions.
 class OfferLetterTemplate {
   static final RegExp _placeholder =
-      RegExp(r'\\{\\{\\s*([A-Za-z][A-Za-z0-9_]*)\\s*\\}\\}');
+      RegExp(r'\{\{\s*([A-Za-z][A-Za-z0-9_]*)\s*\}\}');
 
   /// Returns all placeholders referenced by [template] in appearance order.
   static List<String> placeholders(String template) {
