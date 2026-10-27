@@ -95,10 +95,11 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             };
             db.Documents.Add(walletDocument);
             db.CorporateOfferLetters.Add(offer);
+            // Persist the audit entry in the same DB save as the offer and wallet record.
+            audit.Stage(documentId, uid, "corporate_offer_issued",
+                metadata: JsonSerializer.Serialize(new { offerId = offer.Id, companyId }));
             await db.SaveChangesAsync(HttpContext.RequestAborted);
             persisted = true;
-            try { await audit.LogAsync(documentId, uid, "corporate_offer_issued"); }
-            catch (Exception) { /* Document and offer are already issued; avoid a misleading retry. */ }
             return Created($"/api/corporate/offers/{offer.Id}",
                 new { offer.Id, offer.CompanyId, offer.EmployeeUserId,
                     offer.DocumentId, offer.Status, offer.IssuedAt });
