@@ -7,15 +7,18 @@ ALTER TABLE corporate_memberships
   ADD COLUMN IF NOT EXISTS "Nationality" varchar(100),
   ADD COLUMN IF NOT EXISTS "EmploymentCountry" varchar(100),
   ADD COLUMN IF NOT EXISTS "EmploymentStartDate" date;
-DO $ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
-    WHERE conname = 'corporate_memberships_workforce_classification_check'
-      AND conrelid = 'corporate_memberships'::regclass
-  ) THEN
-    ALTER TABLE corporate_memberships
-      ADD CONSTRAINT corporate_memberships_workforce_classification_check
-      CHECK ("WorkforceClassification" IN ('Local','Foreign','Unknown'));
-  END IF;
-END $;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'corporate_memberships_workforce_classification_check'
+          AND conrelid = 'corporate_memberships'::regclass
+    ) THEN
+        ALTER TABLE corporate_memberships
+        ADD CONSTRAINT corporate_memberships_workforce_classification_check
+        CHECK ("WorkforceClassification" IN ('Local', 'Foreign', 'Unknown'));
+    END IF;
+END
+$$;
 COMMIT;
