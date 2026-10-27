@@ -18,6 +18,9 @@ class CorporateService {
     bool includeInactive = false,
   }) => api.getList('/corporate/companies/$companyId/settings/benefits',
       queryParams: {'includeInactive': '$includeInactive'});
+  Future<Map<String, dynamic>> renameCompany(String companyId, String name) =>
+      api.put('/corporate/companies/$companyId/settings/company-name',
+          body: {'name': name});
   Future<Map<String, dynamic>> companyProfile(String companyId) =>
       api.get('/corporate/companies/$companyId/settings/profile');
   Future<Map<String, dynamic>> saveCompanyProfile(
