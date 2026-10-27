@@ -4,6 +4,7 @@ import 'offer_letter_template.dart';
 /// HR-only offer preview and explicit issuance into the employee wallet.
 class OfferLetterDraftDialog extends StatefulWidget {
   final Future<void> Function(String renderedText) onIssue;
+  final Future<void> Function(String renderedText)? onSaveDraft;
   final int? replacementVersion;
   final String employeeName;
   final String companyName;
@@ -20,6 +21,7 @@ class OfferLetterDraftDialog extends StatefulWidget {
     required this.employeeName,
     this.replacementVersion,
     required this.onIssue,
+    this.onSaveDraft,
     required this.companyName,
     required this.employmentCountry,
     this.startDate,
@@ -219,6 +221,25 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     }
   }
 
+  Future<void> saveDraft() async {
+    if (issuing || widget.onSaveDraft == null) return;
+    if (preview == null) generatePreview();
+    final current = preview;
+    if (current == null) return;
+    setState(() { issuing = true; error = null; });
+    try {
+      await widget.onSaveDraft!(current);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Offer draft saved to server.')));
+      }
+    } catch (e) {
+      if (mounted) setState(() => error = 'Could not save draft: $e');
+    } finally {
+      if (mounted) setState(() => issuing = false);
+    }
+  }
+
   Future<void> issue() async {
     final current = preview;
     if (current == null || issuing) return;
@@ -281,6 +302,12 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
         onPressed: issuing ? null : () => Navigator.pop(context),
         child: const Text('Close'),
       ),
+      if (widget.onSaveDraft != null)
+        OutlinedButton.icon(
+          onPressed: issuing ? null : saveDraft,
+          icon: const Icon(Icons.save_outlined),
+          label: const Text('Save draft'),
+        ),
       FilledButton.icon(
         onPressed: issuing ? null : generatePreview,
         icon: const Icon(Icons.preview_outlined),
