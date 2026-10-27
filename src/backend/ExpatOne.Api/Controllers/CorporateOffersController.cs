@@ -61,17 +61,26 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         if (request.Response is not ("Accepted" or "Declined"))
             return BadRequest(new { message = "Response must be Accepted or Declined." });
         var uid = await UserId();
-        var offer = await db.CorporateOfferLetters.FirstOrDefaultAsync(x =>
-            x.Id == offerId && x.EmployeeUserId == uid);
-        if (offer == null) return NotFound();
-        if (offer.Status != "Issued" || offer.DocumentId == null)
-            return Conflict(new { message = "Only an issued offer can receive a response." });
-        offer.Status = request.Response;
-        offer.Response = request.Response;
-        offer.RespondedAt = DateTime.UtcNow;
-        await db.SaveChangesAsync();
-        return Ok(new { offer.Id, offer.Status, offer.RespondedAt,
-            message = "Response recorded; this is not an electronic signature." });
+        var now = DateTime.UtcNow;
+        // Atomic transition: prevents double acknowledgements from concurrent requests.
+        var changed = await db.CorporateOfferLetters
+            .Where(x => x.Id == offerId && x.EmployeeUserId == uid &&
+                x.Status == "Issued" && x.DocumentId != null)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, request.Response)
+                .SetProperty(x => x.Response, request.Response)
+                .SetProperty(x => x.RespondedAt, now)
+                .SetProperty(x => x.UpdatedAt, now));
+        if (changed == 0)
+        {
+            var exists = await db.CorporateOfferLetters.AsNoTracking()
+                .AnyAsync(x => x.Id == offerId && x.EmployeeUserId == uid);
+            return exists
+                ? Conflict(new { message = "Only an issued, unanswered offer can receive a response." })
+                : NotFound();
+        }
+        return Ok(new { id = offerId, status = request.Response,
+            respondedAt = now, message = "Response recorded; this is not an electronic signature." });
     }
 }
 
