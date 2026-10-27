@@ -5,6 +5,19 @@ class CorporateService {
   CorporateService(this.api);
   Future<List<Map<String, dynamic>>> companies() =>
       api.getList('/corporate/companies');
+  Future<Map<String, dynamic>> issueOffer(
+    String companyId, String employeeUserId, String renderedText,
+  ) => api.post(
+    '/corporate/offers/companies/$companyId/issue',
+    body: {'employeeUserId': employeeUserId, 'renderedText': renderedText},
+  );
+
+  Future<List<Map<String, dynamic>>> myOffers() =>
+      api.getList('/corporate/offers/mine');
+
+  Future<Map<String, dynamic>> respondToOffer(String offerId, String response) =>
+      api.post('/corporate/offers/$offerId/respond', body: {'response': response});
+
   Future<List<Map<String, dynamic>>> invitations() =>
       api.getList('/corporate/invitations');
   Future<Map<String, dynamic>> createCompany(String name) =>
