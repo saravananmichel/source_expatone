@@ -242,13 +242,14 @@ class _CorporateScreenState extends State<CorporateScreen> {
           employeeId: employeeId,
             replacementVersion: previous == null ? null :
                 ((previous['version'] as num?)?.toInt() ?? 1) + 1,
-            onIssue: (renderedText) async {
+            onIssue: (renderedText, benefitIds) async {
               final employeeId = employee['id']?.toString() ?? '';
               if (employeeId.isEmpty || companyId.isEmpty) {
                 throw StateError('Employee or company ID is missing.');
               }
               await widget.service.issueOffer(companyId, employeeId, renderedText,
-                replacesOfferId: previous?['id']?.toString());
+                replacesOfferId: previous?['id']?.toString(),
+                benefitIds: benefitIds);
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Offer issued to employee Document Wallet')),
