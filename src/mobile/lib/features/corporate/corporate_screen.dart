@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
 import 'offer_letter_draft_dialog.dart';
+import 'employee_offers_dialog.dart';
 
 class CorporateScreen extends StatefulWidget {
   final CorporateService service;
@@ -151,6 +152,12 @@ class _CorporateScreenState extends State<CorporateScreen> {
       loading: loading,
       error: error,
       onRefresh: reload,
+      onMyOffers: () async {
+        await showDialog<void>(
+          context: context,
+          builder: (_) => EmployeeOffersDialog(service: widget.service),
+        );
+      },
       onCompany: (id) {
         setState(() {
           selected = companies.firstWhere((c) => c['id'].toString() == id);
