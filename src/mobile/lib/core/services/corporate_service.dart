@@ -50,6 +50,23 @@ class CorporateService {
     '/corporate/companies/$companyId/members/$membershipId/role',
     body: {'role': role},
   );
+  Future<Map<String, dynamic>> updateWorkforce(
+    String companyId,
+    String membershipId, {
+    required String classification,
+    String? nationality,
+    String? employmentCountry,
+    DateTime? employmentStartDate,
+  }) => api.put(
+    '/corporate/companies/$companyId/members/$membershipId/workforce',
+    body: {
+      'workforceClassification': classification,
+      'nationality': nationality,
+      'employmentCountry': employmentCountry,
+      'employmentStartDate': employmentStartDate?.toIso8601String(),
+    },
+  );
+
   Future<Map<String, dynamic>> memberStatus(
     String companyId,
     String membershipId,
