@@ -18,6 +18,12 @@ class CorporateService {
     bool includeInactive = false,
   }) => api.getList('/corporate/companies/$companyId/settings/benefits',
       queryParams: {'includeInactive': '$includeInactive'});
+  Future<Map<String, dynamic>> uploadCompanyLogo(
+    String companyId, List<int> bytes, String fileName, String contentType,
+  ) => api.uploadFile('/corporate/companies/$companyId/settings/logo',
+      bytes: bytes, fileName: fileName, contentType: contentType);
+  Future<Map<String, dynamic>> companyLogoUrl(String companyId) =>
+      api.get('/corporate/companies/$companyId/settings/logo/access-url');
   Future<Map<String, dynamic>> renameCompany(String companyId, String name) =>
       api.put('/corporate/companies/$companyId/settings/company-name',
           body: {'name': name});
