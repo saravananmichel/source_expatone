@@ -139,6 +139,7 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                         final offer = offers[index];
                         final id = offer['id']?.toString() ?? '';
                         final documentId = offer['documentId']?.toString() ?? '';
+                        final signedDocumentId = offer['signedDocumentId']?.toString() ?? '';
                         final status = offer['status']?.toString() ?? 'Unknown';
                         final issuedAt = offer['issuedAt']?.toString().split('T').first ?? '';
                         final busy = respondingId != null;
@@ -156,6 +157,12 @@ class _EmployeeOffersDialogState extends State<EmployeeOffersDialog> {
                                   icon: const Icon(Icons.picture_as_pdf_outlined),
                                   label: const Text('View PDF'),
                                 ),
+                                if (signedDocumentId.isNotEmpty)
+                                  OutlinedButton.icon(
+                                    onPressed: () => openPdf(signedDocumentId),
+                                    icon: const Icon(Icons.verified_outlined),
+                                    label: const Text('View signed PDF'),
+                                  ),
                                 if (status == 'Issued') ...[
                                   OutlinedButton.icon(
                                     onPressed: busy ? null : () => signOffer(id),
