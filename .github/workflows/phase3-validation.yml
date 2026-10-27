@@ -1,0 +1,45 @@
+name: Phase 3 validation
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/backend/**'
+      - 'src/mobile/**'
+      - 'database/phase3/**'
+      - '.github/workflows/phase3-validation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore backend
+        run: dotnet restore src/backend/ExpatOne.Api/ExpatOne.Api.csproj
+      - name: Build backend
+        run: dotnet build src/backend/ExpatOne.Api/ExpatOne.Api.csproj --no-restore --configuration Release
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Dependencies
+        run: flutter pub get
+      - name: Analyze Phase 3 Flutter files
+        run: flutter analyze lib/features/corporate lib/core/services/corporate_service.dart
+      - name: Corporate offer template tests
+        run: flutter test test/features/corporate/offer_letter_template_test.dart
+      - name: Compile Flutter web
+        run: flutter build web --release
