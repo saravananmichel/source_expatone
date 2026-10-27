@@ -170,6 +170,7 @@ builder.Services.AddDbContext<ExpatOneDbContext>(options =>
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<FamilyService>();
 builder.Services.AddScoped<CorporateMobilityService>();
+builder.Services.AddScoped<CorporateOfferPdfStorage>();
 builder.Services.AddHttpClient<VisaApplicationService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
