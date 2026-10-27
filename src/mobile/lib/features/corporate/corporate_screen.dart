@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
 import 'company_offer_dialog_launcher.dart';
+import 'company_offer_settings_screen.dart';
+import 'company_benefits_screen.dart';
 import 'employee_offers_dialog.dart';
 import 'corporate_permits_dialog.dart';
 
@@ -156,6 +158,20 @@ class _CorporateScreenState extends State<CorporateScreen> {
       loading: loading,
       error: error,
       onRefresh: reload,
+      onOfferSettings: () async {
+        if (!isHr) return;
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => CompanyOfferSettingsScreen(
+            companyId: companyId, service: widget.service),
+        ));
+      },
+      onBenefits: () async {
+        if (!isHr) return;
+        await Navigator.of(context).push(MaterialPageRoute<void>(
+          builder: (_) => CompanyBenefitsScreen(
+            companyId: companyId, service: widget.service),
+        ));
+      },
       onPermits: () async {
         if (!isHr) return;
         await showDialog<void>(
