@@ -5,6 +5,13 @@ class CorporateService {
   CorporateService(this.api);
   Future<List<Map<String, dynamic>>> companies() =>
       api.getList('/corporate/companies');
+  Future<List<Map<String, dynamic>>> issuedPermits(String companyId) =>
+      api.getList('/corporate/companies/$companyId/permits');
+
+  Future<Map<String, dynamic>> recordIssuedPermit(
+    String companyId, Map<String, dynamic> payload,
+  ) => api.post('/corporate/companies/$companyId/permits', body: payload);
+
   Future<Map<String, dynamic>> issueOffer(
     String companyId, String employeeUserId, String renderedText,
   ) => api.post(
