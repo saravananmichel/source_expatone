@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:expatone/features/corporate/offer_letter_template.dart';
+import 'package:expatone_app/features/corporate/offer_letter_template.dart';
 
 void main() {
   test('extracts distinct placeholders in appearance order', () {
