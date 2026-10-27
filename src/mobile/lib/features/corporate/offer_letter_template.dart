@@ -29,23 +29,38 @@ class OfferLetterTemplate {
     );
   }
 
+  /// Preview-only draft. Local legal review is required before issuance.
+  /// Currency amounts and optional benefits must be explicitly confirmed by HR.
   static const defaultTemplate = '''
-EMPLOYMENT OFFER LETTER
+DRAFT EMPLOYMENT OFFER — SUBJECT TO LEGAL REVIEW
 
-Date: {{OfferDate}}
+Offer date: {{OfferDate}}
+Employee: {{EmployeeName}}
+Company: {{CompanyName}}
+Employment country: {{EmploymentCountry}}
 
 Dear {{EmployeeName}},
 
-We are pleased to offer you the position of {{JobTitle}} with
-{{CompanyName}} at {{WorkLocation}}, commencing {{StartDate}}.
+We are pleased to offer you the role of {{JobTitle}} in the
+{{Department}} department of {{CompanyName}}.
 
-Your basic salary will be {{Currency}} {{BasicSalary}} per {{PayFrequency}}.
-Your fixed allowance will be {{Currency}} {{Allowance}} per {{PayFrequency}}.
+Employment type: {{EmploymentType}}
+Work location: {{WorkLocation}}
+Proposed start date: {{StartDate}}
 
-Your probation period will be {{ProbationPeriod}}.
-Your notice period will be {{NoticePeriod}}.
+COMPENSATION
+Basic salary: {{Currency}} {{BasicSalary}} per {{PayFrequency}}
+Allowances: {{Currency}} {{Allowance}} per {{PayFrequency}}
+Bonus terms: {{BonusTerms}}
+Benefits: {{Benefits}}
 
-This letter is subject to the final employment agreement and applicable law.
+EMPLOYMENT CONDITIONS
+Probation period: {{ProbationPeriod}}
+Notice period: {{NoticePeriod}}
+
+This is a draft offer for HR review, not a signed employment agreement.
+Employment conditions, statutory entitlements and any immigration
+requirements are subject to applicable law and final agreement.
 
 Sincerely,
 {{SignatoryName}}
