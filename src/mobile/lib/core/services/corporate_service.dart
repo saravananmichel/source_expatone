@@ -29,7 +29,7 @@ class CorporateService {
   }) => api.post(
     '/corporate/offers/companies/$companyId/issue',
     body: {'employeeUserId': employeeUserId, 'renderedText': renderedText,
-      if (replacesOfferId != null) 'replacesOfferId': replacesOfferId},
+      'replacesOfferId': ?replacesOfferId},
   );
 
   Future<List<Map<String, dynamic>>> companyOffers(String companyId) =>
