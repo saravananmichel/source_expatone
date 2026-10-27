@@ -13,7 +13,8 @@ public static class CorporateOfferPdfRenderer
     public static byte[] Render(string text, string? companyName,
         string? companyContactLine, byte[]? logoBytes,
         IReadOnlyList<(string Category, string Name, string? Description)>? benefits = null,
-        byte[]? employeeSignature = null, DateTime? signedAt = null)
+        byte[]? employeeSignature = null, DateTime? signedAt = null,
+        string? originalPdfSha256 = null)
     {
         if (string.IsNullOrWhiteSpace(text) || text.Length > 20000)
             throw new ArgumentException("Offer text must contain 1 to 20,000 characters.");
@@ -68,6 +69,16 @@ public static class CorporateOfferPdfRenderer
                                 table.Cell().Padding(5).Text(benefit.Description ?? "");
                             }
                         });
+                    }
+                    if (!string.IsNullOrWhiteSpace(originalPdfSha256))
+                    {
+                        column.Item().PaddingTop(20).Text("ORIGINAL ISSUED DOCUMENT REFERENCE")
+                            .Bold().FontSize(9);
+                        column.Item().PaddingTop(4).Text(
+                            "SHA-256: " + originalPdfSha256).FontSize(8);
+                        column.Item().PaddingTop(4).Text(
+                            "This acknowledgement refers to the separately preserved original issued PDF. " +
+                            "The original document remains available in the employee wallet.").FontSize(8);
                     }
                     column.Item().PaddingTop(28).AlignRight().Width(230).Column(signature =>
                     {
