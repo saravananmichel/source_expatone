@@ -40,7 +40,7 @@ Future<void> showCompanyOfferDialog({
       startDate: startDate,
       replacementVersion: replacementVersion,
       onIssue: onIssue,
-      onPreviewPdf: (text) => service.previewOfferPdf(companyId, text),
+      onPreviewPdf: (text, benefitIds) => service.previewOfferPdf(companyId, text, benefitIds),
       savedDrafts: drafts,
       onUpdateDraft: (id, text) async {
         await service.saveOfferDraft(companyId, employeeId, text, draftId: id);
