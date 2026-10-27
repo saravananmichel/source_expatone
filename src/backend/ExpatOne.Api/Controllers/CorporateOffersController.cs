@@ -315,8 +315,8 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             {
                 Id = signedDocumentId, UserId = uid,
                 DocumentTypeId = original.DocumentTypeId,
-                DocumentName = "Signed Employment Offer Letter",
-                OriginalFileName = "signed-employment-offer.pdf",
+                DocumentName = "Employment Offer Signed Acknowledgement",
+                OriginalFileName = "employment-offer-signed-acknowledgement.pdf",
                 S3ObjectKey = signedPdfKey!, FileSizeBytes = signedPdf.Length,
                 ContentType = "application/pdf", Status = DocumentStatus.Active,
                 ExtractionStatus = "NOT_REQUESTED"
