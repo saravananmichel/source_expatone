@@ -41,6 +41,8 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             m.CompanyId == companyId && m.UserId == uid && m.Status == "Active" &&
             (m.Role == "Admin" || m.Role == "Owner" || m.Role == "HR"));
         if (!allowed) return Forbid();
+        if (request.EmployeeUserId == Guid.Empty)
+            return BadRequest(new { message = "Employee ID is required." });
         var employee = await db.CorporateMemberships.AnyAsync(m =>
             m.CompanyId == companyId && m.UserId == request.EmployeeUserId &&
             m.Status == "Active" && (m.Role == "Employee" || m.Role == "Viewer"));
@@ -95,7 +97,8 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             db.CorporateOfferLetters.Add(offer);
             await db.SaveChangesAsync(HttpContext.RequestAborted);
             persisted = true;
-            await audit.LogAsync(documentId, uid, "corporate_offer_issued");
+            try { await audit.LogAsync(documentId, uid, "corporate_offer_issued"); }
+            catch (Exception) { /* Document and offer are already issued; avoid a misleading retry. */ }
             return Created($"/api/corporate/offers/{offer.Id}",
                 new { offer.Id, offer.CompanyId, offer.EmployeeUserId,
                     offer.DocumentId, offer.Status, offer.IssuedAt });
