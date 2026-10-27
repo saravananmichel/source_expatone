@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json;
 using ExpatOne.Application.Interfaces;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,8 @@ public sealed record SaveCompanyProfileRequest(
     [MaxLength(40)] string? ContactNumber,
     [EmailAddress, MaxLength(254)] string? ContactEmail,
     [MaxLength(300)] string? Website);
+
+public sealed record SaveOfferTemplateRequest([Required] JsonElement Template);
 
 public sealed record SaveCompanyBenefitRequest(
     [Required, MaxLength(80)] string Category,
@@ -85,6 +88,56 @@ public sealed class CorporateSettingsController(ExpatOneDbContext db, IUserServi
         profile.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
         return Ok(new { profile.CompanyId });
+    }
+
+    [HttpGet("offer-template")]
+    public async Task<IActionResult> OfferTemplate(Guid companyId)
+    {
+        if (!await CanManage(companyId, await UserId())) return Forbid();
+        var profile = await db.CorporateCompanyProfiles.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.CompanyId == companyId);
+        if (profile == null) return Ok(new { version = 0, template = new { } });
+        return Ok(new
+        {
+            version = profile.TemplateVersion,
+            template = JsonSerializer.Deserialize<JsonElement>(profile.OfferTemplateJson)
+        });
+    }
+
+    [HttpPut("offer-template")]
+    public async Task<IActionResult> SaveOfferTemplate(Guid companyId, SaveOfferTemplateRequest request)
+    {
+        if (!await CanManage(companyId, await UserId())) return Forbid();
+        if (!await db.CorporateCompanies.AnyAsync(x => x.Id == companyId)) return NotFound();
+        if (request.Template.ValueKind != JsonValueKind.Object)
+            return BadRequest(new { message = "Offer template must be a JSON object." });
+        var raw = request.Template.GetRawText();
+        if (raw.Length > 20000)
+            return BadRequest(new { message = "Template exceeds 20,000 characters." });
+        // Only a small, explicit schema is accepted. Never interpret template JSON as executable code.
+        if (!request.Template.TryGetProperty("body", out var body) ||
+            body.ValueKind != JsonValueKind.String ||
+            string.IsNullOrWhiteSpace(body.GetString()))
+            return BadRequest(new { message = "Template must contain a nonempty body string." });
+        var profile = await db.CorporateCompanyProfiles.FindAsync(companyId);
+        if (profile == null)
+        {
+            profile = new ExpatOne.Domain.Entities.CorporateCompanyProfile
+            {
+                CompanyId = companyId,
+                OfferTemplateJson = raw,
+                TemplateVersion = 1
+            };
+            db.CorporateCompanyProfiles.Add(profile);
+        }
+        else
+        {
+            profile.OfferTemplateJson = raw;
+            profile.TemplateVersion += 1;
+            profile.UpdatedAt = DateTime.UtcNow;
+        }
+        await db.SaveChangesAsync();
+        return Ok(new { profile.CompanyId, profile.TemplateVersion });
     }
 
     [HttpGet("benefits")]
