@@ -266,7 +266,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         {
             signedPdf = CorporateOfferPdfRenderer.Render(text, company, contact, logo,
                 benefits.Select(b => (b.CategorySnapshot, b.NameSnapshot, b.DescriptionSnapshot)).ToList(),
-                signature, signedAt);
+                signature, signedAt, originalPdfSha256);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         { return BadRequest(new { message = "Unable to render signed offer." }); }
