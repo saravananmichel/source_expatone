@@ -61,6 +61,16 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         { return BadRequest(new { message = "Unable to render offer PDF." }); }
 
+        CorporateOfferLetter? previous = null;
+        if (request.ReplacesOfferId.HasValue)
+        {
+            previous = await db.CorporateOfferLetters.AsNoTracking().FirstOrDefaultAsync(x =>
+                x.Id == request.ReplacesOfferId.Value && x.CompanyId == companyId &&
+                x.EmployeeUserId == request.EmployeeUserId);
+            if (previous == null) return NotFound(new { message = "Previous offer not found." });
+            if (previous.Status != "Issued")
+                return Conflict(new { message = "Only a pending issued offer can be replaced." });
+        }
         var documentId = Guid.NewGuid();
         string? objectKey = null;
         var persisted = false;
@@ -68,6 +78,18 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
         {
             objectKey = await pdfStorage.UploadAsync(companyId, request.EmployeeUserId, documentId,
                 pdf, HttpContext.RequestAborted);
+            await using var tx = await db.Database.BeginTransactionAsync(HttpContext.RequestAborted);
+            if (previous != null)
+            {
+                var replaced = await db.CorporateOfferLetters
+                    .Where(x => x.Id == previous.Id && x.CompanyId == companyId &&
+                        x.EmployeeUserId == request.EmployeeUserId && x.Status == "Issued")
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(x => x.Status, "Superseded")
+                        .SetProperty(x => x.UpdatedAt, DateTime.UtcNow), HttpContext.RequestAborted);
+                if (replaced != 1)
+                    return Conflict(new { message = "Previous offer has already changed." });
+            }
             var offer = new CorporateOfferLetter
             {
                 Id = Guid.NewGuid(),
@@ -75,7 +97,8 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
                 EmployeeUserId = request.EmployeeUserId,
                 CreatedByUserId = uid,
                 Status = "Issued",
-                Version = 1,
+                Version = previous == null ? 1 : previous.Version + 1,
+                ReplacesOfferId = previous?.Id,
                 TemplateDataJson = JsonSerializer.Serialize(new { text }),
                 DocumentId = documentId,
                 IssuedAt = DateTime.UtcNow
@@ -99,10 +122,12 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             audit.Stage(documentId, uid, "corporate_offer_issued",
                 metadata: JsonSerializer.Serialize(new { offerId = offer.Id, companyId }));
             await db.SaveChangesAsync(HttpContext.RequestAborted);
+            await tx.CommitAsync(HttpContext.RequestAborted);
             persisted = true;
             return Created($"/api/corporate/offers/{offer.Id}",
                 new { offer.Id, offer.CompanyId, offer.EmployeeUserId,
-                    offer.DocumentId, offer.Status, offer.IssuedAt });
+                    offer.DocumentId, offer.Status, offer.IssuedAt,
+                    offer.Version, offer.ReplacesOfferId });
         }
         catch
         {
@@ -124,7 +149,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             .Where(x => x.EmployeeUserId == uid && x.Status != "Draft")
             .OrderByDescending(x => x.CreatedAt)
             .Select(x => new { x.Id, x.CompanyId, x.Version, x.Status, x.DocumentId,
-                x.IssuedAt, x.RespondedAt, x.Response })
+                x.IssuedAt, x.RespondedAt, x.Response, x.ReplacesOfferId })
             .ToListAsync();
         return Ok(offers);
     }
@@ -141,7 +166,7 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             .Where(x => x.CompanyId == companyId)
             .OrderByDescending(x => x.CreatedAt).Take(200)
             .Select(x => new { x.Id, x.EmployeeUserId, x.Version, x.Status,
-                x.DocumentId, x.IssuedAt, x.RespondedAt, x.Response })
+                x.DocumentId, x.IssuedAt, x.RespondedAt, x.Response, x.ReplacesOfferId })
             .ToListAsync();
         return Ok(offers);
     }
@@ -185,4 +210,4 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
 
 public sealed record OfferResponseRequest(string Response);
 
-public sealed record IssueCorporateOfferRequest([Required] Guid EmployeeUserId, [Required] string RenderedText);
+public sealed record IssueCorporateOfferRequest([Required] Guid EmployeeUserId, [Required] string RenderedText, Guid? ReplacesOfferId = null);
