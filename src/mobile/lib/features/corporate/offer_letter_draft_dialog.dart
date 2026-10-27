@@ -1,10 +1,13 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'dart:typed_data';
 import 'offer_letter_template.dart';
 
 /// HR-only offer preview and explicit issuance into the employee wallet.
 class OfferLetterDraftDialog extends StatefulWidget {
   final Future<void> Function(String renderedText) onIssue;
+  final Future<List<int>> Function(String renderedText)? onPreviewPdf;
   final Future<void> Function(String renderedText)? onSaveDraft;
   final Future<void> Function(String draftId, String renderedText)? onUpdateDraft;
   final List<Map<String, dynamic>> savedDrafts;
@@ -24,6 +27,7 @@ class OfferLetterDraftDialog extends StatefulWidget {
     required this.employeeName,
     this.replacementVersion,
     required this.onIssue,
+    this.onPreviewPdf,
     this.onSaveDraft,
     this.onUpdateDraft,
     this.savedDrafts = const [],
@@ -266,6 +270,32 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
     }
   }
 
+  Future<void> showPdfPreview() async {
+    if (issuing || widget.onPreviewPdf == null) return;
+    if (preview == null) generatePreview();
+    final text = preview;
+    if (text == null) return;
+    setState(() { issuing = true; error = null; });
+    try {
+      final bytes = await widget.onPreviewPdf!(text);
+      if (!mounted) return;
+      await Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Offer PDF preview — not issued')),
+          body: PdfPreview(
+            build: (_) async => Uint8List.fromList(bytes),
+            canChangeOrientation: false,
+            canChangePageFormat: false,
+          ),
+        ),
+      ));
+    } catch (e) {
+      if (mounted) setState(() => error = 'Could not preview PDF: $e');
+    } finally {
+      if (mounted) setState(() => issuing = false);
+    }
+  }
+
   Future<void> issue() async {
     final current = preview;
     if (current == null || issuing) return;
@@ -376,6 +406,12 @@ class _OfferLetterDraftDialogState extends State<OfferLetterDraftDialog> {
         icon: const Icon(Icons.preview_outlined),
         label: const Text('Preview draft'),
       ),
+      if (preview != null && widget.onPreviewPdf != null)
+        OutlinedButton.icon(
+          onPressed: issuing ? null : showPdfPreview,
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          label: const Text('Preview PDF'),
+        ),
       if (preview != null)
         FilledButton.icon(
           onPressed: issuing ? null : issue,
