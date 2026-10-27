@@ -94,6 +94,29 @@ public sealed class CorporateController(
   return Ok(await db.CorporateMemberships.AsNoTracking().Where(x=>x.UserId==uid && x.Status=="Pending")
    .Join(db.CorporateCompanies,m=>m.CompanyId,c=>c.Id,(m,c)=>new{m.Id,m.CompanyId,c.Name,m.Role}).ToListAsync());
  }
+ [HttpGet("companies/{companyId:guid}/employee-search")]
+ public async Task<IActionResult> SearchRegisteredEmployees(Guid companyId, [FromQuery] string? q) {
+  var uid = await UserId();
+  if (!await Hr(companyId, uid)) return Forbid();
+  var term = (q ?? "").Trim();
+  if (term.Length < 3 || term.Length > 100)
+   return BadRequest(new { message = "Enter 3 to 100 characters to search." });
+  // Never return the full user directory; exclude current company members
+  // and the requesting user, and cap the response to 10 matches.
+  var pattern = "%" + term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+  var members = db.CorporateMemberships.AsNoTracking()
+   .Where(m => m.CompanyId == companyId && m.Status != "Declined")
+   .Select(m => m.UserId);
+  var matches = await db.Users.AsNoTracking()
+   .Where(u => u.IsActive && u.Id != uid && !members.Contains(u.Id)
+    && (EF.Functions.ILike(u.Email, pattern, "\\")
+      || (u.DisplayName != null && EF.Functions.ILike(u.DisplayName, pattern, "\\"))))
+   .OrderBy(u => u.DisplayName).ThenBy(u => u.Email)
+   .Take(10)
+   .Select(u => new { u.DisplayName, u.Email })
+   .ToListAsync();
+  return Ok(matches);
+ }
  [HttpPost("companies/{companyId:guid}/invite")]
  public async Task<IActionResult> Invite(Guid companyId, InviteEmployeeRequest request) {
   var uid=await UserId();
