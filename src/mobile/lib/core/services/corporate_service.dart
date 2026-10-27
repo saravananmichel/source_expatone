@@ -76,9 +76,9 @@ class CorporateService {
       'benefitIds': benefitIds},
   );
 
-  Future<List<int>> previewOfferPdf(String companyId, String renderedText) =>
+  Future<List<int>> previewOfferPdf(String companyId, String renderedText, List<String> benefitIds) =>
       api.postPdf('/corporate/offer-preview/companies/$companyId',
-        {'renderedText': renderedText});
+        {'renderedText': renderedText, 'benefitIds': benefitIds});
 
   Future<Map<String, dynamic>> saveOfferDraft(
     String companyId, String employeeId, String text, {String? draftId},
