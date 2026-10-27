@@ -76,6 +76,10 @@ class CorporateService {
       'benefitIds': benefitIds},
   );
 
+  Future<Map<String, dynamic>> signOffer(String offerId, String signatureBase64) =>
+      api.post('/corporate/offers/$offerId/signature',
+        body: {'signaturePngBase64': signatureBase64, 'confirm': true});
+
   Future<List<int>> previewOfferPdf(String companyId, String renderedText, List<String> benefitIds) =>
       api.postPdf('/corporate/offer-preview/companies/$companyId',
         {'renderedText': renderedText, 'benefitIds': benefitIds});
