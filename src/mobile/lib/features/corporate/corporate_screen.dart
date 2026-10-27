@@ -3,7 +3,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/services/corporate_service.dart';
 import 'business_dashboard.dart';
-import 'offer_letter_draft_dialog.dart';
+import 'company_offer_dialog_launcher.dart';
 import 'employee_offers_dialog.dart';
 import 'corporate_permits_dialog.dart';
 
@@ -216,9 +216,10 @@ class _CorporateScreenState extends State<CorporateScreen> {
           previous = pending.first;
         }
         if (!context.mounted) return;
-        await showDialog<void>(
+        await showCompanyOfferDialog(
           context: context,
-          builder: (ctx) => OfferLetterDraftDialog(
+          service: widget.service,
+          companyId: companyId,
             replacementVersion: previous == null ? null :
                 ((previous['version'] as num?)?.toInt() ?? 1) + 1,
             onIssue: (renderedText) async {
@@ -240,7 +241,6 @@ class _CorporateScreenState extends State<CorporateScreen> {
             companyName: selected?['name']?.toString() ?? '',
             employmentCountry: employee['employmentCountry']?.toString() ?? '',
             startDate: employee['employmentStartDate']?.toString(),
-          ),
         );
       },
       onNewTask: () => action(createCase),
