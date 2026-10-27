@@ -40,3 +40,13 @@ public sealed class Currency
     public bool IsActive { get; set; } = true;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }
+
+public sealed class CorporateOfferBenefit
+{
+    public Guid OfferId { get; set; }
+    public Guid? BenefitId { get; set; }
+    public int Position { get; set; }
+    public string CategorySnapshot { get; set; } = "";
+    public string NameSnapshot { get; set; } = "";
+    public string? DescriptionSnapshot { get; set; }
+}
