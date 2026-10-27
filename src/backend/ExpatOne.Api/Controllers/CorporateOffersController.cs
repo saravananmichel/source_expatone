@@ -93,6 +93,14 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             if (previous.Status != "Issued")
                 return Conflict(new { message = "Only a pending issued offer can be replaced." });
         }
+        var selectedBenefitIds = request.BenefitIds ?? Array.Empty<Guid>();
+        if (selectedBenefitIds.Length > 30 || selectedBenefitIds.Distinct().Count() != selectedBenefitIds.Length)
+            return BadRequest(new { message = "Choose up to 30 unique benefits." });
+        var selectedBenefits = await db.CorporateBenefits.AsNoTracking()
+            .Where(x => x.CompanyId == companyId && x.IsActive && selectedBenefitIds.Contains(x.Id))
+            .ToListAsync(HttpContext.RequestAborted);
+        if (selectedBenefits.Count != selectedBenefitIds.Length)
+            return BadRequest(new { message = "One or more benefits are inactive or belong to another company." });
         var documentId = Guid.NewGuid();
         string? objectKey = null;
         var persisted = false;
@@ -146,6 +154,17 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
             };
             db.Documents.Add(walletDocument);
             db.CorporateOfferLetters.Add(offer);
+            for (var index = 0; index < selectedBenefitIds.Length; index++)
+            {
+                var benefit = selectedBenefits.Single(x => x.Id == selectedBenefitIds[index]);
+                db.CorporateOfferBenefits.Add(new CorporateOfferBenefit
+                {
+                    OfferId = offer.Id, BenefitId = benefit.Id, Position = index,
+                    CategorySnapshot = benefit.Category,
+                    NameSnapshot = benefit.Name,
+                    DescriptionSnapshot = benefit.Description
+                });
+            }
             // Persist the audit entry in the same DB save as the offer and wallet record.
             audit.Stage(documentId, uid, "corporate_offer_issued",
                 metadata: JsonSerializer.Serialize(new { offerId = offer.Id, companyId }));
@@ -244,4 +263,4 @@ public sealed class CorporateOffersController(ExpatOneDbContext db, IUserService
 
 public sealed record OfferResponseRequest(string Response);
 
-public sealed record IssueCorporateOfferRequest([Required] Guid EmployeeUserId, [Required] string RenderedText, Guid? ReplacesOfferId = null);
+public sealed record IssueCorporateOfferRequest([Required] Guid EmployeeUserId, [Required] string RenderedText, Guid? ReplacesOfferId = null, Guid[]? BenefitIds = null);
