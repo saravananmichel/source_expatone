@@ -11,15 +11,17 @@ class FamilyOccasionsScreen extends StatefulWidget {
 class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
+  String? _error;
   @override
   void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
+    if (mounted) setState(() { _loading = true; _error = null; });
     try {
       final items = await widget.api.getList('/family-occasions');
-      if (mounted) setState(() { _items = items; _loading = false; });
+      if (mounted) setState(() { _items = items; _loading = false; _error = null; });
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() { _loading = false; _error = 'Unable to load occasions. Please retry.'; });
     }
   }
 
@@ -88,7 +90,12 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
     appBar: AppBar(title: const Text('Family occasions')),
     floatingActionButton: FloatingActionButton(onPressed: _create, child: const Icon(Icons.add)),
     body: _loading ? const Center(child: CircularProgressIndicator()) :
-      ListView(children: _items.map((item) => ListTile(
+      _error != null ? Center(child: TextButton(onPressed: _load, child: Text(_error!))) :
+      RefreshIndicator(onRefresh: _load, child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [if (_items.isEmpty) const ListTile(title: Text('No occasions yet'),
+          subtitle: Text('Tap + to add a birthday or special occasion.')),
+        ..._items.map((item) => ListTile(
         leading: const Icon(Icons.event),
         title: Text(item['title'] as String? ?? ''),
         subtitle: Text(item['kind'] as String? ?? ''),
@@ -105,6 +112,6 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
             catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Unable to delete occasion'))); }
           }),
-      )).toList()),
+      ))])),
   );
 }
