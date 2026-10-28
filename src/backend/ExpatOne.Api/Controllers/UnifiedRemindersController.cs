@@ -54,7 +54,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
             var tasks = await db.CorporateCases.AsNoTracking()
                 .Where(c => (c.EmployeeUserId == user.Id || c.AssignedHrUserId == user.Id)
                     && db.CorporateMemberships.Any(m => m.CompanyId == c.CompanyId && m.UserId == user.Id && m.Status == "Active")
-                    && c.DueAt.HasValue && c.DueAt.Value >= now && c.DueAt.Value <= until
+                    && c.DueAt.HasValue && c.DueAt.Value <= until
                     && c.Status != "Completed" && c.Status != "Cancelled")
                 .Select(c => new { c.Id, c.Title, c.Notes, c.DueAt })
                 .ToListAsync();
