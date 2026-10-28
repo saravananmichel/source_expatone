@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ExpatOne.Api.Services;
 
 /// <summary>
-/// Opt-in in-app occasion, document, corporate, and sharing reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
+/// Opt-in in-app occasion, document, corporate, sharing, and visa reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
 /// Multiple ECS instances may race; the database unique occurrence constraint is authoritative.
 /// </summary>
 public sealed class NotificationDeliveryWorker(
@@ -24,7 +24,7 @@ public sealed class NotificationDeliveryWorker(
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
         do
         {
-            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); }
+            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); await DeliverVisaDrafts(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { logger.LogError(ex, "Notification delivery cycle failed"); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
@@ -45,6 +45,51 @@ public sealed class NotificationDeliveryWorker(
                 original.Hour, original.Minute, original.Second, DateTimeKind.Utc);
         }
         return occurrence;
+    }
+
+    private async Task DeliverVisaDrafts(CancellationToken ct)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+        var now = DateTime.UtcNow;
+        var drafts = await db.VisaApplications.AsNoTracking()
+            .Where(x => !x.Submitted && x.UpdatedAt >= now.AddDays(-30)
+                && x.UpdatedAt <= now.AddDays(-3))
+            .Select(x => new { x.Id, x.UserId, x.TemplateId, x.UpdatedAt })
+            .ToListAsync(ct);
+
+        foreach (var draft in drafts)
+        {
+            ct.ThrowIfCancellationRequested();
+            var preference = await db.NotificationPreferences.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == draft.UserId, ct);
+            if (preference is { InAppEnabled: false } || preference is { VisaEnabled: false })
+                continue;
+            var key = "visa:" + draft.Id;
+            // A new saved revision can generate a new reminder only after another 3 days.
+            var occurrence = DateOnly.FromDateTime(draft.UpdatedAt.AddDays(3));
+            if (await db.NotificationDeliveries.AnyAsync(x =>
+                    x.UserId == draft.UserId && x.ReminderKey == key &&
+                    x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                continue;
+            db.NotificationDeliveries.Add(new NotificationDelivery
+            {
+                Id = Guid.NewGuid(), UserId = draft.UserId, ReminderKey = key,
+                Channel = "InApp", OccurrenceDate = occurrence,
+                Title = "Visa application draft awaiting completion",
+                Body = "Application template: " + draft.TemplateId,
+                Status = "Delivered", DeliveredAt = now
+            });
+            try { await db.SaveChangesAsync(ct); }
+            catch (DbUpdateException)
+            {
+                db.ChangeTracker.Clear();
+                if (!await db.NotificationDeliveries.AnyAsync(x =>
+                        x.UserId == draft.UserId && x.ReminderKey == key &&
+                        x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                    throw;
+            }
+        }
     }
 
     private async Task DeliverSharingExpiry(CancellationToken ct)
