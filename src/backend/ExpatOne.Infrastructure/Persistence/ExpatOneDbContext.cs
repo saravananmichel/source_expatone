@@ -29,6 +29,8 @@ public class ExpatOneDbContext : DbContext
 
     public DbSet<DocumentAnalysisRun> DocumentAnalysisRuns => Set<DocumentAnalysisRun>();
 
+    public DbSet<NotificationPreference> NotificationPreferences => Set<NotificationPreference>();
+    public DbSet<NotificationDelivery> NotificationDeliveries => Set<NotificationDelivery>();
     public DbSet<FamilyOccasion> FamilyOccasions => Set<FamilyOccasion>();
     public DbSet<FamilyExpiryConfirmation> FamilyExpiryConfirmations => Set<FamilyExpiryConfirmation>();
     public DbSet<FamilyAlertDismissal> FamilyAlertDismissals => Set<FamilyAlertDismissal>();
@@ -92,6 +94,25 @@ public class ExpatOneDbContext : DbContext
             e.ToTable("currencies");
             e.HasKey(x => x.Code);
             e.Property(x => x.Code).HasColumnType("char(3)");
+        });
+
+        modelBuilder.Entity<NotificationPreference>(e =>
+        {
+            e.ToTable("notification_preferences");
+            e.HasKey(x => x.UserId);
+            e.HasOne<User>().WithOne().HasForeignKey<NotificationPreference>(x => x.UserId);
+        });
+        modelBuilder.Entity<NotificationDelivery>(e =>
+        {
+            e.ToTable("notification_deliveries");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.ReminderKey).HasMaxLength(160).IsRequired();
+            e.Property(x => x.Channel).HasMaxLength(16).IsRequired();
+            e.Property(x => x.Title).HasMaxLength(250).IsRequired();
+            e.Property(x => x.Status).HasMaxLength(16).IsRequired();
+            e.HasIndex(x => new { x.UserId, x.ReminderKey, x.Channel, x.OccurrenceDate }).IsUnique();
+            e.HasIndex(x => new { x.UserId, x.CreatedAt });
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.UserId);
         });
 
         modelBuilder.Entity<FamilyOccasion>(e =>
