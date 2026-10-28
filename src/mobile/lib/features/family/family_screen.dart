@@ -11,6 +11,7 @@ class FamilyScreen extends StatefulWidget {
 }
 class _FamilyScreenState extends State<FamilyScreen> {
   final _email = TextEditingController();
+  String _relationship = 'Friend';
   List<FamilyRequest> _requests = [];
   FamilyUser? _found;
   bool _loading = true, _busy = false;
@@ -82,6 +83,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
           enabled: !_busy, onChanged: (_) => setState(() => _found = null),
           decoration: const InputDecoration(labelText: 'Registered email address (name search coming soon)', border: OutlineInputBorder())),
         const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _relationship,
+          decoration: const InputDecoration(labelText: 'Relationship', border: OutlineInputBorder()),
+          items: const ['Spouse', 'Daughter', 'Son', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Colleague', 'Guardian', 'Other']
+            .map((name) => DropdownMenuItem(value: name, child: Text(name))).toList(),
+          onChanged: _busy ? null : (value) { if (value != null) setState(() => _relationship = value); },
+        ),
+        const SizedBox(height: 8),
         FilledButton.icon(onPressed: _busy ? null : () => _run(() async {
           setState(() => _found = null);
           final user = await _service.search(_email.text);
@@ -90,7 +99,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (_found != null) Card(child: ListTile(
           title: Text(_found!.displayName ?? _found!.email), subtitle: Text(_found!.email),
           trailing: TextButton(onPressed: _busy ? null : () => _run(() async {
-            await _service.send(_found!.email);
+            await _service.send(_found!.email, relationship: _relationship);
             if (mounted) setState(() => _found = null);
             await _load();
           }, success: 'Request sent'), child: const Text('Send request')))),
@@ -102,7 +111,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         ..._requests.map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text((r.isIncoming ? r.requester : r.recipient).email, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.status}'),
+            Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.relationship} • ${r.status}'),
             if (r.status == 'Accepted' && !r.isExpired) Text('${r.documentIds.length} document(s) shared ${r.isIncoming ? "by you" : "with you"}'),
             if (r.status == 'Accepted') Text(r.isExpired
               ? 'Access expired — owner can renew sharing'
