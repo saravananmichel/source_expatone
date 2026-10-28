@@ -26,17 +26,19 @@ public partial class FamilyService(ExpatOneDbContext db)
         new(r.RecipientUserId, r.Recipient.Email, r.Recipient.DisplayName),
         r.StatusId, r.StatusId switch { 1 => "Pending", 2 => "Accepted", 3 => "Rejected", 4 => "Cancelled", 5 => "Revoked", _ => "Unknown" }, r.RecipientUserId == userId, r.Revision, r.CreatedAt,
         r.RespondedAt, r.Grants.Select(g => g.DocumentId).ToList(), r.AllowExpiryReminders, r.AccessExpiresAt,
-        r.StatusId == FamilyRequestStates.Accepted && r.AccessExpiresAt.HasValue && r.AccessExpiresAt <= DateTime.UtcNow);
+        r.StatusId == FamilyRequestStates.Accepted && r.AccessExpiresAt.HasValue && r.AccessExpiresAt <= DateTime.UtcNow, r.Relationship);
     public async Task<List<FamilyRequestDto>> ListAsync(Guid userId) =>
         (await Requests.AsNoTracking().Where(x => x.RequesterUserId == userId || x.RecipientUserId == userId)
             .OrderByDescending(x => x.CreatedAt).ToListAsync()).Select(x => Map(x, userId)).ToList();
-    public async Task<FamilyRequestDto> SendAsync(Guid userId, string email)
+    public async Task<FamilyRequestDto> SendAsync(Guid userId, string email, string relationship = "Other")
     {
+        var allowed = new HashSet<string>(StringComparer.Ordinal) { "Spouse", "Daughter", "Son", "Father", "Mother", "Brother", "Sister", "Friend", "Colleague", "Guardian", "Other" };
+        if (!allowed.Contains(relationship)) throw new ArgumentException("Invalid relationship.");
         var target = await SearchAsync(userId, email);
         if (await db.FamilyRequests.AnyAsync(x => x.RequesterUserId == userId && x.RecipientUserId == target.Id &&
             (x.StatusId == FamilyRequestStates.Pending || x.StatusId == FamilyRequestStates.Accepted)))
             throw new InvalidOperationException("A pending or accepted request already exists.");
-        var request = new FamilyRequest { RequesterUserId = userId, RecipientUserId = target.Id };
+        var request = new FamilyRequest { RequesterUserId = userId, RecipientUserId = target.Id, Relationship = relationship };
         db.FamilyRequests.Add(request);
         try { await db.SaveChangesAsync(); }
         catch (DbUpdateException) { throw new InvalidOperationException("Request could not be created. Refresh and try again."); }
