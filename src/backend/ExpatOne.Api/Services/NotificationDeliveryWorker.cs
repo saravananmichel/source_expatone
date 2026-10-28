@@ -24,11 +24,22 @@ public sealed class NotificationDeliveryWorker(
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
         do
         {
-            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); await DeliverVisaDrafts(stoppingToken); await DeliverInvitations(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) { logger.LogError(ex, "Notification delivery cycle failed"); }
+            await RunCategory("occasion", DeliverOccasions, stoppingToken);
+            await RunCategory("document", DeliverDocumentReminders, stoppingToken);
+            await RunCategory("corporate", DeliverCorporateTasks, stoppingToken);
+            await RunCategory("sharing", DeliverSharingExpiry, stoppingToken);
+            await RunCategory("visa", DeliverVisaDrafts, stoppingToken);
+            await RunCategory("connection", DeliverInvitations, stoppingToken);
         } while (!stoppingToken.IsCancellationRequested &&
                  await WaitForNextTick(timer, stoppingToken));
+    }
+
+    private async Task RunCategory(string name, Func<CancellationToken, Task> action, CancellationToken ct)
+    {
+        if (ct.IsCancellationRequested) return;
+        try { await action(ct); }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+        catch (Exception ex) { logger.LogError(ex, "Notification category {Name} failed", name); }
     }
 
     private static async Task<bool> WaitForNextTick(PeriodicTimer timer, CancellationToken ct)
