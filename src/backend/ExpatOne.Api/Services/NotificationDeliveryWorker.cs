@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ExpatOne.Api.Services;
 
 /// <summary>
-/// Opt-in in-app occasion, document, corporate, sharing, and visa reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
+/// Opt-in in-app occasion, document, corporate, sharing, visa, and invitation reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
 /// Multiple ECS instances may race; the database unique occurrence constraint is authoritative.
 /// </summary>
 public sealed class NotificationDeliveryWorker(
@@ -24,7 +24,7 @@ public sealed class NotificationDeliveryWorker(
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
         do
         {
-            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); await DeliverVisaDrafts(stoppingToken); }
+            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); await DeliverVisaDrafts(stoppingToken); await DeliverInvitations(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { logger.LogError(ex, "Notification delivery cycle failed"); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
@@ -45,6 +45,52 @@ public sealed class NotificationDeliveryWorker(
                 original.Hour, original.Minute, original.Second, DateTimeKind.Utc);
         }
         return occurrence;
+    }
+
+    private async Task DeliverInvitations(CancellationToken ct)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+        var now = DateTime.UtcNow;
+        var invitations = await db.FamilyRequests.AsNoTracking()
+            .Where(x => x.StatusId == FamilyRequestStates.Pending
+                && x.CreatedAt >= now.AddDays(-7))
+            .Select(x => new { x.Id, x.RecipientUserId, x.CreatedAt })
+            .ToListAsync(ct);
+
+        foreach (var invitation in invitations)
+        {
+            ct.ThrowIfCancellationRequested();
+            var preference = await db.NotificationPreferences.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == invitation.RecipientUserId, ct);
+            if (preference is { InAppEnabled: false } || preference is { ConnectionEnabled: false })
+                continue;
+
+            var key = "connection:" + invitation.Id;
+            var occurrence = DateOnly.FromDateTime(invitation.CreatedAt);
+            if (await db.NotificationDeliveries.AnyAsync(x =>
+                    x.UserId == invitation.RecipientUserId && x.ReminderKey == key &&
+                    x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                continue;
+
+            db.NotificationDeliveries.Add(new NotificationDelivery
+            {
+                Id = Guid.NewGuid(), UserId = invitation.RecipientUserId,
+                ReminderKey = key, Channel = "InApp", OccurrenceDate = occurrence,
+                Title = "Connection invitation awaiting response",
+                Body = "You have a pending Friends & Family invitation.",
+                Status = "Delivered", DeliveredAt = now
+            });
+            try { await db.SaveChangesAsync(ct); }
+            catch (DbUpdateException)
+            {
+                db.ChangeTracker.Clear();
+                if (!await db.NotificationDeliveries.AnyAsync(x =>
+                        x.UserId == invitation.RecipientUserId && x.ReminderKey == key &&
+                        x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                    throw;
+            }
+        }
     }
 
     private async Task DeliverVisaDrafts(CancellationToken ct)
