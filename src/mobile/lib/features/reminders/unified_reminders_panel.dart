@@ -60,7 +60,7 @@ class _UnifiedRemindersPanelState extends State<UnifiedRemindersPanel> {
         borderRadius: BorderRadius.circular(18)),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Icon(icon, color: color), const SizedBox(height: 10),
-        Text('$'+'$count', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+        Text(count.toString(), style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
         Text(label),
       ]),
     );
