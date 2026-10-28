@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'unified_reminders_panel.dart';
 import '../../core/services/reminder_service.dart';
 import '../../core/theme/app_theme.dart';
 import '../family/family_alerts_panel.dart';
@@ -48,11 +49,11 @@ class _RemindersScreenState extends State<RemindersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(length: 2, child: Scaffold(
+    return DefaultTabController(length: 3, child: Scaffold(
       appBar: AppBar(title: const Text('Reminder Center'), bottom: const TabBar(
-        tabs: [Tab(text: 'My reminders'), Tab(text: 'Family alerts')],
+        tabs: [Tab(text: 'Smart'), Tab(text: 'My reminders'), Tab(text: 'Family alerts')],
       )),
-      body: TabBarView(children: [_isLoading
+      body: TabBarView(children: [UnifiedRemindersPanel(service: widget.reminderService), _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
               ? _buildError()
