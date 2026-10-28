@@ -93,11 +93,15 @@ class _UnifiedRemindersPanelState extends State<UnifiedRemindersPanel> {
                         title: Text('No matching reminders'),
                         subtitle: Text('Try another category, search or date range.'));
                       final item = filtered[index];
+                      final overdue = item.dueAtUtc.isBefore(DateTime.now().toUtc()) &&
+                          (item.category == 'corporate' || item.category == 'document');
                       return ListTile(
-                        leading: const Icon(Icons.notifications_active_outlined),
+                        leading: Icon(overdue ? Icons.warning_amber_outlined : Icons.notifications_active_outlined,
+                          color: overdue ? Theme.of(context).colorScheme.error : null),
                         title: Text(item.title),
                         subtitle: Text([
                           item.category,
+                          if (overdue) 'Overdue',
                           if (item.description != null) item.description!,
                           item.dueAtUtc.toLocal().toString().split('.').first,
                         ].join(' • ')),
