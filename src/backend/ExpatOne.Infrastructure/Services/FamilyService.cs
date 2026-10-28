@@ -26,7 +26,7 @@ public partial class FamilyService(ExpatOneDbContext db)
         new(r.RecipientUserId, r.Recipient.Email, r.Recipient.DisplayName),
         r.StatusId, r.StatusId switch { 1 => "Pending", 2 => "Accepted", 3 => "Rejected", 4 => "Cancelled", 5 => "Revoked", _ => "Unknown" }, r.RecipientUserId == userId, r.Revision, r.CreatedAt,
         r.RespondedAt, r.Grants.Select(g => g.DocumentId).ToList(), r.AllowExpiryReminders, r.AccessExpiresAt,
-        r.StatusId == FamilyRequestStates.Accepted && r.AccessExpiresAt.HasValue && r.AccessExpiresAt <= DateTime.UtcNow, r.Relationship);
+        r.StatusId == FamilyRequestStates.Accepted && r.AccessExpiresAt.HasValue && r.AccessExpiresAt <= DateTime.UtcNow, r.Relationship, r.AllowVisaApplicationUse);
     public async Task<List<FamilyRequestDto>> ListAsync(Guid userId) =>
         (await Requests.AsNoTracking().Where(x => x.RequesterUserId == userId || x.RecipientUserId == userId)
             .OrderByDescending(x => x.CreatedAt).ToListAsync()).Select(x => Map(x, userId)).ToList();
@@ -85,6 +85,7 @@ public partial class FamilyService(ExpatOneDbContext db)
         if (dto.Accept) await ReplaceGrantsAsync(r, dto.DocumentIds);
         r.AccessExpiresAt = expiry;
         r.AllowExpiryReminders = dto.Accept && dto.AllowExpiryReminders == true;
+        r.AllowVisaApplicationUse = dto.Accept && dto.AllowVisaApplicationUse == true;
         r.StatusId = dto.Accept ? FamilyRequestStates.Accepted : FamilyRequestStates.Rejected;
         r.RespondedAt = DateTime.UtcNow;
         return await SaveAsync(r, userId);
@@ -98,6 +99,7 @@ public partial class FamilyService(ExpatOneDbContext db)
         await ReplaceGrantsAsync(r, dto.DocumentIds);
         r.AccessExpiresAt = expiry;
         if (dto.AllowExpiryReminders.HasValue) r.AllowExpiryReminders = dto.AllowExpiryReminders.Value;
+        if (dto.AllowVisaApplicationUse.HasValue) r.AllowVisaApplicationUse = dto.AllowVisaApplicationUse.Value;
         return await SaveAsync(r, userId);
     }
     public async Task<FamilyRequestDto> EndAsync(Guid userId, Guid id, Guid revision)
