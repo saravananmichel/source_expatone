@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'family_dashboard_screen.dart';
+import 'family_occasions_screen.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
 
@@ -84,6 +85,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
               FamilyDashboardScreen(documentService: widget.documentService)));
             if (mounted) await _load();
           },
+        )),
+        Card(child: ListTile(
+          leading: const Icon(Icons.event_outlined),
+          title: const Text('Birthdays & special occasions'),
+          subtitle: const Text('Manage anniversaries, birthdays and reminders'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push<void>(context, MaterialPageRoute(
+            builder: (_) => FamilyOccasionsScreen(api: widget.documentService.apiClient))),
         )),
         const SizedBox(height: 16),
         const Text('Connect with friends & family', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
