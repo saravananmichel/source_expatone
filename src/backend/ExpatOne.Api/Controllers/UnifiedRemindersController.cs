@@ -97,7 +97,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                 var date = occasion.OccasionDate;
                 if (occasion.RepeatsAnnually)
                 {
-                    var year = now.Year;
+                    var year = Math.Max(now.Year, date.Year);
                     var day = Math.Min(date.Day, DateTime.DaysInMonth(year, date.Month));
                     date = new DateTime(year, date.Month, day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
                     if (date.AddDays(-occasion.DaysBefore) < now)
