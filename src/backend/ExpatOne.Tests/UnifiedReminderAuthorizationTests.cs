@@ -41,6 +41,29 @@ public class UnifiedReminderAuthorizationTests
         Assert.IsType<BadRequestObjectResult>(result);
     }
 
+    [Theory]
+    [InlineData("document")]
+    [InlineData("connection")]
+    [InlineData("corporate")]
+    [InlineData("sharing")]
+    [InlineData("visa")]
+    [InlineData("occasion")]
+    [InlineData("  DOCUMENT  ")]
+    public async Task Get_SupportedCategoryWithoutIdentity_ReturnsUnauthorized(string category)
+    {
+        var result = await CreateController().Get(category: category);
+        Assert.IsType<UnauthorizedResult>(result);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(365)]
+    public async Task Get_ValidDayBoundariesWithoutIdentity_ReturnUnauthorized(int days)
+    {
+        var result = await CreateController().Get(days: days);
+        Assert.IsType<UnauthorizedResult>(result);
+    }
+
     [Fact]
     public async Task Get_UnknownCategory_ReturnsBadRequest()
     {
