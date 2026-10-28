@@ -186,11 +186,12 @@ class _GrantScreenState extends State<_GrantScreen> {
   final Set<String> _selected = {};
   bool _loading = true, _saving = false;
   late bool _allowExpiryReminders;
+  late bool _allowVisaApplicationUse;
   DateTime? _accessExpiresAt;
   bool _expiryChanged = false;
   String? _error;
   @override
-  void initState() { super.initState(); _allowExpiryReminders = widget.request.allowExpiryReminders; _accessExpiresAt = widget.request.accessExpiresAt?.toLocal(); _load(); }
+  void initState() { super.initState(); _allowExpiryReminders = widget.request.allowExpiryReminders; _allowVisaApplicationUse = widget.request.allowVisaApplicationUse; _accessExpiresAt = widget.request.accessExpiresAt?.toLocal(); _load(); }
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
@@ -213,7 +214,7 @@ class _GrantScreenState extends State<_GrantScreen> {
     try {
       final service = widget.documentService.familyService;
       if (widget.request.status == 'Pending') {
-        await service.respond(widget.request, true, _selected.toList(), allowExpiryReminders: _allowExpiryReminders,
+        await service.respond(widget.request, true, _selected.toList(), allowExpiryReminders: _allowExpiryReminders, allowVisaApplicationUse: _allowVisaApplicationUse,
           accessExpiresAt: _accessExpiresAt, updateAccessExpiry: _expiryChanged);
       } else {
         await service.update(widget.request, _selected.toList(), allowExpiryReminders: _allowExpiryReminders,
@@ -278,6 +279,12 @@ class _GrantScreenState extends State<_GrantScreen> {
             subtitle: const Text('This member can receive in-app alerts for selected documents after you confirm their expiry dates.'),
             value: _allowExpiryReminders,
             onChanged: _saving ? null : (value) => setState(() => _allowExpiryReminders = value),
+          ),
+          SwitchListTile(
+            title: const Text('Allow use in visa applications'),
+            subtitle: const Text('Separate permission: the connected person may use the selected shared documents in visa applications while sharing remains active. Off by default.'),
+            value: _allowVisaApplicationUse,
+            onChanged: _saving ? null : (value) => setState(() => _allowVisaApplicationUse = value),
           ),
           CheckboxListTile(title: const Text('Select all current documents'),
             value: _docs.isNotEmpty && _selected.length == _docs.length,
