@@ -23,14 +23,17 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
     }
   }
 
-  Future<void> _create() async {
+  Future<void> _create([Map<String, dynamic>? existing]) async {
     final title = TextEditingController();
-    String kind = 'Birthday';
-    int offset = 7;
-    DateTime date = DateTime.now();
+    String kind = existing?['kind'] as String? ?? 'Birthday';
+    int offset = existing?['daysBefore'] as int? ?? 7;
+    DateTime date = existing == null ? DateTime.now() : DateTime.parse(existing['occasionDate'] as String);
+    bool annual = existing?['repeatsAnnually'] as bool? ?? true;
+    bool reminders = existing?['remindersEnabled'] as bool? ?? true;
+    title.text = existing?['title'] as String? ?? '';
     final saved = await showDialog<bool>(context: context, builder: (context) =>
       StatefulBuilder(builder: (context, update) => AlertDialog(
-        title: const Text('Add family occasion'),
+        title: Text(existing == null ? 'Add family occasion' : 'Edit family occasion'),
         content: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: [
           TextField(controller: title, decoration: const InputDecoration(labelText: 'Occasion title')),
           DropdownButton<String>(value: kind, isExpanded: true,
@@ -44,6 +47,10 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
                 initialDate: date, firstDate: DateTime(1900), lastDate: DateTime(2100));
               if (picked != null) update(() => date = picked);
             }),
+          SwitchListTile(title: const Text('Repeat annually'), value: annual,
+            onChanged: (value) => update(() => annual = value)),
+          SwitchListTile(title: const Text('Remind me'), value: reminders,
+            onChanged: (value) => update(() => reminders = value)),
           DropdownButton<int>(value: offset, isExpanded: true,
             items: [1, 3, 7, 30].map((days) =>
                 DropdownMenuItem(value: days, child: Text('$days days before'))).toList(),
@@ -54,11 +61,16 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
           FilledButton(onPressed: () async {
             if (title.text.trim().isEmpty) return;
             try {
-              await widget.api.post('/family-occasions', body: {
+              final body = <String, dynamic>{
                 'title': title.text.trim(), 'kind': kind,
                 'occasionDate': DateTime.utc(date.year, date.month, date.day).toIso8601String(),
-                'repeatsAnnually': true, 'remindersEnabled': true, 'daysBefore': offset,
-              });
+                'repeatsAnnually': annual, 'remindersEnabled': reminders, 'daysBefore': offset,
+              };
+              if (existing == null) {
+                await widget.api.post('/family-occasions', body: body);
+              } else {
+                await widget.api.put('/family-occasions/${existing['id']}', body: body);
+              }
               if (context.mounted) Navigator.pop(context, true);
             } catch (_) {
               if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
@@ -80,6 +92,19 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
         leading: const Icon(Icons.event),
         title: Text(item['title'] as String? ?? ''),
         subtitle: Text(item['kind'] as String? ?? ''),
+        onTap: () => _create(item),
+        trailing: IconButton(icon: const Icon(Icons.delete_outline),
+          onPressed: () async {
+            final confirmed = await showDialog<bool>(context: context, builder: (context) =>
+              AlertDialog(title: const Text('Delete occasion?'), actions: [
+                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+              ]));
+            if (confirmed != true) return;
+            try { await widget.api.delete('/family-occasions/${item['id']}'); await _load(); }
+            catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Unable to delete occasion'))); }
+          }),
       )).toList()),
   );
 }
