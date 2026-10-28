@@ -16,6 +16,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
     [HttpGet]
     public async Task<IActionResult> Get([FromQuery] string? category = null, [FromQuery] int days = 90)
     {
+        category = category?.Trim().ToLowerInvariant();
         if (days < 1 || days > 365) return BadRequest("days must be between 1 and 365.");
         var uid = User.FindFirstValue("firebase_uid") ?? throw new UnauthorizedAccessException();
         var user = await users.FindOrCreateByExternalIdentityAsync("firebase", uid,
@@ -50,6 +51,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
         {
             var tasks = await db.CorporateCases.AsNoTracking()
                 .Where(c => (c.EmployeeUserId == user.Id || c.AssignedHrUserId == user.Id)
+                    && db.CorporateMemberships.Any(m => m.CompanyId == c.CompanyId && m.UserId == user.Id && m.Status == "Active")
                     && c.DueAt.HasValue && c.DueAt.Value >= now && c.DueAt.Value <= until
                     && c.Status != "Completed" && c.Status != "Cancelled")
                 .Select(c => new { c.Id, c.Title, c.Notes, c.DueAt })
