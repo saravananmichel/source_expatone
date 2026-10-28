@@ -100,7 +100,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                     var year = Math.Max(now.Year, date.Year);
                     var day = Math.Min(date.Day, DateTime.DaysInMonth(year, date.Month));
                     date = new DateTime(year, date.Month, day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
-                    if (date.AddDays(-occasion.DaysBefore) < now)
+                    if (date.Date < now.Date)
                     {
                         year++;
                         day = Math.Min(occasion.OccasionDate.Day, DateTime.DaysInMonth(year, date.Month));
@@ -108,9 +108,9 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                     }
                 }
                 var due = date.AddDays(-occasion.DaysBefore);
-                if (due >= now && due <= until)
+                if (date.Date >= now.Date && date <= until && due <= now)
                     items.Add(new UnifiedReminderItem("occasion:" + occasion.Id, "occasion",
-                        occasion.Title, occasion.Kind + " in " + occasion.DaysBefore + " days", due, occasion.Id));
+                        occasion.Title, occasion.Kind + " coming up on " + date.ToString("yyyy-MM-dd"), date, occasion.Id));
             }
         }
 
