@@ -29,6 +29,7 @@ public class ExpatOneDbContext : DbContext
 
     public DbSet<DocumentAnalysisRun> DocumentAnalysisRuns => Set<DocumentAnalysisRun>();
 
+    public DbSet<FamilyOccasion> FamilyOccasions => Set<FamilyOccasion>();
     public DbSet<FamilyExpiryConfirmation> FamilyExpiryConfirmations => Set<FamilyExpiryConfirmation>();
     public DbSet<FamilyAlertDismissal> FamilyAlertDismissals => Set<FamilyAlertDismissal>();
     public DbSet<FamilyRequestStatus> FamilyRequestStatuses => Set<FamilyRequestStatus>();
@@ -91,6 +92,18 @@ public class ExpatOneDbContext : DbContext
             e.ToTable("currencies");
             e.HasKey(x => x.Code);
             e.Property(x => x.Code).HasColumnType("char(3)");
+        });
+
+        modelBuilder.Entity<FamilyOccasion>(e =>
+        {
+            e.ToTable("family_occasions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Title).HasMaxLength(200).IsRequired();
+            e.Property(x => x.Kind).HasMaxLength(32).IsRequired();
+            e.HasIndex(x => new { x.UserId, x.OccasionDate });
+            e.HasOne<User>().WithMany().HasForeignKey(x => x.UserId);
+            e.HasOne<FamilyRequest>().WithMany().HasForeignKey(x => x.ConnectionId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ExpatOneDbContext).Assembly);
