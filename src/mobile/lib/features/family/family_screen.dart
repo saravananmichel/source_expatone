@@ -59,6 +59,59 @@ class _FamilyScreenState extends State<FamilyScreen> {
     ));
     if (ok == true && mounted) await _run(() async { await _service.end(r); await _load(); });
   }
+  Widget _metric(String label, int count, IconData icon, Color bg, Color fg) =>
+    Container(width: 166, padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(17)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon, color: fg, size: 26),
+        const SizedBox(height: 12),
+        Text('$count', style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ]));
+
+  Future<void> _inviteDialog() async {
+    final email = TextEditingController();
+    var relationship = 'Friend';
+    final result = await showDialog<(String, String)>(context: context,
+      builder: (dialogContext) => StatefulBuilder(builder: (dialogContext, update) => AlertDialog(
+        title: const Text('Add a connection'),
+        content: SizedBox(width: 420, child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Step 1 of 2 · Find a registered user and choose your relationship.'),
+          const SizedBox(height: 16),
+          TextField(controller: email, keyboardType: TextInputType.emailAddress,
+            decoration: const InputDecoration(labelText: 'Registered email', prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder())),
+          const SizedBox(height: 14),
+          DropdownButtonFormField<String>(value: relationship,
+            decoration: const InputDecoration(labelText: 'Relationship', border: OutlineInputBorder()),
+            items: const ['Spouse', 'Daughter', 'Son', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Colleague', 'Guardian', 'Other']
+              .map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
+            onChanged: (v) { if (v != null) update(() => relationship = v); }),
+        ])),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
+          FilledButton(onPressed: () {
+            if (!email.text.contains('@')) return;
+            Navigator.pop(dialogContext, (email.text.trim(), relationship));
+          }, child: const Text('Review invitation')),
+        ],
+      )));
+    email.dispose();
+    if (result == null || !mounted) return;
+    final confirmed = await showDialog<bool>(context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Send invitation?'),
+        content: Text('Invite ${result.$1} as ${result.$2}? They can accept or decline and control their own document sharing.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Back')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Send invite')),
+        ]));
+    if (confirmed == true && mounted) {
+      await _run(() async { await _service.send(result.$1, relationship: result.$2); await _load(); },
+        success: 'Invitation sent');
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Friends & Family'), actions: [IconButton(
@@ -66,13 +119,38 @@ class _FamilyScreenState extends State<FamilyScreen> {
     body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.all(16), physics: const AlwaysScrollableScrollPhysics(), children: [
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          Chip(avatar: const Icon(Icons.people_outline, size: 18),
-            label: Text('Active: ${_requests.where((r) => r.status == 'Accepted' && !r.isExpired).length}')),
-          Chip(avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
-            label: Text('Incoming: ${_requests.where((r) => r.status == 'Pending' && r.isIncoming).length}')),
-          Chip(avatar: const Icon(Icons.outgoing_mail, size: 18),
-            label: Text('Sent: ${_requests.where((r) => r.status == 'Pending' && !r.isIncoming).length}')),
+        Container(
+          padding: const EdgeInsets.all(22),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(colors: [Color(0xFF183C9A), Color(0xFF2477D4)]),
+            borderRadius: BorderRadius.circular(22)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Icon(Icons.people_alt_rounded, size: 32, color: Colors.white),
+            const SizedBox(height: 10),
+            const Text('Your trusted circle, connected across borders',
+              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 7),
+            const Text('Manage invitations, relationships and secure document access.',
+              style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: const Color(0xFF174AA8)),
+              onPressed: () => _inviteDialog(),
+              icon: const Icon(Icons.person_add_alt_1),
+              label: const Text('Add connection')),
+          ])),
+        const SizedBox(height: 16),
+        Wrap(spacing: 12, runSpacing: 12, children: [
+          _metric('Connections', _requests.where((r) => r.status == 'Accepted' && !r.isExpired).length,
+            Icons.people_alt_outlined, const Color(0xFFE7F0FF), const Color(0xFF1456BE)),
+          _metric('Shared documents', _requests.where((r) => r.status == 'Accepted' && !r.isExpired)
+            .fold<int>(0, (count, r) => count + r.documentIds.length),
+            Icons.folder_shared_outlined, const Color(0xFFE5F7F1), const Color(0xFF008A68)),
+          _metric('Pending requests', _requests.where((r) => r.status == 'Pending').length,
+            Icons.schedule_outlined, const Color(0xFFF4EBFF), const Color(0xFF8547C7)),
+          _metric('Access expiring', _requests.where((r) => r.status == 'Accepted' && !r.isExpired &&
+            r.accessExpiresAt != null && r.accessExpiresAt!.isBefore(DateTime.now().add(const Duration(days: 30)))).length,
+            Icons.event_busy_outlined, const Color(0xFFFFECEA), const Color(0xFFD24A39)),
         ]),
         const SizedBox(height: 12),
         Card(child: ListTile(
