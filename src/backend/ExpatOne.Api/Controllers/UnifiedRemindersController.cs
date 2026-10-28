@@ -87,7 +87,34 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                 "Application template: " + a.TemplateId, a.UpdatedAt, a.Id)));
         }
 
-        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa"))
+        if (category is null or "occasion")
+        {
+            var occasions = await db.FamilyOccasions.AsNoTracking()
+                .Where(o => o.UserId == user.Id && o.RemindersEnabled)
+                .ToListAsync();
+            foreach (var occasion in occasions)
+            {
+                var date = occasion.OccasionDate;
+                if (occasion.RepeatsAnnually)
+                {
+                    var year = now.Year;
+                    var day = Math.Min(date.Day, DateTime.DaysInMonth(year, date.Month));
+                    date = new DateTime(year, date.Month, day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
+                    if (date.AddDays(-occasion.DaysBefore) < now)
+                    {
+                        year++;
+                        day = Math.Min(occasion.OccasionDate.Day, DateTime.DaysInMonth(year, date.Month));
+                        date = new DateTime(year, date.Month, day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
+                    }
+                }
+                var due = date.AddDays(-occasion.DaysBefore);
+                if (due >= now && due <= until)
+                    items.Add(new UnifiedReminderItem("occasion:" + occasion.Id, "occasion",
+                        occasion.Title, occasion.Kind + " in " + occasion.DaysBefore + " days", due, occasion.Id));
+            }
+        }
+
+        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa" or "occasion"))
             return BadRequest("Unsupported reminder category.");
 
         return Ok(items.OrderBy(i => i.DueAtUtc).ThenBy(i => i.Id).ToList());
