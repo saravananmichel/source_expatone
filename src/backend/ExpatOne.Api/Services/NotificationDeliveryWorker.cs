@@ -1,11 +1,12 @@
 using ExpatOne.Domain.Entities;
+using ExpatOne.Domain.Enums;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace ExpatOne.Api.Services;
 
 /// <summary>
-/// Opt-in in-app occasion delivery. Disabled until the phase 3.3 SQL migration is applied.
+/// Opt-in in-app occasion and document reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
 /// Multiple ECS instances may race; the database unique occurrence constraint is authoritative.
 /// </summary>
 public sealed class NotificationDeliveryWorker(
@@ -23,7 +24,7 @@ public sealed class NotificationDeliveryWorker(
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
         do
         {
-            try { await DeliverOccasions(stoppingToken); }
+            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { logger.LogError(ex, "Notification delivery cycle failed"); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
@@ -44,6 +45,53 @@ public sealed class NotificationDeliveryWorker(
                 original.Hour, original.Minute, original.Second, DateTimeKind.Utc);
         }
         return occurrence;
+    }
+
+    private async Task DeliverDocumentReminders(CancellationToken ct)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+        var now = DateTime.UtcNow;
+        // Bound the catch-up window so enabling the worker does not flood old inboxes.
+        var reminders = await db.Reminders.AsNoTracking()
+            .Where(x => x.Status == ReminderStatus.Active
+                && x.ReminderDate <= now && x.ReminderDate >= now.AddDays(-7))
+            .Select(x => new { x.Id, x.UserId, x.Title, x.Description, x.ReminderDate })
+            .ToListAsync(ct);
+
+        foreach (var reminder in reminders)
+        {
+            ct.ThrowIfCancellationRequested();
+            var preference = await db.NotificationPreferences.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == reminder.UserId, ct);
+            if (preference is { InAppEnabled: false } || preference is { DocumentEnabled: false })
+                continue;
+
+            var key = "document:" + reminder.Id;
+            var occurrence = DateOnly.FromDateTime(reminder.ReminderDate);
+            if (await db.NotificationDeliveries.AnyAsync(x =>
+                    x.UserId == reminder.UserId && x.ReminderKey == key &&
+                    x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                continue;
+
+            db.NotificationDeliveries.Add(new NotificationDelivery
+            {
+                Id = Guid.NewGuid(), UserId = reminder.UserId,
+                ReminderKey = key, Channel = "InApp",
+                OccurrenceDate = occurrence, Title = reminder.Title,
+                Body = reminder.Description,
+                Status = "Delivered", DeliveredAt = now
+            });
+            try { await db.SaveChangesAsync(ct); }
+            catch (DbUpdateException)
+            {
+                db.ChangeTracker.Clear();
+                if (!await db.NotificationDeliveries.AnyAsync(x =>
+                        x.UserId == reminder.UserId && x.ReminderKey == key &&
+                        x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                    throw;
+            }
+        }
     }
 
     private async Task DeliverOccasions(CancellationToken ct)
