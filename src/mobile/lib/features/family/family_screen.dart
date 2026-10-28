@@ -283,7 +283,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
                 ]),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () async {
-                  if (r.isIncoming && (r.status == 'Pending' || r.status == 'Accepted')) {
+                  if (r.isIncoming && r.status == 'Pending') {
+                    await _incomingInvitationDialog(r);
+                  } else if (r.isIncoming && r.status == 'Accepted') {
                     await _choose(r);
                   } else if (r.status == 'Accepted' || r.status == 'Pending') {
                     await _connectionActions(r);
@@ -305,6 +307,41 @@ class _FamilyScreenState extends State<FamilyScreen> {
           ],
         )),
     );
+  }
+
+  Future<void> _incomingInvitationDialog(FamilyRequest request) async {
+    final decision = await showDialog<String>(context: context, builder: (ctx) => AlertDialog(
+      title: const Text('You have a new connection request'),
+      content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+        ListTile(leading: const CircleAvatar(child: Icon(Icons.person)),
+          title: Text(request.requester.displayName ?? request.requester.email),
+          subtitle: Text(request.requester.email)),
+        Chip(avatar: const Icon(Icons.favorite_outline, size: 16),
+          label: Text(request.relationship)),
+        const SizedBox(height: 10),
+        const Text('Accept to choose which documents to share and for how long. '
+          'You can also accept without sharing documents.'),
+        const SizedBox(height: 8),
+        const Text('Blocking users is not available from the current API.',
+          style: TextStyle(fontSize: 12, color: Colors.blueGrey)),
+      ]),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, 'reject'),
+          child: const Text('Reject', style: TextStyle(color: Colors.red))),
+        TextButton(onPressed: null, child: const Text('Block')),
+        FilledButton(onPressed: () => Navigator.pop(ctx, 'accept'),
+          child: const Text('Accept')),
+      ],
+    ));
+    if (!mounted) return;
+    if (decision == 'accept') {
+      await _choose(request);
+    } else if (decision == 'reject') {
+      await _run(() async {
+        await _service.respond(request, false, []);
+        await _load();
+      }, success: 'Invitation declined');
+    }
   }
 
   Future<void> _connectionActions(FamilyRequest request) async {
