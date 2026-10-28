@@ -50,6 +50,29 @@ public class FamilyOccasionAuthorizationTests
         Assert.IsType<UnauthorizedResult>(result);
     }
 
+    [Theory]
+    [InlineData("", "Birthday", 7)]
+    [InlineData("Valid", "Unknown", 7)]
+    [InlineData("Valid", "Birthday", 2)]
+    public async Task Create_InvalidOccasionInput_ReturnsBadRequest(
+        string title, string kind, int daysBefore)
+    {
+        var input = new FamilyOccasionsController.OccasionInput(
+            title, kind, DateTime.UtcNow, true, true, daysBefore);
+        var result = await CreateController().Create(input);
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Create_NonUtcOccasionDate_ReturnsBadRequest()
+    {
+        var input = new FamilyOccasionsController.OccasionInput(
+            "Birthday", "Birthday", DateTime.SpecifyKind(DateTime.Now, DateTimeKind.Local),
+            true, true, 7);
+        var result = await CreateController().Create(input);
+        Assert.IsType<BadRequestObjectResult>(result);
+    }
+
     [Fact]
     public async Task Delete_WithoutFirebaseIdentity_ReturnsUnauthorized()
     {
