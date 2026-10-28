@@ -88,6 +88,97 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     'Expired' => Colors.red.shade700, 'Due soon' => Colors.orange.shade900,
     'Valid' => Colors.green.shade700, _ => Colors.grey.shade700,
   };
+  Widget _summaryCard(BuildContext context, String label, int count, IconData icon) {
+    return SizedBox(width: 190, child: Card(child: Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(height: 8),
+        Text('
+    if (_loading) return const Center(child: CircularProgressIndicator());
+    final groups = <String, List<FamilyDashboardDocument>>{};
+    for (final document in _documents.where((d) => d.matches(_filter))) {
+      groups.putIfAbsent(document.owner.id, () => []).add(document);
+    }
+    final members = groups.values.toList()..sort((a, b) {
+      if (a.first.isOwned != b.first.isOwned) return a.first.isOwned ? -1 : 1;
+      return a.first.owner.email.compareTo(b.first.owner.email);
+    });
+    return RefreshIndicator(onRefresh: _load, child: ListView(
+      physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.all(16), children: [
+        if (_error != null) ...[Text(_error!), TextButton(onPressed: _load, child: const Text('Retry'))]
+        else ...[
+          Text('Document overview', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            _summaryCard(context, 'Shared documents',
+              _documents.where((d) => !d.isOwned).length, Icons.folder_shared_outlined),
+            _summaryCard(context, 'Document owners',
+              _documents.where((d) => !d.isOwned).map((d) => d.owner.id).toSet().length,
+              Icons.people_outline),
+            _summaryCard(context, 'Due within 30 days',
+              _documents.where((d) => d.daysRemaining != null &&
+                d.daysRemaining! >= 0 && d.daysRemaining! <= 30).length,
+              Icons.event_outlined),
+          ]),
+          const SizedBox(height: 16),
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            for (final status in ['Expired', 'Due soon', 'Valid', 'No expiry date'])
+              Chip(label: Text('$status: ${_documents.where((d) => d.expiryStatus == status).length}')),
+          ]),
+          const SizedBox(height: 8),
+          const Text('Your trusted circle: shared documents and expiry alerts. Due soon means today through 90 days; dates use UTC calendar days.'),
+          const SizedBox(height: 12),
+          Wrap(spacing: 8, children: [
+            for (final filter in ['All', 'Expired', 'Next 30 days', 'Next 90 days', 'Valid', 'No expiry date'])
+              ChoiceChip(label: Text(filter), selected: filter == _filter,
+                onSelected: (_) => setState(() => _filter = filter)),
+          ]),
+          const SizedBox(height: 16),
+          if (members.isEmpty) const Text('No documents match this filter.'),
+          for (final documents in members) ...[
+            Text(documents.first.isOwned ? 'My documents' : documents.first.owner.displayName ?? documents.first.owner.email,
+              style: Theme.of(context).textTheme.titleLarge),
+            Text(documents.first.owner.email),
+            ...documents.map((d) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(d.name, style: Theme.of(context).textTheme.titleMedium),
+                Text(d.documentType),
+                Text(d.expiryStatus, style: TextStyle(color: _statusColor(d.expiryStatus), fontWeight: FontWeight.bold)),
+                if (d.expiryDate != null) ...[
+                  Text('Expiry: ${_date(d.expiryDate!)}'),
+                  Text(d.expiryConfirmed ? 'Date confirmed by owner' : 'Awaiting owner confirmation • expiry alerts paused'),
+                  if (!d.isOwned) Text(d.remindersAllowed ? 'Owner allows shared expiry alerts' : 'Owner has not enabled shared expiry alerts'),
+                ],
+                Wrap(spacing: 8, children: [
+                  TextButton(onPressed: _busy.contains(d.id) ? null : () => _open(d.id), child: const Text('View document')),
+                  if (d.isOwned && d.expiryDate != null && !d.expiryConfirmed)
+                    TextButton(onPressed: _busy.contains(d.id) ? null : () => _confirm(d), child: const Text('Confirm expiry date')),
+                ]),
+              ],
+            )))),
+            const SizedBox(height: 16),
+          ],
+        ],
+      ],
+    ));
+  }
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Friends & Family dashboard'), actions: [
+      IconButton(tooltip: 'Refresh dashboard', onPressed: () { _load(); setState(() => _alertsVersion++); }, icon: const Icon(Icons.refresh)),
+    ], bottom: TabBar(controller: _tabs, tabs: const [Tab(text: 'Documents'), Tab(text: 'Alerts')])),
+    body: TabBarView(controller: _tabs, children: [
+      _dashboard(), FamilyAlertsPanel(key: ValueKey(_alertsVersion), service: _service, onOpenDocument: _open),
+    ]),
+  );
+}
+ + '{count}', style: Theme.of(context).textTheme.headlineMedium),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ]),
+    )));
+  }
+
   Widget _dashboard() {
     if (_loading) return const Center(child: CircularProgressIndicator());
     final groups = <String, List<FamilyDashboardDocument>>{};
