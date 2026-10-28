@@ -23,14 +23,17 @@ class _UnifiedRemindersPanelState extends State<UnifiedRemindersPanel> {
     _load();
   }
 
+  int _requestVersion = 0;
+
   Future<void> _load() async {
+    final version = ++_requestVersion;
     setState(() { _loading = true; _error = null; });
     try {
       final items = await widget.service.getUnifiedReminders(
         category: _category, days: _days);
-      if (mounted) setState(() { _items = items; _loading = false; });
+      if (mounted && version == _requestVersion) setState(() { _items = items; _loading = false; });
     } catch (_) {
-      if (mounted) setState(() {
+      if (mounted && version == _requestVersion) setState(() {
         _error = 'Unable to load smart reminders.';
         _loading = false;
       });
