@@ -79,12 +79,12 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
         {
             var applications = await db.VisaApplications.AsNoTracking()
                 .Where(a => a.UserId == user.Id && !a.Submitted
-                    && a.UpdatedAt >= now.AddDays(-30) && a.UpdatedAt <= now)
+                    && a.UpdatedAt >= now.AddDays(-30) && a.UpdatedAt <= now.AddDays(-3)
                 .Select(a => new { a.Id, a.TemplateId, a.UpdatedAt })
                 .ToListAsync();
             items.AddRange(applications.Select(a => new UnifiedReminderItem(
                 "visa:" + a.Id, "visa", "Visa application draft awaiting completion",
-                "Application template: " + a.TemplateId, a.UpdatedAt, a.Id)));
+                "Application template: " + a.TemplateId + " — saved " + a.UpdatedAt.ToString("yyyy-MM-dd"), now, a.Id)));
         }
 
         if (category is null or "occasion")
