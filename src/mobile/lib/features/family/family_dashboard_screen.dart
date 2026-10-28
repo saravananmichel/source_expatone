@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
+import 'family_occasions_screen.dart';
+import '../../core/services/family_service.dart';
 import '../documents/document_detail_screen.dart';
 import 'family_alerts_panel.dart';
 
@@ -16,6 +18,8 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final TabController _tabs;
   List<FamilyDashboardDocument> _documents = [];
+  List<FamilyRequest> _connections = [];
+  List<Map<String, dynamic>> _occasions = [];
   bool _loading = true;
   String? _error;
   String _filter = 'All';
@@ -28,6 +32,17 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     _tabs = TabController(length: 2, vsync: this)..addListener(_tabChanged);
     _load();
+    _loadOverview();
+  }
+
+  Future<void> _loadOverview() async {
+    try {
+      final connections = await _service.requests();
+      final occasions = await widget.documentService.apiClient.getList('/family-occasions');
+      if (mounted) setState(() { _connections = connections; _occasions = occasions; });
+    } catch (_) {
+      // Keep the document dashboard usable if companion feeds are unavailable.
+    }
   }
 
   void _tabChanged() {
@@ -49,7 +64,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _load();
+    if (state == AppLifecycleState.resumed) { _load(); _loadOverview(); }
   }
 
   Future<void> _load() async {
@@ -180,6 +195,30 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     );
   }
 
+  int _daysToOccasion(Map<String, dynamic> item) {
+    final dateString = item['occasionDate'] as String?;
+    if (dateString == null) return 999999;
+    final original = DateTime.tryParse(dateString);
+    if (original == null) return 999999;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    var next = DateTime(original.year, original.month, original.day);
+    if (item['repeatsAnnually'] == true) {
+      next = DateTime(now.year, original.month, original.day);
+      if (next.isBefore(today)) next = DateTime(now.year + 1, original.month, original.day);
+    }
+    return next.difference(today).inDays;
+  }
+
+  List<Map<String, dynamic>> _upcomingOccasions() {
+    final result = _occasions.where((item) {
+      final days = _daysToOccasion(item);
+      return days >= 0 && days <= 30;
+    }).toList();
+    result.sort((a, b) => _daysToOccasion(a).compareTo(_daysToOccasion(b)));
+    return result;
+  }
+
   Widget _dashboard() {
     if (_loading) return const Center(child: CircularProgressIndicator());
     final groups = <String, List<FamilyDashboardDocument>>{};
@@ -192,7 +231,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
         return a.first.owner.email.compareTo(b.first.owner.email);
       });
     return RefreshIndicator(
-      onRefresh: _load,
+      onRefresh: () async { await _load(); await _loadOverview(); },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -201,48 +240,72 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             Text(_error!),
             TextButton(onPressed: _load, child: const Text('Retry')),
           ] else ...[
-            Text(
-              'Friends & Family overview',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 6),
-            const Text('Securely shared documents and expiry alerts across your trusted circle.'),
+            Row(children: [
+              const Icon(Icons.people_alt_outlined, color: Color(0xFF2563EB), size: 26),
+              const SizedBox(width: 10),
+              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Friends & Family Dashboard', style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold)),
+                const Text('Overview of your trusted circle'),
+              ])),
+              FilledButton.icon(onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => FamilyOccasionsScreen(
+                  api: widget.documentService.apiClient))),
+                icon: const Icon(Icons.event_outlined), label: const Text('Occasions')),
+            ]),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
-                _summaryCard(
-                  context,
-                  'Shared documents',
-                  _documents.where((d) => !d.isOwned).length,
-                  Icons.folder_shared_outlined,
-                ),
-                _summaryCard(
-                  context,
-                  'Document owners',
-                  _documents
-                      .where((d) => !d.isOwned)
-                      .map((d) => d.owner.id)
-                      .toSet()
-                      .length,
-                  Icons.people_outline,
-                ),
-                _summaryCard(
-                  context,
-                  'Due within 30 days',
-                  _documents
-                      .where(
-                        (d) =>
-                            d.daysRemaining != null &&
-                            d.daysRemaining! >= 0 &&
-                            d.daysRemaining! <= 30,
-                      )
-                      .length,
-                  Icons.event_outlined,
-                ),
-              ],
-            ),
+            Wrap(spacing: 12, runSpacing: 12, children: [
+              _summaryCard(context, 'Connections',
+                _connections.where((r) => r.status == 'Accepted' && !r.isExpired).length,
+                Icons.people_outline),
+              _summaryCard(context, 'Shared Documents',
+                _documents.where((d) => !d.isOwned).length,
+                Icons.folder_shared_outlined),
+              _summaryCard(context, 'Pending Requests',
+                _connections.where((r) => r.status == 'Pending').length,
+                Icons.schedule_outlined),
+              _summaryCard(context, 'Upcoming Events', _upcomingOccasions().length,
+                Icons.event_available_outlined),
+            ]),
+            const SizedBox(height: 16),
+            LayoutBuilder(builder: (context, layout) => Wrap(
+              spacing: 12, runSpacing: 12, children: [
+                SizedBox(width: layout.maxWidth > 700 ? (layout.maxWidth - 12) / 2 : layout.maxWidth,
+                  child: Card(child: Padding(padding: const EdgeInsets.all(16),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(children: [
+                        const Icon(Icons.cake_outlined, color: Color(0xFFE11D48)),
+                        const SizedBox(width: 8),
+                        Text('Upcoming Celebrations', style: Theme.of(context).textTheme.titleMedium),
+                      ]),
+                      const SizedBox(height: 8),
+                      if (_upcomingOccasions().isEmpty)
+                        const Text('No upcoming occasions in the next 30 days'),
+                      for (final item in _upcomingOccasions().take(4))
+                        ListTile(dense: true, leading: const Icon(Icons.celebration_outlined),
+                          title: Text(item['title'] as String? ?? 'Occasion'),
+                          subtitle: Text(item['kind'] as String? ?? 'Event'),
+                          trailing: Text(_daysToOccasion(item).toString() + ' days')),
+                    ])))),
+                SizedBox(width: layout.maxWidth > 700 ? (layout.maxWidth - 12) / 2 : layout.maxWidth,
+                  child: Card(child: Padding(padding: const EdgeInsets.all(16),
+                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Row(children: [
+                        const Icon(Icons.history_outlined, color: Color(0xFF2563EB)),
+                        const SizedBox(width: 8),
+                        Text('Connection Activity', style: Theme.of(context).textTheme.titleMedium),
+                      ]),
+                      const SizedBox(height: 8),
+                      if (_connections.isEmpty) const Text('No connection activity'),
+                      for (final r in _connections.take(4))
+                        ListTile(dense: true,
+                          leading: Icon(r.status == 'Accepted' ? Icons.check_circle_outline : Icons.mark_email_unread_outlined),
+                          title: Text(r.isIncoming ? (r.requester.displayName ?? r.requester.email)
+                            : (r.recipient.displayName ?? r.recipient.email)),
+                          subtitle: Text('${r.relationship} • ${r.status}')),
+                    ])))),
+              ])),
+            const SizedBox(height: 16),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,
@@ -368,6 +431,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
           tooltip: 'Refresh dashboard',
           onPressed: () {
             _load();
+            _loadOverview();
             setState(() => _alertsVersion++);
           },
           icon: const Icon(Icons.refresh),
