@@ -65,6 +65,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
             var shares = await db.FamilyRequests.AsNoTracking()
                 .Where(r => r.RecipientUserId == user.Id
                     && r.StatusId == FamilyRequestStates.Accepted
+                    && r.AllowExpiryReminders
                     && r.AccessExpiresAt.HasValue
                     && r.AccessExpiresAt.Value > now && r.AccessExpiresAt.Value <= until)
                 .Select(r => new { r.Id, r.AccessExpiresAt, Contact = r.Requester.DisplayName ?? r.Requester.Email })
@@ -78,7 +79,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
         {
             var applications = await db.VisaApplications.AsNoTracking()
                 .Where(a => a.UserId == user.Id && !a.Submitted
-                    && a.UpdatedAt >= now.AddDays(-30))
+                    && a.UpdatedAt >= now.AddDays(-30) && a.UpdatedAt <= now)
                 .Select(a => new { a.Id, a.TemplateId, a.UpdatedAt })
                 .ToListAsync();
             items.AddRange(applications.Select(a => new UnifiedReminderItem(
