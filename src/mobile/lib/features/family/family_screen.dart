@@ -57,14 +57,14 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Family'), actions: [IconButton(
+    appBar: AppBar(title: const Text('Friends & Family'), actions: [IconButton(
       tooltip: 'Refresh', onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh))]),
     body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.all(16), physics: const AlwaysScrollableScrollPhysics(), children: [
         Card(child: ListTile(
           leading: const Icon(Icons.dashboard_outlined),
-          title: const Text('Family dashboard'),
+          title: const Text('Friends & Family dashboard'),
           subtitle: const Text('Documents by member, expiry dates and alerts'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
@@ -74,13 +74,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
           },
         )),
         const SizedBox(height: 16),
-        const Text('Request access to a family member’s documents', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Connect with friends & family', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        const Text('They choose which documents to share with you. Sharing is one-way and read-only.'),
+        const Text('Invite a trusted person. They decide whether to accept and which documents to share, for how long. Existing sharing permissions remain in place.'),
         const SizedBox(height: 16),
         TextField(controller: _email, keyboardType: TextInputType.emailAddress,
           enabled: !_busy, onChanged: (_) => setState(() => _found = null),
-          decoration: const InputDecoration(labelText: 'Exact registered email address', border: OutlineInputBorder())),
+          decoration: const InputDecoration(labelText: 'Registered email address (name search coming soon)', border: OutlineInputBorder())),
         const SizedBox(height: 8),
         FilledButton.icon(onPressed: _busy ? null : () => _run(() async {
           setState(() => _found = null);
@@ -97,7 +97,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (_busy) const LinearProgressIndicator(),
         if (_error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(_error!)),
         const SizedBox(height: 24),
-        const Text('Requests & access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Connections & document access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         if (_requests.isEmpty && _error == null) const Padding(padding: EdgeInsets.all(16), child: Text('No family requests yet.')),
         ..._requests.map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, children: [
