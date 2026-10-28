@@ -35,7 +35,7 @@ public sealed class NotificationDeliveryWorker(
         var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
         var now = DateTime.UtcNow;
         var occasions = await db.FamilyOccasions.AsNoTracking()
-            .Where(x => x.RemindersEnabled && x.OccasionDate <= now.AddDays(366))
+            .Where(x => x.RemindersEnabled && (x.RepeatsAnnually || x.OccasionDate <= now.AddDays(30)))
             .ToListAsync(ct);
 
         foreach (var occasion in occasions)
@@ -55,7 +55,7 @@ public sealed class NotificationDeliveryWorker(
                 }
             }
 
-            if (date.Date < now.Date || date.AddDays(-occasion.DaysBefore) > now)
+            if (date.Date < now.Date || date.AddDays(-occasion.DaysBefore).Date > now.Date)
                 continue;
 
             var preference = await db.NotificationPreferences.AsNoTracking()
