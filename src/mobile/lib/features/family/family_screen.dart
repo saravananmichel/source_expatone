@@ -92,7 +92,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
         const SizedBox(height: 16),
         TextField(controller: _email, keyboardType: TextInputType.emailAddress,
           enabled: !_busy, onChanged: (_) => setState(() => _found = null),
-          decoration: const InputDecoration(labelText: 'Registered email address (name search coming soon)', border: OutlineInputBorder())),
+          decoration: const InputDecoration(labelText: 'Registered email address', border: OutlineInputBorder())),
+        const SizedBox(height: 6),
+        const Text('To protect privacy, new connections are found by their complete registered email. You can search existing connections by name below.'),
         const SizedBox(height: 8),
         DropdownButtonFormField<String>(
           value: _relationship,
