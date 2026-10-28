@@ -49,6 +49,9 @@ public class UnifiedReminderAuthorizationTests
     [InlineData("visa")]
     [InlineData("occasion")]
     [InlineData("  DOCUMENT  ")]
+    [InlineData("all")]
+    [InlineData("  ALL  ")]
+    [InlineData("")]
     public async Task Get_SupportedCategoryWithoutIdentity_ReturnsUnauthorized(string category)
     {
         var result = await CreateController().Get(category: category);
