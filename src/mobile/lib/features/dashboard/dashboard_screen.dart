@@ -137,7 +137,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       backgroundColor: _pageBg,
       body: SafeArea(
-        child: RefreshIndicator(
+        child: Center(child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1440),
+          child: RefreshIndicator(
           onRefresh: _loadAll,
           child: ListView(
             padding: EdgeInsets.zero,
@@ -183,7 +185,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-        ),
+        ))),
       ),
     );
   }
@@ -237,34 +239,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
-          // Notification bell with dot
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: Stack(
-              children: [
-                Align(
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.notifications_outlined,
-                    color: _navy,
-                    size: 24,
-                  ),
-                ),
-                Positioned(
-                  right: 5,
-                  top: 5,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Colors.orange,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: _pageBg, width: 1.5),
-                    ),
-                  ),
-                ),
-              ],
+          IconButton(
+            tooltip: 'Open Reminder Center',
+            onPressed: () => widget.onNavigateToTab?.call(3),
+            icon: Badge(
+              isLabelVisible: _smartReminders.isNotEmpty,
+              smallSize: 8,
+              child: const Icon(Icons.notifications_outlined, color: _navy),
             ),
           ),
           const SizedBox(width: 8),
@@ -476,7 +457,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.folder_copy_outlined, const Color(0xFFE7EEFF), () => widget.onNavigateToTab?.call(1)),
       _homeSummaryCard('Friends & Family', 'Your trusted circle',
           Icons.people_alt_outlined, const Color(0xFFE3F5EE), () =>
-              widget.onOpenFeature?.call(DashboardFeature.family)),
+              widget.onOpenFeature != null
+                  ? widget.onOpenFeature!(DashboardFeature.family)
+                  : widget.onNavigateToTab?.call(4)),
       _homeSummaryCard('AI Government Assistant', 'Get guidance for your journey',
           Icons.auto_awesome_outlined, const Color(0xFFF2E8FF), () => widget.onNavigateToTab?.call(2)),
     ];
