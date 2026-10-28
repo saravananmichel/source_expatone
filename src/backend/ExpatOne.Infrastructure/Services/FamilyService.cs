@@ -35,7 +35,8 @@ public partial class FamilyService(ExpatOneDbContext db)
         var allowed = new HashSet<string>(StringComparer.Ordinal) { "Spouse", "Daughter", "Son", "Father", "Mother", "Brother", "Sister", "Friend", "Colleague", "Guardian", "Other" };
         if (!allowed.Contains(relationship)) throw new ArgumentException("Invalid relationship.");
         var target = await SearchAsync(userId, email);
-        if (await db.FamilyRequests.AnyAsync(x => x.RequesterUserId == userId && x.RecipientUserId == target.Id &&
+        if (await db.FamilyRequests.AnyAsync(x => ((x.RequesterUserId == userId && x.RecipientUserId == target.Id) ||
+             (x.RequesterUserId == target.Id && x.RecipientUserId == userId)) &&
             (x.StatusId == FamilyRequestStates.Pending || x.StatusId == FamilyRequestStates.Accepted)))
             throw new InvalidOperationException("A pending or accepted request already exists.");
         var request = new FamilyRequest { RequesterUserId = userId, RecipientUserId = target.Id, Relationship = relationship };
