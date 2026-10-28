@@ -112,6 +112,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (_found != null) Card(child: ListTile(
           title: Text(_found!.displayName ?? _found!.email), subtitle: Text(_found!.email),
           trailing: TextButton(onPressed: _busy ? null : () => _run(() async {
+            final confirmed = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
+              title: const Text('Send connection invitation?'),
+              content: Text('Invite ${_found!.displayName ?? _found!.email} as $_relationship? They will choose whether to accept and which documents to share.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Send invitation')),
+              ],
+            ));
+            if (confirmed != true) return;
             await _service.send(_found!.email, relationship: _relationship);
             if (mounted) setState(() => _found = null);
             await _load();
