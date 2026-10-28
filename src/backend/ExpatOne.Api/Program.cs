@@ -307,6 +307,8 @@ if (!isDatabaseMigration && FirebaseApp.DefaultInstance is null)
 
 builder.Services.AddScoped<IReminderService, ReminderService>();
 builder.Services.AddHostedService<ReminderProcessorService>();
+// Disabled by default; enable only after notification schema migration is applied.
+builder.Services.AddHostedService<ExpatOne.Api.Services.NotificationDeliveryWorker>();
 builder.Services.AddHostedService<ExpatOne.Api.Services.CorporatePermitAlertWorker>();
 
 builder.Services.AddAuthentication(FirebaseAuthenticationHandler.SchemeName)

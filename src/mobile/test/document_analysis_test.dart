@@ -470,10 +470,23 @@ Date of Expiry
           findsOneWidget,
         );
 
-        await tester.tap(find.text('View original extracted text'));
+        final originalTextButton = find.text('View original extracted text');
+
+        await tester.scrollUntilVisible(
+          originalTextButton,
+          200,
+          scrollable: find.descendant(
+            of: find.byType(ListView).first,
+            matching: find.byType(Scrollable),
+          ).first,
+        );
+        await tester.ensureVisible(originalTextButton);
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('Place of Birth'), findsOneWidget);
+        await tester.tap(originalTextButton);
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('Place of Birth'), findsNWidgets(2));
       },
     );
   });

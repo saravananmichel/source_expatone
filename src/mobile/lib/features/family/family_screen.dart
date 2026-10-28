@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'family_dashboard_screen.dart';
+import 'family_occasions_screen.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
 
@@ -11,6 +12,9 @@ class FamilyScreen extends StatefulWidget {
 }
 class _FamilyScreenState extends State<FamilyScreen> {
   final _email = TextEditingController();
+  final _connectionSearch = TextEditingController();
+  String _relationship = 'Friend';
+  String _statusFilter = 'All';
   List<FamilyRequest> _requests = [];
   FamilyUser? _found;
   bool _loading = true, _busy = false;
@@ -19,7 +23,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   void initState() { super.initState(); _load(); }
   @override
-  void dispose() { _email.dispose(); super.dispose(); }
+  void dispose() { _email.dispose(); _connectionSearch.dispose(); super.dispose(); }
   Future<void> _load() async {
     try {
       final requests = await _service.requests();
@@ -57,14 +61,23 @@ class _FamilyScreenState extends State<FamilyScreen> {
   }
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Family'), actions: [IconButton(
+    appBar: AppBar(title: const Text('Friends & Family'), actions: [IconButton(
       tooltip: 'Refresh', onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh))]),
     body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.all(16), physics: const AlwaysScrollableScrollPhysics(), children: [
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          Chip(avatar: const Icon(Icons.people_outline, size: 18),
+            label: Text('Active: ${_requests.where((r) => r.status == 'Accepted' && !r.isExpired).length}')),
+          Chip(avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
+            label: Text('Incoming: ${_requests.where((r) => r.status == 'Pending' && r.isIncoming).length}')),
+          Chip(avatar: const Icon(Icons.outgoing_mail, size: 18),
+            label: Text('Sent: ${_requests.where((r) => r.status == 'Pending' && !r.isIncoming).length}')),
+        ]),
+        const SizedBox(height: 12),
         Card(child: ListTile(
           leading: const Icon(Icons.dashboard_outlined),
-          title: const Text('Family dashboard'),
+          title: const Text('Friends & Family dashboard'),
           subtitle: const Text('Documents by member, expiry dates and alerts'),
           trailing: const Icon(Icons.chevron_right),
           onTap: () async {
@@ -73,14 +86,32 @@ class _FamilyScreenState extends State<FamilyScreen> {
             if (mounted) await _load();
           },
         )),
+        Card(child: ListTile(
+          leading: const Icon(Icons.event_outlined),
+          title: const Text('Birthdays & special occasions'),
+          subtitle: const Text('Manage anniversaries, birthdays and reminders'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => Navigator.push<void>(context, MaterialPageRoute(
+            builder: (_) => FamilyOccasionsScreen(api: widget.documentService.apiClient))),
+        )),
         const SizedBox(height: 16),
-        const Text('Request access to a family member’s documents', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Connect with friends & family', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        const Text('They choose which documents to share with you. Sharing is one-way and read-only.'),
+        const Text('Invite a trusted person. They decide whether to accept and which documents to share, for how long. Existing sharing permissions remain in place.'),
         const SizedBox(height: 16),
         TextField(controller: _email, keyboardType: TextInputType.emailAddress,
           enabled: !_busy, onChanged: (_) => setState(() => _found = null),
-          decoration: const InputDecoration(labelText: 'Exact registered email address', border: OutlineInputBorder())),
+          decoration: const InputDecoration(labelText: 'Registered email address', border: OutlineInputBorder())),
+        const SizedBox(height: 6),
+        const Text('To protect privacy, new connections are found by their complete registered email. You can search existing connections by name below.'),
+        const SizedBox(height: 8),
+        DropdownButtonFormField<String>(
+          value: _relationship,
+          decoration: const InputDecoration(labelText: 'Relationship', border: OutlineInputBorder()),
+          items: const ['Spouse', 'Daughter', 'Son', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Colleague', 'Guardian', 'Other']
+            .map((name) => DropdownMenuItem(value: name, child: Text(name))).toList(),
+          onChanged: _busy ? null : (value) { if (value != null) setState(() => _relationship = value); },
+        ),
         const SizedBox(height: 8),
         FilledButton.icon(onPressed: _busy ? null : () => _run(() async {
           setState(() => _found = null);
@@ -90,19 +121,45 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (_found != null) Card(child: ListTile(
           title: Text(_found!.displayName ?? _found!.email), subtitle: Text(_found!.email),
           trailing: TextButton(onPressed: _busy ? null : () => _run(() async {
-            await _service.send(_found!.email);
+            final confirmed = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
+              title: const Text('Send connection invitation?'),
+              content: Text('Invite ${_found!.displayName ?? _found!.email} as $_relationship? They will choose whether to accept and which documents to share.'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
+                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Send invitation')),
+              ],
+            ));
+            if (confirmed != true) return;
+            await _service.send(_found!.email, relationship: _relationship);
             if (mounted) setState(() => _found = null);
             await _load();
           }, success: 'Request sent'), child: const Text('Send request')))),
         if (_busy) const LinearProgressIndicator(),
         if (_error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(_error!)),
         const SizedBox(height: 24),
-        const Text('Requests & access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Connections & document access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final status in const ['All', 'Pending', 'Accepted', 'Rejected', 'Cancelled', 'Revoked'])
+            ChoiceChip(label: Text(status), selected: _statusFilter == status,
+              onSelected: (_) => setState(() => _statusFilter = status)),
+        ]),
+        const SizedBox(height: 8),
+        TextField(controller: _connectionSearch, onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(labelText: 'Search connections by name or email',
+            prefixIcon: Icon(Icons.search), border: OutlineInputBorder())),
+        const SizedBox(height: 8),
         if (_requests.isEmpty && _error == null) const Padding(padding: EdgeInsets.all(16), child: Text('No family requests yet.')),
-        ..._requests.map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
+        ..._requests.where((r) {
+          final contact = r.isIncoming ? r.requester : r.recipient;
+          final query = _connectionSearch.text.trim().toLowerCase();
+          return (_statusFilter == 'All' || r.status == _statusFilter) &&
+            (query.isEmpty || contact.email.toLowerCase().contains(query) ||
+            (contact.displayName?.toLowerCase().contains(query) ?? false));
+        }).map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text((r.isIncoming ? r.requester : r.recipient).email, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.status}'),
+            Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.relationship} • ${r.status}'),
             if (r.status == 'Accepted' && !r.isExpired) Text('${r.documentIds.length} document(s) shared ${r.isIncoming ? "by you" : "with you"}'),
             if (r.status == 'Accepted') Text(r.isExpired
               ? 'Access expired — owner can renew sharing'
@@ -138,11 +195,12 @@ class _GrantScreenState extends State<_GrantScreen> {
   final Set<String> _selected = {};
   bool _loading = true, _saving = false;
   late bool _allowExpiryReminders;
+  late bool _allowVisaApplicationUse;
   DateTime? _accessExpiresAt;
   bool _expiryChanged = false;
   String? _error;
   @override
-  void initState() { super.initState(); _allowExpiryReminders = widget.request.allowExpiryReminders; _accessExpiresAt = widget.request.accessExpiresAt?.toLocal(); _load(); }
+  void initState() { super.initState(); _allowExpiryReminders = widget.request.allowExpiryReminders; _allowVisaApplicationUse = widget.request.allowVisaApplicationUse; _accessExpiresAt = widget.request.accessExpiresAt?.toLocal(); _load(); }
   Future<void> _load() async {
     setState(() { _loading = true; _error = null; });
     try {
@@ -165,7 +223,7 @@ class _GrantScreenState extends State<_GrantScreen> {
     try {
       final service = widget.documentService.familyService;
       if (widget.request.status == 'Pending') {
-        await service.respond(widget.request, true, _selected.toList(), allowExpiryReminders: _allowExpiryReminders,
+        await service.respond(widget.request, true, _selected.toList(), allowExpiryReminders: _allowExpiryReminders, allowVisaApplicationUse: _allowVisaApplicationUse,
           accessExpiresAt: _accessExpiresAt, updateAccessExpiry: _expiryChanged);
       } else {
         await service.update(widget.request, _selected.toList(), allowExpiryReminders: _allowExpiryReminders,
@@ -215,7 +273,7 @@ class _GrantScreenState extends State<_GrantScreen> {
               Text('Access ends: ${_formatAccessDate(_accessExpiresAt!)}'),
               Wrap(spacing: 8, children: [
                 for (final choice in const {'1 hour': Duration(hours: 1), '24 hours': Duration(days: 1),
-                    '7 days': Duration(days: 7), '30 days': Duration(days: 30)}.entries)
+                    '7 days': Duration(days: 7), '30 days': Duration(days: 30), '90 days': Duration(days: 90)}.entries)
                   ActionChip(label: Text(choice.key), onPressed: _saving ? null : () => setState(() {
                     _accessExpiresAt = DateTime.now().add(choice.value); _expiryChanged = true;
                   })),
@@ -230,6 +288,12 @@ class _GrantScreenState extends State<_GrantScreen> {
             subtitle: const Text('This member can receive in-app alerts for selected documents after you confirm their expiry dates.'),
             value: _allowExpiryReminders,
             onChanged: _saving ? null : (value) => setState(() => _allowExpiryReminders = value),
+          ),
+          SwitchListTile(
+            title: const Text('Allow use in visa applications'),
+            subtitle: const Text('Separate permission: the connected person may use the selected shared documents in visa applications while sharing remains active. Off by default.'),
+            value: _allowVisaApplicationUse,
+            onChanged: _saving ? null : (value) => setState(() => _allowVisaApplicationUse = value),
           ),
           CheckboxListTile(title: const Text('Select all current documents'),
             value: _docs.isNotEmpty && _selected.length == _docs.length,

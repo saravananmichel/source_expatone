@@ -56,12 +56,19 @@ void main() {
     reminderService = MockReminderService();
   });
 
+  Future<void> selectMyRemindersTab(WidgetTester tester) async {
+    final tab = find.text('My reminders');
+    expect(tab, findsOneWidget);
+    await tester.tap(tab);
+    await tester.pumpAndSettle();
+  }
   group('RemindersScreen', () {
     testWidgets('shows empty state when no reminders', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: RemindersScreen(reminderService: reminderService),
       ));
       await tester.pumpAndSettle();
+      await selectMyRemindersTab(tester);
 
       expect(find.text('No active reminders'), findsOneWidget);
     });
@@ -87,6 +94,7 @@ void main() {
         home: RemindersScreen(reminderService: reminderService),
       ));
       await tester.pumpAndSettle();
+      await selectMyRemindersTab(tester);
 
       expect(find.text('My Passport'), findsOneWidget);
       expect(find.text('Passport'), findsOneWidget);
@@ -101,6 +109,7 @@ void main() {
         home: RemindersScreen(reminderService: reminderService),
       ));
       await tester.pumpAndSettle();
+      await selectMyRemindersTab(tester);
 
       expect(find.text('Unable to load reminders'), findsOneWidget);
       expect(find.text('Retry'), findsOneWidget);

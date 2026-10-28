@@ -39,13 +39,25 @@ void main() {
     Map<String, dynamic>? body;
     final service = DocumentService(ApiClient(httpClient: MockClient((request) async {
       if (request.method == 'POST') { body = jsonDecode(request.body) as Map<String, dynamic>; return http.Response('{}', 200); }
-      if (request.url.path.endsWith('/family/requests')) return http.Response(jsonEncode([requestJson(status: 'Pending')]), 200);
+      if (request.method == 'GET' && request.url.path.endsWith('/family/requests')) {
+        final payload = [requestJson(status: 'Pending')];
+        return http.Response(jsonEncode(payload), 200);
+      }
       return http.Response('[]', 200);
     })));
-    await tester.pumpWidget(MaterialApp(home: FamilyScreen(documentService: service)));
+
+    await tester.pumpWidget(
+      MaterialApp(home: FamilyScreen(documentService: service)),
+    );
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Review & accept'));
-    await tester.tap(find.text('Review & accept')); await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('Review & accept'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Review & accept'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Temporary access')); await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('1 hour'));
     final before = DateTime.now();

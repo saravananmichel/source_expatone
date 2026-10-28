@@ -36,7 +36,12 @@ void main() {
     final service = DocumentService(ApiClient(httpClient: client));
     await tester.pumpWidget(MaterialApp(home: FamilyScreen(documentService: service)));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Review & accept'));
+    await tester.scrollUntilVisible(
+      find.text('Review & accept'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Review & accept'));
     await tester.pumpAndSettle();
     expect(find.text('Other family file'), findsNothing);
