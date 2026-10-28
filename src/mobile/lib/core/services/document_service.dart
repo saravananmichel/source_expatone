@@ -301,6 +301,7 @@ class UploadUrlResponse {
 class DocumentService {
   VisaService get visaService => VisaService(_apiClient);
   FamilyService get familyService => FamilyService(_apiClient);
+  ApiClient get apiClient => _apiClient;
   final ApiClient _apiClient;
   final _analysisProgress = StreamController<Map<String, String>>.broadcast();
   Stream<Map<String, String>> get analysisProgress => _analysisProgress.stream;
