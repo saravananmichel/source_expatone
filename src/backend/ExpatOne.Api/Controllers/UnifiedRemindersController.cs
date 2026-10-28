@@ -21,6 +21,8 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
         var uid = User.FindFirstValue("firebase_uid") ?? throw new UnauthorizedAccessException();
         var user = await users.FindOrCreateByExternalIdentityAsync("firebase", uid,
             User.FindFirstValue(ClaimTypes.Email) ?? "", User.FindFirstValue(ClaimTypes.Name));
+        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa" or "occasion"))
+            return BadRequest("Unsupported reminder category.");
         var now = DateTime.UtcNow;
         var until = now.AddDays(days);
         var items = new List<UnifiedReminderItem>();
@@ -113,9 +115,6 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                         occasion.Title, occasion.Kind + " coming up on " + date.ToString("yyyy-MM-dd"), date, occasion.Id));
             }
         }
-
-        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa" or "occasion"))
-            return BadRequest("Unsupported reminder category.");
 
         return Ok(items.OrderBy(i => i.DueAtUtc).ThenBy(i => i.Id).ToList());
     }
