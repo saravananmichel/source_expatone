@@ -43,6 +43,8 @@ public class FamilyVisaConsentTests
     [InlineData(true, 2, false, true)]
     [InlineData(false, 2, false, false)]
     [InlineData(true, 1, false, false)]
+    [InlineData(true, 3, false, false)]
+    [InlineData(true, 4, false, false)]
     [InlineData(true, 5, false, false)]
     [InlineData(true, 2, true, false)]
     public async Task SharedVisaDocument_RequiresActiveConsent(
