@@ -1,6 +1,19 @@
 import '../networking/api_client.dart';
 import 'family_service.dart';
 
+class UnifiedReminder {
+  final String id, category, title, sourceId;
+  final String? description;
+  final DateTime dueAtUtc;
+  UnifiedReminder.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as String,
+        category = json['category'] as String,
+        title = json['title'] as String,
+        sourceId = json['sourceId'] as String,
+        description = json['description'] as String?,
+        dueAtUtc = DateTime.parse(json['dueAtUtc'] as String).toUtc();
+}
+
 class ReminderItem {
   final String id;
   final String documentId;
@@ -57,6 +70,14 @@ class ReminderService {
   ReminderService(this._apiClient);
 
   FamilyService get familyService => FamilyService(_apiClient);
+
+  Future<List<UnifiedReminder>> getUnifiedReminders({String? category, int days = 90}) async {
+    final result = await _apiClient.getList('/unified-reminders', queryParams: {
+      'days': days.toString(),
+      if (category != null && category != 'all') 'category': category,
+    });
+    return result.map(UnifiedReminder.fromJson).toList();
+  }
 
   Future<List<ReminderItem>> getReminders() async {
     final response = await _apiClient.getList('/reminders');
