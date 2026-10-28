@@ -29,6 +29,23 @@ public sealed class NotificationDeliveryWorker(
         } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 
+    public static DateTime NextOccurrence(DateTime original, bool annually, DateTime now)
+    {
+        if (!annually) return original;
+        var year = Math.Max(now.Year, original.Year);
+        var day = Math.Min(original.Day, DateTime.DaysInMonth(year, original.Month));
+        var occurrence = new DateTime(year, original.Month, day,
+            original.Hour, original.Minute, original.Second, DateTimeKind.Utc);
+        if (occurrence.Date < now.Date)
+        {
+            year++;
+            day = Math.Min(original.Day, DateTime.DaysInMonth(year, original.Month));
+            occurrence = new DateTime(year, original.Month, day,
+                original.Hour, original.Minute, original.Second, DateTimeKind.Utc);
+        }
+        return occurrence;
+    }
+
     private async Task DeliverOccasions(CancellationToken ct)
     {
         await using var scope = scopes.CreateAsyncScope();
@@ -41,20 +58,7 @@ public sealed class NotificationDeliveryWorker(
         foreach (var occasion in occasions)
         {
             ct.ThrowIfCancellationRequested();
-            var date = occasion.OccasionDate;
-            if (occasion.RepeatsAnnually)
-            {
-                var year = Math.Max(now.Year, date.Year);
-                var day = Math.Min(date.Day, DateTime.DaysInMonth(year, date.Month));
-                date = new DateTime(year, date.Month, day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
-                if (date.Date < now.Date)
-                {
-                    year++;
-                    day = Math.Min(occasion.OccasionDate.Day, DateTime.DaysInMonth(year, date.Month));
-                    date = new DateTime(year, date.Month, day, date.Hour, date.Minute, date.Second, DateTimeKind.Utc);
-                }
-            }
-
+            var date = NextOccurrence(occasion.OccasionDate, occasion.RepeatsAnnually, now);
             if (date.Date < now.Date || date.AddDays(-occasion.DaysBefore).Date > now.Date)
                 continue;
 
