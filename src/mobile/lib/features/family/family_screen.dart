@@ -71,194 +71,250 @@ class _FamilyScreenState extends State<FamilyScreen> {
 
   Future<void> _inviteDialog() async {
     final email = TextEditingController();
-    var relationship = 'Friend';
-    final result = await showDialog<(String, String)>(context: context,
-      builder: (dialogContext) => StatefulBuilder(builder: (dialogContext, update) => AlertDialog(
-        title: const Text('Add a connection'),
-        content: SizedBox(width: 420, child: Column(mainAxisSize: MainAxisSize.min, children: [
-          const Text('Step 1 of 2 · Find a registered user and choose your relationship.'),
-          const SizedBox(height: 16),
-          TextField(controller: email, keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(labelText: 'Registered email', prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder())),
-          const SizedBox(height: 14),
-          DropdownButtonFormField<String>(value: relationship,
-            decoration: const InputDecoration(labelText: 'Relationship', border: OutlineInputBorder()),
-            items: const ['Spouse', 'Daughter', 'Son', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Colleague', 'Guardian', 'Other']
-              .map((v) => DropdownMenuItem(value: v, child: Text(v))).toList(),
-            onChanged: (v) { if (v != null) update(() => relationship = v); }),
-        ])),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
-          FilledButton(onPressed: () {
-            if (!email.text.contains('@')) return;
-            Navigator.pop(dialogContext, (email.text.trim(), relationship));
-          }, child: const Text('Review invitation')),
-        ],
-      )));
+    final message = TextEditingController();
+    FamilyUser? found;
+    String relationship = 'Friend';
+    int step = 0;
+    bool searching = false;
+    String? error;
+    final result = await showDialog<(String, String)>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, update) => AlertDialog(
+          title: Row(children: [
+            const Expanded(child: Text('Add a Connection')),
+            IconButton(icon: const Icon(Icons.close), tooltip: 'Close',
+              onPressed: () => Navigator.pop(context)),
+          ]),
+          content: SizedBox(width: 460, child: SingleChildScrollView(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                for (var i = 0; i < 3; i++)
+                  Expanded(child: Column(children: [
+                    CircleAvatar(radius: 14, backgroundColor: i <= step ? const Color(0xFF1264EF) : const Color(0xFFE8EEF8),
+                      child: Text('${i + 1}', style: TextStyle(color: i <= step ? Colors.white : Colors.blueGrey, fontSize: 12))),
+                    const SizedBox(height: 4),
+                    Text(['Search User', 'Relationship', 'Send Invite'][i], style: const TextStyle(fontSize: 11)),
+                  ])),
+              ]),
+              const SizedBox(height: 20),
+              if (step == 0) ...[
+                const Text('Find a registered ExpatOne user'),
+                const SizedBox(height: 8),
+                TextField(controller: email, keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.search), hintText: 'Enter full registered email',
+                    border: OutlineInputBorder())),
+                const SizedBox(height: 8),
+                const Text('For privacy, searches require the complete registered email.',
+                  style: TextStyle(fontSize: 12, color: Colors.blueGrey)),
+                if (searching) const LinearProgressIndicator(),
+                if (found != null) Card(child: ListTile(
+                  leading: const CircleAvatar(child: Icon(Icons.person)),
+                  title: Text(found!.displayName ?? found!.email),
+                  subtitle: Text(found!.email),
+                  trailing: const Icon(Icons.check_circle, color: Colors.green),
+                )),
+              ],
+              if (step == 1) ...[
+                Text('Connecting with ${found?.displayName ?? found?.email ?? email.text}',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+                const SizedBox(height: 12),
+                const Text('Select relationship'),
+                const SizedBox(height: 8),
+                ...['Spouse', 'Daughter', 'Son', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Colleague', 'Guardian', 'Other']
+                  .map((r) => RadioListTile<String>(
+                    dense: true, title: Text(r), value: r, groupValue: relationship,
+                    onChanged: (value) => update(() => relationship = value ?? relationship))),
+              ],
+              if (step == 2) ...[
+                ListTile(leading: const Icon(Icons.person_outline),
+                  title: Text(found?.displayName ?? email.text), subtitle: Text(email.text)),
+                ListTile(leading: const Icon(Icons.favorite_outline),
+                  title: Text(relationship), subtitle: const Text('Relationship')),
+                TextField(controller: message, maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Personal message (optional)',
+                    hintText: 'Message support requires an API update',
+                    border: OutlineInputBorder())),
+                const SizedBox(height: 6),
+                const Text('Personal messages are not sent yet; the current invitation API only stores email and relationship.',
+                  style: TextStyle(fontSize: 12, color: Colors.blueGrey)),
+              ],
+              if (error != null) Padding(padding: const EdgeInsets.only(top: 12),
+                child: Text(error!, style: const TextStyle(color: Colors.red))),
+            ]),
+          )),
+          actions: [
+            TextButton(onPressed: () {
+              if (step == 0) Navigator.pop(context);
+              else update(() { step--; error = null; });
+            }, child: Text(step == 0 ? 'Cancel' : 'Back')),
+            FilledButton(
+              onPressed: searching ? null : () async {
+                if (step == 0) {
+                  if (!email.text.trim().contains('@')) {
+                    update(() => error = 'Enter a registered email.'); return;
+                  }
+                  update(() { searching = true; error = null; found = null; });
+                  try {
+                    final user = await _service.search(email.text.trim());
+                    if (!context.mounted) return;
+                    update(() { found = user; step = 1; searching = false; });
+                  } catch (_) {
+                    if (context.mounted) update(() { searching = false; error = 'User not found or search unavailable.'; });
+                  }
+                } else if (step == 1) {
+                  update(() { step = 2; error = null; });
+                } else {
+                  Navigator.pop(context, (email.text.trim(), relationship));
+                }
+              },
+              child: Text(step == 2 ? 'Send Invite' : 'Next'),
+            ),
+          ],
+        ),
+      ),
+    );
     email.dispose();
+    message.dispose();
     if (result == null || !mounted) return;
-    final confirmed = await showDialog<bool>(context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Send invitation?'),
-        content: Text('Invite ${result.$1} as ${result.$2}? They can accept or decline and control their own document sharing.'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Back')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Send invite')),
-        ]));
-    if (confirmed == true && mounted) {
-      await _run(() async { await _service.send(result.$1, relationship: result.$2); await _load(); },
-        success: 'Invitation sent');
-    }
+    await _run(() async {
+      await _service.send(result.$1, relationship: result.$2);
+      await _load();
+    }, success: 'Invitation sent');
   }
 
+  Widget _shortcut(String title, String subtitle, IconData icon, VoidCallback onTap) =>
+    Card(child: ListTile(leading: Icon(icon, color: const Color(0xFF2563EB)),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: Text(subtitle), trailing: const Icon(Icons.chevron_right),
+      onTap: onTap));
+
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Friends & Family'), actions: [IconButton(
-      tooltip: 'Refresh', onPressed: _busy ? null : _load, icon: const Icon(Icons.refresh))]),
-    body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
-      onRefresh: _load,
-      child: ListView(padding: const EdgeInsets.all(16), physics: const AlwaysScrollableScrollPhysics(), children: [
-        Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [Color(0xFF183C9A), Color(0xFF2477D4)]),
-            borderRadius: BorderRadius.circular(22)),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            const Icon(Icons.people_alt_rounded, size: 32, color: Colors.white),
-            const SizedBox(height: 10),
-            const Text('Your trusted circle, connected across borders',
-              style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 7),
-            const Text('Manage invitations, relationships and secure document access.',
-              style: TextStyle(color: Colors.white70)),
+  Widget build(BuildContext context) {
+    final connected = _requests.where((r) => r.status == 'Accepted' && !r.isExpired).toList();
+    final pending = _requests.where((r) => r.status == 'Pending').toList();
+    final shared = connected.fold<int>(0, (count, r) => count + r.documentIds.length);
+    final expiring = connected.where((r) => r.accessExpiresAt != null &&
+      r.accessExpiresAt!.isBefore(DateTime.now().add(const Duration(days: 30)))).length;
+    final query = _connectionSearch.text.trim().toLowerCase();
+    final filtered = _requests.where((r) {
+      final contact = r.isIncoming ? r.requester : r.recipient;
+      final relationship = r.relationship.toLowerCase();
+      final fits = switch (_statusFilter) {
+        'Family' => relationship != 'friend' && relationship != 'colleague',
+        'Friends' => relationship == 'friend' || relationship == 'colleague',
+        'Pending' => r.status == 'Pending',
+        _ => true,
+      };
+      return fits && (query.isEmpty || contact.email.toLowerCase().contains(query) ||
+        (contact.displayName?.toLowerCase().contains(query) ?? false));
+    }).toList();
+    return Scaffold(
+      appBar: AppBar(title: const Text('Friends & Family'),
+        actions: [IconButton(tooltip: 'Refresh', onPressed: _busy ? null : _load,
+          icon: const Icon(Icons.refresh))]),
+      body: _loading ? const Center(child: CircularProgressIndicator()) :
+        RefreshIndicator(onRefresh: _load, child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          children: [
+            LayoutBuilder(builder: (context, bounds) => Wrap(
+              alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12, runSpacing: 12, children: [
+                Column(crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Friends & Family', style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold, color: const Color(0xFF102552))),
+                    const Text('Your trusted circle, connected across borders'),
+                  ]),
+                FilledButton.icon(onPressed: _busy ? null : _inviteDialog,
+                  icon: const Icon(Icons.add), label: const Text('Add Connection')),
+              ])),
             const SizedBox(height: 16),
-            FilledButton.icon(
-              style: FilledButton.styleFrom(backgroundColor: Colors.white, foregroundColor: const Color(0xFF174AA8)),
-              onPressed: () => _inviteDialog(),
-              icon: const Icon(Icons.person_add_alt_1),
-              label: const Text('Add connection')),
-          ])),
-        const SizedBox(height: 16),
-        Wrap(spacing: 12, runSpacing: 12, children: [
-          _metric('Connections', _requests.where((r) => r.status == 'Accepted' && !r.isExpired).length,
-            Icons.people_alt_outlined, const Color(0xFFE7F0FF), const Color(0xFF1456BE)),
-          _metric('Shared documents', _requests.where((r) => r.status == 'Accepted' && !r.isExpired)
-            .fold<int>(0, (count, r) => count + r.documentIds.length),
-            Icons.folder_shared_outlined, const Color(0xFFE5F7F1), const Color(0xFF008A68)),
-          _metric('Pending requests', _requests.where((r) => r.status == 'Pending').length,
-            Icons.schedule_outlined, const Color(0xFFF4EBFF), const Color(0xFF8547C7)),
-          _metric('Access expiring', _requests.where((r) => r.status == 'Accepted' && !r.isExpired &&
-            r.accessExpiresAt != null && r.accessExpiresAt!.isBefore(DateTime.now().add(const Duration(days: 30)))).length,
-            Icons.event_busy_outlined, const Color(0xFFFFECEA), const Color(0xFFD24A39)),
-        ]),
-        const SizedBox(height: 12),
-        Card(child: ListTile(
-          leading: const Icon(Icons.dashboard_outlined),
-          title: const Text('Friends & Family dashboard'),
-          subtitle: const Text('Documents by member, expiry dates and alerts'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () async {
-            await Navigator.push<void>(context, MaterialPageRoute(builder: (_) =>
-              FamilyDashboardScreen(documentService: widget.documentService)));
-            if (mounted) await _load();
-          },
-        )),
-        Card(child: ListTile(
-          leading: const Icon(Icons.event_outlined),
-          title: const Text('Birthdays & special occasions'),
-          subtitle: const Text('Manage anniversaries, birthdays and reminders'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push<void>(context, MaterialPageRoute(
-            builder: (_) => FamilyOccasionsScreen(api: widget.documentService.apiClient))),
-        )),
-        const SizedBox(height: 16),
-        const Text('Connect with friends & family', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        const Text('Invite a trusted person. They decide whether to accept and which documents to share, for how long. Existing sharing permissions remain in place.'),
-        const SizedBox(height: 16),
-        TextField(controller: _email, keyboardType: TextInputType.emailAddress,
-          enabled: !_busy, onChanged: (_) => setState(() => _found = null),
-          decoration: const InputDecoration(labelText: 'Registered email address', border: OutlineInputBorder())),
-        const SizedBox(height: 6),
-        const Text('To protect privacy, new connections are found by their complete registered email. You can search existing connections by name below.'),
-        const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
-          value: _relationship,
-          decoration: const InputDecoration(labelText: 'Relationship', border: OutlineInputBorder()),
-          items: const ['Spouse', 'Daughter', 'Son', 'Father', 'Mother', 'Brother', 'Sister', 'Friend', 'Colleague', 'Guardian', 'Other']
-            .map((name) => DropdownMenuItem(value: name, child: Text(name))).toList(),
-          onChanged: _busy ? null : (value) { if (value != null) setState(() => _relationship = value); },
-        ),
-        const SizedBox(height: 8),
-        FilledButton.icon(onPressed: _busy ? null : () => _run(() async {
-          setState(() => _found = null);
-          final user = await _service.search(_email.text);
-          if (mounted) setState(() => _found = user);
-        }), icon: const Icon(Icons.search), label: const Text('Search')),
-        if (_found != null) Card(child: ListTile(
-          title: Text(_found!.displayName ?? _found!.email), subtitle: Text(_found!.email),
-          trailing: TextButton(onPressed: _busy ? null : () => _run(() async {
-            final confirmed = await showDialog<bool>(context: context, builder: (dialogContext) => AlertDialog(
-              title: const Text('Send connection invitation?'),
-              content: Text('Invite ${_found!.displayName ?? _found!.email} as $_relationship? They will choose whether to accept and which documents to share.'),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(dialogContext, false), child: const Text('Cancel')),
-                FilledButton(onPressed: () => Navigator.pop(dialogContext, true), child: const Text('Send invitation')),
-              ],
-            ));
-            if (confirmed != true) return;
-            await _service.send(_found!.email, relationship: _relationship);
-            if (mounted) setState(() => _found = null);
-            await _load();
-          }, success: 'Request sent'), child: const Text('Send request')))),
-        if (_busy) const LinearProgressIndicator(),
-        if (_error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(_error!)),
-        const SizedBox(height: 24),
-        const Text('Connections & document access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 8),
-        Wrap(spacing: 8, runSpacing: 8, children: [
-          for (final status in const ['All', 'Pending', 'Accepted', 'Rejected', 'Cancelled', 'Revoked'])
-            ChoiceChip(label: Text(status), selected: _statusFilter == status,
-              onSelected: (_) => setState(() => _statusFilter = status)),
-        ]),
-        const SizedBox(height: 8),
-        TextField(controller: _connectionSearch, onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(labelText: 'Search connections by name or email',
-            prefixIcon: Icon(Icons.search), border: OutlineInputBorder())),
-        const SizedBox(height: 8),
-        if (_requests.isEmpty && _error == null) const Padding(padding: EdgeInsets.all(16), child: Text('No family requests yet.')),
-        ..._requests.where((r) {
-          final contact = r.isIncoming ? r.requester : r.recipient;
-          final query = _connectionSearch.text.trim().toLowerCase();
-          return (_statusFilter == 'All' || r.status == _statusFilter) &&
-            (query.isEmpty || contact.email.toLowerCase().contains(query) ||
-            (contact.displayName?.toLowerCase().contains(query) ?? false));
-        }).map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text((r.isIncoming ? r.requester : r.recipient).email, style: const TextStyle(fontWeight: FontWeight.bold)),
-            Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.relationship} • ${r.status}'),
-            if (r.status == 'Accepted' && !r.isExpired) Text('${r.documentIds.length} document(s) shared ${r.isIncoming ? "by you" : "with you"}'),
-            if (r.status == 'Accepted') Text(r.isExpired
-              ? 'Access expired — owner can renew sharing'
-              : r.accessExpiresAt == null ? 'Access: no expiry' : 'Access ends: ${_formatAccessDate(r.accessExpiresAt!)}'),
-            Wrap(spacing: 8, children: [
-              if (r.isIncoming && r.status == 'Pending') ...[
-                TextButton(onPressed: _busy ? null : () => _choose(r), child: const Text('Review & accept')),
-                TextButton(onPressed: _busy ? null : () => _run(() async {
-                  await _service.respond(r, false, []); await _load();
-                }), child: const Text('Reject')),
-              ],
-              if (r.isIncoming && r.status == 'Accepted')
-                TextButton(onPressed: _busy ? null : () => _choose(r), child: Text(r.isExpired ? 'Renew sharing' : 'Manage documents')),
-              if (r.status == 'Accepted' || (!r.isIncoming && r.status == 'Pending'))
-                TextButton(onPressed: _busy ? null : () => _end(r), child: Text(r.status == 'Pending' ? 'Cancel' : 'Revoke access')),
-            ]),
+            LayoutBuilder(builder: (context, bounds) => Wrap(
+              spacing: 12, runSpacing: 12,
+              children: [
+                _metric('Connections', connected.length, Icons.people,
+                  const Color(0xFFE9F2FF), const Color(0xFF1769EC)),
+                _metric('Shared Documents', shared, Icons.folder_shared_outlined,
+                  const Color(0xFFE3F7F2), const Color(0xFF009D78)),
+                _metric('Pending Requests', pending.length, Icons.schedule_outlined,
+                  const Color(0xFFF6EDFF), const Color(0xFF7C3AED)),
+                _metric('Access Expiring', expiring, Icons.event_outlined,
+                  const Color(0xFFFFF0E8), const Color(0xFFEA580C)),
+              ])),
+            const SizedBox(height: 16),
+            TextField(controller: _connectionSearch, onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(prefixIcon: const Icon(Icons.search),
+                hintText: 'Search by name or email to find your connections...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)))),
+            const SizedBox(height: 12),
+            SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
+              for (final status in ['All', 'Family', 'Friends', 'Pending'])
+                Padding(padding: const EdgeInsets.only(right: 8), child: ChoiceChip(
+                  label: Text(status), selected: _statusFilter == status,
+                  onSelected: (_) => setState(() => _statusFilter = status))),
+            ])),
+            if (_error != null) Padding(padding: const EdgeInsets.all(12), child: Text(_error!)),
+            if (_busy) const LinearProgressIndicator(),
+            const SizedBox(height: 8),
+            if (filtered.isEmpty) const Card(child: Padding(padding: EdgeInsets.all(24),
+              child: Center(child: Text('No matching connections yet.')))),
+            for (final r in filtered)
+              Card(child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                leading: CircleAvatar(backgroundColor: const Color(0xFFE9F2FF),
+                  child: Text((r.isIncoming ? r.requester : r.recipient)
+                    .displayName?.substring(0, 1).toUpperCase() ?? '•')),
+                title: Text((r.isIncoming ? r.requester : r.recipient).displayName ??
+                  (r.isIncoming ? r.requester : r.recipient).email,
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Wrap(spacing: 8, runSpacing: 4, children: [
+                  Text(r.relationship),
+                  Text('${r.documentIds.length} shared documents'),
+                  Text(r.status),
+                  if (r.accessExpiresAt != null) Text('Until ${_formatAccessDate(r.accessExpiresAt!)}'),
+                ]),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () async {
+                  if (r.isIncoming && (r.status == 'Pending' || r.status == 'Accepted')) {
+                    await _choose(r);
+                  } else if (r.status == 'Accepted' || r.status == 'Pending') {
+                    await _connectionActions(r);
+                  }
+                },
+              )),
+            const SizedBox(height: 16),
+            Text('Explore your circle', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            _shortcut('Friends & Family Dashboard', 'Sharing overview and document alerts',
+              Icons.dashboard_outlined, () async {
+                await Navigator.push<void>(context, MaterialPageRoute(builder: (_) =>
+                  FamilyDashboardScreen(documentService: widget.documentService)));
+                if (mounted) _load();
+              }),
+            _shortcut('Birthdays & Special Occasions', 'Celebrations, reminders and upcoming events',
+              Icons.cake_outlined, () => Navigator.push<void>(context, MaterialPageRoute(
+                builder: (_) => FamilyOccasionsScreen(api: widget.documentService.apiClient)))),
           ],
-        )))),
-      ]),
-    ),
-  );
+        )),
+    );
+  }
+
+  Future<void> _connectionActions(FamilyRequest request) async {
+    final shouldEnd = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+      title: Text(request.status == 'Pending' ? 'Pending invitation' : 'Connection details'),
+      content: Text('${request.relationship} • ${request.status} • ${request.documentIds.length} shared documents'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Close')),
+        TextButton(onPressed: () => Navigator.pop(ctx, true),
+          child: Text(request.status == 'Pending' ? 'Cancel invitation' : 'Revoke access')),
+      ],
+    ));
+    if (shouldEnd == true && mounted) _end(request);
+  }
+
 }
 
 class _GrantScreen extends StatefulWidget {
