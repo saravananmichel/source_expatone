@@ -52,70 +52,83 @@ class _UnifiedRemindersPanelState extends State<UnifiedRemindersPanel> {
     final filtered = _items.where((item) =>
       ('${item.title} ${item.description ?? ''} ${item.category}')
         .toLowerCase().contains(_search.toLowerCase())).toList();
-    return Column(children: [
-      Padding(
-        padding: const EdgeInsets.all(12),
-        child: DropdownButtonFormField<String>(
-          value: _category,
-          decoration: const InputDecoration(labelText: 'Reminder category'),
-          items: const [
-            DropdownMenuItem(value: 'all', child: Text('All')),
+    final overdueCount = _items.where((e) => e.dueAtUtc.isBefore(DateTime.now().toUtc())).length;
+    final upcomingCount = _items.where((e) => !e.dueAtUtc.isBefore(DateTime.now().toUtc())).length;
+    Widget metric(String label, int count, IconData icon, Color color) => Container(
+      width: 172, padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: color.withValues(alpha: .09),
+        borderRadius: BorderRadius.circular(18)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Icon(icon, color: color), const SizedBox(height: 10),
+        Text('$'+'$count', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+        Text(label),
+      ]),
+    );
+    return RefreshIndicator(onRefresh: _load, child: ListView(
+      padding: const EdgeInsets.all(18),
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        Text('Stay ahead of what matters', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 5),
+        Text('Your documents, family, visa and work reminders in one place.',
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        const SizedBox(height: 20),
+        Wrap(spacing: 12, runSpacing: 12, children: [
+          metric('All reminders', _items.length, Icons.notifications_active_outlined, Colors.indigo),
+          metric('Upcoming', upcomingCount, Icons.event_available_outlined, Colors.teal),
+          metric('Past due', overdueCount, Icons.warning_amber_rounded, Colors.deepOrange),
+        ]),
+        const SizedBox(height: 24),
+        TextField(decoration: InputDecoration(
+          prefixIcon: const Icon(Icons.search), hintText: 'Search your reminders',
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14))),
+          onChanged: (value) => setState(() => _search = value)),
+        const SizedBox(height: 12),
+        Wrap(spacing: 10, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
+          DropdownButton<String>(value: _category, items: const [
+            DropdownMenuItem(value: 'all', child: Text('All categories')),
             DropdownMenuItem(value: 'document', child: Text('Documents')),
             DropdownMenuItem(value: 'connection', child: Text('Connections')),
             DropdownMenuItem(value: 'corporate', child: Text('Corporate tasks')),
             DropdownMenuItem(value: 'sharing', child: Text('Sharing expiry')),
             DropdownMenuItem(value: 'visa', child: Text('Visa drafts')),
             DropdownMenuItem(value: 'occasion', child: Text('Family occasions')),
-          ],
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() => _category = value);
-            _load();
-          },
-        ),
-      ),
-      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: TextField(
-        decoration: const InputDecoration(prefixIcon: Icon(Icons.search),
-          hintText: 'Search reminders'),
-        onChanged: (value) => setState(() => _search = value))),
-      Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Row(children: [
-        const Text('Next'), const SizedBox(width: 12),
-        DropdownButton<int>(value: _days,
-          items: const [DropdownMenuItem(value: 30, child: Text('30 days')),
-            DropdownMenuItem(value: 90, child: Text('90 days')),
-            DropdownMenuItem(value: 365, child: Text('365 days'))],
-          onChanged: (value) { if (value != null) { setState(() => _days = value); _load(); } }),
-      ])),
-      Expanded(child: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(child: TextButton(onPressed: _load, child: Text(_error!)))
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.builder(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    itemCount: filtered.isEmpty ? 1 : filtered.length,
-                    itemBuilder: (context, index) {
-                      if (filtered.isEmpty) return const ListTile(
-                        title: Text('No matching reminders'),
-                        subtitle: Text('Try another category, search or date range.'));
-                      final item = filtered[index];
-                      final overdue = item.dueAtUtc.isBefore(DateTime.now().toUtc()) &&
-                          (item.category == 'corporate' || item.category == 'document');
-                      return ListTile(
-                        leading: Icon(overdue ? Icons.warning_amber_outlined : Icons.notifications_active_outlined,
-                          color: overdue ? Theme.of(context).colorScheme.error : null),
-                        title: Text(item.title),
-                        subtitle: Text([
-                          item.category,
-                          if (overdue) 'Overdue',
-                          if (item.description != null) item.description!,
-                          item.dueAtUtc.toLocal().toString().split('.').first,
-                        ].join(' • ')),
-                      );
-                    },
-                  ),
-                )),
-    ]);
+          ], onChanged: (value) { if (value != null) { setState(() => _category = value); _load(); } }),
+          const SizedBox(width: 10),
+          DropdownButton<int>(value: _days, items: const [
+            DropdownMenuItem(value: 30, child: Text('Next 30 days')),
+            DropdownMenuItem(value: 90, child: Text('Next 90 days')),
+            DropdownMenuItem(value: 365, child: Text('Next 365 days')),
+          ], onChanged: (value) { if (value != null) { setState(() => _days = value); _load(); } }),
+        ]),
+        const SizedBox(height: 18),
+        Text('Your reminders', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12),
+        if (_loading) const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()))
+        else if (_error != null) Center(child: TextButton.icon(
+          onPressed: _load, icon: const Icon(Icons.refresh), label: Text(_error!)))
+        else if (filtered.isEmpty) Card(child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 42, horizontal: 20),
+          child: Column(children: [
+            Icon(Icons.event_available_outlined, size: 46, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(height: 12),
+            const Text('Nothing needs your attention', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 5),
+            const Text('Try another category or time range.', textAlign: TextAlign.center),
+          ])))
+        else ...filtered.map((item) {
+          final overdue = item.dueAtUtc.isBefore(DateTime.now().toUtc());
+          return Card(margin: const EdgeInsets.only(bottom: 10), child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            leading: CircleAvatar(child: Icon(overdue ? Icons.priority_high : Icons.notifications_outlined)),
+            title: Text(item.title, style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Padding(padding: const EdgeInsets.only(top: 6),
+              child: Text([item.category, if (item.description != null) item.description!,
+                item.dueAtUtc.toLocal().toString().split('.').first].join(' • '))),
+            trailing: overdue ? const Icon(Icons.warning_amber, color: Colors.deepOrange) : null,
+          ));
+        }),
+      ],
+    ));
   }
 }
