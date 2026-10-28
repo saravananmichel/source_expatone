@@ -67,6 +67,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _healthError;
   UserProfile? _profile;
   List<ChecklistItem> _checklist = [];
+  List<UnifiedReminder> _smartReminders = [];
+  bool _remindersLoading = true;
 
   @override
   void initState() {
@@ -80,7 +82,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _healthError = null;
     });
 
-    await Future.wait([_checkHealth(), _loadProfile(), _loadChecklist()]);
+    await Future.wait([_checkHealth(), _loadProfile(), _loadChecklist(), _loadSmartReminders()]);
 
     if (mounted) setState(() => _isLoading = false);
   }
@@ -106,6 +108,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       _checklist = await widget.userService.getOnboardingChecklist();
     } catch (_) {}
+  }
+
+  Future<void> _loadSmartReminders() async {
+    try {
+      final items = await widget.reminderService.getUnifiedReminders(days: 90);
+      if (mounted) setState(() { _smartReminders = items; _remindersLoading = false; });
+    } catch (_) {
+      if (mounted) setState(() { _remindersLoading = false; });
+    }
   }
 
   String get _firstName {
@@ -154,6 +165,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildHealthCard(),
                     const SizedBox(height: 12),
                     _buildPassCard(),
+                    const SizedBox(height: 18),
+                    _buildJourneyOverview(),
+                    const SizedBox(height: 20),
+                    _buildUpcomingReminders(),
                     if (_checklist.isNotEmpty) ...[
                       const SizedBox(height: 28),
                       _buildChecklistSection(),
@@ -450,6 +465,92 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildJourneyOverview() {
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 650;
+    final cards = [
+      _homeSummaryCard('Document wallet', 'Keep important files close',
+          Icons.folder_copy_outlined, const Color(0xFFE7EEFF), () => widget.onNavigateToTab?.call(1)),
+      _homeSummaryCard('Friends & Family', 'Your trusted circle',
+          Icons.people_alt_outlined, const Color(0xFFE3F5EE), () =>
+              widget.onOpenFeature?.call(DashboardFeature.family)),
+      _homeSummaryCard('AI Government Assistant', 'Get guidance for your journey',
+          Icons.auto_awesome_outlined, const Color(0xFFF2E8FF), () => widget.onNavigateToTab?.call(2)),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Your journey at a glance',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: _navy)),
+      const SizedBox(height: 12),
+      if (compact) ...cards.map((card) => Padding(
+        padding: const EdgeInsets.only(bottom: 10), child: card))
+      else Row(children: [
+        for (var i = 0; i < cards.length; i++) ...[
+          if (i > 0) const SizedBox(width: 12),
+          Expanded(child: cards[i]),
+        ],
+      ]),
+    ]);
+  }
+
+  Widget _homeSummaryCard(String title, String description, IconData icon,
+      Color tint, VoidCallback action) {
+    return Material(color: Colors.white, borderRadius: BorderRadius.circular(18),
+      child: InkWell(onTap: action, borderRadius: BorderRadius.circular(18),
+        child: Container(padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE1E7F0))),
+          child: Row(children: [
+            Container(padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(14)),
+              child: Icon(icon, color: _accentBlue, size: 25)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: _navy)),
+              const SizedBox(height: 3),
+              Text(description, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+            ])),
+            const Icon(Icons.chevron_right, color: _accentBlue),
+          ]))));
+  }
+
+  Widget _buildUpcomingReminders() {
+    final now = DateTime.now().toUtc();
+    final upcoming = _smartReminders.where((r) => !r.dueAtUtc.isBefore(now)).toList()
+      ..sort((a, b) => a.dueAtUtc.compareTo(b.dueAtUtc));
+    final urgent = upcoming.where((r) => r.dueAtUtc.isBefore(now.add(const Duration(days: 7)))).length;
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE1E7F0))),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Row(children: [
+          const Icon(Icons.notifications_active_outlined, color: _accentBlue),
+          const SizedBox(width: 10),
+          const Expanded(child: Text('Upcoming reminders',
+            style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: _navy))),
+          TextButton(onPressed: () => widget.onNavigateToTab?.call(3),
+            child: const Text('View all')),
+        ]),
+        if (_remindersLoading) const LinearProgressIndicator()
+        else if (upcoming.isEmpty) const Padding(
+          padding: EdgeInsets.symmetric(vertical: 12),
+          child: Text('All caught up! No upcoming reminders in the next 90 days.'))
+        else ...[
+          Text('$urgent due in the next 7 days',
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+          const SizedBox(height: 8),
+          for (final item in upcoming.take(3))
+            ListTile(dense: true, contentPadding: EdgeInsets.zero,
+              leading: const CircleAvatar(child: Icon(Icons.event_note_outlined)),
+              title: Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+              subtitle: Text('${item.category} • ${item.dueAtUtc.toLocal().toString().split('.').first}'),
+              onTap: () => widget.onNavigateToTab?.call(3)),
+        ],
+      ]),
     );
   }
 
