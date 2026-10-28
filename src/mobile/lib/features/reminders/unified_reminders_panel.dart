@@ -25,6 +25,12 @@ class _UnifiedRemindersPanelState extends State<UnifiedRemindersPanel> {
 
   int _requestVersion = 0;
 
+  @override
+  void dispose() {
+    _requestVersion++;
+    super.dispose();
+  }
+
   Future<void> _load() async {
     final version = ++_requestVersion;
     if (!mounted) return;
