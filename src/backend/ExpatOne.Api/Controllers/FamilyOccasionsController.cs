@@ -10,6 +10,7 @@ namespace ExpatOne.Api.Controllers;
 
 [ApiController]
 [Authorize]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [Route("api/family-occasions")]
 public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users) : ControllerBase
 {
