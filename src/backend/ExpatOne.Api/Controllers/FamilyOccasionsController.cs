@@ -28,7 +28,7 @@ public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users)
 
     private static string? Validate(OccasionInput input)
     {
-        if (string.IsNullOrWhiteSpace(input.Title) || input.Title.Length > 200) return "Invalid title.";
+        if (string.IsNullOrWhiteSpace(input.Title) || input.Title.Trim().Length > 200) return "Invalid title.";
         if (input.Kind is not ("Birthday" or "Anniversary" or "Relocation" or "Custom")) return "Invalid kind.";
         if (input.DaysBefore is not (1 or 3 or 7 or 30)) return "Invalid reminder offset.";
         if (input.OccasionDate.Kind != DateTimeKind.Utc) return "Date must be UTC.";
