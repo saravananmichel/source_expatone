@@ -60,7 +60,21 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                 "corporate:" + c.Id, "corporate", c.Title, c.Notes, c.DueAt!.Value, c.Id)));
         }
 
-        if (category is not null && category is not ("document" or "connection" or "corporate"))
+        if (category is null or "sharing")
+        {
+            var shares = await db.FamilyRequests.AsNoTracking()
+                .Where(r => r.RecipientUserId == user.Id
+                    && r.StatusId == FamilyRequestStates.Accepted
+                    && r.AccessExpiresAt.HasValue
+                    && r.AccessExpiresAt.Value > now && r.AccessExpiresAt.Value <= until)
+                .Select(r => new { r.Id, r.AccessExpiresAt, Contact = r.Requester.DisplayName ?? r.Requester.Email })
+                .ToListAsync();
+            items.AddRange(shares.Select(r => new UnifiedReminderItem(
+                "sharing:" + r.Id, "sharing", "Document sharing expires soon",
+                "Shared access for " + r.Contact, r.AccessExpiresAt!.Value, r.Id)));
+        }
+
+        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing"))
             return BadRequest("Unsupported reminder category.");
 
         return Ok(items.OrderBy(i => i.DueAtUtc).ThenBy(i => i.Id).ToList());
