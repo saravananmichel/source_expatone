@@ -8,7 +8,7 @@ class FamilyUser {
         displayName = json['displayName'] as String?;
 }
 class FamilyRequest {
-  final String id, status, revision;
+  final String id, status, revision, relationship;
   final FamilyUser requester, recipient;
   final bool isIncoming, allowExpiryReminders;
   final DateTime? accessExpiresAt;
@@ -18,6 +18,7 @@ class FamilyRequest {
   FamilyRequest.fromJson(Map<String, dynamic> json)
       : id = json['id'] as String, status = json['status'] as String,
         revision = json['revision'] as String,
+        relationship = json['relationship'] as String? ?? 'Other',
         requester = FamilyUser.fromJson(json['requester'] as Map<String, dynamic>),
         recipient = FamilyUser.fromJson(json['recipient'] as Map<String, dynamic>),
         isIncoming = json['isIncoming'] as bool,
@@ -33,8 +34,8 @@ class FamilyService {
       await _api.get('/family/search', queryParams: {'email': email.trim()}));
   Future<List<FamilyRequest>> requests() async =>
       (await _api.getList('/family/requests')).map(FamilyRequest.fromJson).toList();
-  Future<void> send(String email) async {
-    await _api.post('/family/requests', body: {'email': email.trim()});
+  Future<void> send(String email, {String relationship = 'Other'}) async {
+    await _api.post('/family/requests', body: {'email': email.trim(), 'relationship': relationship});
   }
   Future<void> respond(FamilyRequest request, bool accept, List<String> ids, {bool? allowExpiryReminders, DateTime? accessExpiresAt, bool updateAccessExpiry = false}) async {
     await _api.post('/family/requests/${request.id}/respond', body: {
