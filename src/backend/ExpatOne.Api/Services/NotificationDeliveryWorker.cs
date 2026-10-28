@@ -2,6 +2,7 @@ using ExpatOne.Domain.Entities;
 using ExpatOne.Domain.Enums;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace ExpatOne.Api.Services;
 
@@ -100,7 +101,7 @@ public sealed class NotificationDeliveryWorker(
                 Status = "Delivered", DeliveredAt = now
             });
             try { await db.SaveChangesAsync(ct); }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 db.ChangeTracker.Clear();
                 if (!await db.NotificationDeliveries.AnyAsync(x =>
@@ -145,7 +146,7 @@ public sealed class NotificationDeliveryWorker(
                 Status = "Delivered", DeliveredAt = now
             });
             try { await db.SaveChangesAsync(ct); }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 db.ChangeTracker.Clear();
                 if (!await db.NotificationDeliveries.AnyAsync(x =>
@@ -192,7 +193,7 @@ public sealed class NotificationDeliveryWorker(
                 Status = "Delivered", DeliveredAt = now
             });
             try { await db.SaveChangesAsync(ct); }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 db.ChangeTracker.Clear();
                 if (!await db.NotificationDeliveries.AnyAsync(x =>
@@ -247,7 +248,7 @@ public sealed class NotificationDeliveryWorker(
                     Status = "Delivered", DeliveredAt = now
                 });
                 try { await db.SaveChangesAsync(ct); }
-                catch (DbUpdateException)
+                catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
                 {
                     db.ChangeTracker.Clear();
                     if (!await db.NotificationDeliveries.AnyAsync(x =>
@@ -295,7 +296,7 @@ public sealed class NotificationDeliveryWorker(
                 Status = "Delivered", DeliveredAt = now
             });
             try { await db.SaveChangesAsync(ct); }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 db.ChangeTracker.Clear();
                 if (!await db.NotificationDeliveries.AnyAsync(x =>
@@ -344,7 +345,7 @@ public sealed class NotificationDeliveryWorker(
                 Status = "Delivered", DeliveredAt = now
             });
             try { await db.SaveChangesAsync(ct); }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex) when (ex.InnerException is PostgresException pg && pg.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 // Another worker may have inserted the same unique occurrence.
                 db.ChangeTracker.Clear();
