@@ -14,9 +14,10 @@ namespace ExpatOne.Api.Controllers;
 [Route("api/family-occasions")]
 public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users) : ControllerBase
 {
-    private async Task<Guid> CurrentUserId()
+    private async Task<Guid?> CurrentUserId()
     {
-        var uid = User.FindFirstValue("firebase_uid") ?? throw new UnauthorizedAccessException();
+        var uid = User.FindFirstValue("firebase_uid");
+        if (string.IsNullOrWhiteSpace(uid)) return null;
         var user = await users.FindOrCreateByExternalIdentityAsync("firebase", uid,
             User.FindFirstValue(ClaimTypes.Email) ?? "", User.FindFirstValue(ClaimTypes.Name));
         return user.Id;
@@ -38,6 +39,7 @@ public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users)
     public async Task<IActionResult> List()
     {
         var userId = await CurrentUserId();
+        if (userId is null) return Unauthorized();
         return Ok(await db.FamilyOccasions.AsNoTracking().Where(o => o.UserId == userId)
             .OrderBy(o => o.OccasionDate).ToListAsync());
     }
