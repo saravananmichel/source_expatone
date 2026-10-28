@@ -52,7 +52,7 @@ public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users)
         var userId = await CurrentUserId();
         var occasion = new FamilyOccasion
         {
-            Id = Guid.NewGuid(), UserId = userId, Title = input.Title.Trim(), Kind = input.Kind,
+            Id = Guid.NewGuid(), UserId = userId.Value, Title = input.Title.Trim(), Kind = input.Kind,
             OccasionDate = input.OccasionDate, RepeatsAnnually = input.RepeatsAnnually,
             RemindersEnabled = input.RemindersEnabled, DaysBefore = input.DaysBefore
         };
