@@ -224,7 +224,7 @@ class _GrantScreenState extends State<_GrantScreen> {
               Text('Access ends: ${_formatAccessDate(_accessExpiresAt!)}'),
               Wrap(spacing: 8, children: [
                 for (final choice in const {'1 hour': Duration(hours: 1), '24 hours': Duration(days: 1),
-                    '7 days': Duration(days: 7), '30 days': Duration(days: 30)}.entries)
+                    '7 days': Duration(days: 7), '30 days': Duration(days: 30), '90 days': Duration(days: 90)}.entries)
                   ActionChip(label: Text(choice.key), onPressed: _saving ? null : () => setState(() {
                     _accessExpiresAt = DateTime.now().add(choice.value); _expiryChanged = true;
                   })),
