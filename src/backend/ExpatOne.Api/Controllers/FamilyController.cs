@@ -18,7 +18,7 @@ public class FamilyController(FamilyService family, IUserService users) : Contro
     [HttpGet("requests")]
     public async Task<IActionResult> List() => Ok(await family.ListAsync(await UserId()));
     [HttpPost("requests")]
-    public async Task<IActionResult> Send(SendFamilyRequestDto dto) => Ok(await family.SendAsync(await UserId(), dto.Email));
+    public async Task<IActionResult> Send(SendFamilyRequestDto dto) => Ok(await family.SendAsync(await UserId(), dto.Email, dto.Relationship));
     [HttpPost("requests/{id:guid}/respond")]
     public async Task<IActionResult> Respond(Guid id, FamilyDecisionDto dto) => Ok(await family.RespondAsync(await UserId(), id, dto));
     [HttpPut("requests/{id:guid}/documents")]
