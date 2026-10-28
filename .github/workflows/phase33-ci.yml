@@ -28,6 +28,6 @@ jobs:
           channel: stable
       - run: flutter pub get
       - name: Analyze Friends and Family
-        run: flutter analyze lib/features/family lib/core/services/family_service.dart
+        run: flutter analyze lib/features/family lib/features/reminders lib/core/services/family_service.dart lib/core/services/reminder_service.dart lib/core/services/document_service.dart
       - name: Build web
         run: flutter build web --release
