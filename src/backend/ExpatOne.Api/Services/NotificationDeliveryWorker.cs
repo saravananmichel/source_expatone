@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace ExpatOne.Api.Services;
 
 /// <summary>
-/// Opt-in in-app occasion, document, and corporate reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
+/// Opt-in in-app occasion, document, corporate, and sharing reminder delivery. Disabled until the phase 3.3 SQL migration is applied.
 /// Multiple ECS instances may race; the database unique occurrence constraint is authoritative.
 /// </summary>
 public sealed class NotificationDeliveryWorker(
@@ -24,7 +24,7 @@ public sealed class NotificationDeliveryWorker(
         using var timer = new PeriodicTimer(TimeSpan.FromMinutes(15));
         do
         {
-            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); }
+            try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { logger.LogError(ex, "Notification delivery cycle failed"); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
@@ -45,6 +45,53 @@ public sealed class NotificationDeliveryWorker(
                 original.Hour, original.Minute, original.Second, DateTimeKind.Utc);
         }
         return occurrence;
+    }
+
+    private async Task DeliverSharingExpiry(CancellationToken ct)
+    {
+        await using var scope = scopes.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<ExpatOneDbContext>();
+        var now = DateTime.UtcNow;
+        var shares = await db.FamilyRequests.AsNoTracking()
+            .Where(x => x.StatusId == FamilyRequestStates.Accepted
+                && x.AllowExpiryReminders && x.AccessExpiresAt.HasValue
+                && x.AccessExpiresAt.Value >= now
+                && x.AccessExpiresAt.Value <= now.AddDays(7))
+            .Select(x => new { x.Id, x.RecipientUserId, x.AccessExpiresAt })
+            .ToListAsync(ct);
+
+        foreach (var share in shares)
+        {
+            ct.ThrowIfCancellationRequested();
+            var recipient = share.RecipientUserId;
+            var preference = await db.NotificationPreferences.AsNoTracking()
+                .SingleOrDefaultAsync(x => x.UserId == recipient, ct);
+            if (preference is { InAppEnabled: false } || preference is { SharingEnabled: false })
+                continue;
+            var key = "sharing:" + share.Id;
+            var occurrence = DateOnly.FromDateTime(share.AccessExpiresAt!.Value);
+            if (await db.NotificationDeliveries.AnyAsync(x =>
+                    x.UserId == recipient && x.ReminderKey == key &&
+                    x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                continue;
+            db.NotificationDeliveries.Add(new NotificationDelivery
+            {
+                Id = Guid.NewGuid(), UserId = recipient, ReminderKey = key,
+                Channel = "InApp", OccurrenceDate = occurrence,
+                Title = "Shared document access expires soon",
+                Body = "Access expires on " + share.AccessExpiresAt.Value.ToString("yyyy-MM-dd"),
+                Status = "Delivered", DeliveredAt = now
+            });
+            try { await db.SaveChangesAsync(ct); }
+            catch (DbUpdateException)
+            {
+                db.ChangeTracker.Clear();
+                if (!await db.NotificationDeliveries.AnyAsync(x =>
+                        x.UserId == recipient && x.ReminderKey == key &&
+                        x.Channel == "InApp" && x.OccurrenceDate == occurrence, ct))
+                    throw;
+            }
+        }
     }
 
     private async Task DeliverCorporateTasks(CancellationToken ct)
