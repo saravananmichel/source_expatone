@@ -98,7 +98,9 @@ void main() {
         TextButton,
         'Confirm expiry date',
       );
-      for (var i = 0; i < 20 && confirmButton.evaluate().isEmpty; i++) {
+      for (var i = 0;
+          i < 20 && confirmButton.hitTestable().evaluate().isEmpty;
+          i++) {
         await tester.drag(find.byType(Scrollable).first, const Offset(0, -250));
         await tester.pumpAndSettle();
       }
@@ -157,7 +159,9 @@ void main() {
         'Confirm expiry date',
       );
 
-      for (var i = 0; i < 20 && confirmButton.evaluate().isEmpty; i++) {
+      for (var i = 0;
+          i < 20 && confirmButton.hitTestable().evaluate().isEmpty;
+          i++) {
         await tester.drag(find.byType(Scrollable).first, const Offset(0, -250));
         await tester.pumpAndSettle();
       }

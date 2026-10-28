@@ -136,7 +136,8 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
                 FilledButton.icon(onPressed: () => _create(), icon: const Icon(Icons.add),
                   label: const Text('Add first occasion')),
               ])))
-            else ..._items.map((item) => Card(
+            else ..._items.map((item) {
+              return Card(
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -169,7 +170,9 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
                     PopupMenuItem(value: 'edit', child: Text('Edit')),
                     PopupMenuItem(value: 'delete', child: Text('Delete')),
                   ]),
-              )),
+              ),
+              );
+            }),
             const SizedBox(height: 80),
           ])),
     );

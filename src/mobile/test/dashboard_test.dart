@@ -300,7 +300,10 @@ void main() {
       await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
       await tester.pumpAndSettle();
       expect(find.textContaining('Add'), findsWidgets);
-      await tester.tap(find.text('Add\nDocument'));
+      final actionFinder = find.text('Add\nDocument');
+      await tester.ensureVisible(actionFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(actionFinder);
       expect(tapped, 1);
     });
 
@@ -308,7 +311,10 @@ void main() {
       int? tapped;
       await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Ask\nAssistant'));
+      final actionFinder = find.text('Ask\nAssistant');
+      await tester.ensureVisible(actionFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(actionFinder);
       expect(tapped, 2);
     });
 
@@ -316,7 +322,10 @@ void main() {
       int? tapped;
       await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('View\nReminders'));
+      final actionFinder = find.text('View\nReminders');
+      await tester.ensureVisible(actionFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(actionFinder);
       expect(tapped, 3);
     });
 
@@ -324,7 +333,10 @@ void main() {
       int? tapped;
       await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Emergency\nHelp'));
+      final actionFinder = find.text('Emergency\nHelp');
+      await tester.ensureVisible(actionFinder);
+      await tester.pumpAndSettle();
+      await tester.tap(actionFinder);
       expect(tapped, 4);
     });
   });
