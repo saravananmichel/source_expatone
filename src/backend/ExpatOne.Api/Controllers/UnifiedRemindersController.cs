@@ -74,7 +74,19 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                 "Shared access for " + r.Contact, r.AccessExpiresAt!.Value, r.Id)));
         }
 
-        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing"))
+        if (category is null or "visa")
+        {
+            var applications = await db.VisaApplications.AsNoTracking()
+                .Where(a => a.UserId == user.Id && !a.Submitted
+                    && a.UpdatedAt >= now.AddDays(-30))
+                .Select(a => new { a.Id, a.TemplateId, a.UpdatedAt })
+                .ToListAsync();
+            items.AddRange(applications.Select(a => new UnifiedReminderItem(
+                "visa:" + a.Id, "visa", "Visa application draft awaiting completion",
+                "Application template: " + a.TemplateId, a.UpdatedAt, a.Id)));
+        }
+
+        if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa"))
             return BadRequest("Unsupported reminder category.");
 
         return Ok(items.OrderBy(i => i.DueAtUtc).ThenBy(i => i.Id).ToList());
