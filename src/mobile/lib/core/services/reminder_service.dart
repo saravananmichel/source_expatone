@@ -1,6 +1,7 @@
 import '../networking/api_client.dart';
 import 'family_service.dart';
 import 'notification_preferences_service.dart';
+import 'notification_inbox_service.dart';
 
 class UnifiedReminder {
   final String id, category, title, sourceId;
@@ -71,6 +72,7 @@ class ReminderService {
   ReminderService(this._apiClient);
 
   FamilyService get familyService => FamilyService(_apiClient);
+  NotificationInboxService get notificationInboxService => NotificationInboxService(_apiClient);
   NotificationPreferencesService get notificationPreferencesService =>
       NotificationPreferencesService(_apiClient);
 
