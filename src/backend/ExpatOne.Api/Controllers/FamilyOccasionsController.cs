@@ -50,6 +50,7 @@ public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users)
         var error = Validate(input);
         if (error != null) return BadRequest(error);
         var userId = await CurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
         var occasion = new FamilyOccasion
         {
             Id = Guid.NewGuid(), UserId = userId.Value, Title = input.Title.Trim(), Kind = input.Kind,
@@ -67,6 +68,7 @@ public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users)
         var error = Validate(input);
         if (error != null) return BadRequest(error);
         var userId = await CurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
         var occasion = await db.FamilyOccasions.SingleOrDefaultAsync(o => o.Id == id && o.UserId == userId);
         if (occasion == null) return NotFound();
         occasion.Title = input.Title.Trim();
@@ -83,6 +85,7 @@ public class FamilyOccasionsController(ExpatOneDbContext db, IUserService users)
     public async Task<IActionResult> Delete(Guid id)
     {
         var userId = await CurrentUserId();
+        if (!userId.HasValue) return Unauthorized();
         var occasion = await db.FamilyOccasions.SingleOrDefaultAsync(o => o.Id == id && o.UserId == userId);
         if (occasion == null) return NotFound();
         db.FamilyOccasions.Remove(occasion);
