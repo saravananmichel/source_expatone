@@ -79,7 +79,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
         {
             var applications = await db.VisaApplications.AsNoTracking()
                 .Where(a => a.UserId == user.Id && !a.Submitted
-                    && a.UpdatedAt >= now.AddDays(-30) && a.UpdatedAt <= now.AddDays(-3)
+                    && a.UpdatedAt >= now.AddDays(-30) && a.UpdatedAt <= now.AddDays(-3))
                 .Select(a => new { a.Id, a.TemplateId, a.UpdatedAt })
                 .ToListAsync();
             items.AddRange(applications.Select(a => new UnifiedReminderItem(
