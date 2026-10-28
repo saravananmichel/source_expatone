@@ -21,6 +21,7 @@ public class FamilyDecisionDto
 }
 public class FamilyGrantsDto
 {
+    public bool? AllowVisaApplicationUse { get; set; }
     public Guid Revision { get; set; }
     public DateTimeOffset? AccessExpiresAt { get; set; }
     public bool UpdateAccessExpiry { get; set; }
