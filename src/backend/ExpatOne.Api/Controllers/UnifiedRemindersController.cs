@@ -46,7 +46,19 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
                 "Invitation from " + r.Sender, r.CreatedAt, r.Id)));
         }
 
-        if (category is not null && category is not ("document" or "connection"))
+        if (category is null or "corporate")
+        {
+            var tasks = await db.CorporateCases.AsNoTracking()
+                .Where(c => (c.EmployeeUserId == user.Id || c.AssignedHrUserId == user.Id)
+                    && c.DueAt.HasValue && c.DueAt.Value >= now && c.DueAt.Value <= until
+                    && c.Status != "Completed" && c.Status != "Cancelled")
+                .Select(c => new { c.Id, c.Title, c.Notes, c.DueAt })
+                .ToListAsync();
+            items.AddRange(tasks.Select(c => new UnifiedReminderItem(
+                "corporate:" + c.Id, "corporate", c.Title, c.Notes, c.DueAt!.Value, c.Id)));
+        }
+
+        if (category is not null && category is not ("document" or "connection" or "corporate"))
             return BadRequest("Unsupported reminder category.");
 
         return Ok(items.OrderBy(i => i.DueAtUtc).ThenBy(i => i.Id).ToList());
