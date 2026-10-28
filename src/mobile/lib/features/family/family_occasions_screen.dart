@@ -86,32 +86,92 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Family occasions')),
-    floatingActionButton: FloatingActionButton(onPressed: _create, child: const Icon(Icons.add)),
-    body: _loading ? const Center(child: CircularProgressIndicator()) :
-      _error != null ? Center(child: TextButton(onPressed: _load, child: Text(_error!))) :
-      RefreshIndicator(onRefresh: _load, child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [if (_items.isEmpty) const ListTile(title: Text('No occasions yet'),
-          subtitle: Text('Tap + to add a birthday or special occasion.')),
-        ..._items.map((item) => ListTile(
-        leading: const Icon(Icons.event),
-        title: Text(item['title'] as String? ?? ''),
-        subtitle: Text(item['kind'] as String? ?? ''),
-        onTap: () => _create(item),
-        trailing: IconButton(icon: const Icon(Icons.delete_outline),
-          onPressed: () async {
-            final confirmed = await showDialog<bool>(context: context, builder: (context) =>
-              AlertDialog(title: const Text('Delete occasion?'), actions: [
-                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
-              ]));
-            if (confirmed != true) return;
-            try { await widget.api.delete('/family-occasions/${item['id']}'); await _load(); }
-            catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Unable to delete occasion'))); }
-          }),
-      ))])),
-  );
+  Widget build(BuildContext context) {
+    final birthdays = _items.where((e) => e['kind'] == 'Birthday').length;
+    final anniversaries = _items.where((e) => e['kind'] == 'Anniversary').length;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Family occasions'),
+        actions: [IconButton(onPressed: _load, icon: const Icon(Icons.refresh), tooltip: 'Refresh')]),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _create(), icon: const Icon(Icons.add), label: const Text('Add occasion')),
+      body: _loading ? const Center(child: CircularProgressIndicator()) :
+        _error != null ? Center(child: TextButton(onPressed: _load, child: Text(_error!))) :
+        RefreshIndicator(onRefresh: _load, child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(18),
+          children: [
+            Container(padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(colors: [Color(0xFF273E85), Color(0xFF5368B5)]),
+                borderRadius: BorderRadius.circular(20)),
+              child: const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Icon(Icons.celebration_outlined, color: Colors.white, size: 32),
+                SizedBox(height: 12),
+                Text('Celebrate every special moment',
+                  style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+                SizedBox(height: 6),
+                Text('Birthdays, anniversaries and milestones — all in one place.',
+                  style: TextStyle(color: Colors.white70)),
+              ])),
+            const SizedBox(height: 16),
+            Wrap(spacing: 10, runSpacing: 10, children: [
+              Chip(avatar: const Icon(Icons.cake_outlined, size: 18), label: Text('Birthdays: '+birthdays.toString())),
+              Chip(avatar: const Icon(Icons.favorite_outline, size: 18), label: Text('Anniversaries: '+anniversaries.toString())),
+              Chip(avatar: const Icon(Icons.event_outlined, size: 18), label: Text('All occasions: '+_items.length.toString())),
+            ]),
+            const SizedBox(height: 20),
+            Text('Your occasions', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 12),
+            if (_items.isEmpty) Card(child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+              child: Column(children: [
+                Icon(Icons.cake_outlined, size: 52, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(height: 12),
+                const Text('Your celebration calendar starts here',
+                  textAlign: TextAlign.center, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 6),
+                const Text('Add a birthday or anniversary to receive reminders.',
+                  textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton.icon(onPressed: () => _create(), icon: const Icon(Icons.add),
+                  label: const Text('Add first occasion')),
+              ])))
+            else ..._items.map((item) => Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                leading: CircleAvatar(child: Icon(item['kind'] == 'Birthday'
+                    ? Icons.cake_outlined : Icons.event_outlined)),
+                title: Text(item['title'] as String? ?? '',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
+                subtitle: Text([
+                  item['kind'] as String? ?? 'Occasion',
+                  if (item['occasionDate'] is String)
+                    (item['occasionDate'] as String).split('T').first,
+                  if (item['repeatsAnnually'] == true) 'Repeats yearly',
+                ].join(' • ')),
+                onTap: () => _create(item),
+                trailing: PopupMenuButton<String>(
+                  onSelected: (action) async {
+                    if (action == 'edit') { await _create(item); return; }
+                    final confirmed = await showDialog<bool>(context: context,
+                      builder: (context) => AlertDialog(title: const Text('Delete occasion?'),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+                        ]));
+                    if (confirmed != true) return;
+                    try { await widget.api.delete('/family-occasions/${item['id']}'); await _load(); }
+                    catch (_) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Unable to delete occasion'))); }
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'edit', child: Text('Edit')),
+                    PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  ]),
+              )),
+            const SizedBox(height: 80),
+          ])),
+    );
+  }
 }
