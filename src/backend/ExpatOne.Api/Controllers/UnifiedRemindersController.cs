@@ -18,11 +18,12 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
     {
         category = category?.Trim().ToLowerInvariant();
         if (days < 1 || days > 365) return BadRequest("days must be between 1 and 365.");
-        var uid = User.FindFirstValue("firebase_uid") ?? throw new UnauthorizedAccessException();
-        var user = await users.FindOrCreateByExternalIdentityAsync("firebase", uid,
-            User.FindFirstValue(ClaimTypes.Email) ?? "", User.FindFirstValue(ClaimTypes.Name));
         if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa" or "occasion"))
             return BadRequest("Unsupported reminder category.");
+        var uid = User.FindFirstValue("firebase_uid");
+        if (string.IsNullOrWhiteSpace(uid)) return Unauthorized();
+        var user = await users.FindOrCreateByExternalIdentityAsync("firebase", uid,
+            User.FindFirstValue(ClaimTypes.Email) ?? "", User.FindFirstValue(ClaimTypes.Name));
         var now = DateTime.UtcNow;
         var until = now.AddDays(days);
         var items = new List<UnifiedReminderItem>();
