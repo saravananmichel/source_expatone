@@ -13,6 +13,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   final _email = TextEditingController();
   final _connectionSearch = TextEditingController();
   String _relationship = 'Friend';
+  String _statusFilter = 'All';
   List<FamilyRequest> _requests = [];
   FamilyUser? _found;
   bool _loading = true, _busy = false;
@@ -108,6 +109,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (_error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(_error!)),
         const SizedBox(height: 24),
         const Text('Connections & document access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          for (final status in const ['All', 'Pending', 'Accepted', 'Rejected', 'Cancelled', 'Revoked'])
+            ChoiceChip(label: Text(status), selected: _statusFilter == status,
+              onSelected: (_) => setState(() => _statusFilter = status)),
+        ]),
+        const SizedBox(height: 8),
         TextField(controller: _connectionSearch, onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(labelText: 'Search connections by name or email',
             prefixIcon: Icon(Icons.search), border: OutlineInputBorder())),
@@ -116,8 +124,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
         ..._requests.where((r) {
           final contact = r.isIncoming ? r.requester : r.recipient;
           final query = _connectionSearch.text.trim().toLowerCase();
-          return query.isEmpty || contact.email.toLowerCase().contains(query) ||
-            (contact.displayName?.toLowerCase().contains(query) ?? false);
+          return (_statusFilter == 'All' || r.status == _statusFilter) &&
+            (query.isEmpty || contact.email.toLowerCase().contains(query) ||
+            (contact.displayName?.toLowerCase().contains(query) ?? false));
         }).map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text((r.isIncoming ? r.requester : r.recipient).email, style: const TextStyle(fontWeight: FontWeight.bold)),
