@@ -107,7 +107,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
               Chip(label: Text('$status: ${_documents.where((d) => d.expiryStatus == status).length}')),
           ]),
           const SizedBox(height: 8),
-          const Text('Only documents shared with you are included. Due soon means today through 90 days; dates use UTC calendar days.'),
+          const Text('Your trusted circle: shared documents and expiry alerts. Due soon means today through 90 days; dates use UTC calendar days.'),
           const SizedBox(height: 12),
           Wrap(spacing: 8, children: [
             for (final filter in ['All', 'Expired', 'Next 30 days', 'Next 90 days', 'Valid', 'No expiry date'])
@@ -145,7 +145,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   }
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Family dashboard'), actions: [
+    appBar: AppBar(title: const Text('Friends & Family dashboard'), actions: [
       IconButton(tooltip: 'Refresh dashboard', onPressed: () { _load(); setState(() => _alertsVersion++); }, icon: const Icon(Icons.refresh)),
     ], bottom: TabBar(controller: _tabs, tabs: const [Tab(text: 'Documents'), Tab(text: 'Alerts')])),
     body: TabBarView(controller: _tabs, children: [
