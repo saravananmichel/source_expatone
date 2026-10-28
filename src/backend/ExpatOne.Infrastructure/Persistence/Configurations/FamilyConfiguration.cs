@@ -26,6 +26,7 @@ public class FamilyRequestConfiguration : IEntityTypeConfiguration<FamilyRequest
         b.HasKey(x => x.Id);
         b.Property(x => x.Revision).IsConcurrencyToken();
         b.Property(x => x.Relationship).HasMaxLength(40).IsRequired().HasDefaultValue("Other");
+        b.Property(x => x.AllowVisaApplicationUse).HasDefaultValue(false);
         b.HasOne(x => x.Requester).WithMany().HasForeignKey(x => x.RequesterUserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Recipient).WithMany().HasForeignKey(x => x.RecipientUserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Status).WithMany().HasForeignKey(x => x.StatusId).OnDelete(DeleteBehavior.Restrict);
