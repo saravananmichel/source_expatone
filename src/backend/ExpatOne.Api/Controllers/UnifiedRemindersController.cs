@@ -17,6 +17,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
     public async Task<IActionResult> Get([FromQuery] string? category = null, [FromQuery] int days = 90)
     {
         category = category?.Trim().ToLowerInvariant();
+        if (category is "all" or "") category = null;
         if (days < 1 || days > 365) return BadRequest("days must be between 1 and 365.");
         if (category is not null && category is not ("document" or "connection" or "corporate" or "sharing" or "visa" or "occasion"))
             return BadRequest("Unsupported reminder category.");
