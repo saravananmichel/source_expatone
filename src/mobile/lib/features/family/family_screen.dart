@@ -65,6 +65,15 @@ class _FamilyScreenState extends State<FamilyScreen> {
     body: _loading ? const Center(child: CircularProgressIndicator()) : RefreshIndicator(
       onRefresh: _load,
       child: ListView(padding: const EdgeInsets.all(16), physics: const AlwaysScrollableScrollPhysics(), children: [
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          Chip(avatar: const Icon(Icons.people_outline, size: 18),
+            label: Text('Active: ${_requests.where((r) => r.status == 'Accepted' && !r.isExpired).length}')),
+          Chip(avatar: const Icon(Icons.mark_email_unread_outlined, size: 18),
+            label: Text('Incoming: ${_requests.where((r) => r.status == 'Pending' && r.isIncoming).length}')),
+          Chip(avatar: const Icon(Icons.outgoing_mail, size: 18),
+            label: Text('Sent: ${_requests.where((r) => r.status == 'Pending' && !r.isIncoming).length}')),
+        ]),
+        const SizedBox(height: 12),
         Card(child: ListTile(
           leading: const Icon(Icons.dashboard_outlined),
           title: const Text('Friends & Family dashboard'),
