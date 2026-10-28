@@ -39,6 +39,28 @@ public class FamilyVisaConsentTests
         Assert.NotNull(property);
         Assert.Equal(false, property!.GetDefaultValue());
     }
+
+    [Fact]
+    public async Task ReciprocalPendingInvitation_IsRejected()
+    {
+        var options = new DbContextOptionsBuilder<ExpatOneDbContext>()
+            .UseInMemoryDatabase($"reciprocal-{Guid.NewGuid()}").Options;
+        using var db = new ExpatOneDbContext(options);
+        var sender = Guid.NewGuid();
+        var recipient = Guid.NewGuid();
+        db.Users.AddRange(
+            new User { Id = sender, ExternalId = "sender", Email = "sender@example.test" },
+            new User { Id = recipient, ExternalId = "recipient", Email = "recipient@example.test" });
+        db.FamilyRequests.Add(new FamilyRequest {
+            Id = Guid.NewGuid(), RequesterUserId = sender,
+            RecipientUserId = recipient, StatusId = FamilyRequestStates.Pending
+        });
+        await db.SaveChangesAsync();
+        var service = new FamilyService(db);
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.SendAsync(recipient, "sender@example.test", "Friend"));
+    }
+
     [Theory]
     [InlineData(true, 2, false, true)]
     [InlineData(false, 2, false, false)]
