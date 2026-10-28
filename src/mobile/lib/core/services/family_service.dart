@@ -10,7 +10,7 @@ class FamilyUser {
 class FamilyRequest {
   final String id, status, revision, relationship;
   final FamilyUser requester, recipient;
-  final bool isIncoming, allowExpiryReminders;
+  final bool isIncoming, allowExpiryReminders, allowVisaApplicationUse;
   final DateTime? accessExpiresAt;
   final bool expiredAtLoad;
   bool get isExpired => expiredAtLoad || (status == 'Accepted' && accessExpiresAt != null && !accessExpiresAt!.isAfter(DateTime.now()));
@@ -25,6 +25,7 @@ class FamilyRequest {
         accessExpiresAt = json['accessExpiresAt'] == null ? null : DateTime.parse(json['accessExpiresAt'] as String),
         expiredAtLoad = json['isExpired'] as bool? ?? false,
         allowExpiryReminders = json['allowExpiryReminders'] as bool? ?? false,
+        allowVisaApplicationUse = json['allowVisaApplicationUse'] as bool? ?? false,
         documentIds = (json['documentIds'] as List).cast<String>();
 }
 class FamilyService {
@@ -37,11 +38,12 @@ class FamilyService {
   Future<void> send(String email, {String relationship = 'Other'}) async {
     await _api.post('/family/requests', body: {'email': email.trim(), 'relationship': relationship});
   }
-  Future<void> respond(FamilyRequest request, bool accept, List<String> ids, {bool? allowExpiryReminders, DateTime? accessExpiresAt, bool updateAccessExpiry = false}) async {
+  Future<void> respond(FamilyRequest request, bool accept, List<String> ids, {bool? allowExpiryReminders, bool? allowVisaApplicationUse, DateTime? accessExpiresAt, bool updateAccessExpiry = false}) async {
     await _api.post('/family/requests/${request.id}/respond', body: {
       'revision': request.revision, 'accept': accept, 'documentIds': ids,
       if (accessExpiresAt != null) 'accessExpiresAt': accessExpiresAt.toUtc().toIso8601String(),
       'allowExpiryReminders': ?allowExpiryReminders,
+      'allowVisaApplicationUse': ?allowVisaApplicationUse,
     });
   }
   Future<void> update(FamilyRequest request, List<String> ids, {bool? allowExpiryReminders, DateTime? accessExpiresAt, bool updateAccessExpiry = false}) async {
