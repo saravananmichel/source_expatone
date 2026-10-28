@@ -27,7 +27,14 @@ public sealed class NotificationDeliveryWorker(
             try { await DeliverOccasions(stoppingToken); await DeliverDocumentReminders(stoppingToken); await DeliverCorporateTasks(stoppingToken); await DeliverSharingExpiry(stoppingToken); await DeliverVisaDrafts(stoppingToken); await DeliverInvitations(stoppingToken); }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception ex) { logger.LogError(ex, "Notification delivery cycle failed"); }
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
+        } while (!stoppingToken.IsCancellationRequested &&
+                 await WaitForNextTick(timer, stoppingToken));
+    }
+
+    private static async Task<bool> WaitForNextTick(PeriodicTimer timer, CancellationToken ct)
+    {
+        try { return await timer.WaitForNextTickAsync(ct); }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested) { return false; }
     }
 
     public static DateTime NextOccurrence(DateTime original, bool annually, DateTime now)
