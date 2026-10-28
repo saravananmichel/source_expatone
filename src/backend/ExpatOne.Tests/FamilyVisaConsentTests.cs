@@ -69,12 +69,6 @@ public class FamilyVisaConsentTests
             Id = docId, UserId = owner, DocumentTypeId = db.DocumentTypes.Local.Single().Id,
             DocumentName = "Test document", S3ObjectKey = "test/key"
         });
-        db.FamilyRequestStatuses.AddRange(
-            new FamilyRequestStatus { Id = 1, Name = "Pending" },
-            new FamilyRequestStatus { Id = 2, Name = "Accepted" },
-            new FamilyRequestStatus { Id = 3, Name = "Rejected" },
-            new FamilyRequestStatus { Id = 4, Name = "Cancelled" },
-            new FamilyRequestStatus { Id = 5, Name = "Revoked" });
         db.FamilyRequests.Add(request);
         db.FamilyDocumentGrants.Add(new FamilyDocumentGrant {
             FamilyRequestId = request.Id, DocumentId = docId
