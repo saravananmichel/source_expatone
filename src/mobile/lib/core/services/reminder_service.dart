@@ -1,5 +1,6 @@
 import '../networking/api_client.dart';
 import 'family_service.dart';
+import 'notification_preferences_service.dart';
 
 class UnifiedReminder {
   final String id, category, title, sourceId;
@@ -70,6 +71,8 @@ class ReminderService {
   ReminderService(this._apiClient);
 
   FamilyService get familyService => FamilyService(_apiClient);
+  NotificationPreferencesService get notificationPreferencesService =>
+      NotificationPreferencesService(_apiClient);
 
   Future<List<UnifiedReminder>> getUnifiedReminders({String? category, int days = 90}) async {
     final result = await _apiClient.getList('/unified-reminders', queryParams: {
