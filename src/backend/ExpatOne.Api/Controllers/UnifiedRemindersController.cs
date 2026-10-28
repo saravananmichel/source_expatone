@@ -29,7 +29,7 @@ public class UnifiedRemindersController(ExpatOneDbContext db, IUserService users
         {
             var reminders = await db.Reminders.AsNoTracking()
                 .Where(r => r.UserId == user.Id && r.Status == ReminderStatus.Active
-                    && r.ReminderDate >= now && r.ReminderDate <= until)
+                    && r.ReminderDate <= until)
                 .Select(r => new { r.Id, r.DocumentId, r.Title, r.Description, r.ReminderDate })
                 .ToListAsync();
             items.AddRange(reminders.Select(r => new UnifiedReminderItem(
