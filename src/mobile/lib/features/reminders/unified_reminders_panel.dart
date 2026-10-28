@@ -27,6 +27,7 @@ class _UnifiedRemindersPanelState extends State<UnifiedRemindersPanel> {
 
   Future<void> _load() async {
     final version = ++_requestVersion;
+    if (!mounted) return;
     setState(() { _loading = true; _error = null; });
     try {
       final items = await widget.service.getUnifiedReminders(
