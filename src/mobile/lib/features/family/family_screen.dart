@@ -11,6 +11,7 @@ class FamilyScreen extends StatefulWidget {
 }
 class _FamilyScreenState extends State<FamilyScreen> {
   final _email = TextEditingController();
+  final _connectionSearch = TextEditingController();
   String _relationship = 'Friend';
   List<FamilyRequest> _requests = [];
   FamilyUser? _found;
@@ -20,7 +21,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   @override
   void initState() { super.initState(); _load(); }
   @override
-  void dispose() { _email.dispose(); super.dispose(); }
+  void dispose() { _email.dispose(); _connectionSearch.dispose(); super.dispose(); }
   Future<void> _load() async {
     try {
       final requests = await _service.requests();
@@ -107,8 +108,17 @@ class _FamilyScreenState extends State<FamilyScreen> {
         if (_error != null) Padding(padding: const EdgeInsets.symmetric(vertical: 12), child: Text(_error!)),
         const SizedBox(height: 24),
         const Text('Connections & document access', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        TextField(controller: _connectionSearch, onChanged: (_) => setState(() {}),
+          decoration: const InputDecoration(labelText: 'Search connections by name or email',
+            prefixIcon: Icon(Icons.search), border: OutlineInputBorder())),
+        const SizedBox(height: 8),
         if (_requests.isEmpty && _error == null) const Padding(padding: EdgeInsets.all(16), child: Text('No family requests yet.')),
-        ..._requests.map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
+        ..._requests.where((r) {
+          final contact = r.isIncoming ? r.requester : r.recipient;
+          final query = _connectionSearch.text.trim().toLowerCase();
+          return query.isEmpty || contact.email.toLowerCase().contains(query) ||
+            (contact.displayName?.toLowerCase().contains(query) ?? false);
+        }).map((r) => Card(child: Padding(padding: const EdgeInsets.all(12), child: Column(
           crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text((r.isIncoming ? r.requester : r.recipient).email, style: const TextStyle(fontWeight: FontWeight.bold)),
             Text('${r.isIncoming ? "Incoming" : "Sent"} • ${r.relationship} • ${r.status}'),
