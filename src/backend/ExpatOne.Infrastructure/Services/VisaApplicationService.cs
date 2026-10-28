@@ -39,7 +39,7 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         if(d.UserId!=user) {
             var now=DateTime.UtcNow;
             var g=await db.FamilyDocumentGrants.AsNoTracking().Where(g=>g.DocumentId==id && g.Request.RequesterUserId==user && g.Request.RecipientUserId==d.UserId &&
-                g.Request.StatusId==FamilyRequestStates.Accepted && (g.Request.AccessExpiresAt==null || g.Request.AccessExpiresAt>now))
+                g.Request.StatusId==FamilyRequestStates.Accepted && g.Request.AllowVisaApplicationUse && (g.Request.AccessExpiresAt==null || g.Request.AccessExpiresAt>now))
                 .Select(g=>new{g.FamilyRequestId,g.Request.Revision,g.Request.AccessExpiresAt}).FirstOrDefaultAsync();
             if(g==null) return null; deadline=g.AccessExpiresAt; grant=$"{g.FamilyRequestId}:{g.Revision}";
         }
