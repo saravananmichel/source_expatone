@@ -47,6 +47,8 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         var fingerprint=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes($"{d.Id}|{d.S3ObjectKey}|{d.UpdatedAt.Ticks}|{version?.Id}|{version?.Sha256Hash}|{grant}")));
         return new(d,fingerprint,deadline);
     }
+    public async Task<bool> CanUseDocumentForVisaAsync(Guid user, Guid documentId) =>
+        await Accessible(user, documentId) != null;
     private async Task<List<Access>?> Validate(Guid user,VisaState state) {
         var result=new List<Access>();
         foreach(var d in state.Documents) { var a=await Accessible(user,d.Id); if(a==null || a.Fingerprint!=d.Fingerprint) return null; result.Add(a); }
