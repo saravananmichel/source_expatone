@@ -159,8 +159,11 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     IconData icon,
   ) {
     return SizedBox(
-      width: 190,
+      width: 180,
       child: Card(
+        color: const Color(0xFFEAF2FF),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -168,7 +171,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             children: [
               Icon(icon, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 8),
-              Text('$count', style: Theme.of(context).textTheme.headlineMedium),
+              Text('$count', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
               Text(label, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
@@ -199,13 +202,15 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             TextButton(onPressed: _load, child: const Text('Retry')),
           ] else ...[
             Text(
-              'Document overview',
+              'Friends & Family overview',
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 6),
+            const Text('Securely shared documents and expiry alerts across your trusted circle.'),
+            const SizedBox(height: 16),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 12,
+              runSpacing: 12,
               children: [
                 _summaryCard(
                   context,
