@@ -25,6 +25,7 @@ public class FamilyRequestConfiguration : IEntityTypeConfiguration<FamilyRequest
         b.ToTable("family_requests", t => t.HasCheckConstraint("CK_family_not_self", "\"RequesterUserId\" <> \"RecipientUserId\""));
         b.HasKey(x => x.Id);
         b.Property(x => x.Revision).IsConcurrencyToken();
+        b.Property(x => x.Relationship).HasMaxLength(40).IsRequired().HasDefaultValue("Other");
         b.HasOne(x => x.Requester).WithMany().HasForeignKey(x => x.RequesterUserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Recipient).WithMany().HasForeignKey(x => x.RecipientUserId).OnDelete(DeleteBehavior.Cascade);
         b.HasOne(x => x.Status).WithMany().HasForeignKey(x => x.StatusId).OnDelete(DeleteBehavior.Restrict);
