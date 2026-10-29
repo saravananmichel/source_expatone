@@ -18,6 +18,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   List<FamilyRequest> _requests = [];
   bool _loading = true, _busy = false;
   String? _error;
+  final Map<String, String?> _memberPhotos = {};
   FamilyService get _service => widget.documentService.familyService;
   @override
   void initState() { super.initState(); _load(); }
