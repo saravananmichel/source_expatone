@@ -64,6 +64,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     } catch (_) {
       // Connection feed is optional; leave other dashboard sections available.
     }
+    if (!mounted || version != _overviewRequestVersion) return;
     try {
       final occasions = await widget.documentService.apiClient.getList(
         '/family-occasions',
