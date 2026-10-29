@@ -19,6 +19,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   bool _loading = true, _busy = false;
   String? _error;
   final Map<String, String?> _memberPhotos = {};
+  int _photoLoadVersion = 0;
   FamilyService get _service => widget.documentService.familyService;
   Future<void> _loadMemberPhotos() async {
     final members = _requests.where((r) => r.status == 'Accepted' && !r.isExpired)
