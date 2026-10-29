@@ -50,22 +50,44 @@ void main() {
       MaterialApp(home: FamilyScreen(documentService: service)),
     );
     await tester.pumpAndSettle();
-    await tester.scrollUntilVisible(
-      find.text('Review & accept'),
-      300,
-      scrollable: find.byType(Scrollable).first,
-    );
+
+    // Open the incoming connection request.
+    await tester.tap(find.text('viewer@test.com'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Review & accept'));
+
+    expect(find.text('You have a new connection request'), findsOneWidget);
+
+    await tester.tap(find.text('Accept'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Temporary access')); await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('1 hour'));
+
+    // Step 1: Document selection.
+    expect(find.text('Choose which documents to share'), findsOneWidget);
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
+    // Step 2: Access duration — select 7 days.
+    expect(find.text('Access Duration'), findsNWidgets(2));
     final before = DateTime.now();
-    await tester.tap(find.text('1 hour')); await tester.pumpAndSettle();
-    await tester.tap(find.text('Accept & share (0)')); await tester.pumpAndSettle();
+    await tester.tap(find.text('7 days'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+
+    // Step 3: Confirm sharing.
+    expect(find.text('Confirm & Share'), findsOneWidget);
+    await tester.tap(find.text('Confirm & Share'));
+    await tester.pumpAndSettle();
     final deadline = DateTime.parse(body!['accessExpiresAt'] as String);
+
     expect(deadline.isUtc, true);
-    expect(deadline.isAfter(before.add(const Duration(minutes: 59))), true);
-    expect(deadline.isBefore(DateTime.now().add(const Duration(minutes: 61))), true);
+    expect(
+      deadline.isAfter(before.add(const Duration(days: 6, hours: 23))),
+      true,
+    );
+    expect(
+      deadline.isBefore(DateTime.now().add(const Duration(days: 7, minutes: 1))),
+      true,
+    );
   });
 }

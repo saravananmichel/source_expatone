@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
 import 'family_occasions_screen.dart';
-import '../../core/services/family_service.dart';
 import '../documents/document_detail_screen.dart';
 import 'family_alerts_panel.dart';
 
@@ -38,8 +37,14 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   Future<void> _loadOverview() async {
     try {
       final connections = await _service.requests();
-      final occasions = await widget.documentService.apiClient.getList('/family-occasions');
-      if (mounted) setState(() { _connections = connections; _occasions = occasions; });
+      final occasions = await widget.documentService.apiClient.getList(
+        '/family-occasions',
+      );
+      if (mounted)
+        setState(() {
+          _connections = connections;
+          _occasions = occasions;
+        });
     } catch (_) {
       // Keep the document dashboard usable if companion feeds are unavailable.
     }
@@ -64,7 +69,10 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) { _load(); _loadOverview(); }
+    if (state == AppLifecycleState.resumed) {
+      _load();
+      _loadOverview();
+    }
   }
 
   Future<void> _load() async {
@@ -186,7 +194,11 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             children: [
               Icon(icon, color: Theme.of(context).colorScheme.primary),
               const SizedBox(height: 8),
-              Text('$count', style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
+              Text(
+                '$count',
+                style: Theme.of(context).textTheme.headlineMedium
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
               Text(label, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
@@ -205,7 +217,8 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     var next = DateTime(original.year, original.month, original.day);
     if (item['repeatsAnnually'] == true) {
       next = DateTime(now.year, original.month, original.day);
-      if (next.isBefore(today)) next = DateTime(now.year + 1, original.month, original.day);
+      if (next.isBefore(today))
+        next = DateTime(now.year + 1, original.month, original.day);
     }
     return next.difference(today).inDays;
   }
@@ -231,7 +244,10 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
         return a.first.owner.email.compareTo(b.first.owner.email);
       });
     return RefreshIndicator(
-      onRefresh: () async { await _load(); await _loadOverview(); },
+      onRefresh: () async {
+        await _load();
+        await _loadOverview();
+      },
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
@@ -240,71 +256,188 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             Text(_error!),
             TextButton(onPressed: _load, child: const Text('Retry')),
           ] else ...[
-            Row(children: [
-              const Icon(Icons.people_alt_outlined, color: Color(0xFF2563EB), size: 26),
-              const SizedBox(width: 10),
-              Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Friends & Family Dashboard', style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold)),
-                const Text('Overview of your trusted circle'),
-              ])),
-              FilledButton.icon(onPressed: () => Navigator.push(context,
-                MaterialPageRoute(builder: (_) => FamilyOccasionsScreen(
-                  api: widget.documentService.apiClient))),
-                icon: const Icon(Icons.event_outlined), label: const Text('Occasions')),
-            ]),
+            Row(
+              children: [
+                const Icon(
+                  Icons.people_alt_outlined,
+                  color: Color(0xFF2563EB),
+                  size: 26,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Friends & Family Dashboard',
+                        style: Theme.of(context).textTheme.titleLarge
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const Text('Overview of your trusted circle'),
+                    ],
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => FamilyOccasionsScreen(
+                        api: widget.documentService.apiClient,
+                      ),
+                    ),
+                  ),
+                  icon: const Icon(Icons.event_outlined),
+                  label: const Text('Occasions'),
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            Wrap(spacing: 12, runSpacing: 12, children: [
-              _summaryCard(context, 'Connections',
-                _connections.where((r) => r.status == 'Accepted' && !r.isExpired).length,
-                Icons.people_outline),
-              _summaryCard(context, 'Shared Documents',
-                _documents.where((d) => !d.isOwned).length,
-                Icons.folder_shared_outlined),
-              _summaryCard(context, 'Pending Requests',
-                _connections.where((r) => r.status == 'Pending').length,
-                Icons.schedule_outlined),
-              _summaryCard(context, 'Upcoming Events', _upcomingOccasions().length,
-                Icons.event_available_outlined),
-            ]),
+            Wrap(
+              spacing: 12,
+              runSpacing: 12,
+              children: [
+                _summaryCard(
+                  context,
+                  'Connections',
+                  _connections
+                      .where((r) => r.status == 'Accepted' && !r.isExpired)
+                      .length,
+                  Icons.people_outline,
+                ),
+                _summaryCard(
+                  context,
+                  'Shared Documents',
+                  _documents.where((d) => !d.isOwned).length,
+                  Icons.folder_shared_outlined,
+                ),
+                _summaryCard(
+                  context,
+                  'Pending Requests',
+                  _connections.where((r) => r.status == 'Pending').length,
+                  Icons.schedule_outlined,
+                ),
+                _summaryCard(
+                  context,
+                  'Upcoming Events',
+                  _upcomingOccasions().length,
+                  Icons.event_available_outlined,
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
-            LayoutBuilder(builder: (context, layout) => Wrap(
-              spacing: 12, runSpacing: 12, children: [
-                SizedBox(width: layout.maxWidth > 700 ? (layout.maxWidth - 12) / 2 : layout.maxWidth,
-                  child: Card(child: Padding(padding: const EdgeInsets.all(16),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(children: [
-                        const Icon(Icons.cake_outlined, color: Color(0xFFE11D48)),
-                        const SizedBox(width: 8),
-                        Text('Upcoming Celebrations', style: Theme.of(context).textTheme.titleMedium),
-                      ]),
-                      const SizedBox(height: 8),
-                      if (_upcomingOccasions().isEmpty)
-                        const Text('No upcoming occasions in the next 30 days'),
-                      for (final item in _upcomingOccasions().take(4))
-                        ListTile(dense: true, leading: const Icon(Icons.celebration_outlined),
-                          title: Text(item['title'] as String? ?? 'Occasion'),
-                          subtitle: Text(item['kind'] as String? ?? 'Event'),
-                          trailing: Text(_daysToOccasion(item).toString() + ' days')),
-                    ])))),
-                SizedBox(width: layout.maxWidth > 700 ? (layout.maxWidth - 12) / 2 : layout.maxWidth,
-                  child: Card(child: Padding(padding: const EdgeInsets.all(16),
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Row(children: [
-                        const Icon(Icons.history_outlined, color: Color(0xFF2563EB)),
-                        const SizedBox(width: 8),
-                        Text('Connection Activity', style: Theme.of(context).textTheme.titleMedium),
-                      ]),
-                      const SizedBox(height: 8),
-                      if (_connections.isEmpty) const Text('No connection activity'),
-                      for (final r in _connections.take(4))
-                        ListTile(dense: true,
-                          leading: Icon(r.status == 'Accepted' ? Icons.check_circle_outline : Icons.mark_email_unread_outlined),
-                          title: Text(r.isIncoming ? (r.requester.displayName ?? r.requester.email)
-                            : (r.recipient.displayName ?? r.recipient.email)),
-                          subtitle: Text('${r.relationship} • ${r.status}')),
-                    ])))),
-              ])),
+            LayoutBuilder(
+              builder: (context, layout) => Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: [
+                  SizedBox(
+                    width: layout.maxWidth > 700
+                        ? (layout.maxWidth - 12) / 2
+                        : layout.maxWidth,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.cake_outlined,
+                                  color: Color(0xFFE11D48),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Upcoming Celebrations',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (_upcomingOccasions().isEmpty)
+                              const Text(
+                                'No upcoming occasions in the next 30 days',
+                              ),
+                            for (final item in _upcomingOccasions().take(4))
+                              ListTile(
+                                dense: true,
+                                leading: const Icon(Icons.celebration_outlined),
+                                title: Text(
+                                  item['title'] as String? ?? 'Occasion',
+                                ),
+                                subtitle: Text(
+                                  item['kind'] as String? ?? 'Event',
+                                ),
+                                trailing: Text(
+                                  _daysToOccasion(item).toString() + ' days',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: layout.maxWidth > 700
+                        ? (layout.maxWidth - 12) / 2
+                        : layout.maxWidth,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.history_outlined,
+                                  color: Color(0xFF2563EB),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Connection Activity',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            if (_connections.isEmpty)
+                              const Text('No connection activity'),
+                            for (final r in _connections.take(4))
+                              ListTile(
+                                dense: true,
+                                leading: Icon(
+                                  r.status == 'Accepted'
+                                      ? Icons.check_circle_outline
+                                      : Icons.mark_email_unread_outlined,
+                                ),
+                                title: Text(
+                                  r.isIncoming
+                                      ? (r.requester.displayName ??
+                                            r.requester.email)
+                                      : (r.recipient.displayName ??
+                                            r.recipient.email),
+                                ),
+                                subtitle: Text(
+                                  '${r.relationship} • ${r.status}',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 16),
             const SizedBox(height: 16),
             Wrap(
