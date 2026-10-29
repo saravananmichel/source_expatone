@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'family_dashboard_screen.dart';
+import '../../shared/widgets/profile_avatar.dart';
 import 'family_occasions_screen.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
@@ -113,7 +114,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   style: TextStyle(fontSize: 12, color: Colors.blueGrey)),
                 if (searching) const LinearProgressIndicator(),
                 if (found != null) Card(child: ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.person)),
+                  leading: ProfileAvatar(imageUrl: found!.profilePhotoUrl, displayName: found!.displayName, email: found!.email),
                   title: Text(found!.displayName ?? found!.email),
                   subtitle: Text(found!.email),
                   trailing: const Icon(Icons.check_circle, color: Colors.green),
@@ -267,9 +268,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
             for (final r in filtered)
               Card(child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: CircleAvatar(backgroundColor: const Color(0xFFE9F2FF),
-                  child: Text((r.isIncoming ? r.requester : r.recipient)
-                    .displayName?.substring(0, 1).toUpperCase() ?? '•')),
+                leading: ProfileAvatar(imageUrl: (r.isIncoming ? r.requester : r.recipient).profilePhotoUrl,
+                  displayName: (r.isIncoming ? r.requester : r.recipient).displayName,
+                  email: (r.isIncoming ? r.requester : r.recipient).email),
                 title: Text((r.isIncoming ? r.requester : r.recipient).displayName ??
                   (r.isIncoming ? r.requester : r.recipient).email,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -311,7 +312,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final decision = await showDialog<String>(context: context, builder: (ctx) => AlertDialog(
       title: const Text('You have a new connection request'),
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        ListTile(leading: const CircleAvatar(child: Icon(Icons.person)),
+        ListTile(leading: ProfileAvatar(imageUrl: request.requester.profilePhotoUrl,
+          displayName: request.requester.displayName, email: request.requester.email),
           title: Text(request.requester.displayName ?? request.requester.email),
           subtitle: Text(request.requester.email)),
         Chip(avatar: const Icon(Icons.favorite_outline, size: 16),
