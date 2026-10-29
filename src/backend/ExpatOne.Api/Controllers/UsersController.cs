@@ -41,7 +41,7 @@ public class UsersController : ControllerBase
 
     [HttpPost("me/photo")]
     [RequestSizeLimit(3 * 1024 * 1024)]
-    public async Task<IActionResult> UploadPhoto(IFormFile? file, CancellationToken ct)
+    public async Task<IActionResult> UploadPhoto([FromForm] IFormFile? file, CancellationToken ct)
     {
         if (file is null || file.Length == 0 || file.Length > 2 * 1024 * 1024)
             return BadRequest("Photo must be between 1 byte and 2 MB.");
@@ -54,7 +54,8 @@ public class UsersController : ControllerBase
         var isWebp = count >= 12 && System.Text.Encoding.ASCII.GetString(header, 0, 4) == "RIFF"
             && System.Text.Encoding.ASCII.GetString(header, 8, 4) == "WEBP";
         if (!isJpeg && !isPng && !isWebp) return BadRequest("Only JPEG, PNG or WebP images are supported.");
-        if (stream.CanSeek) stream.Position = 0;
+        if (!stream.CanSeek) return BadRequest("Unable to read uploaded image stream.");
+        stream.Position = 0;
         var current = await GetAuthenticatedUserAsync();
         var user = await _db.Users.SingleAsync(u => u.Id == current.Id, ct);
         var extension = isJpeg ? "jpg" : isPng ? "png" : "webp";
@@ -64,9 +65,20 @@ public class UsersController : ControllerBase
         user.ProfilePhotoKey = key;
         user.ProfilePhotoSource = "upload";
         user.ProfilePhotoUpdatedAt = DateTime.UtcNow;
-        await _db.SaveChangesAsync(ct);
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            await _storage.DeleteFileAsync(key);
+            throw;
+        }
         if (oldKey is not null && oldKey.StartsWith($"profile-photos/{user.Id:N}/", StringComparison.Ordinal))
-            await _storage.DeleteFileAsync(oldKey);
+        {
+            try { await _storage.DeleteFileAsync(oldKey); }
+            catch { /* The new photo is saved; stale object cleanup can be retried. */ }
+        }
         return Ok(new { profilePhotoSource = user.ProfilePhotoSource });
     }
 
@@ -90,7 +102,10 @@ public class UsersController : ControllerBase
         user.ProfilePhotoUpdatedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync(ct);
         if (oldKey is not null && oldKey.StartsWith($"profile-photos/{user.Id:N}/", StringComparison.Ordinal))
-            await _storage.DeleteFileAsync(oldKey);
+        {
+            try { await _storage.DeleteFileAsync(oldKey); }
+            catch { /* The profile no longer references this object. */ }
+        }
         return NoContent();
     }
 
