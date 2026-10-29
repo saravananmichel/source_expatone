@@ -126,14 +126,19 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
 
   Future<void> _changePhoto() async {
     if (_photoBusy) return;
-    final picked = await FilePicker.platform.pickFiles(
+    final file = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
-      withData: true,
     );
-    if (picked == null || picked.files.isEmpty || !mounted) return;
-    final file = picked.files.single;
-    final bytes = file.bytes;
+    if (file == null || !mounted) return;
+    final length = file.lengthSync() ?? await file.length();
+    if (length > 2 * 1024 * 1024 || length == 0) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose a photo smaller than 2 MB.')),
+      );
+      return;
+    }
+    final bytes = await file.readAsBytes();
     if (bytes == null || bytes.isEmpty || bytes.length > 2 * 1024 * 1024) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Choose a photo smaller than 2 MB.')),
