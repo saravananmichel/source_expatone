@@ -3,9 +3,11 @@ import '../networking/api_client.dart';
 class FamilyUser {
   final String id, email;
   final String? displayName;
+  final String? profilePhotoUrl;
   FamilyUser.fromJson(Map<String, dynamic> json)
       : id = json['id'] as String, email = json['email'] as String,
-        displayName = json['displayName'] as String?;
+        displayName = json['displayName'] as String?,
+        profilePhotoUrl = json['profilePhotoUrl'] as String?;
 }
 class FamilyRequest {
   final String id, status, revision, relationship;
