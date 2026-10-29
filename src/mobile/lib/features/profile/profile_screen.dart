@@ -29,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   String? _error;
   String? _photoUrl;
   bool _photoBusy = false;
+  int _photoRefreshVersion = 0;
 
   @override
   void initState() {
@@ -80,11 +81,12 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   }
 
   Future<void> _refreshPhoto() async {
+    final version = ++_photoRefreshVersion;
     try {
       final url = await widget.userService.getMyProfilePhotoUrl();
-      if (mounted) setState(() => _photoUrl = url);
+      if (mounted && version == _photoRefreshVersion) setState(() => _photoUrl = url);
     } catch (_) {
-      if (mounted) setState(() => _photoUrl = null);
+      if (mounted && version == _photoRefreshVersion) setState(() => _photoUrl = null);
     }
   }
 
