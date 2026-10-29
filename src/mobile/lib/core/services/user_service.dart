@@ -143,6 +143,10 @@ class UserService {
 
   UserService(this._apiClient);
 
+  Future<void> syncGoogleProfilePhoto() async {
+    await _apiClient.post('/users/me/photo/sync-google', {});
+  }
+
   Future<String?> getMyProfilePhotoUrl() async {
     final response = await _apiClient.get('/users/me/photo');
     return response['url'] as String?;
