@@ -245,6 +245,12 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   }
 
   Widget _buildProfileContent() {
+    if (_photoUrlFetchedAt != null &&
+        DateTime.now().difference(_photoUrlFetchedAt!) > const Duration(minutes: 4)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_photoBusy) _refreshPhoto();
+      });
+    }
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
