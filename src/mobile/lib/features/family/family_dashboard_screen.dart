@@ -21,6 +21,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   List<FamilyRequest> _connections = [];
   final Map<String, String?> _memberPhotos = {};
   int _avatarRequestVersion = 0;
+  int _overviewRequestVersion = 0;
   List<Map<String, dynamic>> _occasions = [];
   bool _loading = true;
   String? _error;
@@ -50,9 +51,11 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   }
 
   Future<void> _loadOverview() async {
+    final version = ++_overviewRequestVersion;
+    ++_avatarRequestVersion;
     try {
       final connections = await _service.requests();
-      if (!mounted) return;
+      if (!mounted || version != _overviewRequestVersion) return;
       setState(() {
         _connections = connections;
         _memberPhotos.clear();
@@ -65,7 +68,9 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
       final occasions = await widget.documentService.apiClient.getList(
         '/family-occasions',
       );
-      if (mounted) setState(() => _occasions = occasions);
+      if (mounted && version == _overviewRequestVersion) {
+        setState(() => _occasions = occasions);
+      }
     } catch (_) {
       // Occasions are independent of connection loading.
     }
