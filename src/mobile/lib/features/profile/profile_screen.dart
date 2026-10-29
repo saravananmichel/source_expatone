@@ -162,7 +162,12 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     setState(() => _photoBusy = true);
     try {
       await widget.userService.deleteMyProfilePhoto();
-      if (mounted) setState(() => _photoUrl = null);
+      if (mounted) setState(() {
+        _photoRefreshVersion++;
+        _photoUrl = null;
+        _photoUrlFetchedAt = DateTime.now();
+        _profile = null;
+      });
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to remove photo.')),
