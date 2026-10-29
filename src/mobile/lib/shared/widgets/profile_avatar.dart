@@ -22,7 +22,7 @@ class ProfileAvatar extends StatelessWidget {
             : (email ?? ''))
         .trim();
     if (name.isEmpty) return '';
-    final words = name.split(RegExp(r'\\s+')).where((w) => w.isNotEmpty).toList();
+    final words = name.split(' ').where((w) => w.isNotEmpty).toList();
     if (words.length >= 2) {
       return '${words.first[0]}${words.last[0]}'.toUpperCase();
     }
