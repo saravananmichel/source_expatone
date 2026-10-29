@@ -143,6 +143,24 @@ class UserService {
 
   UserService(this._apiClient);
 
+  Future<String?> getMyProfilePhotoUrl() async {
+    final response = await _apiClient.get('/users/me/photo');
+    return response['url'] as String?;
+  }
+
+  Future<void> uploadMyProfilePhoto({
+    required List<int> bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    await _apiClient.uploadFile('/users/me/photo',
+      bytes: bytes, fileName: fileName, contentType: contentType);
+  }
+
+  Future<void> deleteMyProfilePhoto() async {
+    await _apiClient.delete('/users/me/photo');
+  }
+
   Future<UserProfile> getMe() async {
     final response = await _apiClient.get('/users/me');
     return UserProfile.fromJson(response);
