@@ -136,6 +136,9 @@ class _FakeUserService extends UserService {
       );
 
   @override
+  Future<String?> getMyProfilePhotoUrl() async => null;
+
+  @override
   Future<ProfileOptions> getProfileOptions() async => ProfileOptions(
         visaPassTypes: [],
         employmentStatuses: [],
