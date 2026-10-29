@@ -30,6 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   String? _photoUrl;
   bool _photoBusy = false;
   int _photoRefreshVersion = 0;
+  DateTime? _photoUrlFetchedAt;
 
   @override
   void initState() {
