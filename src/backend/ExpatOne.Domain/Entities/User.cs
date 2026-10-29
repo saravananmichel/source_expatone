@@ -9,6 +9,10 @@ public class User : BaseEntity
     public required string Email { get; set; }
     public string? DisplayName { get; set; }
     public string? PhoneNumber { get; set; }
+    public string? ProfilePhotoKey { get; set; }
+    public string? ProfilePhotoSource { get; set; }
+    public DateTime? ProfilePhotoUpdatedAt { get; set; }
+    public string? GooglePhotoReference { get; set; }
     public string CountryCode { get; set; } = "MY";
     public string PreferredLanguage { get; set; } = "en";
     public bool IsActive { get; set; } = true;
