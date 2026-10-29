@@ -33,6 +33,14 @@ class FamilyRequest {
 class FamilyService {
   final ApiClient _api;
   FamilyService(this._api);
+  Future<String?> memberPhotoUrl(String memberId) async {
+    try {
+      final result = await _api.get('/family/members/$memberId/photo');
+      return result['url'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
   Future<FamilyUser> search(String email) async => FamilyUser.fromJson(
       await _api.get('/family/search', queryParams: {'email': email.trim()}));
   Future<List<FamilyRequest>> requests() async =>
