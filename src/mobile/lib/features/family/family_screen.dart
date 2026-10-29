@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'family_dashboard_screen.dart';
 import '../../shared/widgets/profile_avatar.dart';
@@ -20,6 +21,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String? _error;
   final Map<String, String?> _memberPhotos = {};
   int _photoLoadVersion = 0;
+  Timer? _photoRefreshTimer;
   FamilyService get _service => widget.documentService.familyService;
   Future<void> _loadMemberPhotos() async {
     final version = ++_photoLoadVersion;
@@ -33,9 +35,22 @@ class _FamilyScreenState extends State<FamilyScreen> {
     }
   }
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _photoRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) {
+      if (!mounted || _requests.isEmpty) return;
+      setState(() => _memberPhotos.clear());
+      _loadMemberPhotos();
+    });
+    _load();
+  }
   @override
-  void dispose() { _email.dispose(); _connectionSearch.dispose(); super.dispose(); }
+  void dispose() {
+    _photoRefreshTimer?.cancel();
+    _email.dispose();
+    _connectionSearch.dispose();
+    super.dispose();
+  }
   Future<void> _load() async {
     try {
       final requests = await _service.requests();
