@@ -169,7 +169,8 @@ void main() {
   // Helper: scrolls to and taps the Sign Out button.
   // The button is at the bottom of a long ListView and may be off-screen.
   Future<void> tapSignOutButton(WidgetTester tester) async {
-    await tester.scrollUntilVisible(find.byIcon(Icons.logout), 80.0);
+    await tester.ensureVisible(find.byIcon(Icons.logout));
+    await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.logout));
     await tester.pumpAndSettle();
   }
