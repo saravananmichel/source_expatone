@@ -19,6 +19,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   late final TabController _tabs;
   List<FamilyDashboardDocument> _documents = [];
   List<FamilyRequest> _connections = [];
+  final Map<String, String?> _memberPhotos = {};
   List<Map<String, dynamic>> _occasions = [];
   bool _loading = true;
   String? _error;
@@ -35,6 +36,17 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     _loadOverview();
   }
 
+  Future<void> _loadMemberPhotos() async {
+    final members = _connections.where((r) => r.status == 'Accepted' && !r.isExpired)
+        .map((r) => r.isIncoming ? r.requester : r.recipient);
+    for (final member in members) {
+      if (_memberPhotos.containsKey(member.id)) continue;
+      final url = await _service.memberPhotoUrl(member.id);
+      if (!mounted) return;
+      setState(() => _memberPhotos[member.id] = url);
+    }
+  }
+
   Future<void> _loadOverview() async {
     try {
       final connections = await _service.requests();
@@ -44,8 +56,10 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
       if (mounted)
         setState(() {
           _connections = connections;
+          _memberPhotos.clear();
           _occasions = occasions;
         });
+      _loadMemberPhotos();
     } catch (_) {
       // Keep the document dashboard usable if companion feeds are unavailable.
     }
@@ -426,7 +440,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                               ListTile(
                                 dense: true,
                                 leading: ProfileAvatar(
-                                  imageUrl: (r.isIncoming ? r.requester : r.recipient).profilePhotoUrl,
+                                  imageUrl: _memberPhotos[(r.isIncoming ? r.requester : r.recipient).id],
                                   displayName: (r.isIncoming ? r.requester : r.recipient).displayName,
                                   email: (r.isIncoming ? r.requester : r.recipient).email,
                                   radius: 20,
