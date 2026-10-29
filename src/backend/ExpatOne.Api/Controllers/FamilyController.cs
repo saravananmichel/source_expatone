@@ -44,6 +44,62 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
         return Ok(new { url = await storage.GeneratePresignedUrlAsync(key, TimeSpan.FromMinutes(5)) });
     }
 
+    // Historical events are derived only from persisted timestamps; no inferred document-grant history.
+    [HttpGet("activity")]
+    public async Task<IActionResult> Activity([FromQuery] int limit = 30, CancellationToken ct = default)
+    {
+        var callerId = await UserId();
+        limit = Math.Clamp(limit, 1, 100);
+        var requests = await db.FamilyRequests.AsNoTracking()
+            .Where(r => r.RequesterUserId == callerId || r.RecipientUserId == callerId)
+            .Select(r => new {
+                r.Id, r.RequesterUserId, r.RecipientUserId, r.Relationship,
+                r.StatusId, r.CreatedAt, r.RespondedAt,
+                RequesterName = r.Requester.DisplayName, RequesterEmail = r.Requester.Email,
+                RecipientName = r.Recipient.DisplayName, RecipientEmail = r.Recipient.Email
+            }).ToListAsync(ct);
+        var occasions = await db.FamilyOccasions.AsNoTracking()
+            .Where(o => o.UserId == callerId)
+            .OrderByDescending(o => o.CreatedAt).Take(limit)
+            .Select(o => new { o.Id, o.Title, o.CreatedAt, o.ConnectionId })
+            .ToListAsync(ct);
+        var events = new List<object>();
+        foreach (var r in requests)
+        {
+            var incoming = r.RecipientUserId == callerId;
+            var otherId = incoming ? r.RequesterUserId : r.RecipientUserId;
+            var otherName = incoming ? r.RequesterName ?? r.RequesterEmail : r.RecipientName ?? r.RecipientEmail;
+            events.Add(new {
+                id = $"request:{r.Id}:created", kind = "invitation", occurredAt = r.CreatedAt,
+                memberId = otherId, memberName = otherName,
+                title = incoming ? "Invitation received" : "Invitation sent",
+                detail = r.Relationship
+            });
+            if (r.RespondedAt.HasValue)
+            {
+                var title = r.StatusId switch {
+                    2 => "Connection accepted",
+                    3 => "Invitation declined",
+                    4 => "Invitation cancelled",
+                    5 => "Connection ended",
+                    _ => "Invitation updated"
+                };
+                events.Add(new {
+                    id = $"request:{r.Id}:response", kind = "connection", occurredAt = r.RespondedAt.Value,
+                    memberId = otherId, memberName = otherName, title, detail = r.Relationship
+                });
+            }
+        }
+        foreach (var o in occasions)
+            events.Add(new {
+                id = $"occasion:{o.Id}:created", kind = "occasion", occurredAt = o.CreatedAt,
+                memberId = o.ConnectionId, memberName = o.Title,
+                title = "Occasion added", detail = o.Title
+            });
+        return Ok(events.OrderByDescending(e => (DateTime)e.GetType().GetProperty("occurredAt")!.GetValue(e)!)
+            .Take(limit));
+    }
+
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard() => Ok(await family.DashboardAsync(await UserId()));
     [HttpGet("alerts")]
