@@ -52,7 +52,7 @@ class ProfileAvatar extends StatelessWidget {
         child: hasImage
             ? ClipOval(
                 child: Image.network(
-                  url,
+                  url!,
                   width: radius * 2,
                   height: radius * 2,
                   fit: BoxFit.cover,
