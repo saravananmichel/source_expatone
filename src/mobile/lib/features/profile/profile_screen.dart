@@ -228,7 +228,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Center(
           child: ProfileAvatar(
             radius: 48,
-            imageUrl: _photoUrl ?? _profile!.profilePhotoUrl ?? widget.authService.currentState.user?.photoUrl,
+            imageUrl: _photoUrl ?? (_profile!.profilePhotoSource == 'upload' ? null : widget.authService.currentState.user?.photoUrl),
             displayName: _profile!.displayName,
             email: _profile!.email,
           ),
