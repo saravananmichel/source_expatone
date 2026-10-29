@@ -40,6 +40,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.dispose();
   }
 
+  Future<void> _pickPhoto() async {
+    final selection = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+      withData: true,
+    );
+    if (selection == null || selection.files.isEmpty || !mounted) return;
+    final photo = selection.files.single;
+    if (photo.bytes == null || photo.bytes!.isEmpty ||
+        photo.bytes!.length > 2 * 1024 * 1024) {
+      setState(() => _errorMessage = 'Photo must be smaller than 2 MB.');
+      return;
+    }
+    setState(() {
+      _selectedPhoto = photo;
+      _errorMessage = null;
+    });
+  }
+
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -97,7 +116,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: AppTheme.textSecondary,
                       ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _pickPhoto,
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: Text(_selectedPhoto?.name ?? 'Add profile photo (optional)'),
+                ),
+                if (_selectedPhoto != null)
+                  TextButton(
+                    onPressed: _isLoading ? null : () => setState(() => _selectedPhoto = null),
+                    child: const Text('Remove selected photo'),
+                  ),
+                const SizedBox(height: 24),
                 if (_errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
