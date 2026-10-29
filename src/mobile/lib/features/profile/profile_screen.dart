@@ -147,6 +147,11 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     try {
       await widget.userService.uploadMyProfilePhoto(
         bytes: bytes, fileName: file.name, contentType: type);
+      ++_photoRefreshVersion;
+      while (_photoRefreshInFlight) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        if (!mounted) return;
+      }
       await _refreshPhoto();
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
