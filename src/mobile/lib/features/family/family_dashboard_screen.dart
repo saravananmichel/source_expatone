@@ -23,6 +23,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   int _avatarRequestVersion = 0;
   int _overviewRequestVersion = 0;
   List<Map<String, dynamic>> _occasions = [];
+  List<Map<String, dynamic>> _activity = [];
   bool _loading = true;
   String? _error;
   String _filter = 'All';
@@ -63,6 +64,15 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
       _loadMemberPhotos();
     } catch (_) {
       // Connection feed is optional; leave other dashboard sections available.
+    }
+    if (!mounted || version != _overviewRequestVersion) return;
+    try {
+      final activity = await widget.documentService.apiClient.getList('/family/activity');
+      if (mounted && version == _overviewRequestVersion) {
+        setState(() => _activity = activity);
+      }
+    } catch (_) {
+      // Older API deployments may not yet provide the activity endpoint.
     }
     if (!mounted || version != _overviewRequestVersion) return;
     try {
@@ -232,6 +242,16 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
         ),
       ),
     );
+  }
+
+  String _activityTime(Object? value) {
+    final date = DateTime.tryParse(value?.toString() ?? '')?.toLocal();
+    if (date == null) return '';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day $hour:$minute';
   }
 
   int _daysToOccasion(Map<String, dynamic> item) {
@@ -437,7 +457,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Recent Connection Activity',
+                                    'Recent Family Activity',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium,
@@ -446,27 +466,22 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                               ],
                             ),
                             const SizedBox(height: 8),
-                            if (_connections.isEmpty)
-                              const Text('No connection activity'),
-                            for (final r in _connections.take(4))
+                            if (_activity.isEmpty)
+                              const Text('No recorded activity yet'),
+                            for (final event in _activity.take(8))
                               ListTile(
                                 dense: true,
                                 leading: ProfileAvatar(
-                                  imageUrl: _memberPhotos[(r.isIncoming ? r.requester : r.recipient).id],
-                                  displayName: (r.isIncoming ? r.requester : r.recipient).displayName,
-                                  email: (r.isIncoming ? r.requester : r.recipient).email,
+                                  imageUrl: _memberPhotos[event['memberId']?.toString()],
+                                  displayName: event['memberName'] as String?,
                                   radius: 20,
                                 ),
-                                title: Text(
-                                  r.isIncoming
-                                      ? (r.requester.displayName ??
-                                            r.requester.email)
-                                      : (r.recipient.displayName ??
-                                            r.recipient.email),
-                                ),
+                                title: Text(event['title'] as String? ?? 'Family activity'),
                                 subtitle: Text(
-                                  '${r.relationship} • ${r.status}',
+                                  '${event['memberName'] ?? ''} • ${event['detail'] ?? ''}\n'
+                                  '${_activityTime(event['occurredAt'])}',
                                 ),
+                                isThreeLine: true,
                               ),
                           ],
                         ),
