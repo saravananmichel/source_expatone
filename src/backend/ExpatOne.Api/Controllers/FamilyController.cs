@@ -89,11 +89,12 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
                     memberId = otherId, memberName = otherName, title, detail = r.Relationship
                 }));
             }
-            if (r.StatusId == 5 && r.UpdatedAt > r.CreatedAt)
+            if ((r.StatusId == 4 || r.StatusId == 5) && r.UpdatedAt > r.CreatedAt)
                 events.Add((r.UpdatedAt, new {
-                    id = $"request:{r.Id}:ended", kind = "connection", occurredAt = r.UpdatedAt,
+                    id = $"request:{r.Id}:closed", kind = "connection", occurredAt = r.UpdatedAt,
                     memberId = otherId, memberName = otherName,
-                    title = "Connection ended", detail = r.Relationship
+                    title = r.StatusId == 4 ? "Invitation cancelled" : "Connection ended",
+                    detail = r.Relationship
                 }));
         }
         foreach (var o in occasions)
