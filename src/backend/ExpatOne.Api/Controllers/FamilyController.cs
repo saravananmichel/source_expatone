@@ -54,7 +54,7 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
             .Where(r => r.RequesterUserId == callerId || r.RecipientUserId == callerId)
             .Select(r => new {
                 r.Id, r.RequesterUserId, r.RecipientUserId, r.Relationship,
-                r.StatusId, r.CreatedAt, r.RespondedAt,
+                r.StatusId, r.CreatedAt, r.UpdatedAt, r.RespondedAt,
                 RequesterName = r.Requester.DisplayName, RequesterEmail = r.Requester.Email,
                 RecipientName = r.Recipient.DisplayName, RecipientEmail = r.Recipient.Email
             }).ToListAsync(ct);
@@ -81,7 +81,7 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
                     2 => "Connection accepted",
                     3 => "Invitation declined",
                     4 => "Invitation cancelled",
-                    5 => "Connection ended",
+                    5 => "Invitation responded to",
                     _ => "Invitation updated"
                 };
                 events.Add((r.RespondedAt.Value, new {
@@ -89,11 +89,17 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
                     memberId = otherId, memberName = otherName, title, detail = r.Relationship
                 }));
             }
+            if (r.StatusId == 5 && r.UpdatedAt > r.CreatedAt)
+                events.Add((r.UpdatedAt, new {
+                    id = $"request:{r.Id}:ended", kind = "connection", occurredAt = r.UpdatedAt,
+                    memberId = otherId, memberName = otherName,
+                    title = "Connection ended", detail = r.Relationship
+                }));
         }
         foreach (var o in occasions)
             events.Add((o.CreatedAt, new {
                 id = $"occasion:{o.Id}:created", kind = "occasion", occurredAt = o.CreatedAt,
-                memberId = o.ConnectionId, memberName = o.Title,
+                memberId = (Guid?)null, memberName = o.Title,
                 title = "Occasion added", detail = o.Title
             }));
         return Ok(events.OrderByDescending(e => e.At).Take(limit).Select(e => e.Data));
