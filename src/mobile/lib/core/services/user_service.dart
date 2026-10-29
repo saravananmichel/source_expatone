@@ -26,6 +26,7 @@ class UserProfile {
     required this.email,
     this.displayName,
     this.profilePhotoUrl,
+    this.profilePhotoSource,
     this.phoneNumber,
     required this.countryCode,
     required this.preferredLanguage,
