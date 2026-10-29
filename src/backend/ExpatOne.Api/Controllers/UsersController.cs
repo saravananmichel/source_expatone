@@ -1,4 +1,6 @@
 using System.Security.Claims;
+using FirebaseAdmin.Auth;
+using System.Net;
 using ExpatOne.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using ExpatOne.Application.DTOs;
