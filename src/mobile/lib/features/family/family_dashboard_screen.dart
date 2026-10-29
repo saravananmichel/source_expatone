@@ -38,7 +38,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     _avatarRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) {
       if (mounted && _connections.isNotEmpty) {
-        _memberPhotos.clear();
+        setState(() => _memberPhotos.clear());
         _loadMemberPhotos();
       }
     });
