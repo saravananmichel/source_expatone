@@ -49,6 +49,7 @@ class UserProfile {
       email: json['email'] as String,
       displayName: json['displayName'] as String?,
       profilePhotoUrl: json['profilePhotoUrl'] as String?,
+      profilePhotoSource: json['profilePhotoSource'] as String?,
       phoneNumber: json['phoneNumber'] as String?,
       countryCode: json['countryCode'] as String? ?? 'MY',
       preferredLanguage: json['preferredLanguage'] as String? ?? 'en',
