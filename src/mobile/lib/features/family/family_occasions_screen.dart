@@ -142,11 +142,15 @@ class _FamilyOccasionsScreenState extends State<FamilyOccasionsScreen> {
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                leading: ProfileAvatar(
-                  imageUrl: item['profilePhotoUrl'] as String?,
-                  displayName: item['title'] as String?,
-                  radius: 22,
-                ),
+                leading: item['profilePhotoUrl'] is String &&
+                        (item['profilePhotoUrl'] as String).isNotEmpty
+                    ? ProfileAvatar(
+                        imageUrl: item['profilePhotoUrl'] as String,
+                        displayName: item['title'] as String?,
+                        radius: 22,
+                      )
+                    : CircleAvatar(child: Icon(item['kind'] == 'Birthday'
+                        ? Icons.cake_outlined : Icons.event_outlined)),
                 title: Text(item['title'] as String? ?? '',
                   style: const TextStyle(fontWeight: FontWeight.w600)),
                 subtitle: Text([
