@@ -52,18 +52,22 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   Future<void> _loadOverview() async {
     try {
       final connections = await _service.requests();
+      if (!mounted) return;
+      setState(() {
+        _connections = connections;
+        _memberPhotos.clear();
+      });
+      _loadMemberPhotos();
+    } catch (_) {
+      // Connection feed is optional; leave other dashboard sections available.
+    }
+    try {
       final occasions = await widget.documentService.apiClient.getList(
         '/family-occasions',
       );
-      if (mounted)
-        setState(() {
-          _connections = connections;
-          _memberPhotos.clear();
-          _occasions = occasions;
-        });
-      _loadMemberPhotos();
+      if (mounted) setState(() => _occasions = occasions);
     } catch (_) {
-      // Keep the document dashboard usable if companion feeds are unavailable.
+      // Occasions are independent of connection loading.
     }
   }
 
