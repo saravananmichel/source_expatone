@@ -3,9 +3,11 @@ import '../networking/api_client.dart';
 class FamilyUser {
   final String id, email;
   final String? displayName;
+  final String? profilePhotoUrl;
   FamilyUser.fromJson(Map<String, dynamic> json)
       : id = json['id'] as String, email = json['email'] as String,
-        displayName = json['displayName'] as String?;
+        displayName = json['displayName'] as String?,
+        profilePhotoUrl = json['profilePhotoUrl'] as String?;
 }
 class FamilyRequest {
   final String id, status, revision, relationship;
@@ -31,6 +33,14 @@ class FamilyRequest {
 class FamilyService {
   final ApiClient _api;
   FamilyService(this._api);
+  Future<String?> memberPhotoUrl(String memberId) async {
+    try {
+      final result = await _api.get('/family/members/$memberId/photo');
+      return result['url'] as String?;
+    } catch (_) {
+      return null;
+    }
+  }
   Future<FamilyUser> search(String email) async => FamilyUser.fromJson(
       await _api.get('/family/search', queryParams: {'email': email.trim()}));
   Future<List<FamilyRequest>> requests() async =>

@@ -157,6 +157,7 @@ public class UserService : IUserService
         Id = user.Id,
         Email = user.Email,
         DisplayName = user.DisplayName,
+        ProfilePhotoSource = user.ProfilePhotoSource,
         PhoneNumber = user.PhoneNumber,
         CountryCode = user.CountryCode,
         PreferredLanguage = user.PreferredLanguage,

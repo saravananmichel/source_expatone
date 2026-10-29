@@ -1,0 +1,39 @@
+name: Profile and Family validation
+
+on:
+  pull_request:
+    paths:
+      - 'src/backend/**'
+      - 'src/mobile/**'
+      - '.github/workflows/profile-family-validation.yml'
+  workflow_dispatch:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Build API
+        run: dotnet build src/backend/ExpatOne.Api/ExpatOne.Api.csproj --configuration Release
+
+  flutter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - name: Fetch dependencies
+        working-directory: src/mobile
+        run: flutter pub get
+      - name: Analyze Dart
+        working-directory: src/mobile
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Run Flutter tests
+        working-directory: src/mobile
+        run: flutter test

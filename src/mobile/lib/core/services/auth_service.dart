@@ -28,8 +28,9 @@ class AuthUser {
   final String uid;
   final String? email;
   final String? displayName;
+  final String? photoUrl;
 
-  const AuthUser({required this.uid, this.email, this.displayName});
+  const AuthUser({required this.uid, this.email, this.displayName, this.photoUrl});
 }
 
 abstract class IAuthService {
@@ -65,6 +66,7 @@ class FirebaseAuthService implements IAuthService {
             uid: fbUser.uid,
             email: fbUser.email,
             displayName: fbUser.displayName,
+            photoUrl: fbUser.photoURL,
           ),
         );
       }
@@ -188,6 +190,7 @@ class FirebaseAuthService implements IAuthService {
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
+      photoUrl: user.photoURL,
     );
   }
 

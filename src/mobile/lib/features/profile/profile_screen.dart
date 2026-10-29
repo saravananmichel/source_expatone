@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../shared/widgets/profile_avatar.dart';
 
 class ProfileScreen extends StatefulWidget {
   final IAuthService authService;
@@ -20,16 +23,44 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   UserProfile? _profile;
   ProfileOptions? _options;
   bool _isLoading = true;
   String? _error;
+  String? _photoUrl;
+  bool _photoBusy = false;
+  int _photoRefreshVersion = 0;
+  DateTime? _photoUrlFetchedAt;
+  Timer? _photoRefreshTimer;
+  bool _photoRefreshInFlight = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _photoRefreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      final fetchedAt = _photoUrlFetchedAt;
+      if (mounted && !_photoBusy && _profile != null && fetchedAt != null &&
+          DateTime.now().difference(fetchedAt) >= const Duration(minutes: 4)) {
+        _refreshPhoto();
+      }
+    });
     _loadProfile();
+  }
+
+  @override
+  void dispose() {
+    _photoRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _profile != null) {
+      _refreshPhoto();
+    }
   }
 
   Future<void> _loadProfile() async {
@@ -49,6 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _options = results[1] as ProfileOptions;
           _isLoading = false;
         });
+        _syncGooglePhotoAndRefresh();
       }
     } catch (e) {
       if (mounted) {
@@ -57,6 +89,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _syncGooglePhotoAndRefresh() async {
+    if (widget.authService.currentState.user?.photoUrl != null &&
+        _profile?.profilePhotoSource != 'upload') {
+      try {
+        await widget.userService.syncGoogleProfilePhoto();
+      } catch (_) {
+        // Keep profile usable if Google photo sync is unavailable.
+      }
+    }
+    if (mounted) await _refreshPhoto();
+  }
+
+  Future<void> _refreshPhoto() async {
+    if (_photoRefreshInFlight) return;
+    _photoRefreshInFlight = true;
+    final version = ++_photoRefreshVersion;
+    try {
+      final url = await widget.userService.getMyProfilePhotoUrl();
+      if (mounted && version == _photoRefreshVersion) setState(() {
+        _photoUrl = url;
+        _photoUrlFetchedAt = DateTime.now();
+      });
+    } catch (_) {
+      if (mounted && version == _photoRefreshVersion) setState(() {
+        _photoUrl = null;
+        _photoUrlFetchedAt = DateTime.now();
+      });
+    } finally {
+      _photoRefreshInFlight = false;
+    }
+  }
+
+  Future<void> _changePhoto() async {
+    if (_photoBusy) return;
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+    );
+    if (file == null || !mounted) return;
+    final length = file.lengthSync() ?? await file.length();
+    if (length > 2 * 1024 * 1024 || length == 0) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose a photo smaller than 2 MB.')),
+      );
+      return;
+    }
+    final bytes = await file.readAsBytes();
+    if (bytes == null || bytes.isEmpty || bytes.length > 2 * 1024 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose a photo smaller than 2 MB.')),
+      );
+      return;
+    }
+    final ext = file.extension?.toLowerCase();
+    final type = ext == 'png' ? 'image/png'
+        : ext == 'webp' ? 'image/webp' : 'image/jpeg';
+    setState(() => _photoBusy = true);
+    try {
+      await widget.userService.uploadMyProfilePhoto(
+        bytes: bytes, fileName: file.name, contentType: type);
+      ++_photoRefreshVersion;
+      while (_photoRefreshInFlight) {
+        await Future<void>.delayed(const Duration(milliseconds: 50));
+        if (!mounted) return;
+      }
+      await _refreshPhoto();
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to upload photo. Please retry.')),
+      );
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  Future<void> _removePhoto() async {
+    if (_photoBusy) return;
+    setState(() => _photoBusy = true);
+    try {
+      await widget.userService.deleteMyProfilePhoto();
+      if (mounted) setState(() {
+        _photoRefreshVersion++;
+        _photoUrl = null;
+        _photoUrlFetchedAt = DateTime.now();
+      });
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to remove photo.')),
+      );
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
     }
   }
 
@@ -160,23 +286,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileContent() {
+    if (_photoUrlFetchedAt != null &&
+        DateTime.now().difference(_photoUrlFetchedAt!) > const Duration(minutes: 4)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_photoBusy) _refreshPhoto();
+      });
+    }
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         Center(
-          child: CircleAvatar(
+          child: ProfileAvatar(
             radius: 48,
-            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-            child: Text(
-              (_profile!.displayName?.isNotEmpty == true)
-                  ? _profile!.displayName![0].toUpperCase()
-                  : (_profile!.email[0].toUpperCase()),
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
+            imageUrl: _photoUrl ?? (_profile!.profilePhotoSource == 'upload' ? null : widget.authService.currentState.user?.photoUrl),
+            displayName: _profile!.displayName,
+            email: _profile!.email,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Wrap(
+            spacing: 8,
+            children: [
+              TextButton.icon(
+                onPressed: _photoBusy ? null : _changePhoto,
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: Text(_photoBusy ? 'Saving...' : 'Change photo'),
               ),
-            ),
+              if (_photoUrl != null)
+                TextButton.icon(
+                  onPressed: _photoBusy ? null : _removePhoto,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Remove'),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 16),

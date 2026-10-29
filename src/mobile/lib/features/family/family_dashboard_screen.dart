@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/services/document_service.dart';
@@ -5,6 +6,7 @@ import '../../core/services/family_service.dart';
 import 'family_occasions_screen.dart';
 import '../documents/document_detail_screen.dart';
 import 'family_alerts_panel.dart';
+import '../../shared/widgets/profile_avatar.dart';
 
 class FamilyDashboardScreen extends StatefulWidget {
   final DocumentService documentService;
@@ -18,7 +20,12 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   late final TabController _tabs;
   List<FamilyDashboardDocument> _documents = [];
   List<FamilyRequest> _connections = [];
+  final Map<String, String?> _memberPhotos = {};
+  int _avatarRequestVersion = 0;
+  int _overviewRequestVersion = 0;
+  Timer? _avatarRefreshTimer;
   List<Map<String, dynamic>> _occasions = [];
+  List<Map<String, dynamic>> _activity = [];
   bool _loading = true;
   String? _error;
   String _filter = 'All';
@@ -29,24 +36,62 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _avatarRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) {
+      if (mounted && _connections.isNotEmpty) {
+        setState(() => _memberPhotos.clear());
+        _loadMemberPhotos();
+      }
+    });
     _tabs = TabController(length: 2, vsync: this)..addListener(_tabChanged);
     _load();
     _loadOverview();
   }
 
+  Future<void> _loadMemberPhotos() async {
+    final version = ++_avatarRequestVersion;
+    final members = _connections.where((r) => r.status == 'Accepted' && !r.isExpired)
+        .map((r) => r.isIncoming ? r.requester : r.recipient);
+    for (final member in members) {
+      if (_memberPhotos.containsKey(member.id)) continue;
+      final url = await _service.memberPhotoUrl(member.id);
+      if (!mounted || version != _avatarRequestVersion) return;
+      setState(() => _memberPhotos[member.id] = url);
+    }
+  }
+
   Future<void> _loadOverview() async {
+    final version = ++_overviewRequestVersion;
+    ++_avatarRequestVersion;
     try {
       final connections = await _service.requests();
+      if (!mounted || version != _overviewRequestVersion) return;
+      setState(() {
+        _connections = connections;
+        _memberPhotos.clear();
+      });
+      _loadMemberPhotos();
+    } catch (_) {
+      // Connection feed is optional; leave other dashboard sections available.
+    }
+    if (!mounted || version != _overviewRequestVersion) return;
+    try {
+      final activity = await widget.documentService.apiClient.getList('/family/activity');
+      if (mounted && version == _overviewRequestVersion) {
+        setState(() => _activity = activity);
+      }
+    } catch (_) {
+      // Older API deployments may not yet provide the activity endpoint.
+    }
+    if (!mounted || version != _overviewRequestVersion) return;
+    try {
       final occasions = await widget.documentService.apiClient.getList(
         '/family-occasions',
       );
-      if (mounted)
-        setState(() {
-          _connections = connections;
-          _occasions = occasions;
-        });
+      if (mounted && version == _overviewRequestVersion) {
+        setState(() => _occasions = occasions);
+      }
     } catch (_) {
-      // Keep the document dashboard usable if companion feeds are unavailable.
+      // Occasions are independent of connection loading.
     }
   }
 
@@ -61,6 +106,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
 
   @override
   void dispose() {
+    _avatarRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _tabs.removeListener(_tabChanged);
     _tabs.dispose();
@@ -182,7 +228,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     IconData icon,
   ) {
     return SizedBox(
-      width: 180,
+      width: double.infinity,
       child: Card(
         color: const Color(0xFFEAF2FF),
         elevation: 0,
@@ -205,6 +251,16 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
         ),
       ),
     );
+  }
+
+  String _activityTime(Object? value) {
+    final date = DateTime.tryParse(value?.toString() ?? '')?.toLocal();
+    if (date == null) return '';
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final hour = date.hour.toString().padLeft(2, '0');
+    final minute = date.minute.toString().padLeft(2, '0');
+    return '${date.year}-$month-$day $hour:$minute';
   }
 
   int _daysToOccasion(Map<String, dynamic> item) {
@@ -292,10 +348,16 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
               ],
             ),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
+            LayoutBuilder(builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 880 ? 4 : constraints.maxWidth >= 480 ? 2 : 1;
+              return GridView.count(
+                crossAxisCount: columns,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: columns == 1 ? 4.2 : columns == 2 ? 2.6 : 1.75,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
                 _summaryCard(
                   context,
                   'Connections',
@@ -323,7 +385,8 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                   Icons.event_available_outlined,
                 ),
               ],
-            ),
+              );
+            }),
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, layout) => Wrap(
@@ -365,7 +428,10 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                             for (final item in _upcomingOccasions().take(4))
                               ListTile(
                                 dense: true,
-                                leading: const Icon(Icons.celebration_outlined),
+                                leading: ProfileAvatar(
+                                  imageUrl: item['profilePhotoUrl'] as String?,
+                                  displayName: item['personName'] as String? ?? item['title'] as String?,
+                                  radius: 20),
                                 title: Text(
                                   item['title'] as String? ?? 'Occasion',
                                 ),
@@ -400,7 +466,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Connection Activity',
+                                    'Recent Family Activity',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium,
@@ -409,26 +475,22 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                               ],
                             ),
                             const SizedBox(height: 8),
-                            if (_connections.isEmpty)
-                              const Text('No connection activity'),
-                            for (final r in _connections.take(4))
+                            if (_activity.isEmpty)
+                              const Text('No recorded activity yet'),
+                            for (final event in _activity.take(8))
                               ListTile(
                                 dense: true,
-                                leading: Icon(
-                                  r.status == 'Accepted'
-                                      ? Icons.check_circle_outline
-                                      : Icons.mark_email_unread_outlined,
+                                leading: ProfileAvatar(
+                                  imageUrl: _memberPhotos[event['memberId']?.toString()],
+                                  displayName: event['memberName'] as String?,
+                                  radius: 20,
                                 ),
-                                title: Text(
-                                  r.isIncoming
-                                      ? (r.requester.displayName ??
-                                            r.requester.email)
-                                      : (r.recipient.displayName ??
-                                            r.recipient.email),
-                                ),
+                                title: Text(event['title'] as String? ?? 'Family activity'),
                                 subtitle: Text(
-                                  '${r.relationship} • ${r.status}',
+                                  '${event['memberName'] ?? ''} • ${event['detail'] ?? ''}\n'
+                                  '${_activityTime(event['occurredAt'])}',
                                 ),
+                                isThreeLine: true,
                               ),
                           ],
                         ),

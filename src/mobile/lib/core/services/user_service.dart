@@ -4,6 +4,8 @@ class UserProfile {
   final String id;
   final String email;
   final String? displayName;
+  final String? profilePhotoUrl;
+  final String? profilePhotoSource;
   final String? phoneNumber;
   final String countryCode;
   final String preferredLanguage;
@@ -23,6 +25,8 @@ class UserProfile {
     required this.id,
     required this.email,
     this.displayName,
+    this.profilePhotoUrl,
+    this.profilePhotoSource,
     this.phoneNumber,
     required this.countryCode,
     required this.preferredLanguage,
@@ -44,6 +48,8 @@ class UserProfile {
       id: json['id'] as String,
       email: json['email'] as String,
       displayName: json['displayName'] as String?,
+      profilePhotoUrl: json['profilePhotoUrl'] as String?,
+      profilePhotoSource: json['profilePhotoSource'] as String?,
       phoneNumber: json['phoneNumber'] as String?,
       countryCode: json['countryCode'] as String? ?? 'MY',
       preferredLanguage: json['preferredLanguage'] as String? ?? 'en',
@@ -139,6 +145,28 @@ class UserService {
   final ApiClient _apiClient;
 
   UserService(this._apiClient);
+
+  Future<void> syncGoogleProfilePhoto() async {
+    await _apiClient.post('/users/me/photo/sync-google', body: {});
+  }
+
+  Future<String?> getMyProfilePhotoUrl() async {
+    final response = await _apiClient.get('/users/me/photo');
+    return response['url'] as String?;
+  }
+
+  Future<void> uploadMyProfilePhoto({
+    required List<int> bytes,
+    required String fileName,
+    required String contentType,
+  }) async {
+    await _apiClient.uploadFile('/users/me/photo',
+      bytes: bytes, fileName: fileName, contentType: contentType);
+  }
+
+  Future<void> deleteMyProfilePhoto() async {
+    await _apiClient.delete('/users/me/photo');
+  }
 
   Future<UserProfile> getMe() async {
     final response = await _apiClient.get('/users/me');

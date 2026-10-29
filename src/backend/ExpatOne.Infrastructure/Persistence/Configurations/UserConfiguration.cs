@@ -27,6 +27,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(u => u.DisplayName)
             .HasMaxLength(200);
 
+        builder.Property(u => u.ProfilePhotoKey).HasMaxLength(512);
+        builder.Property(u => u.ProfilePhotoSource).HasMaxLength(32);
+        builder.Property(u => u.GooglePhotoReference).HasMaxLength(2048);
+
         builder.Property(u => u.PhoneNumber)
             .HasMaxLength(20);
 

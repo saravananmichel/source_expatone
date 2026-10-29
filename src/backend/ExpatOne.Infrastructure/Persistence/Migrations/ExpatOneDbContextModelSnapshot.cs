@@ -1274,6 +1274,21 @@ namespace ExpatOne.Infrastructure.Persistence.Migrations
                     b.Property<bool>("OnboardingCompleted")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("GooglePhotoReference")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<string>("ProfilePhotoKey")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("ProfilePhotoSource")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTime?>("ProfilePhotoUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");

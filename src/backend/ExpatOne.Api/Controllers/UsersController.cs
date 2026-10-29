@@ -1,4 +1,8 @@
 using System.Security.Claims;
+using FirebaseAdmin.Auth;
+using System.Net;
+using ExpatOne.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -12,10 +16,14 @@ namespace ExpatOne.Api.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly ExpatOneDbContext _db;
+    private readonly IStorageService _storage;
 
-    public UsersController(IUserService userService)
+    public UsersController(IUserService userService, ExpatOneDbContext db, IStorageService storage)
     {
         _userService = userService;
+        _db = db;
+        _storage = storage;
     }
 
     [HttpGet("me")]
@@ -31,6 +39,146 @@ public class UsersController : ControllerBase
         var currentUser = await GetAuthenticatedUserAsync();
         var updated = await _userService.UpdateProfileAsync(currentUser.Id, dto);
         return Ok(updated);
+    }
+
+    [HttpPost("me/photo/sync-google")]
+    public async Task<IActionResult> SyncGooglePhoto(CancellationToken ct)
+    {
+        var uid = User.FindFirstValue("firebase_uid");
+        if (string.IsNullOrWhiteSpace(uid)) return Unauthorized();
+        var current = await GetAuthenticatedUserAsync();
+        var user = await _db.Users.SingleAsync(u => u.Id == current.Id, ct);
+        if (user.ProfilePhotoSource == "upload")
+            return Ok(new { profilePhotoSource = "upload" });
+
+        var firebaseUser = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
+        if (!firebaseUser.ProviderData.Any(p => p.ProviderId == "google.com"))
+            return BadRequest("Google account not linked.");
+
+        var reference = firebaseUser.PhotoUrl;
+        if (!Uri.TryCreate(reference, UriKind.Absolute, out var uri) ||
+            uri.Scheme != Uri.UriSchemeHttps || uri.Port != 443 || !string.IsNullOrEmpty(uri.UserInfo) ||
+            !(uri.Host.Equals("lh3.googleusercontent.com", StringComparison.OrdinalIgnoreCase) ||
+              uri.Host.EndsWith(".googleusercontent.com", StringComparison.OrdinalIgnoreCase)))
+            return BadRequest("Unsupported Google photo URL.");
+        if (user.ProfilePhotoKey != null && user.GooglePhotoReference == reference)
+            return Ok(new { profilePhotoSource = "google", unchanged = true });
+
+        using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
+        { Timeout = TimeSpan.FromSeconds(10) };
+        using var response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, ct);
+        if (response.StatusCode != HttpStatusCode.OK)
+            return StatusCode(502, "Google photo unavailable.");
+        if (response.Content.Headers.ContentLength > 2 * 1024 * 1024)
+            return BadRequest("Photo exceeds 2 MB.");
+
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        await using var buffer = new MemoryStream();
+        var chunk = new byte[8192];
+        int read;
+        while ((read = await stream.ReadAsync(chunk.AsMemory(), ct)) > 0)
+        {
+            if (buffer.Length + read > 2 * 1024 * 1024)
+                return BadRequest("Photo exceeds 2 MB.");
+            await buffer.WriteAsync(chunk.AsMemory(0, read), ct);
+        }
+        var bytes = buffer.ToArray();
+        var jpeg = bytes.Length >= 3 && bytes[0] == 255 && bytes[1] == 216 && bytes[2] == 255;
+        var png = bytes.Length >= 8 && bytes.AsSpan(0, 8).SequenceEqual(new byte[] {137,80,78,71,13,10,26,10});
+        var webp = bytes.Length >= 12 && System.Text.Encoding.ASCII.GetString(bytes, 0, 4) == "RIFF"
+            && System.Text.Encoding.ASCII.GetString(bytes, 8, 4) == "WEBP";
+        if (!jpeg && !png && !webp) return BadRequest("Unsupported image format.");
+        buffer.Position = 0;
+        var extension = jpeg ? "jpg" : png ? "png" : "webp";
+        var mime = jpeg ? "image/jpeg" : png ? "image/png" : "image/webp";
+        var key = await _storage.UploadFileAsync(buffer, $"{Guid.NewGuid():N}.{extension}",
+            mime, $"profile-photos/{user.Id:N}");
+        var oldKey = user.ProfilePhotoKey;
+        user.ProfilePhotoKey = key;
+        user.ProfilePhotoSource = "google";
+        user.GooglePhotoReference = reference;
+        user.ProfilePhotoUpdatedAt = DateTime.UtcNow;
+        try { await _db.SaveChangesAsync(ct); }
+        catch
+        {
+            await _storage.DeleteFileAsync(key);
+            throw;
+        }
+        if (oldKey != null && oldKey.StartsWith($"profile-photos/{user.Id:N}/", StringComparison.Ordinal))
+        {
+            try { await _storage.DeleteFileAsync(oldKey); } catch { }
+        }
+        return Ok(new { profilePhotoSource = "google" });
+    }
+
+    [HttpPost("me/photo")]
+    [RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<IActionResult> UploadPhoto([FromForm] IFormFile? file, CancellationToken ct)
+    {
+        if (file is null || file.Length == 0 || file.Length > 2 * 1024 * 1024)
+            return BadRequest("Photo must be between 1 byte and 2 MB.");
+
+        await using var stream = file.OpenReadStream();
+        var header = new byte[12];
+        var count = await stream.ReadAsync(header.AsMemory(), ct);
+        var isJpeg = count >= 3 && header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF;
+        var isPng = count >= 8 && header.AsSpan(0, 8).SequenceEqual(new byte[] {137,80,78,71,13,10,26,10});
+        var isWebp = count >= 12 && System.Text.Encoding.ASCII.GetString(header, 0, 4) == "RIFF"
+            && System.Text.Encoding.ASCII.GetString(header, 8, 4) == "WEBP";
+        if (!isJpeg && !isPng && !isWebp) return BadRequest("Only JPEG, PNG or WebP images are supported.");
+        if (!stream.CanSeek) return BadRequest("Unable to read uploaded image stream.");
+        stream.Position = 0;
+        var current = await GetAuthenticatedUserAsync();
+        var user = await _db.Users.SingleAsync(u => u.Id == current.Id, ct);
+        var extension = isJpeg ? "jpg" : isPng ? "png" : "webp";
+        var key = await _storage.UploadFileAsync(stream, $"{Guid.NewGuid():N}.{extension}",
+            isJpeg ? "image/jpeg" : isPng ? "image/png" : "image/webp", $"profile-photos/{user.Id:N}");
+        var oldKey = user.ProfilePhotoKey;
+        user.ProfilePhotoKey = key;
+        user.ProfilePhotoSource = "upload";
+        user.ProfilePhotoUpdatedAt = DateTime.UtcNow;
+        try
+        {
+            await _db.SaveChangesAsync(ct);
+        }
+        catch
+        {
+            await _storage.DeleteFileAsync(key);
+            throw;
+        }
+        if (oldKey is not null && oldKey.StartsWith($"profile-photos/{user.Id:N}/", StringComparison.Ordinal))
+        {
+            try { await _storage.DeleteFileAsync(oldKey); }
+            catch { /* The new photo is saved; stale object cleanup can be retried. */ }
+        }
+        return Ok(new { profilePhotoSource = user.ProfilePhotoSource });
+    }
+
+    [HttpGet("me/photo")]
+    public async Task<IActionResult> GetPhoto(CancellationToken ct)
+    {
+        var current = await GetAuthenticatedUserAsync();
+        var key = await _db.Users.Where(u => u.Id == current.Id).Select(u => u.ProfilePhotoKey).SingleAsync(ct);
+        if (string.IsNullOrEmpty(key)) return NotFound();
+        return Ok(new { url = await _storage.GeneratePresignedUrlAsync(key, TimeSpan.FromMinutes(5)) });
+    }
+
+    [HttpDelete("me/photo")]
+    public async Task<IActionResult> DeletePhoto(CancellationToken ct)
+    {
+        var current = await GetAuthenticatedUserAsync();
+        var user = await _db.Users.SingleAsync(u => u.Id == current.Id, ct);
+        var oldKey = user.ProfilePhotoKey;
+        user.ProfilePhotoKey = null;
+        user.ProfilePhotoSource = null;
+        user.ProfilePhotoUpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+        if (oldKey is not null && oldKey.StartsWith($"profile-photos/{user.Id:N}/", StringComparison.Ordinal))
+        {
+            try { await _storage.DeleteFileAsync(oldKey); }
+            catch { /* The profile no longer references this object. */ }
+        }
+        return NoContent();
     }
 
     private async Task<UserDto> GetAuthenticatedUserAsync()

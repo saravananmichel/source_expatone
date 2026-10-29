@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'family_dashboard_screen.dart';
+import '../../shared/widgets/profile_avatar.dart';
 import 'family_occasions_screen.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/family_service.dart';
@@ -17,15 +19,45 @@ class _FamilyScreenState extends State<FamilyScreen> {
   List<FamilyRequest> _requests = [];
   bool _loading = true, _busy = false;
   String? _error;
+  final Map<String, String?> _memberPhotos = {};
+  int _photoLoadVersion = 0;
+  Timer? _photoRefreshTimer;
   FamilyService get _service => widget.documentService.familyService;
+  Future<void> _loadMemberPhotos() async {
+    final version = ++_photoLoadVersion;
+    final members = _requests.where((r) => r.status == 'Accepted' && !r.isExpired)
+        .map((r) => r.isIncoming ? r.requester : r.recipient);
+    for (final member in members) {
+      if (_memberPhotos.containsKey(member.id)) continue;
+      final url = await _service.memberPhotoUrl(member.id);
+      if (!mounted || version != _photoLoadVersion) return;
+      setState(() => _memberPhotos[member.id] = url);
+    }
+  }
   @override
-  void initState() { super.initState(); _load(); }
+  void initState() {
+    super.initState();
+    _photoRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) {
+      if (!mounted || _requests.isEmpty) return;
+      setState(() => _memberPhotos.clear());
+      _loadMemberPhotos();
+    });
+    _load();
+  }
   @override
-  void dispose() { _email.dispose(); _connectionSearch.dispose(); super.dispose(); }
+  void dispose() {
+    _photoRefreshTimer?.cancel();
+    _email.dispose();
+    _connectionSearch.dispose();
+    super.dispose();
+  }
   Future<void> _load() async {
     try {
       final requests = await _service.requests();
-      if (mounted) setState(() { _requests = requests; _loading = false; _error = null; });
+      if (mounted) {
+        setState(() { _requests = requests; _loading = false; _error = null; _memberPhotos.clear(); });
+        _loadMemberPhotos();
+      }
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = 'Unable to load requests. $e'; });
     }
@@ -113,7 +145,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
                   style: TextStyle(fontSize: 12, color: Colors.blueGrey)),
                 if (searching) const LinearProgressIndicator(),
                 if (found != null) Card(child: ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.person)),
+                  leading: ProfileAvatar(imageUrl: found!.profilePhotoUrl, displayName: found!.displayName, email: found!.email),
                   title: Text(found!.displayName ?? found!.email),
                   subtitle: Text(found!.email),
                   trailing: const Icon(Icons.check_circle, color: Colors.green),
@@ -267,9 +299,9 @@ class _FamilyScreenState extends State<FamilyScreen> {
             for (final r in filtered)
               Card(child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: CircleAvatar(backgroundColor: const Color(0xFFE9F2FF),
-                  child: Text((r.isIncoming ? r.requester : r.recipient)
-                    .displayName?.substring(0, 1).toUpperCase() ?? '•')),
+                leading: ProfileAvatar(imageUrl: _memberPhotos[(r.isIncoming ? r.requester : r.recipient).id],
+                  displayName: (r.isIncoming ? r.requester : r.recipient).displayName,
+                  email: (r.isIncoming ? r.requester : r.recipient).email),
                 title: Text((r.isIncoming ? r.requester : r.recipient).displayName ??
                   (r.isIncoming ? r.requester : r.recipient).email,
                   style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -311,7 +343,8 @@ class _FamilyScreenState extends State<FamilyScreen> {
     final decision = await showDialog<String>(context: context, builder: (ctx) => AlertDialog(
       title: const Text('You have a new connection request'),
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        ListTile(leading: const CircleAvatar(child: Icon(Icons.person)),
+        ListTile(leading: ProfileAvatar(imageUrl: request.requester.profilePhotoUrl,
+          displayName: request.requester.displayName, email: request.requester.email),
           title: Text(request.requester.displayName ?? request.requester.email),
           subtitle: Text(request.requester.email)),
         Chip(avatar: const Icon(Icons.favorite_outline, size: 16),

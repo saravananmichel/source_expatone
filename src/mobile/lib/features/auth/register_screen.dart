@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
+import '../../core/networking/api_client.dart';
+import '../../core/services/user_service.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/theme/app_theme.dart';
 
@@ -26,6 +29,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
+  PlatformFile? _selectedPhoto;
+  List<int>? _selectedPhotoBytes;
 
   @override
   void dispose() {
@@ -34,6 +39,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickPhoto() async {
+    final photo = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+    );
+    if (photo == null || !mounted) return;
+    final length = photo.lengthSync() ?? await photo.length();
+    if (length == 0 || length > 2 * 1024 * 1024) {
+      setState(() => _errorMessage = 'Photo must be smaller than 2 MB.');
+      return;
+    }
+    final bytes = await photo.readAsBytes();
+    if (!mounted) return;
+    if (bytes.isEmpty || bytes.length > 2 * 1024 * 1024) {
+      setState(() => _errorMessage = 'Photo must be smaller than 2 MB.');
+      return;
+    }
+    setState(() {
+      _selectedPhoto = photo;
+      _selectedPhotoBytes = bytes;
+      _errorMessage = null;
+    });
   }
 
   Future<void> _register() async {
@@ -50,6 +79,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text,
         _nameController.text.trim(),
       );
+      if (_selectedPhoto != null) {
+        final client = ApiClient()..setAuthService(widget.authService);
+        try {
+          final photo = _selectedPhoto!;
+          final ext = photo.extension?.toLowerCase();
+          final contentType = ext == 'png' ? 'image/png'
+              : ext == 'webp' ? 'image/webp' : 'image/jpeg';
+          await UserService(client).uploadMyProfilePhoto(
+            bytes: _selectedPhotoBytes!, fileName: photo.name,
+            contentType: contentType,
+          );
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(
+                'Account created, but photo upload failed. Add it later in Profile.',
+              )),
+            );
+          }
+        } finally {
+          client.dispose();
+        }
+      }
       // Firebase signs in newly registered users automatically.
       // Best-effort sign-out so signup still returns to login if cleanup fails.
       try {
@@ -93,7 +145,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: AppTheme.textSecondary,
                       ),
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _isLoading ? null : _pickPhoto,
+                  icon: const Icon(Icons.add_a_photo_outlined),
+                  label: Text(_selectedPhoto?.name ?? 'Add profile photo (optional)'),
+                ),
+                if (_selectedPhoto != null)
+                  TextButton(
+                    onPressed: _isLoading ? null : () => setState(() => _selectedPhoto = null),
+                    child: const Text('Remove selected photo'),
+                  ),
+                const SizedBox(height: 24),
                 if (_errorMessage != null) ...[
                   Container(
                     padding: const EdgeInsets.all(12),
