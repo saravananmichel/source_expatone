@@ -23,7 +23,12 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError("Unhandled exception category={Category}", ex.GetType().Name);
+            _logger.LogError(
+                ex,
+                "Unhandled exception category={Category} traceId={TraceId} path={Path}",
+                ex.GetType().Name,
+                context.TraceIdentifier,
+                context.Request.Path);
             await HandleExceptionAsync(context, ex);
         }
     }
