@@ -20,6 +20,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   List<FamilyDashboardDocument> _documents = [];
   List<FamilyRequest> _connections = [];
   final Map<String, String?> _memberPhotos = {};
+  int _avatarRequestVersion = 0;
   List<Map<String, dynamic>> _occasions = [];
   bool _loading = true;
   String? _error;
@@ -37,12 +38,13 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   }
 
   Future<void> _loadMemberPhotos() async {
+    final version = ++_avatarRequestVersion;
     final members = _connections.where((r) => r.status == 'Accepted' && !r.isExpired)
         .map((r) => r.isIncoming ? r.requester : r.recipient);
     for (final member in members) {
       if (_memberPhotos.containsKey(member.id)) continue;
       final url = await _service.memberPhotoUrl(member.id);
-      if (!mounted) return;
+      if (!mounted || version != _avatarRequestVersion) return;
       setState(() => _memberPhotos[member.id] = url);
     }
   }
