@@ -73,6 +73,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
         _passwordController.text,
         _nameController.text.trim(),
       );
+      if (_selectedPhoto != null) {
+        final client = ApiClient()..setAuthService(widget.authService);
+        try {
+          final photo = _selectedPhoto!;
+          final ext = photo.extension?.toLowerCase();
+          final contentType = ext == 'png' ? 'image/png'
+              : ext == 'webp' ? 'image/webp' : 'image/jpeg';
+          await UserService(client).uploadMyProfilePhoto(
+            bytes: photo.bytes!, fileName: photo.name,
+            contentType: contentType,
+          );
+        } catch (_) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text(
+                'Account created, but photo upload failed. Add it later in Profile.',
+              )),
+            );
+          }
+        } finally {
+          client.dispose();
+        }
+      }
       // Firebase signs in newly registered users automatically.
       // Best-effort sign-out so signup still returns to login if cleanup fails.
       try {
