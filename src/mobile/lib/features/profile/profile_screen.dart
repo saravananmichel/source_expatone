@@ -166,7 +166,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
         _photoRefreshVersion++;
         _photoUrl = null;
         _photoUrlFetchedAt = DateTime.now();
-        _profile = null;
       });
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
