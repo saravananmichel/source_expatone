@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
@@ -26,6 +27,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ProfileOptions? _options;
   bool _isLoading = true;
   String? _error;
+  String? _photoUrl;
+  bool _photoBusy = false;
 
   @override
   void initState() {
@@ -50,6 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _options = results[1] as ProfileOptions;
           _isLoading = false;
         });
+        _refreshPhoto();
       }
     } catch (e) {
       if (mounted) {
@@ -58,6 +62,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _refreshPhoto() async {
+    try {
+      final url = await widget.userService.getMyProfilePhotoUrl();
+      if (mounted) setState(() => _photoUrl = url);
+    } catch (_) {
+      if (mounted) setState(() => _photoUrl = null);
+    }
+  }
+
+  Future<void> _changePhoto() async {
+    if (_photoBusy) return;
+    final picked = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
+      withData: true,
+    );
+    if (picked == null || picked.files.isEmpty || !mounted) return;
+    final file = picked.files.single;
+    final bytes = file.bytes;
+    if (bytes == null || bytes.isEmpty || bytes.length > 2 * 1024 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Choose a photo smaller than 2 MB.')),
+      );
+      return;
+    }
+    final ext = file.extension?.toLowerCase();
+    final type = ext == 'png' ? 'image/png'
+        : ext == 'webp' ? 'image/webp' : 'image/jpeg';
+    setState(() => _photoBusy = true);
+    try {
+      await widget.userService.uploadMyProfilePhoto(
+        bytes: bytes, fileName: file.name, contentType: type);
+      await _refreshPhoto();
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to upload photo. Please retry.')),
+      );
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
+    }
+  }
+
+  Future<void> _removePhoto() async {
+    if (_photoBusy) return;
+    setState(() => _photoBusy = true);
+    try {
+      await widget.userService.deleteMyProfilePhoto();
+      if (mounted) setState(() => _photoUrl = null);
+    } catch (_) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to remove photo.')),
+      );
+    } finally {
+      if (mounted) setState(() => _photoBusy = false);
     }
   }
 
@@ -167,9 +228,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Center(
           child: ProfileAvatar(
             radius: 48,
-            imageUrl: _profile!.profilePhotoUrl ?? widget.authService.currentState.user?.photoUrl,
+            imageUrl: _photoUrl ?? _profile!.profilePhotoUrl ?? widget.authService.currentState.user?.photoUrl,
             displayName: _profile!.displayName,
             email: _profile!.email,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Center(
+          child: Wrap(
+            spacing: 8,
+            children: [
+              TextButton.icon(
+                onPressed: _photoBusy ? null : _changePhoto,
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: Text(_photoBusy ? 'Saving...' : 'Change photo'),
+              ),
+              if (_photoUrl != null)
+                TextButton.icon(
+                  onPressed: _photoBusy ? null : _removePhoto,
+                  icon: const Icon(Icons.delete_outline),
+                  label: const Text('Remove'),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
