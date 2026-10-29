@@ -30,6 +30,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
   PlatformFile? _selectedPhoto;
+  List<int>? _selectedPhotoBytes;
 
   @override
   void dispose() {
@@ -41,20 +42,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Future<void> _pickPhoto() async {
-    final selection = await FilePicker.platform.pickFiles(
+    final photo = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'webp'],
-      withData: true,
     );
-    if (selection == null || selection.files.isEmpty || !mounted) return;
-    final photo = selection.files.single;
-    if (photo.bytes == null || photo.bytes!.isEmpty ||
-        photo.bytes!.length > 2 * 1024 * 1024) {
+    if (photo == null || !mounted) return;
+    final length = photo.lengthSync() ?? await photo.length();
+    if (length == 0 || length > 2 * 1024 * 1024) {
+      setState(() => _errorMessage = 'Photo must be smaller than 2 MB.');
+      return;
+    }
+    final bytes = await photo.readAsBytes();
+    if (!mounted) return;
+    if (bytes.isEmpty || bytes.length > 2 * 1024 * 1024) {
       setState(() => _errorMessage = 'Photo must be smaller than 2 MB.');
       return;
     }
     setState(() {
       _selectedPhoto = photo;
+      _selectedPhotoBytes = bytes;
       _errorMessage = null;
     });
   }
@@ -81,7 +87,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           final contentType = ext == 'png' ? 'image/png'
               : ext == 'webp' ? 'image/webp' : 'image/jpeg';
           await UserService(client).uploadMyProfilePhoto(
-            bytes: photo.bytes!, fileName: photo.name,
+            bytes: _selectedPhotoBytes!, fileName: photo.name,
             contentType: contentType,
           );
         } catch (_) {
