@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/services/document_service.dart';
@@ -22,6 +23,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   final Map<String, String?> _memberPhotos = {};
   int _avatarRequestVersion = 0;
   int _overviewRequestVersion = 0;
+  Timer? _avatarRefreshTimer;
   List<Map<String, dynamic>> _occasions = [];
   List<Map<String, dynamic>> _activity = [];
   bool _loading = true;
@@ -34,6 +36,12 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _avatarRefreshTimer = Timer.periodic(const Duration(minutes: 4), (_) {
+      if (mounted && _connections.isNotEmpty) {
+        _memberPhotos.clear();
+        _loadMemberPhotos();
+      }
+    });
     _tabs = TabController(length: 2, vsync: this)..addListener(_tabChanged);
     _load();
     _loadOverview();
@@ -98,6 +106,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
 
   @override
   void dispose() {
+    _avatarRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     _tabs.removeListener(_tabChanged);
     _tabs.dispose();
