@@ -148,7 +148,6 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
       await widget.userService.uploadMyProfilePhoto(
         bytes: bytes, fileName: file.name, contentType: type);
       await _refreshPhoto();
-      if (mounted) setState(() {});
     } catch (_) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Unable to upload photo. Please retry.')),
