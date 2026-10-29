@@ -291,8 +291,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                   label: const Text('Occasions'),
                 ),
               ],
-              );
-            }),
+            ),
             const SizedBox(height: 16),
             LayoutBuilder(builder: (context, constraints) {
               final columns = constraints.maxWidth >= 880 ? 4 : constraints.maxWidth >= 480 ? 2 : 1;
@@ -411,7 +410,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Recent Activity',
+                                    'Recent Connection Activity',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium,
