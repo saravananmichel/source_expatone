@@ -22,12 +22,13 @@ class _FamilyScreenState extends State<FamilyScreen> {
   int _photoLoadVersion = 0;
   FamilyService get _service => widget.documentService.familyService;
   Future<void> _loadMemberPhotos() async {
+    final version = ++_photoLoadVersion;
     final members = _requests.where((r) => r.status == 'Accepted' && !r.isExpired)
         .map((r) => r.isIncoming ? r.requester : r.recipient);
     for (final member in members) {
       if (_memberPhotos.containsKey(member.id)) continue;
       final url = await _service.memberPhotoUrl(member.id);
-      if (!mounted) return;
+      if (!mounted || version != _photoLoadVersion) return;
       setState(() => _memberPhotos[member.id] = url);
     }
   }
