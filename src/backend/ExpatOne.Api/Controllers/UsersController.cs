@@ -57,7 +57,7 @@ public class UsersController : ControllerBase
 
         var reference = firebaseUser.PhotoUrl;
         if (!Uri.TryCreate(reference, UriKind.Absolute, out var uri) ||
-            uri.Scheme != Uri.UriSchemeHttps ||
+            uri.Scheme != Uri.UriSchemeHttps || uri.Port != 443 || !string.IsNullOrEmpty(uri.UserInfo) ||
             !(uri.Host.Equals("lh3.googleusercontent.com", StringComparison.OrdinalIgnoreCase) ||
               uri.Host.EndsWith(".googleusercontent.com", StringComparison.OrdinalIgnoreCase)))
             return BadRequest("Unsupported Google photo URL.");
