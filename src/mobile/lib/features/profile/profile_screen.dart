@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -31,16 +32,25 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   bool _photoBusy = false;
   int _photoRefreshVersion = 0;
   DateTime? _photoUrlFetchedAt;
+  Timer? _photoRefreshTimer;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _photoRefreshTimer = Timer.periodic(const Duration(minutes: 1), (_) {
+      final fetchedAt = _photoUrlFetchedAt;
+      if (mounted && !_photoBusy && _profile != null && fetchedAt != null &&
+          DateTime.now().difference(fetchedAt) >= const Duration(minutes: 4)) {
+        _refreshPhoto();
+      }
+    });
     _loadProfile();
   }
 
   @override
   void dispose() {
+    _photoRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
