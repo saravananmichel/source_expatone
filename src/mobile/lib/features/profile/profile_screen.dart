@@ -33,6 +33,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   int _photoRefreshVersion = 0;
   DateTime? _photoUrlFetchedAt;
   Timer? _photoRefreshTimer;
+  bool _photoRefreshInFlight = false;
 
   @override
   void initState() {
@@ -92,6 +93,8 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
   }
 
   Future<void> _refreshPhoto() async {
+    if (_photoRefreshInFlight) return;
+    _photoRefreshInFlight = true;
     final version = ++_photoRefreshVersion;
     try {
       final url = await widget.userService.getMyProfilePhotoUrl();
@@ -102,8 +105,10 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     } catch (_) {
       if (mounted && version == _photoRefreshVersion) setState(() {
         _photoUrl = null;
-        _photoUrlFetchedAt = null;
+        _photoUrlFetchedAt = DateTime.now();
       });
+    } finally {
+      _photoRefreshInFlight = false;
     }
   }
 
