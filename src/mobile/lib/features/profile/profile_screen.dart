@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/services/auth_service.dart';
 import '../../core/services/user_service.dart';
 import '../../core/theme/app_theme.dart';
+import '../../shared/widgets/profile_avatar.dart';
 
 class ProfileScreen extends StatefulWidget {
   final IAuthService authService;
@@ -164,19 +165,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       padding: const EdgeInsets.all(20),
       children: [
         Center(
-          child: CircleAvatar(
+          child: ProfileAvatar(
             radius: 48,
-            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
-            child: Text(
-              (_profile!.displayName?.isNotEmpty == true)
-                  ? _profile!.displayName![0].toUpperCase()
-                  : (_profile!.email[0].toUpperCase()),
-              style: TextStyle(
-                fontSize: 36,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryColor,
-              ),
-            ),
+            imageUrl: _profile!.profilePhotoUrl ?? widget.authService.currentState.user?.photoUrl,
+            displayName: _profile!.displayName,
+            email: _profile!.email,
           ),
         ),
         const SizedBox(height: 16),
