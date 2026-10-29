@@ -63,18 +63,18 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
             .OrderByDescending(o => o.CreatedAt).Take(limit)
             .Select(o => new { o.Id, o.Title, o.CreatedAt, o.ConnectionId })
             .ToListAsync(ct);
-        var events = new List<object>();
+        var events = new List<(DateTime At, object Data)>();
         foreach (var r in requests)
         {
             var incoming = r.RecipientUserId == callerId;
             var otherId = incoming ? r.RequesterUserId : r.RecipientUserId;
             var otherName = incoming ? r.RequesterName ?? r.RequesterEmail : r.RecipientName ?? r.RecipientEmail;
-            events.Add(new {
+            events.Add((r.CreatedAt, new {
                 id = $"request:{r.Id}:created", kind = "invitation", occurredAt = r.CreatedAt,
                 memberId = otherId, memberName = otherName,
                 title = incoming ? "Invitation received" : "Invitation sent",
                 detail = r.Relationship
-            });
+            }));
             if (r.RespondedAt.HasValue)
             {
                 var title = r.StatusId switch {
@@ -84,20 +84,19 @@ public class FamilyController(FamilyService family, IUserService users, ExpatOne
                     5 => "Connection ended",
                     _ => "Invitation updated"
                 };
-                events.Add(new {
+                events.Add((r.RespondedAt.Value, new {
                     id = $"request:{r.Id}:response", kind = "connection", occurredAt = r.RespondedAt.Value,
                     memberId = otherId, memberName = otherName, title, detail = r.Relationship
-                });
+                }));
             }
         }
         foreach (var o in occasions)
-            events.Add(new {
+            events.Add((o.CreatedAt, new {
                 id = $"occasion:{o.Id}:created", kind = "occasion", occurredAt = o.CreatedAt,
                 memberId = o.ConnectionId, memberName = o.Title,
                 title = "Occasion added", detail = o.Title
-            });
-        return Ok(events.OrderByDescending(e => (DateTime)e.GetType().GetProperty("occurredAt")!.GetValue(e)!)
-            .Take(limit));
+            }));
+        return Ok(events.OrderByDescending(e => e.At).Take(limit).Select(e => e.Data));
     }
 
     [HttpGet("dashboard")]
