@@ -80,7 +80,7 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
           _options = results[1] as ProfileOptions;
           _isLoading = false;
         });
-        _refreshPhoto();
+        _syncGooglePhotoAndRefresh();
       }
     } catch (e) {
       if (mounted) {
@@ -90,6 +90,18 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
         });
       }
     }
+  }
+
+  Future<void> _syncGooglePhotoAndRefresh() async {
+    if (widget.authService.currentState.user?.photoUrl != null &&
+        _profile?.profilePhotoSource != 'upload') {
+      try {
+        await widget.userService.syncGoogleProfilePhoto();
+      } catch (_) {
+        // Keep profile usable if Google photo sync is unavailable.
+      }
+    }
+    if (mounted) await _refreshPhoto();
   }
 
   Future<void> _refreshPhoto() async {
