@@ -37,7 +37,10 @@ class _FamilyScreenState extends State<FamilyScreen> {
   Future<void> _load() async {
     try {
       final requests = await _service.requests();
-      if (mounted) setState(() { _requests = requests; _loading = false; _error = null; });
+      if (mounted) {
+        setState(() { _requests = requests; _loading = false; _error = null; _memberPhotos.clear(); });
+        _loadMemberPhotos();
+      }
     } catch (e) {
       if (mounted) setState(() { _loading = false; _error = 'Unable to load requests. $e'; });
     }
@@ -279,7 +282,7 @@ class _FamilyScreenState extends State<FamilyScreen> {
             for (final r in filtered)
               Card(child: ListTile(
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                leading: ProfileAvatar(imageUrl: (r.isIncoming ? r.requester : r.recipient).profilePhotoUrl,
+                leading: ProfileAvatar(imageUrl: _memberPhotos[(r.isIncoming ? r.requester : r.recipient).id],
                   displayName: (r.isIncoming ? r.requester : r.recipient).displayName,
                   email: (r.isIncoming ? r.requester : r.recipient).email),
                 title: Text((r.isIncoming ? r.requester : r.recipient).displayName ??
