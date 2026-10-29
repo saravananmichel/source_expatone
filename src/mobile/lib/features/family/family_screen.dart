@@ -13,10 +13,8 @@ class FamilyScreen extends StatefulWidget {
 class _FamilyScreenState extends State<FamilyScreen> {
   final _email = TextEditingController();
   final _connectionSearch = TextEditingController();
-  String _relationship = 'Friend';
   String _statusFilter = 'All';
   List<FamilyRequest> _requests = [];
-  FamilyUser? _found;
   bool _loading = true, _busy = false;
   String? _error;
   FamilyService get _service => widget.documentService.familyService;

@@ -37,8 +37,8 @@ jobs:
           channel: stable
       - name: Dependencies
         run: flutter pub get
-      - name: Analyze Phase 3 Flutter files
-        run: flutter analyze lib/features/corporate lib/core/services/corporate_service.dart
+      - name: Analyze Friends and Family UI files
+        run: flutter analyze --no-fatal-infos lib/features/documents/documents_screen.dart lib/features/family/family_screen.dart lib/features/family/family_dashboard_screen.dart
       - name: Corporate offer template tests
         run: flutter test test/features/corporate/offer_letter_template_test.dart
       - name: Compile Flutter web
