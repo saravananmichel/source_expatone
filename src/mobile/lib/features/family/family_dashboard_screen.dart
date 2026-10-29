@@ -5,6 +5,7 @@ import '../../core/services/family_service.dart';
 import 'family_occasions_screen.dart';
 import '../documents/document_detail_screen.dart';
 import 'family_alerts_panel.dart';
+import '../../shared/widgets/profile_avatar.dart';
 
 class FamilyDashboardScreen extends StatefulWidget {
   final DocumentService documentService;
@@ -182,7 +183,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
     IconData icon,
   ) {
     return SizedBox(
-      width: 180,
+      width: double.infinity,
       child: Card(
         color: const Color(0xFFEAF2FF),
         elevation: 0,
@@ -290,12 +291,19 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                   label: const Text('Occasions'),
                 ),
               ],
-            ),
+              );
+            }),
             const SizedBox(height: 16),
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
-              children: [
+            LayoutBuilder(builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 880 ? 4 : constraints.maxWidth >= 480 ? 2 : 1;
+              return GridView.count(
+                crossAxisCount: columns,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: columns == 1 ? 4.2 : columns == 2 ? 2.6 : 1.75,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
                 _summaryCard(
                   context,
                   'Connections',
@@ -365,7 +373,10 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                             for (final item in _upcomingOccasions().take(4))
                               ListTile(
                                 dense: true,
-                                leading: const Icon(Icons.celebration_outlined),
+                                leading: ProfileAvatar(
+                                  imageUrl: item['profilePhotoUrl'] as String?,
+                                  displayName: item['personName'] as String? ?? item['title'] as String?,
+                                  radius: 20),
                                 title: Text(
                                   item['title'] as String? ?? 'Occasion',
                                 ),
@@ -400,7 +411,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    'Connection Activity',
+                                    'Recent Activity',
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium,
@@ -414,10 +425,11 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                             for (final r in _connections.take(4))
                               ListTile(
                                 dense: true,
-                                leading: Icon(
-                                  r.status == 'Accepted'
-                                      ? Icons.check_circle_outline
-                                      : Icons.mark_email_unread_outlined,
+                                leading: ProfileAvatar(
+                                  imageUrl: (r.isIncoming ? r.requester : r.recipient).profilePhotoUrl,
+                                  displayName: (r.isIncoming ? r.requester : r.recipient).displayName,
+                                  email: (r.isIncoming ? r.requester : r.recipient).email,
+                                  radius: 20,
                                 ),
                                 title: Text(
                                   r.isIncoming
