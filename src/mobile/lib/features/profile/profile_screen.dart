@@ -85,9 +85,15 @@ class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserv
     final version = ++_photoRefreshVersion;
     try {
       final url = await widget.userService.getMyProfilePhotoUrl();
-      if (mounted && version == _photoRefreshVersion) setState(() => _photoUrl = url);
+      if (mounted && version == _photoRefreshVersion) setState(() {
+        _photoUrl = url;
+        _photoUrlFetchedAt = DateTime.now();
+      });
     } catch (_) {
-      if (mounted && version == _photoRefreshVersion) setState(() => _photoUrl = null);
+      if (mounted && version == _photoRefreshVersion) setState(() {
+        _photoUrl = null;
+        _photoUrlFetchedAt = null;
+      });
     }
   }
 
