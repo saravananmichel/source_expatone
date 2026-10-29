@@ -3,6 +3,8 @@ using System.Security.Claims;
 using ExpatOne.Application.DTOs;
 using ExpatOne.Application.Interfaces;
 using ExpatOne.Infrastructure.Services;
+using ExpatOne.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -10,7 +12,7 @@ namespace ExpatOne.Api.Controllers;
 
 [ApiController, Authorize, Route("api/family")]
 [EnableRateLimiting("family-per-user")]
-public class FamilyController(FamilyService family, IUserService users) : ControllerBase
+public class FamilyController(FamilyService family, IUserService users, ExpatOneDbContext db, IStorageService storage) : ControllerBase
 {
     [HttpGet("search")]
     public async Task<IActionResult> Search([FromQuery, Required, EmailAddress, MaxLength(256)] string email) =>
@@ -25,6 +27,23 @@ public class FamilyController(FamilyService family, IUserService users) : Contro
     public async Task<IActionResult> Grants(Guid id, FamilyGrantsDto dto) => Ok(await family.UpdateGrantsAsync(await UserId(), id, dto));
     [HttpPost("requests/{id:guid}/end")]
     public async Task<IActionResult> End(Guid id, FamilyRevisionDto dto) => Ok(await family.EndAsync(await UserId(), id, dto.Revision));
+    [HttpGet("members/{memberId:guid}/photo")]
+    public async Task<IActionResult> MemberPhoto(Guid memberId, CancellationToken ct)
+    {
+        var callerId = await UserId();
+        var permitted = memberId == callerId || await db.FamilyRequests.AsNoTracking().AnyAsync(
+            r => r.StatusId == 2 && (r.AccessExpiresAt == null || r.AccessExpiresAt > DateTime.UtcNow) &&
+                 ((r.RequesterUserId == callerId && r.RecipientUserId == memberId) ||
+                  (r.RecipientUserId == callerId && r.RequesterUserId == memberId)), ct);
+        if (!permitted) return NotFound();
+        var key = await db.Users.AsNoTracking().Where(u => u.Id == memberId && u.IsActive)
+            .Select(u => u.ProfilePhotoKey).SingleOrDefaultAsync(ct);
+        if (string.IsNullOrWhiteSpace(key)) return NotFound();
+        if (!key.StartsWith($"profile-photos/{memberId:N}/", StringComparison.Ordinal))
+            return NotFound();
+        return Ok(new { url = await storage.GeneratePresignedUrlAsync(key, TimeSpan.FromMinutes(5)) });
+    }
+
     [HttpGet("dashboard")]
     public async Task<IActionResult> Dashboard() => Ok(await family.DashboardAsync(await UserId()));
     [HttpGet("alerts")]
