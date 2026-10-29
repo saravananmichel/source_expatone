@@ -20,6 +20,16 @@ class _FamilyScreenState extends State<FamilyScreen> {
   String? _error;
   final Map<String, String?> _memberPhotos = {};
   FamilyService get _service => widget.documentService.familyService;
+  Future<void> _loadMemberPhotos() async {
+    final members = _requests.where((r) => r.status == 'Accepted' && !r.isExpired)
+        .map((r) => r.isIncoming ? r.requester : r.recipient);
+    for (final member in members) {
+      if (_memberPhotos.containsKey(member.id)) continue;
+      final url = await _service.memberPhotoUrl(member.id);
+      if (!mounted) return;
+      setState(() => _memberPhotos[member.id] = url);
+    }
+  }
   @override
   void initState() { super.initState(); _load(); }
   @override
