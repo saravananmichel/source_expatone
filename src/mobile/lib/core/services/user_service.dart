@@ -5,6 +5,7 @@ class UserProfile {
   final String email;
   final String? displayName;
   final String? profilePhotoUrl;
+  final String? profilePhotoSource;
   final String? phoneNumber;
   final String countryCode;
   final String preferredLanguage;
