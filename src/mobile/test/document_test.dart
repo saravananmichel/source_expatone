@@ -113,7 +113,7 @@ void main() {
       expect(find.text('My Passport'), findsOneWidget);
       expect(find.text('Work Visa'), findsOneWidget);
       expect(find.text('Passport'), findsOneWidget);
-      expect(find.text('Expires: 12 May 2030'), findsOneWidget);
+      expect(find.text('12/05/2030'), findsOneWidget);
     });
 
     testWidgets('shows error state', (tester) async {

@@ -106,9 +106,11 @@ void main() {
       }
       expect(confirmButton, findsOneWidget);
       expect(find.text('Confirm expiry date'), findsOneWidget);
-      await tester.drag(find.byType(ListView).first, const Offset(0, 2000));
+      final expiredFilter = find.widgetWithText(ChoiceChip, 'Expired');
+      await tester.ensureVisible(expiredFilter);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(ChoiceChip, 'Expired'));
+      expect(expiredFilter, findsOneWidget);
+      await tester.tap(expiredFilter);
       await tester.pumpAndSettle();
       final sharedVisa = find.text('Shared visa');
       for (var i = 0; i < 20 && sharedVisa.evaluate().isEmpty; i++) {
