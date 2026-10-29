@@ -51,7 +51,7 @@ public class UsersController : ControllerBase
         if (user.ProfilePhotoSource == "upload")
             return Ok(new { profilePhotoSource = "upload" });
 
-        var firebaseUser = await FirebaseAuth.DefaultInstance.GetUserAsync(uid, ct);
+        var firebaseUser = await FirebaseAuth.DefaultInstance.GetUserAsync(uid);
         if (!firebaseUser.ProviderData.Any(p => p.ProviderId == "google.com"))
             return BadRequest("Google account not linked.");
 
