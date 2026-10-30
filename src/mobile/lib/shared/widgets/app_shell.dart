@@ -88,7 +88,7 @@ class _AppShellState extends State<AppShell> {
   }
 
   void _openLanguageRegion() {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => LanguageRegionScreen(userService: widget.userService)));
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => LanguageRegionScreen(userService: widget.userService, destinationService: DestinationService(ApiClient()..setAuthService(widget.authService)))));
   }
 
   void _openProfile() {
