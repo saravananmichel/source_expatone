@@ -50,19 +50,40 @@ class _FamilyAlertsPanelState extends State<FamilyAlertsPanel> with WidgetsBindi
       child: ListView(physics: const AlwaysScrollableScrollPhysics(), padding: const EdgeInsets.all(16), children: [
         if (_error != null) ...[Text(_error!), TextButton(onPressed: _load, child: const Text('Retry'))]
         else if (_alerts.isEmpty) const Text('No new family alerts. Expiry alerts need an owner-confirmed date and, for shared documents, the owner’s reminder permission.'),
-        ..._alerts.map((alert) => Card(child: Padding(padding: const EdgeInsets.all(16), child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(alert.title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8), Text(alert.message),
-            if (alert.expiryDate != null) Text('Expiry: ${alert.expiryDate!.toIso8601String().substring(0, 10)}'),
-            if (alert.kind == 'request') const Text('Manage this request in More → Family.'),
-            Wrap(spacing: 12, children: [
-              if (alert.documentId != null && widget.onOpenDocument != null)
-                TextButton(onPressed: () => widget.onOpenDocument!(alert.documentId!), child: const Text('View document')),
-              TextButton(onPressed: _busy.contains(alert.id) ? null : () => _dismiss(alert), child: const Text('Dismiss')),
+        ..._alerts.map((alert) => Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          clipBehavior: Clip.antiAlias,
+          child: Container(width: double.infinity, padding: const EdgeInsets.all(18),
+            decoration: const BoxDecoration(border: Border(
+              left: BorderSide(color: Color(0xFF2563EB), width: 4))),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                CircleAvatar(backgroundColor: const Color(0xFFEFF6FF),
+                  child: Icon(alert.kind == 'request' ? Icons.group_add_outlined : Icons.notifications_active_outlined,
+                    color: const Color(0xFF2563EB))),
+                const SizedBox(width: 12),
+                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(alert.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 5),
+                  Text(alert.message),
+                ])),
+              ]),
+              if (alert.expiryDate != null) Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Chip(avatar: const Icon(Icons.event_outlined, size: 18),
+                  label: Text('Expiry: ${alert.expiryDate!.toIso8601String().substring(0, 10)}'))),
+              if (alert.kind == 'request') const Padding(
+                padding: EdgeInsets.only(top: 8), child: Text('Manage in More → Family')),
+              const Divider(height: 24),
+              Wrap(spacing: 10, children: [
+                if (alert.documentId != null && widget.onOpenDocument != null)
+                  OutlinedButton.icon(onPressed: () => widget.onOpenDocument!(alert.documentId!),
+                    icon: const Icon(Icons.visibility_outlined), label: const Text('View document')),
+                TextButton.icon(onPressed: _busy.contains(alert.id) ? null : () => _dismiss(alert),
+                  icon: const Icon(Icons.check), label: const Text('Dismiss')),
+              ]),
             ]),
-          ],
-        )))),
+          ))),
       ]),
     )),
   ]);
