@@ -59,6 +59,7 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  int _dashboardRefresh = 0;
   int _documentRefresh = 0;
   int _reminderRefresh = 0;
   String? _avatarUrl;
@@ -87,8 +88,17 @@ class _AppShellState extends State<AppShell> {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SettingsScreen()));
   }
 
-  void _openLanguageRegion() {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => LanguageRegionScreen(userService: widget.userService, destinationService: DestinationService(ApiClient()..setAuthService(widget.authService)))));
+  Future<void> _openLanguageRegion() async {
+    final saved = await Navigator.of(context).push<bool>(MaterialPageRoute<bool>(
+      builder: (_) => LanguageRegionScreen(
+        userService: widget.userService,
+        destinationService: DestinationService(ApiClient()..setAuthService(widget.authService)),
+      ),
+    ));
+    if (saved == true && mounted) {
+      // Reload profile and destination banner with the newly selected region.
+      setState(() => _dashboardRefresh++);
+    }
   }
 
   void _openProfile() {
@@ -210,6 +220,7 @@ class _AppShellState extends State<AppShell> {
   Widget build(BuildContext context) {
     final screens = [
       DashboardScreen(
+        key: ValueKey('dashboard-$_dashboardRefresh'),
         healthService: widget.healthService,
         userService: widget.userService,
         reminderService: widget.reminderService,
