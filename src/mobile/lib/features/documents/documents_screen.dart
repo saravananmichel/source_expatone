@@ -44,35 +44,32 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _loadWalletExtras() async {
-    // Family dashboard and direct document sharing are independent sources.
-    // Load concurrently and preserve whichever feed succeeds.
-    final familyFuture = widget.documentService.familyService.dashboard();
-    final directFuture = widget.documentService.getSharedWithMe();
-    final requestsFuture = widget.documentService.familyService.requests();
-    try {
-      final family = await familyFuture;
-      if (mounted) setState(() => _familyDashboardDocs = family);
-    } catch (_) {
-      if (mounted) setState(() => _familyDashboardDocs = []);
-    }
-    try {
-      final direct = await directFuture;
-      if (mounted) setState(() { _sharedWithMe = direct; _sharedTabError = null; });
-    } catch (_) {
-      if (mounted) setState(() {
-        _sharedWithMe = [];
-        _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
-      });
-    }
-    try {
-      final requests = await requestsFuture;
-      if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
-    } catch (_) {
-      if (mounted) setState(() {
-        _familyRequests = [];
-        _tabError = 'Unable to load family requests. Retry to refresh.';
-      });
-    }
+    // Fetch independently so a failed source does not block the other tabs.
+    // Each future handles its own error immediately (no unhandled rejection
+    // while another network request is still pending).
+    await Future.wait<void>([
+      widget.documentService.familyService.dashboard().then((family) {
+        if (mounted) setState(() => _familyDashboardDocs = family);
+      }).catchError((Object _) {
+        if (mounted) setState(() => _familyDashboardDocs = []);
+      }),
+      widget.documentService.getSharedWithMe().then((direct) {
+        if (mounted) setState(() { _sharedWithMe = direct; _sharedTabError = null; });
+      }).catchError((Object _) {
+        if (mounted) setState(() {
+          _sharedWithMe = [];
+          _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
+        });
+      }),
+      widget.documentService.familyService.requests().then((requests) {
+        if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
+      }).catchError((Object _) {
+        if (mounted) setState(() {
+          _familyRequests = [];
+          _tabError = 'Unable to load family requests. Retry to refresh.';
+        });
+      }),
+    ]);
   }
 
   Future<void> _loadDocuments() async {
