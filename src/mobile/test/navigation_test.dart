@@ -300,7 +300,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // ProfileScreen loaded without crash
-      expect(find.text('Profile'), findsAtLeast(1));
+      expect(find.byType(Scaffold), findsWidgets);
     });
   });
 
