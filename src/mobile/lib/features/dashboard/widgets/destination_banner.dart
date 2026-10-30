@@ -260,8 +260,8 @@ class _DestinationBannerState extends State<DestinationBanner>
                     children: [
                       Text(
                         widget.greeting,
-                        style: const TextStyle(
-                          color: Color(0xFF082457),
+                        style: TextStyle(
+                          color: const Color(0xFF082457),
                           fontSize: MediaQuery.sizeOf(context).width < 430 ? 20 : 25,
                           fontWeight: FontWeight.w800,
                         ),
