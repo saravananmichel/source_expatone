@@ -181,7 +181,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (_tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Text(_tabError!), TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
     ]));
-    if (_sharedWithMe == null || _familyRequests == null) {
+    if (_sharedWithMe == null || _familyRequests == null || (_walletTab == 2 && _isLoading)) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_walletTab == 1) {
