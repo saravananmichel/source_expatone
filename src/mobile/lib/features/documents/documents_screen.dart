@@ -121,22 +121,36 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       appBar: AppBar(
         title: Text(_selected.isEmpty ? 'Document Wallet' : '${_selected.length} selected'),
         actions: [
-          IconButton(icon: const Icon(Icons.assignment_outlined), tooltip: 'Prepare application',
-            onPressed: _selected.isEmpty || _isLoading || _error != null ? null : () async {
-              await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                ApplicationAssistantScreen(documentService: widget.documentService, selectedDocumentIds: _selected.toList())));
-              if (mounted) _loadDocuments();
-            }),
-          IconButton(icon: const Icon(Icons.family_restroom_outlined), tooltip: 'Friends & Family',
-            onPressed: () async {
-              await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                FamilyScreen(documentService: widget.documentService)));
-              if (mounted) { _loadDocuments(); _loadWalletExtras(); }
-            }),
-          IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh wallet',
-            onPressed: () { _loadDocuments(); _loadWalletExtras(); }),
-          IconButton(icon: const Icon(Icons.add_circle_outline), tooltip: 'Add document',
-            onPressed: _navigateToAdd),
+          PopupMenuButton<String>(
+            tooltip: 'Wallet actions',
+            icon: const Icon(Icons.more_vert),
+            onSelected: (action) async {
+              switch (action) {
+                case 'application':
+                  if (_selected.isEmpty || _isLoading || _error != null) return;
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
+                    ApplicationAssistantScreen(documentService: widget.documentService,
+                      selectedDocumentIds: _selected.toList())));
+                  if (mounted) _loadDocuments();
+                case 'family':
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
+                    FamilyScreen(documentService: widget.documentService)));
+                  if (mounted) { _loadDocuments(); _loadWalletExtras(); }
+                case 'refresh':
+                  _loadDocuments();
+                  _loadWalletExtras();
+                case 'add':
+                  _navigateToAdd();
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'application', enabled: _selected.isNotEmpty && !_isLoading && _error == null,
+                child: const Text('Prepare application')),
+              const PopupMenuItem(value: 'family', child: Text('Friends & Family')),
+              const PopupMenuItem(value: 'refresh', child: Text('Refresh wallet')),
+              const PopupMenuItem(value: 'add', child: Text('Add document')),
+            ],
+          ),
         ],
       ),
       body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
