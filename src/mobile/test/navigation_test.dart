@@ -12,6 +12,7 @@ import 'package:expatone_app/core/services/user_service.dart';
 import 'package:expatone_app/shared/services/health_service.dart';
 import 'package:expatone_app/shared/widgets/app_shell.dart';
 import 'package:expatone_app/shared/widgets/more_screen.dart';
+import 'package:expatone_app/features/profile/profile_screen.dart';
 
 // ──────────────────────────────────────────────────────
 // Mock services — minimal stubs for navigation tests
@@ -299,9 +300,8 @@ void main() {
       await tester.tap(find.text('Profile'));
       await tester.pumpAndSettle();
 
-      // The profile route must replace the More menu in the visible tree.
-      expect(find.text('Manage your ExpatOne profile'), findsNothing);
-      expect(find.byType(Scaffold), findsWidgets);
+      // Verify the actual profile route, not just a generic Scaffold.
+      expect(find.byType(ProfileScreen), findsOneWidget);
     });
   });
 
