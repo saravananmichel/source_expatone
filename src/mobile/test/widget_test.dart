@@ -211,6 +211,8 @@ void main() {
         ),
       ));
 
+      await tester.ensureVisible(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
