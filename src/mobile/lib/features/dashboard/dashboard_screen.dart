@@ -550,7 +550,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const Text('Your relocation checklist',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
-            Flexible(child: ListView(shrinkWrap: true, children: [
+            SizedBox(height: MediaQuery.sizeOf(sheetContext).height * 0.5,
+              child: ListView(children: [
               for (final item in _checklist) ListTile(
                 leading: Icon(item.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
                   color: item.isCompleted ? AppTheme.successColor : AppTheme.textSecondary),
