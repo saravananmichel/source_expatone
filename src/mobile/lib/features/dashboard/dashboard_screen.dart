@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'widgets/destination_banner.dart';
 
@@ -71,12 +72,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ChecklistItem> _checklist = [];
   List<UnifiedReminder> _smartReminders = [];
   bool _remindersLoading = true;
+  bool _compactCards = false;
 
   @override
   void initState() {
     super.initState();
     _loadAll();
+    _loadDashboardPreferences();
   }
+
+  Future<void> _loadDashboardPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) setState(() => _compactCards = prefs.getBool('expatone.ui.compactCards') ?? false);
+    } catch (_) {
+      // Keep the default layout when local preferences are unavailable.
+    }
+  }
+
 
   Future<void> _loadAll() async {
     setState(() {
@@ -142,7 +155,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1440),
           child: RefreshIndicator(
-          onRefresh: _loadAll,
+          onRefresh: () async {
+        await Future.wait([_loadAll(), _loadDashboardPreferences()]);
+      },
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
@@ -487,7 +502,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: InkWell(
         onTap: action,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 156),
+          constraints: BoxConstraints(minHeight: _compactCards ? 116 : 156),
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
