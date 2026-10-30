@@ -220,7 +220,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   Widget _sharingBody() {
-    if (_walletTab == 1 && _sharedTabError != null) {
+    if (_walletTab == 1 && _sharedTabError != null && (_familyDashboardDocs ?? []).isEmpty) {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text(_sharedTabError!),
         TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
@@ -229,7 +229,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (_walletTab == 3 && _tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Text(_tabError!), TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
     ]));
-    if ((_walletTab == 1 && _sharedWithMe == null) ||
+    if ((_walletTab == 1 && _sharedWithMe == null && _familyDashboardDocs == null) ||
         (_walletTab == 2 && _isLoading) ||
         (_walletTab == 3 && _familyRequests == null)) {
       return const Center(child: CircularProgressIndicator());
@@ -243,7 +243,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         return const Center(child: Text('No documents shared with you yet.'));
       }
       return ListView(padding: const EdgeInsets.all(16), children: [
-        for (final entry in <MapEntry<String, List<FamilyDashboardDocument>> >[
+        for (final entry in <MapEntry<String, List<FamilyDashboardDocument>>>[
           ...(() {
             final grouped = <String, List<FamilyDashboardDocument>>{};
             for (final d in family) { grouped.putIfAbsent(d.owner.id, () => []).add(d); }
