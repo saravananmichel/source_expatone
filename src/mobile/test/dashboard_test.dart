@@ -195,8 +195,9 @@ void main() {
   });
 
   group('15. No overflow at target device size', () {
-    testWidgets('renders without RenderFlex overflow at 360x800dp', (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
+    for (final width in [360, 390, 430]) {
+    testWidgets('renders without RenderFlex overflow at ${width}x800dp', (tester) async {
+      tester.view.physicalSize = Size(width * 3.0, 2400);
       tester.view.devicePixelRatio = 3.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -218,5 +219,6 @@ void main() {
 
       expect(tester.takeException(), isNull);
     });
+    }
   });
 }
