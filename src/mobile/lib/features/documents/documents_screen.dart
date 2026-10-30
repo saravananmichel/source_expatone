@@ -249,22 +249,31 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           leading: const CircleAvatar(child: Icon(Icons.person_outline)),
           title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
           subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
-          children: [for (final d in family.where((d) => d.owner.id == ownerId)) ListTile(
-            title: Text(d.name),
-            subtitle: Text('${d.documentType} • Expiry: ${d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!)}'),
-            trailing: TextButton(onPressed: () async {
-              try {
-                final document = await widget.documentService.getDocument(d.id);
-                if (!context.mounted) return;
-                await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                  DocumentDetailScreen(document: document, documentService: widget.documentService,
-                    reminderService: widget.reminderService)));
-              } catch (_) {
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Unable to open family document.')));
-              }
-            }, child: const Text('View')),
-          )],
+          children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
+            child: DataTable(columns: const [
+              DataColumn(label: Text('Document')),
+              DataColumn(label: Text('Type')),
+              DataColumn(label: Text('Expiry Date')),
+              DataColumn(label: Text('Sharing')),
+              DataColumn(label: Text('Actions')),
+            ], rows: family.where((d) => d.owner.id == ownerId).map((d) => DataRow(cells: [
+              DataCell(Text(d.name)),
+              DataCell(Text(d.documentType)),
+              DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
+              const DataCell(Text('Family access')),
+              DataCell(TextButton(onPressed: () async {
+                try {
+                  final document = await widget.documentService.getDocument(d.id);
+                  if (!context.mounted) return;
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
+                    DocumentDetailScreen(document: document, documentService: widget.documentService,
+                      reminderService: widget.reminderService)));
+                } catch (_) {
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Unable to open family document.')));
+                }
+              }, child: const Text('View'))),
+            ])).toList()))],
         )),
         for (final owner in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
           Card(child: ExpansionTile(
