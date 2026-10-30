@@ -204,6 +204,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           ])).toList()))),
       ]);
     }
+    if (_walletTab == 2) {
+      final docs = (_documents ?? []).where((d) => !d.isSharedWithMe && d.activeShareCount > 0).toList();
+      if (docs.isEmpty) return const Center(child: Text('No documents shared by you yet.'));
+      return ListView(padding: const EdgeInsets.all(16), children: [
+        for (final doc in docs) Card(child: ListTile(
+          leading: const Icon(Icons.folder_shared_outlined),
+          title: Text(doc.name),
+          subtitle: Text('Active shares: ${doc.activeShareCount}'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _navigateToDetail(doc),
+        )),
+      ]);
+    }
     final requests = _familyRequests!;
     final filtered = _walletTab == 2
         ? requests.where((r) => r.status == 'Accepted' && !r.isExpired).toList()
