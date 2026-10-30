@@ -140,7 +140,54 @@ class _AppShellState extends State<AppShell> {
 
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => Scaffold(
-        body: screen,
+        body: Column(children: [
+          Material(
+            color: Colors.white,
+            child: SafeArea(bottom: false, child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              child: Row(children: [
+                const Icon(Icons.public, color: AppTheme.primaryColor),
+                const SizedBox(width: 8),
+                const Expanded(child: Text('ExpatOne',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                IconButton(
+                  tooltip: 'Reminders',
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _navigateToTab(3);
+                  },
+                ),
+                PopupMenuButton<String>(
+                  tooltip: 'Account menu',
+                  onSelected: (value) {
+                    Navigator.of(context).pop();
+                    switch (value) {
+                      case 'profile':
+                        _openProfile();
+                      case 'settings':
+                        _openSettings();
+                      case 'language':
+                        _openLanguageRegion();
+                      case 'logout':
+                        _signOut();
+                    }
+                  },
+                  itemBuilder: (_) => const [
+                    PopupMenuItem(value: 'profile', child: Text('My Profile')),
+                    PopupMenuItem(value: 'settings', child: Text('Settings & preferences')),
+                    PopupMenuItem(value: 'language', child: Text('Language & region')),
+                    PopupMenuDivider(),
+                    PopupMenuItem(value: 'logout', child: Text('Logout')),
+                  ],
+                  child: ProfileAvatar(imageUrl: _avatarUrl,
+                    displayName: widget.userName, radius: 17),
+                ),
+              ]),
+            )),
+          ),
+          Expanded(child: screen),
+        ]),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (index) {
