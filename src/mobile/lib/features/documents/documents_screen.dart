@@ -28,6 +28,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   List<SharedDocument>? _sharedWithMe;
   List<FamilyRequest>? _familyRequests;
   String? _tabError;
+  final Map<String, Future<List<DocumentShare>>> _shareRecipients = {};
+
+  Future<List<DocumentShare>> _recipientsFor(String documentId) =>
+      _shareRecipients.putIfAbsent(documentId, () => widget.documentService.getShares(documentId));
 
   @override
   void initState() {
@@ -50,6 +54,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     setState(() {
       _isLoading = true;
       _error = null;
+      _shareRecipients.clear();
     });
 
     try {
@@ -214,11 +219,21 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           subtitle: Text('Active shares: ${doc.activeShareCount}'),
           children: [
             FutureBuilder<List<DocumentShare>>(
-              future: widget.documentService.getShares(doc.id),
+              future: _recipientsFor(doc.id),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) return const ListTile(title: Text('Loading recipients...'));
+                if (snapshot.hasError) return const ListTile(
+                  leading: Icon(Icons.error_outline),
+                  title: Text('Unable to load recipients'),
+                  subtitle: Text('Refresh the wallet to try again.'),
+                );
+                if (!snapshot.hasData) return const ListTile(
+                  leading: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                  title: Text('Loading recipients...'),
+                );
+                final activeShares = snapshot.data!.where((share) => share.isActive).toList();
+                if (activeShares.isEmpty) return const ListTile(title: Text('No active recipients found.'));
                 return Column(children: [
-                  for (final share in snapshot.data!.where((share) => share.isActive))
+                  for (final share in activeShares)
                     ListTile(title: Text(share.sharedWithEmail ?? share.sharedWithUserId),
                       subtitle: Text(share.permission),
                       onTap: () => _navigateToDetail(doc)),
