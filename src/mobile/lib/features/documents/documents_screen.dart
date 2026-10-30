@@ -218,14 +218,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       ]);
     }
     final requests = _familyRequests!;
-    final filtered = _walletTab == 2
-        ? requests.where((r) => r.status == 'Accepted' && !r.isExpired).toList()
-        : requests.where((r) => r.status == 'Pending').toList();
+    final filtered = requests.where((r) => r.status == 'Pending').toList();
     if (filtered.isEmpty) return Center(child: Text(
-      _walletTab == 2 ? 'No active family document sharing.' : 'No pending connection requests.'));
+      'No pending connection requests.'));
     return ListView(padding: const EdgeInsets.all(16), children: [
       for (final r in filtered) Card(child: ListTile(
-        leading: Icon(_walletTab == 2 ? Icons.folder_shared_outlined : Icons.mark_email_unread_outlined,
+        leading: Icon(Icons.mark_email_unread_outlined,
           color: const Color(0xFF2563EB)),
         title: Text(r.isIncoming ? (r.requester.displayName ?? r.requester.email)
           : (r.recipient.displayName ?? r.recipient.email)),
