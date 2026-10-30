@@ -302,7 +302,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
           subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
           children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-            child: DataTable(columns: const [
+            child: _richTable(const [
               DataColumn(label: Text('Document')),
               DataColumn(label: Text('Type')),
               DataColumn(label: Text('Expiry Date')),
@@ -371,7 +371,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             DataColumn(label: Text('Expiry Date')),
             DataColumn(label: Text('Sharing')),
             DataColumn(label: Text('Actions')),
-          ], rows: docs.map((doc) => DataRow(cells: [
+          ], docs.map((doc) => DataRow(cells: [
             DataCell(Text(doc.name)),
             DataCell(Text(doc.documentType)),
             DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
