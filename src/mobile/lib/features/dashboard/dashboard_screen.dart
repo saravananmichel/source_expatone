@@ -157,6 +157,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     greeting: _timeGreeting,
                     userId: _profile?.id,
                     preferredCountry: _profile?.countryCode,
+                    completedSteps: _checklist.where((item) => item.isCompleted).length,
+                    totalSteps: _checklist.length,
                   ),
                 ),
                 const SizedBox(height: 20),
