@@ -262,7 +262,7 @@ class _DestinationBannerState extends State<DestinationBanner>
                         widget.greeting,
                         style: const TextStyle(
                           color: Color(0xFF082457),
-                          fontSize: 25,
+                          fontSize: MediaQuery.sizeOf(context).width < 430 ? 20 : 25,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -279,7 +279,7 @@ class _DestinationBannerState extends State<DestinationBanner>
                 Align(
                   alignment: Alignment.centerRight,
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 310),
+                    constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width < 430 ? double.infinity : 310),
                     padding: const EdgeInsets.all(14),
                     decoration: BoxDecoration(
                       color: const Color(0xFF0D244B).withValues(alpha: .86),
