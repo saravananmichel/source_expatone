@@ -271,21 +271,28 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             }, child: const Text('View')),
           )],
         )),
-        if (direct.isNotEmpty) Card(clipBehavior: Clip.antiAlias,
-          child: SingleChildScrollView(scrollDirection: Axis.horizontal,
-            child: DataTable(columns: const [
-              DataColumn(label: Text('Document')),
-              DataColumn(label: Text('Type')),
-              DataColumn(label: Text('Expiry Date')),
-              DataColumn(label: Text('Shared By')),
-              DataColumn(label: Text('Actions')),
-            ], rows: direct.map((d) => DataRow(cells: [
-              DataCell(Text(d.documentName)),
-              DataCell(Text(d.documentType)),
-              DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
-              DataCell(Text(d.ownerEmail ?? 'Shared contact')),
-              DataCell(TextButton(onPressed: () => _openShared(d), child: const Text('View'))),
-            ])).toList()))),
+        for (final owner in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
+          Card(child: ExpansionTile(
+            initiallyExpanded: true,
+            leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+            title: Text('$' + '{owner} ($' + '{direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
+            subtitle: const Text('Direct document shares'),
+            children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
+              child: DataTable(columns: const [
+                DataColumn(label: Text('Document')),
+                DataColumn(label: Text('Type')),
+                DataColumn(label: Text('Expiry Date')),
+                DataColumn(label: Text('Sharing')),
+                DataColumn(label: Text('Actions')),
+              ], rows: direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner)
+                .map((d) => DataRow(cells: [
+                  DataCell(Text(d.documentName)),
+                  DataCell(Text(d.documentType)),
+                  DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
+                  DataCell(Text(d.permission)),
+                  DataCell(TextButton(onPressed: () => _openShared(d), child: const Text('View'))),
+                ])).toList()))],
+          )),
       ]);
     }
     if (_walletTab == 2) {
