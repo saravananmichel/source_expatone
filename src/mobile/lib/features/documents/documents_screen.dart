@@ -105,9 +105,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
         });
       }),
-      widget.documentService.familyService.requests().then((requests) {
+      widget.documentService.familyService.requests().then((requests) async {
         if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
-        await _loadMemberPhotos(requests);
+        try {
+          await _loadMemberPhotos(requests);
+        } catch (_) {
+          // Profile photos are optional; keep family requests available.
+        }
       }).catchError((Object _) {
         if (mounted) setState(() {
           _familyRequests = [];
