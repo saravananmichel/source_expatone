@@ -168,10 +168,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHealthCard(),
-                    const SizedBox(height: 12),
-                    _buildPassCard(),
-                    const SizedBox(height: 18),
                     _buildJourneyOverview(),
                     const SizedBox(height: 20),
                     _buildUpcomingReminders(),
@@ -465,7 +461,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.auto_awesome_outlined, const Color(0xFFF2E8FF), () => widget.onNavigateToTab?.call(2)),
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Your journey at a glance',
+      const Text('Your ExpatOne services',
           style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: _navy)),
       const SizedBox(height: 12),
       if (compact) ...cards.map((card) => Padding(
