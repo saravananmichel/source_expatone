@@ -810,49 +810,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickActions() {
-    return Row(
-      children: [
-        _QuickActionCard(
-          icon: Icons.note_add_outlined,
-          label: 'Add\nDocument',
-          bgColor: _qaDocBg,
-          iconColor: _accentBlue,
-          onTap: () => widget.onNavigateToTab?.call(1),
-        ),
-        const SizedBox(width: 10),
-        _QuickActionCard(
-          icon: Icons.auto_awesome_outlined,
-          label: 'Ask\nAssistant',
-          bgColor: _qaAssistBg,
-          iconColor: _qaAssistIcon,
-          onTap: () => widget.onNavigateToTab?.call(2),
-        ),
-        const SizedBox(width: 10),
-        _QuickActionCard(
-          icon: Icons.calendar_month_outlined,
-          label: 'View\nReminders',
-          bgColor: _qaReminderBg,
-          iconColor: _qaReminderIcon,
-          onTap: () => widget.onNavigateToTab?.call(3),
-        ),
-        const SizedBox(width: 10),
-        _QuickActionCard(
-          icon: Icons.location_on_outlined,
-          label: 'Emergency\nHelp',
-          bgColor: _qaEmergencyBg,
-          iconColor: _qaEmergencyIcon,
-          onTap: () {
-            final openFeature = widget.onOpenFeature;
-            if (openFeature != null) {
-              openFeature(DashboardFeature.emergency);
-            } else {
-              widget.onNavigateToTab?.call(4);
-            }
-          },
-        ),
-      ],
-    );
+    final actions = <Widget>[
+      _QuickActionCard(icon: Icons.note_add_outlined, label: 'Add Document',
+        bgColor: _qaDocBg, iconColor: _accentBlue,
+        onTap: () => widget.onNavigateToTab?.call(1)),
+      _QuickActionCard(icon: Icons.person_add_alt_outlined, label: 'Add Family',
+        bgColor: _qaReminderBg, iconColor: _qaReminderIcon,
+        onTap: () => widget.onOpenFeature?.call(DashboardFeature.family)),
+      _QuickActionCard(icon: Icons.share_outlined, label: 'Share Document',
+        bgColor: _qaDocBg, iconColor: _accentBlue,
+        onTap: () => widget.onNavigateToTab?.call(1)),
+      _QuickActionCard(icon: Icons.celebration_outlined, label: 'Add Occasion',
+        bgColor: _qaAssistBg, iconColor: _qaAssistIcon,
+        onTap: () => widget.onNavigateToTab?.call(3)),
+      _QuickActionCard(icon: Icons.add_alert_outlined, label: 'New Reminder',
+        bgColor: _qaReminderBg, iconColor: _qaReminderIcon,
+        onTap: () => widget.onNavigateToTab?.call(3)),
+      _QuickActionCard(icon: Icons.assignment_outlined, label: 'Visa Application',
+        bgColor: _qaDocBg, iconColor: _accentBlue,
+        onTap: () => widget.onOpenFeature?.call(DashboardFeature.visaAssistant)),
+      _QuickActionCard(icon: Icons.auto_awesome_outlined, label: 'AI Assistant',
+        bgColor: _qaAssistBg, iconColor: _qaAssistIcon,
+        onTap: () => widget.onNavigateToTab?.call(2)),
+      _QuickActionCard(icon: Icons.explore_outlined, label: 'Find Services',
+        bgColor: _qaReminderBg, iconColor: _qaReminderIcon,
+        onTap: () => widget.onNavigateToTab?.call(4)),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Quick actions',
+        style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: _navy)),
+      const SizedBox(height: 12),
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth < 420 ? 2 : 4;
+        return Column(children: [
+          for (var row = 0; row < 8; row += columns) ...[
+            Row(children: [
+              for (var index = row; index < row + columns; index++) ...[
+                if (index > row) const SizedBox(width: 10),
+                actions[index],
+              ],
+            ]),
+            const SizedBox(height: 10),
+          ],
+        ]);
+      }),
+    ]);
   }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
