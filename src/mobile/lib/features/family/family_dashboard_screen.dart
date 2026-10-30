@@ -546,6 +546,7 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             if (members.isEmpty) const Text('No documents match this filter.'),
             for (final documents in members) ...[
               Card(child: ExpansionTile(
+                initiallyExpanded: documents.first.isOwned,
                 key: PageStorageKey('family-documents-${documents.first.owner.id}'),
                 leading: CircleAvatar(
                   foregroundImage: _memberPhotos[documents.first.owner.id] == null ? null : NetworkImage(_memberPhotos[documents.first.owner.id]!),
