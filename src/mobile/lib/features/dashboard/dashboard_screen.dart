@@ -479,23 +479,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _homeSummaryCard(String title, String description, IconData icon,
       Color tint, VoidCallback action) {
-    return Material(color: Colors.white, borderRadius: BorderRadius.circular(18),
-      child: InkWell(onTap: action, borderRadius: BorderRadius.circular(18),
-        child: Container(padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE1E7F0))),
-          child: Row(children: [
-            Container(padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, color: _accentBlue, size: 25)),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: _navy)),
-              const SizedBox(height: 3),
-              Text(description, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-            ])),
-            const Icon(Icons.chevron_right, color: _accentBlue),
-          ]))));
+    return Material(
+      color: tint,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: action,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 156),
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE0E7F2)),
+          ),
+          child: Stack(children: [
+            Positioned(
+              right: -10, bottom: -18,
+              child: Icon(icon, size: 112, color: _accentBlue.withValues(alpha: .10)),
+            ),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: _accentBlue, size: 26),
+              ),
+              const SizedBox(height: 15),
+              Text(title, style: const TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 17, color: _navy)),
+              const SizedBox(height: 5),
+              Text(description, style: const TextStyle(
+                fontSize: 12, color: AppTheme.textSecondary)),
+              const SizedBox(height: 12),
+              const Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('Open', style: TextStyle(
+                  color: _accentBlue, fontWeight: FontWeight.w700)),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_forward, color: _accentBlue, size: 16),
+              ]),
+            ]),
+          ]),
+        ),
+      ),
+    );
   }
 
   Widget _buildUpcomingReminders() {
