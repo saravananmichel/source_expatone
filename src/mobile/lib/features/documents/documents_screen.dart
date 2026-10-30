@@ -43,27 +43,28 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _loadWalletExtras() async {
-    // Family grants are served by a separate endpoint from direct shares.
-    // Keep the feeds independent so a failure cannot hide direct shares.
+    // Family dashboard and direct document sharing are independent sources.
+    // Load concurrently and preserve whichever feed succeeds.
+    final familyFuture = widget.documentService.familyService.dashboard();
+    final directFuture = widget.documentService.getSharedWithMe();
+    final requestsFuture = widget.documentService.familyService.requests();
     try {
-      final familyDocs = await widget.documentService.familyService.dashboard();
-      if (mounted) setState(() => _familyDashboardDocs = familyDocs);
+      final family = await familyFuture;
+      if (mounted) setState(() => _familyDashboardDocs = family);
     } catch (_) {
-      if (mounted) setState(() => _familyDashboardDocs = null);
+      if (mounted) setState(() => _familyDashboardDocs = []);
     }
-    // Sharing and family requests are independent APIs. A failure in one
-    // must not hide the other tab's successful results.
     try {
-      final shared = await widget.documentService.getSharedWithMe();
-      if (mounted) setState(() { _sharedWithMe = shared; _sharedTabError = null; });
+      final direct = await directFuture;
+      if (mounted) setState(() { _sharedWithMe = direct; _sharedTabError = null; });
     } catch (_) {
       if (mounted) setState(() {
         _sharedWithMe = [];
-        _sharedTabError = 'Unable to load documents shared with you. Retry to refresh.';
+        _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
       });
     }
     try {
-      final requests = await widget.documentService.familyService.requests();
+      final requests = await requestsFuture;
       if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
     } catch (_) {
       if (mounted) setState(() {
@@ -339,7 +340,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         )),
       ]);
     }
-    final requests = _familyRequests!;
+    final requests = _familyRequests ?? [];
     final filtered = requests.where((r) => r.status == 'Pending').toList();
     if (filtered.isEmpty) return Center(child: Text(
       'No pending connection requests.'));
