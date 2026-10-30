@@ -374,8 +374,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         subtitle: Text('${r.relationship} • ${r.status} • ${r.documentIds.length} document(s)'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-            FamilyScreen(documentService: widget.documentService)));
+          final family = FamilyScreen(documentService: widget.documentService,
+            onOpenNested: widget.onOpenNested);
+          if (widget.onOpenNested != null) {
+            widget.onOpenNested!(family);
+          } else {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => family));
+          }
           if (mounted) _loadWalletExtras();
         },
       )),
