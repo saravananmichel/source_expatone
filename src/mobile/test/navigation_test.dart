@@ -297,6 +297,8 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
 
       // Tap Profile to open the ProfileScreen
+      await tester.ensureVisible(find.text('Profile'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Profile'));
       await tester.pumpAndSettle();
 
