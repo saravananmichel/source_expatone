@@ -138,7 +138,29 @@ class _AppShellState extends State<AppShell> {
         break;
     }
 
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => screen));
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => Scaffold(
+        appBar: AppBar(title: const Text('ExpatOne'), actions: [
+          IconButton(tooltip: 'Back to Home', icon: const Icon(Icons.home_outlined),
+            onPressed: () => Navigator.of(context).pop()),
+        ]),
+        body: screen,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            Navigator.of(context).pop();
+            _navigateToTab(index);
+          },
+          destinations: const [
+            NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+            NavigationDestination(icon: Icon(Icons.folder_outlined), label: 'Documents'),
+            NavigationDestination(icon: Icon(Icons.account_balance_outlined), label: 'Assistant'),
+            NavigationDestination(icon: Icon(Icons.notifications_outlined), label: 'Reminders'),
+            NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
+          ],
+        ),
+      ),
+    ));
   }
 
   @override
