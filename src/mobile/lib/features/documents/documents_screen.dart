@@ -317,9 +317,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 try {
                   final document = await widget.documentService.getDocument(d.id);
                   if (!context.mounted) return;
-                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                    DocumentDetailScreen(document: document, documentService: widget.documentService,
-                      reminderService: widget.reminderService)));
+                  await _showDocumentPreview(document);
                 } catch (_) {
                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Unable to open family document.')));
@@ -346,7 +344,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   DataCell(Text(d.documentType)),
                   DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
                   DataCell(Text(d.permission)),
-                  DataCell(TextButton(onPressed: () => _openShared(d), child: const Text('View'))),
+                  DataCell(TextButton.icon(onPressed: () => _showSharedPreview(d), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
                 ])).toList()))],
           )),
       ]);
@@ -376,7 +374,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             DataCell(Text(doc.documentType)),
             DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
             DataCell(Text(doc.activeShareCount > 0 ? '${doc.activeShareCount} direct' : 'Family')),
-            DataCell(TextButton(onPressed: () => _navigateToDetail(doc), child: const Text('View'))),
+            DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
           ])).toList()))),
         for (final doc in docs) Card(child: ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
@@ -429,6 +427,27 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         },
       )),
     ]);
+  }
+
+  Future<void> _showSharedPreview(SharedDocument doc) async {
+    await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
+      title: Text(doc.documentName),
+      content: SizedBox(width: 440, child: Column(mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Owner: ${doc.ownerEmail ?? 'Shared contact'}'),
+          const SizedBox(height: 8),
+          Text('Type: ${doc.documentType}'),
+          Text('Permission: ${doc.permission}'),
+          Text('Expiry: ${doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!)}'),
+          const SizedBox(height: 12),
+          const Text('The document opens securely in your browser using its access link.'),
+        ])),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+        FilledButton.icon(onPressed: () { Navigator.pop(dialogContext); _openShared(doc); },
+          icon: const Icon(Icons.open_in_new), label: const Text('Open document')),
+      ],
+    ));
   }
 
   Future<void> _openShared(SharedDocument doc) async {
