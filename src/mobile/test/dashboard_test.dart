@@ -171,49 +171,26 @@ void main() {
   });
 
   group('Quick actions', () {
-    testWidgets('8. Add Document action is present and taps to tab 1', (tester) async {
-      int? tapped;
-      await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
+    testWidgets('eight actions are available', (tester) async {
+      await tester.pumpWidget(_buildDashboard());
       await tester.pumpAndSettle();
-      expect(find.textContaining('Add'), findsWidgets);
-      final actionFinder = find.text('Add\nDocument');
-      await tester.ensureVisible(actionFinder);
-      await tester.pumpAndSettle();
-      await tester.tap(actionFinder);
-      expect(tapped, 1);
+      for (final label in [
+        'Add Document', 'Add Family', 'Share Document', 'Add Occasion',
+        'New Reminder', 'Visa Application', 'AI Assistant', 'Find Services',
+      ]) {
+        expect(find.text(label, skipOffstage: false), findsWidgets);
+      }
     });
 
-    testWidgets('9. Ask Assistant action is present and taps to tab 2', (tester) async {
-      int? tapped;
-      await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
+    testWidgets('Add Document opens documents tab', (tester) async {
+      int? selected;
+      await tester.pumpWidget(_buildDashboard(onNavigate: (index) => selected = index));
       await tester.pumpAndSettle();
-      final actionFinder = find.text('Ask\nAssistant');
-      await tester.ensureVisible(actionFinder);
+      final target = find.text('Add Document', skipOffstage: false).first;
+      await tester.ensureVisible(target);
       await tester.pumpAndSettle();
-      await tester.tap(actionFinder);
-      expect(tapped, 2);
-    });
-
-    testWidgets('10. View Reminders action is present and taps to tab 3', (tester) async {
-      int? tapped;
-      await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
-      await tester.pumpAndSettle();
-      final actionFinder = find.text('View\nReminders');
-      await tester.ensureVisible(actionFinder);
-      await tester.pumpAndSettle();
-      await tester.tap(actionFinder);
-      expect(tapped, 3);
-    });
-
-    testWidgets('11. Emergency Help action is present and taps to tab 4', (tester) async {
-      int? tapped;
-      await tester.pumpWidget(_buildDashboard(onNavigate: (i) => tapped = i));
-      await tester.pumpAndSettle();
-      final actionFinder = find.text('Emergency\nHelp');
-      await tester.ensureVisible(actionFinder);
-      await tester.pumpAndSettle();
-      await tester.tap(actionFinder);
-      expect(tapped, 4);
+      await tester.tap(target);
+      expect(selected, 1);
     });
   });
 
