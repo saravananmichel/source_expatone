@@ -244,17 +244,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         return const Center(child: Text('No documents shared with you yet.'));
       }
       return ListView(padding: const EdgeInsets.all(16), children: [
-        for (final entry in <MapEntry<String, List<FamilyDashboardDocument>>>[
-          ...(() {
-            final grouped = <String, List<FamilyDashboardDocument>>{};
-            for (final d in family) { grouped.putIfAbsent(d.owner.id, () => []).add(d); }
-            return grouped.entries.toList();
-          })(),
-        ]) Card(child: ExpansionTile(
+        for (final ownerId in family.map((d) => d.owner.id).toSet())
+          Card(child: ExpansionTile(
           leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-          title: Text('${entry.value.first.owner.displayName ?? entry.value.first.owner.email} (${entry.value.length})'),
-          subtitle: Text(entry.value.first.owner.email),
-          children: [for (final d in entry.value) ListTile(
+          title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
+          subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
+          children: [for (final d in family.where((d) => d.owner.id == ownerId)) ListTile(
             title: Text(d.name),
             subtitle: Text('${d.documentType} • Expiry: ${d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!)}'),
             trailing: TextButton(onPressed: () async {
