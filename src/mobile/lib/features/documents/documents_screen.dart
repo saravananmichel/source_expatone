@@ -275,7 +275,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           Card(child: ExpansionTile(
             initiallyExpanded: true,
             leading: const CircleAvatar(child: Icon(Icons.person_outline)),
-            title: Text('$' + '{owner} ($' + '{direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
+            title: Text('${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
             subtitle: const Text('Direct document shares'),
             children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
               child: DataTable(columns: const [
