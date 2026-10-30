@@ -32,6 +32,50 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   String? _tabError;
   String? _sharedTabError;
   final Map<String, Future<List<DocumentShare>>> _shareRecipients = {};
+  final Map<String, String?> _memberPhotos = {};
+
+  Widget _personAvatar(String email, {String? userId}) {
+    final url = userId == null ? null : (_memberPhotos[userId] ?? (_familyDashboardDocs ?? <FamilyDashboardDocument>[]).where((d) => d.owner.id == userId).map((d) => d.owner.profilePhotoUrl).whereType<String>().firstOrNull);
+    return CircleAvatar(radius: 21,
+      foregroundImage: url == null || url.isEmpty ? null : NetworkImage(url),
+      child: Text(email.isEmpty ? '?' : email[0].toUpperCase()));
+  }
+
+  Future<void> _loadMemberPhotos(List<FamilyRequest> requests) async {
+    final people = <String, FamilyUser>{};
+    for (final request in requests.where((r) => r.status == 'Accepted' && !r.isExpired)) {
+      final person = request.isIncoming ? request.requester : request.recipient;
+      people[person.id] = person;
+    }
+    for (final person in people.values) {
+      if (_memberPhotos.containsKey(person.id)) continue;
+      final url = await widget.documentService.familyService.memberPhotoUrl(person.id);
+      if (!mounted) return;
+      setState(() => _memberPhotos[person.id] = url);
+    }
+  }
+
+  Widget _richTable(List<DataColumn> columns, List<DataRow> rows) =>
+    Align(alignment: Alignment.centerLeft, child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: DataTable(
+        headingRowColor: WidgetStateProperty.all(const Color(0xFFF1F5F9)),
+        dataRowMinHeight: 56, dataRowMaxHeight: 72,
+        dividerThickness: 0.5, columnSpacing: 28,
+        showBottomBorder: true, columns: columns, rows: rows)));
+
+  Future<void> _showDocumentPreview(DocumentItem document) async {
+    await showDialog<void>(context: context, builder: (dialogContext) => Dialog(
+      insetPadding: const EdgeInsets.all(20),
+      child: SizedBox(width: 950, height: 680, child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: DocumentDetailScreen(document: document,
+          documentService: widget.documentService,
+          reminderService: widget.reminderService))),
+    ));
+    if (mounted) _loadDocuments();
+  }
+
 
   Future<List<DocumentShare>> _recipientsFor(String documentId) =>
       _shareRecipients.putIfAbsent(documentId, () => widget.documentService.getShares(documentId));
@@ -61,8 +105,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
         });
       }),
-      widget.documentService.familyService.requests().then((requests) {
+      widget.documentService.familyService.requests().then((requests) async {
         if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
+        try {
+          await _loadMemberPhotos(requests);
+        } catch (_) {
+          // Profile photos are optional; keep family requests available.
+        }
       }).catchError((Object _) {
         if (mounted) setState(() {
           _familyRequests = [];
@@ -200,13 +249,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         child: ListView(padding: const EdgeInsets.all(16), children: [
           Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: DataTable(columns: const [
+            child: _richTable(const [
               DataColumn(label: Text('Document')),
               DataColumn(label: Text('Type')),
               DataColumn(label: Text('Expiry Date')),
               DataColumn(label: Text('Sharing')),
               DataColumn(label: Text('Actions')),
-            ], rows: docs.map((doc) => DataRow(cells: [
+            ], docs.map((doc) => DataRow(cells: [
               DataCell(Row(children: [
                 Checkbox(value: _selected.contains(doc.id), onChanged: (v) =>
                   setState(() { if (v == true) { _selected.add(doc.id); } else { _selected.remove(doc.id); } })),
@@ -217,7 +266,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               DataCell(Text(doc.documentType)),
               DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
               DataCell(Text(doc.activeShareCount > 0 ? 'Shared' : 'Private')),
-              DataCell(TextButton(onPressed: () => _navigateToDetail(doc), child: const Text('View'))),
+              DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
             ])).toList()),
           )),
         ]));
@@ -253,17 +302,17 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       return ListView(padding: const EdgeInsets.all(16), children: [
         for (final ownerId in family.map((d) => d.owner.id).toSet())
           Card(child: ExpansionTile(
-          leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+          leading: _personAvatar(family.firstWhere((d) => d.owner.id == ownerId).owner.email, userId: ownerId),
           title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
           subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
           children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-            child: DataTable(columns: const [
+            child: _richTable(const [
               DataColumn(label: Text('Document')),
               DataColumn(label: Text('Type')),
               DataColumn(label: Text('Expiry Date')),
               DataColumn(label: Text('Sharing')),
               DataColumn(label: Text('Actions')),
-            ], rows: family.where((d) => d.owner.id == ownerId).map((d) => DataRow(cells: [
+            ], family.where((d) => d.owner.id == ownerId).map((d) => DataRow(cells: [
               DataCell(Text(d.name)),
               DataCell(Text(d.documentType)),
               DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
@@ -272,9 +321,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                 try {
                   final document = await widget.documentService.getDocument(d.id);
                   if (!context.mounted) return;
-                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                    DocumentDetailScreen(document: document, documentService: widget.documentService,
-                      reminderService: widget.reminderService)));
+                  await _showDocumentPreview(document);
                 } catch (_) {
                   if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Unable to open family document.')));
@@ -285,23 +332,23 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         for (final owner in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
           Card(child: ExpansionTile(
             initiallyExpanded: true,
-            leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+            leading: _personAvatar(owner, userId: (() { for (final r in _familyRequests ?? <FamilyRequest>[]) { final person = r.isIncoming ? r.requester : r.recipient; if (person.email.toLowerCase() == owner.toLowerCase()) return person.id; } return null; })()),
             title: Text('${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
             subtitle: const Text('Direct document shares'),
             children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-              child: DataTable(columns: const [
+              child: _richTable(const [
                 DataColumn(label: Text('Document')),
                 DataColumn(label: Text('Type')),
                 DataColumn(label: Text('Expiry Date')),
                 DataColumn(label: Text('Sharing')),
                 DataColumn(label: Text('Actions')),
-              ], rows: direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner)
+              ], direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner)
                 .map((d) => DataRow(cells: [
                   DataCell(Text(d.documentName)),
                   DataCell(Text(d.documentType)),
                   DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
                   DataCell(Text(d.permission)),
-                  DataCell(TextButton(onPressed: () => _openShared(d), child: const Text('View'))),
+                  DataCell(TextButton.icon(onPressed: () => _showSharedPreview(d), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
                 ])).toList()))],
           )),
       ]);
@@ -320,18 +367,18 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       return ListView(padding: const EdgeInsets.all(16), children: [
         Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(columns: const [
+          child: _richTable(const [
             DataColumn(label: Text('Document')),
             DataColumn(label: Text('Type')),
             DataColumn(label: Text('Expiry Date')),
             DataColumn(label: Text('Sharing')),
             DataColumn(label: Text('Actions')),
-          ], rows: docs.map((doc) => DataRow(cells: [
+          ], docs.map((doc) => DataRow(cells: [
             DataCell(Text(doc.name)),
             DataCell(Text(doc.documentType)),
             DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
             DataCell(Text(doc.activeShareCount > 0 ? '${doc.activeShareCount} direct' : 'Family')),
-            DataCell(TextButton(onPressed: () => _navigateToDetail(doc), child: const Text('View'))),
+            DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
           ])).toList()))),
         for (final doc in docs) Card(child: ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
@@ -340,7 +387,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           children: [
             for (final request in activeFamily.where((r) => r.documentIds.contains(doc.id)))
               ListTile(
-                leading: const Icon(Icons.family_restroom_outlined),
+                leading: _personAvatar(request.requester.email, userId: request.requester.id),
                 title: Text(request.isIncoming
                     ? (request.requester.displayName ?? request.requester.email)
                     : (request.recipient.displayName ?? request.recipient.email)),
@@ -384,6 +431,27 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         },
       )),
     ]);
+  }
+
+  Future<void> _showSharedPreview(SharedDocument doc) async {
+    await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
+      title: Text(doc.documentName),
+      content: SizedBox(width: 440, child: Column(mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text('Owner: ${doc.ownerEmail ?? 'Shared contact'}'),
+          const SizedBox(height: 8),
+          Text('Type: ${doc.documentType}'),
+          Text('Permission: ${doc.permission}'),
+          Text('Expiry: ${doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!)}'),
+          const SizedBox(height: 12),
+          const Text('The document opens securely in your browser using its access link.'),
+        ])),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
+        FilledButton.icon(onPressed: () { Navigator.pop(dialogContext); _openShared(doc); },
+          icon: const Icon(Icons.open_in_new), label: const Text('Open document')),
+      ],
+    ));
   }
 
   Future<void> _openShared(SharedDocument doc) async {

@@ -564,15 +564,22 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                 children: [
               ...documents.map(
                 (d) => Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.fromLTRB(12, 5, 12, 7),
+                  clipBehavior: Clip.antiAlias,
+                  child: Container(
+                    width: double.infinity,
+                    decoration: const BoxDecoration(border: Border(
+                      left: BorderSide(color: Color(0xFF2563EB), width: 3))),
+                    padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          d.name,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                        Row(children: [
+                          const Icon(Icons.description_outlined, color: Color(0xFF2563EB)),
+                          const SizedBox(width: 10),
+                          Expanded(child: Text(d.name,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700))),
+                        ]),
                         Text(d.documentType),
                         Text(
                           d.expiryStatus,
