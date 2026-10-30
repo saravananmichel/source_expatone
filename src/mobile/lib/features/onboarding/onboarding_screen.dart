@@ -180,6 +180,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF2F6FC),
       body: SafeArea(
         child: Column(
           children: [
@@ -208,33 +209,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildProgressBar() {
+    final progress = _currentStep / (_totalSteps - 1);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Step $_currentStep of ${_totalSteps - 1}',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-              ),
-              Text(
-                '${((_currentStep / (_totalSteps - 1)) * 100).round()}%',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-              ),
-            ],
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
+      child: Column(children: [
+        Row(children: [
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryColor,
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(Icons.public, color: Colors.white, size: 23),
           ),
-          const SizedBox(height: 8),
-          LinearProgressIndicator(
-            value: _currentStep / (_totalSteps - 1),
-            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.1),
+          const SizedBox(width: 10),
+          const Expanded(child: Text('ExpatOne',
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800,
+              color: Color(0xFF142C50)))),
+          Text('STEP $_currentStep / ${_totalSteps - 1}',
+            style: const TextStyle(fontSize: 12, letterSpacing: 1.1,
+              fontWeight: FontWeight.w700, color: Color(0xFF536782))),
+        ]),
+        const SizedBox(height: 16),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: LinearProgressIndicator(
+            value: progress,
+            minHeight: 7,
+            backgroundColor: const Color(0xFFDCE6F3),
             color: AppTheme.primaryColor,
-            minHeight: 4,
-            borderRadius: BorderRadius.circular(2),
           ),
-        ],
-      ),
+        ),
+      ]),
     );
   }
 
@@ -248,27 +254,42 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     VoidCallback? onContinue,
     String continueLabel = 'Continue',
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
+    return Center(child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 680),
+      child: Container(
+      margin: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [BoxShadow(color: const Color(0xFF163B6C).withValues(alpha: 0.08), blurRadius: 24, offset: const Offset(0, 9))],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Container(
+            width: 48, height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: const Color(0xFFEAF3FF), borderRadius: BorderRadius.circular(15)),
+            child: Icon(_stepIcon(_currentStep), color: AppTheme.primaryColor, size: 27),
+          ),
           const SizedBox(height: 16),
-          Text(title, style: Theme.of(context).textTheme.headlineMedium),
+          Text(title, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: const Color(0xFF142C50))),
           const SizedBox(height: 8),
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodyLarge
                 ?.copyWith(color: AppTheme.textSecondary),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 20),
           Expanded(child: content),
           const SizedBox(height: 16),
           Row(
             children: [
               if (showBack)
                 Expanded(
-                  child: OutlinedButton(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.arrow_back, size: 18),
                     onPressed: _isSaving ? null : _back,
                     child: const Text('Back'),
                   ),
@@ -292,10 +313,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : Text(
-                              continueLabel,
-                              style: const TextStyle(fontSize: 16),
-                            ),
+                          : Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                              Flexible(child: Text(continueLabel, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700))),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.arrow_forward, size: 18),
+                            ]),
                     ),
                   ),
                 ),
@@ -303,8 +325,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ],
       ),
-    );
+    )));
   }
+
+  IconData _stepIcon(int step) => switch (step) {
+    0 => Icons.waving_hand_outlined,
+    1 => Icons.flag_outlined,
+    2 => Icons.location_on_outlined,
+    3 => Icons.badge_outlined,
+    4 => Icons.work_outline,
+    5 => Icons.family_restroom,
+    6 => Icons.translate,
+    _ => Icons.verified_outlined,
+  };
 
   Widget _buildWelcomeStep() {
     return _buildStepScaffold(
