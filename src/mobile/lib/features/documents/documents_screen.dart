@@ -310,8 +310,10 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       ]);
     }
     if (_walletTab == 2) {
+      // Incoming requests are accepted by this account and grant access to its documents.
+      // Outgoing requests describe documents owned by the other account.
       final activeFamily = (_familyRequests ?? [])
-          .where((r) => r.status == 'Accepted' && !r.isExpired).toList();
+          .where((r) => r.status == 'Accepted' && !r.isExpired && r.isIncoming).toList();
       final familyDocumentIds = <String>{
         for (final r in activeFamily) ...r.documentIds,
       };
