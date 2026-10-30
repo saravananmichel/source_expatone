@@ -291,7 +291,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: OutlinedButton.icon(
                     icon: const Icon(Icons.arrow_back, size: 18),
                     onPressed: _isSaving ? null : _back,
-                    child: const Text('Back'),
+                    label: const Text('Back'),
                   ),
                 ),
               if (showBack && showContinue) const SizedBox(width: 12),
