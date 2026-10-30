@@ -58,7 +58,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           SwitchListTile(
             title: const Text('Compact dashboard cards'),
-            subtitle: const Text('Saved for future dashboard layout options.'),
+            subtitle: const Text('Changes homepage service card spacing after refreshing Home.'),
             value: _compactCards,
             onChanged: _setCompactCards,
           ),
