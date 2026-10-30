@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/profile/profile_screen.dart';
 import 'profile_avatar.dart';
+import 'language_region_screen.dart';
 
 import '../../features/translator/translation_screen.dart';
 import '../../features/family/family_screen.dart';
@@ -79,6 +80,10 @@ class _AppShellState extends State<AppShell> {
     if (!mounted) return;
     widget.onLogout();
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _openLanguageRegion() {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => LanguageRegionScreen(userService: widget.userService)));
   }
 
   void _openProfile() {
@@ -191,8 +196,9 @@ class _AppShellState extends State<AppShell> {
                 case 'profile':
                   _openProfile();
                 case 'settings':
-                case 'language':
                   _navigateToTab(4);
+                case 'language':
+                  _openLanguageRegion();
                 case 'logout':
                   _signOut();
               }
