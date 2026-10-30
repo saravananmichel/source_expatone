@@ -8,7 +8,8 @@ import '../../core/services/family_service.dart';
 
 class FamilyScreen extends StatefulWidget {
   final DocumentService documentService;
-  const FamilyScreen({super.key, required this.documentService});
+  final void Function(Widget screen)? onOpenNested;
+  const FamilyScreen({super.key, required this.documentService, this.onOpenNested});
   @override
   State<FamilyScreen> createState() => _FamilyScreenState();
 }
@@ -327,13 +328,23 @@ class _FamilyScreenState extends State<FamilyScreen> {
             const SizedBox(height: 8),
             _shortcut('Friends & Family Dashboard', 'Sharing overview and document alerts',
               Icons.dashboard_outlined, () async {
-                await Navigator.push<void>(context, MaterialPageRoute(builder: (_) =>
-                  FamilyDashboardScreen(documentService: widget.documentService)));
+                final dashboard = FamilyDashboardScreen(documentService: widget.documentService);
+                if (widget.onOpenNested != null) {
+                  widget.onOpenNested!(dashboard);
+                } else {
+                  await Navigator.push<void>(context, MaterialPageRoute(builder: (_) => dashboard));
+                }
                 if (mounted) _load();
               }),
             _shortcut('Birthdays & Special Occasions', 'Celebrations, reminders and upcoming events',
-              Icons.cake_outlined, () => Navigator.push<void>(context, MaterialPageRoute(
-                builder: (_) => FamilyOccasionsScreen(api: widget.documentService.apiClient)))),
+              Icons.cake_outlined, () {
+                final occasions = FamilyOccasionsScreen(api: widget.documentService.apiClient);
+                if (widget.onOpenNested != null) {
+                  widget.onOpenNested!(occasions);
+                } else {
+                  Navigator.push<void>(context, MaterialPageRoute(builder: (_) => occasions));
+                }
+              }),
           ],
         )),
     );
