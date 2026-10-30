@@ -299,7 +299,8 @@ void main() {
       await tester.tap(find.text('Profile'));
       await tester.pumpAndSettle();
 
-      // ProfileScreen loaded without crash
+      // The profile route must replace the More menu in the visible tree.
+      expect(find.text('Manage your ExpatOne profile'), findsNothing);
       expect(find.byType(Scaffold), findsWidgets);
     });
   });
