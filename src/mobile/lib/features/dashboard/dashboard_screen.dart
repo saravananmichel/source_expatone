@@ -159,6 +159,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     preferredCountry: _profile?.countryCode,
                     completedSteps: _checklist.where((item) => item.isCompleted).length,
                     totalSteps: _checklist.length,
+                    checklistPreview: _checklist.where((item) => item.isCompleted).map((item) => item.title).toList(),
+                    onViewChecklist: _showFullChecklist,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -535,6 +537,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ─── Checklist ────────────────────────────────────────────────────────────
+
+  void _showFullChecklist() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('Your relocation checklist',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            Flexible(child: ListView(shrinkWrap: true, children: [
+              for (final item in _checklist) ListTile(
+                leading: Icon(item.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: item.isCompleted ? AppTheme.successColor : AppTheme.textSecondary),
+                title: Text(item.title),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  if (item.action != null) {
+                    final tab = _actionToTab(item.action!);
+                    if (tab != null) widget.onNavigateToTab?.call(tab);
+                  }
+                },
+              ),
+            ])),
+          ]),
+        ),
+      ),
+    );
+  }
 
   Widget _buildChecklistSection() {
     final completed = _checklist.where((c) => c.isCompleted).length;
