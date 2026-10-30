@@ -249,6 +249,7 @@ class _AppShellState extends State<AppShell> {
         translationService: widget.translationService,
         emergencyService: widget.emergencyService,
         onLogout: widget.onLogout,
+        onOpenFeature: _openDashboardFeature,
       ),
     ];
 
