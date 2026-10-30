@@ -282,6 +282,7 @@ class _AppShellState extends State<AppShell> {
         key: ValueKey(_documentRefresh),
         documentService: widget.documentService,
         reminderService: widget.reminderService,
+        onOpenNested: _openNestedFeature,
       ),
       AssistantScreen(assistantService: widget.assistantService),
       RemindersScreen(
