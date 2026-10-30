@@ -553,7 +553,14 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                   child: Text((documents.first.owner.displayName?.isNotEmpty == true ? documents.first.owner.displayName! : documents.first.owner.email).substring(0, 1).toUpperCase()),
                 ),
                 title: Text('${documents.first.isOwned ? 'My documents' : (documents.first.owner.displayName ?? documents.first.owner.email)} (${documents.length})'),
-                subtitle: Text(documents.first.owner.email),
+                subtitle: Text(() {
+                  final owner = documents.first.owner;
+                  if (documents.first.isOwned) return owner.email;
+                  final matching = _connections.where((r) => r.status == 'Accepted' && !r.isExpired &&
+                      (r.requester.id == owner.id || r.recipient.id == owner.id));
+                  if (matching.isEmpty) return owner.email;
+                  return '${matching.first.relationship} • ${owner.email}';
+                }()),
                 children: [
               ...documents.map(
                 (d) => Card(
