@@ -140,10 +140,6 @@ class _AppShellState extends State<AppShell> {
 
     Navigator.of(context).push(MaterialPageRoute<void>(
       builder: (_) => Scaffold(
-        appBar: AppBar(title: const Text('ExpatOne'), actions: [
-          IconButton(tooltip: 'Back to Home', icon: const Icon(Icons.home_outlined),
-            onPressed: () => Navigator.of(context).pop()),
-        ]),
         body: screen,
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
