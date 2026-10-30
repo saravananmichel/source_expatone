@@ -73,15 +73,14 @@ class MoreScreen extends StatelessWidget {
             title: 'ExpatOne Business',
             subtitle: 'Corporate invitations, HR dashboard & employee tasks',
             onTap: () {
+              if (onOpenFeature != null) {
+                onOpenFeature!(DashboardFeature.corporate);
+                return;
+              }
               final api = ApiClient()..setAuthService(authService);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CorporateScreen(
-                    service: CorporateService(api),
-                  ),
-                ),
-              );
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => CorporateScreen(service: CorporateService(api)),
+              ));
             },
           ),
           const Divider(height: 1, indent: 56),
