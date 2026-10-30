@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
 import '../../core/services/user_service.dart';
+import '../../core/services/destination_service.dart';
 import '../../core/theme/app_theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final UserService userService;
+  final DestinationService? destinationService;
   final VoidCallback onComplete;
 
   const OnboardingScreen({
     super.key,
     required this.userService,
+    this.destinationService,
     required this.onComplete,
   });
 
@@ -23,6 +26,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   static const _totalSteps = 8;
 
   ProfileOptions? _options;
+  List<Destination> _residenceDestinations = const [];
   bool _isLoadingOptions = true;
   bool _isSaving = false;
   String? _error;
@@ -43,6 +47,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   void initState() {
     super.initState();
     _loadOptions();
+    _loadResidenceDestinations();
+  }
+
+  Future<void> _loadResidenceDestinations() async {
+    if (widget.destinationService == null) return;
+    try {
+      final destinations = await widget.destinationService!.getDestinations();
+      if (mounted) setState(() => _residenceDestinations = destinations);
+    } catch (_) {
+      // Offer default destinations when the API is temporarily unavailable.
+    }
   }
 
   @override
@@ -388,40 +403,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildResidenceStep() {
-    final countries = [('MY', 'Malaysia'), ('SG', 'Singapore')];
+    final countries = _residenceDestinations.isNotEmpty
+        ? _residenceDestinations.map((destination) =>
+            (destination.code, destination.name)).toList()
+        : <(String, String)>[
+            ('MY', 'Malaysia'), ('SG', 'Singapore'), ('IN', 'India'),
+            ('ID', 'Indonesia'), ('CN', 'China'), ('AE', 'United Arab Emirates'),
+            ('BH', 'Bahrain'), ('KW', 'Kuwait'), ('OM', 'Oman'),
+            ('QA', 'Qatar'), ('SA', 'Saudi Arabia'),
+          ];
 
     return _buildStepScaffold(
       title: 'Where do you live?',
-      subtitle: 'Your country and city of residence in Malaysia.',
-      content: RadioGroup<String>(
-        groupValue: _countryOfResidence,
-        onChanged: (v) => setState(() => _countryOfResidence = v ?? 'MY'),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ...countries.map((c) {
-              final (code, name) = c;
-              return RadioListTile<String>(
-                value: code,
-                title: Text(name),
-                activeColor: AppTheme.primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              );
-            }),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _residenceController,
-              decoration: const InputDecoration(
-                labelText: 'City / Area (optional)',
-                hintText: 'e.g. Kuala Lumpur, Penang, Johor Bahru',
-                prefixIcon: Icon(Icons.location_on_outlined),
-              ),
-              onChanged: (v) => _residenceLocation = v.trim(),
+      subtitle: 'Select your country of residence and optionally your city.',
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(child: RadioGroup<String>(
+            groupValue: _countryOfResidence,
+            onChanged: (v) => setState(() => _countryOfResidence = v ?? 'MY'),
+            child: ListView(
+              children: [
+                for (final (code, name) in countries)
+                  RadioListTile<String>(
+                    value: code,
+                    title: Text(name),
+                    activeColor: AppTheme.primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+              ],
             ),
-          ],
-        ),
+          )),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _residenceController,
+            decoration: const InputDecoration(
+              labelText: 'City / Area (optional)',
+              hintText: 'e.g. Kuala Lumpur, Singapore, Dubai',
+              prefixIcon: Icon(Icons.location_on_outlined),
+            ),
+            onChanged: (v) => _residenceLocation = v.trim(),
+          ),
+        ],
       ),
     );
   }
