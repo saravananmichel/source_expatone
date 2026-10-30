@@ -10,12 +10,21 @@ class DestinationBanner extends StatefulWidget {
   final DestinationService service;
   final String greeting;
   final String? userId, preferredCountry;
+  final int completedSteps, totalSteps;
+  final List<String> checklistPreview;
+  final List<bool> checklistCompleted;
+  final VoidCallback? onViewChecklist;
   const DestinationBanner({
     super.key,
     required this.service,
     required this.greeting,
     this.userId,
     this.preferredCountry,
+    this.completedSteps = 0,
+    this.totalSteps = 0,
+    this.checklistPreview = const [],
+    this.checklistCompleted = const [],
+    this.onViewChecklist,
   });
   @override
   State<DestinationBanner> createState() => _DestinationBannerState();
@@ -251,9 +260,9 @@ class _DestinationBannerState extends State<DestinationBanner>
                     children: [
                       Text(
                         widget.greeting,
-                        style: const TextStyle(
-                          color: Color(0xFF082457),
-                          fontSize: 25,
+                        style: TextStyle(
+                          color: const Color(0xFF082457),
+                          fontSize: MediaQuery.sizeOf(context).width < 430 ? 20 : 25,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -266,7 +275,65 @@ class _DestinationBannerState extends State<DestinationBanner>
                   ),
                 ),
               ),
-              const SizedBox(height: 100),
+              if (widget.totalSteps > 0)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width < 430 ? double.infinity : 310),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D244B).withValues(alpha: .86),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Your journey progress',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Row(children: [
+                          SizedBox(
+                            width: 64, height: 64,
+                            child: Stack(alignment: Alignment.center, children: [
+                              SizedBox.expand(child: CircularProgressIndicator(
+                                value: widget.completedSteps / widget.totalSteps,
+                                strokeWidth: 6,
+                                color: const Color(0xFF18C788),
+                                backgroundColor: Colors.white24,
+                              )),
+                              Text('${widget.completedSteps}/${widget.totalSteps}',
+                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                            ]),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(child: Text('Your relocation checklist',
+                            style: TextStyle(color: Colors.white, fontSize: 13))),
+                        ]),
+                        for (var index = 0; index < widget.checklistPreview.length && index < 4; index++)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 7),
+                            child: Row(children: [
+                              Icon(index < widget.checklistCompleted.length && widget.checklistCompleted[index]
+                                ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: index < widget.checklistCompleted.length && widget.checklistCompleted[index]
+                                  ? const Color(0xFF18C788) : Colors.white70, size: 16),
+                              const SizedBox(width: 7),
+                              Expanded(child: Text(widget.checklistPreview[index],
+                                style: const TextStyle(color: Colors.white, fontSize: 12),
+                                maxLines: 1, overflow: TextOverflow.ellipsis)),
+                            ]),
+                          ),
+                        if (widget.onViewChecklist != null)
+                          TextButton(
+                            onPressed: widget.onViewChecklist,
+                            child: const Text('View full checklist',
+                              style: TextStyle(color: Colors.white, decoration: TextDecoration.underline)),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 20),
               if (_loading)
                 const LinearProgressIndicator()
               else if (_error != null)

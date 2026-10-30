@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'widgets/destination_banner.dart';
 
@@ -43,6 +44,7 @@ class DashboardScreen extends StatefulWidget {
   final ReminderService reminderService;
   final DestinationService? destinationService;
   final String? userName;
+  final bool showHeader;
   final ValueChanged<int>? onNavigateToTab;
   final ValueChanged<DashboardFeature>? onOpenFeature;
 
@@ -53,6 +55,7 @@ class DashboardScreen extends StatefulWidget {
     required this.reminderService,
     this.destinationService,
     this.userName,
+    this.showHeader = true,
     this.onNavigateToTab,
     this.onOpenFeature,
   });
@@ -69,12 +72,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ChecklistItem> _checklist = [];
   List<UnifiedReminder> _smartReminders = [];
   bool _remindersLoading = true;
+  bool _compactCards = false;
 
   @override
   void initState() {
     super.initState();
     _loadAll();
+    _loadDashboardPreferences();
   }
+
+  Future<void> _loadDashboardPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (mounted) setState(() => _compactCards = prefs.getBool('expatone.ui.compactCards') ?? false);
+    } catch (_) {
+      // Keep the default layout when local preferences are unavailable.
+    }
+  }
+
 
   Future<void> _loadAll() async {
     setState(() {
@@ -140,11 +155,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Center(child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1440),
           child: RefreshIndicator(
-          onRefresh: _loadAll,
+          onRefresh: () async {
+        await Future.wait([_loadAll(), _loadDashboardPreferences()]);
+      },
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              _buildHeader(),
+              if (widget.showHeader) _buildHeader(),
               const SizedBox(height: 12),
               if (widget.destinationService == null) _buildGreeting(),
               if (widget.destinationService != null) ...[
@@ -155,6 +172,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     greeting: _timeGreeting,
                     userId: _profile?.id,
                     preferredCountry: _profile?.countryCode,
+                    completedSteps: _checklist.where((item) => item.isCompleted).length,
+                    totalSteps: _checklist.length,
+                    checklistPreview: _checklist.map((item) => item.title).toList(),
+                    checklistCompleted: _checklist.map((item) => item.isCompleted).toList(),
+                    onViewChecklist: _showFullChecklist,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -164,17 +186,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildHealthCard(),
-                    const SizedBox(height: 12),
-                    _buildPassCard(),
-                    const SizedBox(height: 18),
                     _buildJourneyOverview(),
                     const SizedBox(height: 20),
                     _buildUpcomingReminders(),
-                    if (_checklist.isNotEmpty) ...[
-                      const SizedBox(height: 28),
-                      _buildChecklistSection(),
-                    ],
+
                     const SizedBox(height: 28),
                     _buildQuickActions(),
                     const SizedBox(height: 20),
@@ -464,7 +479,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Icons.auto_awesome_outlined, const Color(0xFFF2E8FF), () => widget.onNavigateToTab?.call(2)),
     ];
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const Text('Your journey at a glance',
+      const Text('Your ExpatOne services',
           style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: _navy)),
       const SizedBox(height: 12),
       if (compact) ...cards.map((card) => Padding(
@@ -480,23 +495,51 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _homeSummaryCard(String title, String description, IconData icon,
       Color tint, VoidCallback action) {
-    return Material(color: Colors.white, borderRadius: BorderRadius.circular(18),
-      child: InkWell(onTap: action, borderRadius: BorderRadius.circular(18),
-        child: Container(padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFFE1E7F0))),
-          child: Row(children: [
-            Container(padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: tint, borderRadius: BorderRadius.circular(14)),
-              child: Icon(icon, color: _accentBlue, size: 25)),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: _navy)),
-              const SizedBox(height: 3),
-              Text(description, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
-            ])),
-            const Icon(Icons.chevron_right, color: _accentBlue),
-          ]))));
+    return Material(
+      color: tint,
+      borderRadius: BorderRadius.circular(20),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: action,
+        child: Container(
+          constraints: BoxConstraints(minHeight: _compactCards ? 116 : 156),
+          padding: EdgeInsets.all(_compactCards ? 12 : 18),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFE0E7F2)),
+          ),
+          child: Stack(children: [
+            Positioned(
+              right: -10, bottom: -18,
+              child: Icon(icon, size: _compactCards ? 80 : 112, color: _accentBlue.withValues(alpha: .10)),
+            ),
+            Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: _accentBlue, size: 26),
+              ),
+              SizedBox(height: _compactCards ? 7 : 15),
+              Text(title, style: const TextStyle(
+                fontWeight: FontWeight.w800, fontSize: 17, color: _navy)),
+              const SizedBox(height: 5),
+              Text(description, style: const TextStyle(
+                fontSize: 12, color: AppTheme.textSecondary)),
+              SizedBox(height: _compactCards ? 5 : 12),
+              const Row(mainAxisSize: MainAxisSize.min, children: [
+                Text('Open', style: TextStyle(
+                  color: _accentBlue, fontWeight: FontWeight.w700)),
+                SizedBox(width: 4),
+                Icon(Icons.arrow_forward, color: _accentBlue, size: 16),
+              ]),
+            ]),
+          ]),
+        ),
+      ),
+    );
   }
 
   Widget _buildUpcomingReminders() {
@@ -538,6 +581,39 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // ─── Checklist ────────────────────────────────────────────────────────────
+
+  void _showFullChecklist() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            const Text('Your relocation checklist',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            SizedBox(height: MediaQuery.sizeOf(sheetContext).height * 0.5,
+              child: ListView(children: [
+              for (final item in _checklist) ListTile(
+                leading: Icon(item.isCompleted ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: item.isCompleted ? AppTheme.successColor : AppTheme.textSecondary),
+                title: Text(item.title),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  if (item.action != null) {
+                    final tab = _actionToTab(item.action!);
+                    if (tab != null) widget.onNavigateToTab?.call(tab);
+                  }
+                },
+              ),
+            ])),
+          ]),
+        ),
+      ),
+    );
+  }
 
   Widget _buildChecklistSection() {
     final completed = _checklist.where((c) => c.isCompleted).length;
@@ -813,49 +889,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildQuickActions() {
-    return Row(
-      children: [
-        _QuickActionCard(
-          icon: Icons.note_add_outlined,
-          label: 'Add\nDocument',
-          bgColor: _qaDocBg,
-          iconColor: _accentBlue,
-          onTap: () => widget.onNavigateToTab?.call(1),
-        ),
-        const SizedBox(width: 10),
-        _QuickActionCard(
-          icon: Icons.auto_awesome_outlined,
-          label: 'Ask\nAssistant',
-          bgColor: _qaAssistBg,
-          iconColor: _qaAssistIcon,
-          onTap: () => widget.onNavigateToTab?.call(2),
-        ),
-        const SizedBox(width: 10),
-        _QuickActionCard(
-          icon: Icons.calendar_month_outlined,
-          label: 'View\nReminders',
-          bgColor: _qaReminderBg,
-          iconColor: _qaReminderIcon,
-          onTap: () => widget.onNavigateToTab?.call(3),
-        ),
-        const SizedBox(width: 10),
-        _QuickActionCard(
-          icon: Icons.location_on_outlined,
-          label: 'Emergency\nHelp',
-          bgColor: _qaEmergencyBg,
-          iconColor: _qaEmergencyIcon,
-          onTap: () {
-            final openFeature = widget.onOpenFeature;
-            if (openFeature != null) {
-              openFeature(DashboardFeature.emergency);
-            } else {
-              widget.onNavigateToTab?.call(4);
-            }
-          },
-        ),
-      ],
-    );
+    final actions = <Widget>[
+      _QuickActionCard(icon: Icons.note_add_outlined, label: 'Add Document',
+        bgColor: _qaDocBg, iconColor: _accentBlue,
+        onTap: () => widget.onNavigateToTab?.call(1)),
+      _QuickActionCard(icon: Icons.person_add_alt_outlined, label: 'Add Family',
+        bgColor: _qaReminderBg, iconColor: _qaReminderIcon,
+        onTap: () => widget.onOpenFeature?.call(DashboardFeature.family)),
+      _QuickActionCard(icon: Icons.share_outlined, label: 'Share Document',
+        bgColor: _qaDocBg, iconColor: _accentBlue,
+        onTap: () => widget.onNavigateToTab?.call(1)),
+      _QuickActionCard(icon: Icons.celebration_outlined, label: 'Add Occasion',
+        bgColor: _qaAssistBg, iconColor: _qaAssistIcon,
+        onTap: () => widget.onNavigateToTab?.call(3)),
+      _QuickActionCard(icon: Icons.add_alert_outlined, label: 'New Reminder',
+        bgColor: _qaReminderBg, iconColor: _qaReminderIcon,
+        onTap: () => widget.onNavigateToTab?.call(3)),
+      _QuickActionCard(icon: Icons.assignment_outlined, label: 'Visa Application',
+        bgColor: _qaDocBg, iconColor: _accentBlue,
+        onTap: () => widget.onOpenFeature?.call(DashboardFeature.visaAssistant)),
+      _QuickActionCard(icon: Icons.auto_awesome_outlined, label: 'AI Assistant',
+        bgColor: _qaAssistBg, iconColor: _qaAssistIcon,
+        onTap: () => widget.onNavigateToTab?.call(2)),
+      _QuickActionCard(icon: Icons.explore_outlined, label: 'Find Services',
+        bgColor: _qaReminderBg, iconColor: _qaReminderIcon,
+        onTap: () => widget.onNavigateToTab?.call(4)),
+    ];
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const Text('Quick actions',
+        style: TextStyle(fontSize: 19, fontWeight: FontWeight.bold, color: _navy)),
+      const SizedBox(height: 12),
+      LayoutBuilder(builder: (context, constraints) {
+        final columns = constraints.maxWidth < 420 ? 2 : 4;
+        return Column(children: [
+          for (var row = 0; row < 8; row += columns) ...[
+            Row(children: [
+              for (var index = row; index < row + columns; index++) ...[
+                if (index > row) const SizedBox(width: 10),
+                actions[index],
+              ],
+            ]),
+            const SizedBox(height: 10),
+          ],
+        ]);
+      }),
+    ]);
   }
+
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

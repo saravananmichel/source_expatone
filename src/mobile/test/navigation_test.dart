@@ -12,6 +12,7 @@ import 'package:expatone_app/core/services/user_service.dart';
 import 'package:expatone_app/shared/services/health_service.dart';
 import 'package:expatone_app/shared/widgets/app_shell.dart';
 import 'package:expatone_app/shared/widgets/more_screen.dart';
+import 'package:expatone_app/features/profile/profile_screen.dart';
 
 // ──────────────────────────────────────────────────────
 // Mock services — minimal stubs for navigation tests
@@ -296,11 +297,13 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
 
       // Tap Profile to open the ProfileScreen
+      await tester.ensureVisible(find.text('Profile'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Profile'));
       await tester.pumpAndSettle();
 
-      // ProfileScreen loaded without crash
-      expect(find.text('Profile'), findsAtLeast(1));
+      // Verify the actual profile route, not just a generic Scaffold.
+      expect(find.byType(ProfileScreen), findsOneWidget);
     });
   });
 

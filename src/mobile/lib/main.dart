@@ -4,6 +4,7 @@ import 'core/networking/api_client.dart';
 import 'core/services/assistant_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/document_service.dart';
+import 'core/services/destination_service.dart';
 import 'core/services/emergency_service.dart';
 import 'core/services/reminder_service.dart';
 import 'core/services/translation_service.dart';

@@ -103,15 +103,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
       // Firebase signs in newly registered users automatically.
-      // Best-effort sign-out so signup still returns to login if cleanup fails.
-      try {
-        await widget.authService.signOut();
-      } catch (_) {
-        // Account creation succeeded; don't present it as a registration failure.
-      }
-
+      // Return to the root auth-state-driven screen. The app will show
+      // onboarding or Home without leaving registration on the route stack.
       if (mounted) {
-        Navigator.of(context).pop();
+        widget.onRegisterSuccess();
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } on AuthServiceException catch (e) {
       if (mounted) setState(() => _errorMessage = e.message);
@@ -125,18 +121,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Create Account')),
+      backgroundColor: const Color(0xFFF2F6FC),
+      appBar: AppBar(title: const Text('Create Account'), backgroundColor: const Color(0xFFF2F6FC)),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+        child: Center(child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 580),
+          child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 30),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [BoxShadow(color: const Color(0xFF163B6C).withValues(alpha: .08), blurRadius: 24, offset: const Offset(0, 9))],
+            ),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Container(
+                  width: 54, height: 54,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: const Color(0xFFEAF3FF), borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.public, size: 30, color: AppTheme.primaryColor),
+                ),
+                const SizedBox(height: 16),
                 Text(
                   'Join ExpatOne',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800, color: const Color(0xFF142C50)),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -145,7 +158,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         color: AppTheme.textSecondary,
                       ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                const Text('One account. Every step of your expat journey.', style: TextStyle(color: Color(0xFF536782))),
+                const SizedBox(height: 20),
                 OutlinedButton.icon(
                   onPressed: _isLoading ? null : _pickPhoto,
                   icon: const Icon(Icons.add_a_photo_outlined),
@@ -272,8 +287,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
                   children: [
                     Text(
                       'Already have an account?',
@@ -287,8 +304,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ],
             ),
-          ),
-        ),
+          ))),
+        )),
       ),
     );
   }

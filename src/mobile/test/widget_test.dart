@@ -203,6 +203,27 @@ void main() {
       expect(find.text('Create Account'), findsWidgets);
     });
 
+    for (final width in [360, 390, 430]) {
+      testWidgets('registration is scrollable at ${width}dp', (tester) async {
+        tester.view.physicalSize = Size(width * 3.0, 2400);
+        tester.view.devicePixelRatio = 3.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(MaterialApp(
+          home: RegisterScreen(
+            authService: authService,
+            onRegisterSuccess: () {},
+          ),
+        ));
+        await tester.pumpAndSettle();
+        expect(find.text('Join ExpatOne'), findsOneWidget);
+        await tester.ensureVisible(find.byType(ElevatedButton));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+      });
+    }
+
     testWidgets('validates empty fields', (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: RegisterScreen(
@@ -211,6 +232,8 @@ void main() {
         ),
       ));
 
+      await tester.ensureVisible(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
       await tester.tap(find.byType(ElevatedButton));
       await tester.pump();
 
