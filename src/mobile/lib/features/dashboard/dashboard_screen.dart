@@ -503,7 +503,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onTap: action,
         child: Container(
           constraints: BoxConstraints(minHeight: _compactCards ? 116 : 156),
-          padding: const EdgeInsets.all(18),
+          padding: EdgeInsets.all(_compactCards ? 12 : 18),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFE0E7F2)),
@@ -511,7 +511,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Stack(children: [
             Positioned(
               right: -10, bottom: -18,
-              child: Icon(icon, size: 112, color: _accentBlue.withValues(alpha: .10)),
+              child: Icon(icon, size: _compactCards ? 80 : 112, color: _accentBlue.withValues(alpha: .10)),
             ),
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Container(
@@ -522,13 +522,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: Icon(icon, color: _accentBlue, size: 26),
               ),
-              const SizedBox(height: 15),
+              SizedBox(height: _compactCards ? 7 : 15),
               Text(title, style: const TextStyle(
                 fontWeight: FontWeight.w800, fontSize: 17, color: _navy)),
               const SizedBox(height: 5),
               Text(description, style: const TextStyle(
                 fontSize: 12, color: AppTheme.textSecondary)),
-              const SizedBox(height: 12),
+              SizedBox(height: _compactCards ? 5 : 12),
               const Row(mainAxisSize: MainAxisSize.min, children: [
                 Text('Open', style: TextStyle(
                   color: _accentBlue, fontWeight: FontWeight.w700)),
