@@ -35,7 +35,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   final Map<String, String?> _memberPhotos = {};
 
   Widget _personAvatar(String email, {String? userId}) {
-    final url = userId == null ? null : _memberPhotos[userId];
+    final url = userId == null ? null : (_memberPhotos[userId] ?? (_familyDashboardDocs ?? <FamilyDashboardDocument>[]).where((d) => d.owner.id == userId).map((d) => d.owner.profilePhotoUrl).whereType<String>().firstOrNull);
     return CircleAvatar(radius: 21,
       foregroundImage: url == null || url.isEmpty ? null : NetworkImage(url),
       child: Text(email.isEmpty ? '?' : email[0].toUpperCase()));
