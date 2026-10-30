@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../features/profile/profile_screen.dart';
+import 'profile_avatar.dart';
 
 import '../../features/translator/translation_screen.dart';
 import '../../features/family/family_screen.dart';
@@ -57,6 +59,38 @@ class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
   int _documentRefresh = 0;
   int _reminderRefresh = 0;
+  String? _avatarUrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatar();
+  }
+
+  Future<void> _loadAvatar() async {
+    try {
+      final url = await widget.userService.getMyProfilePhotoUrl();
+      if (mounted) setState(() => _avatarUrl = url);
+    } catch (_) {}
+  }
+
+  Future<void> _signOut() async {
+    await widget.authService.signOut();
+    if (!mounted) return;
+    widget.onLogout();
+    Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _openProfile() {
+    Navigator.of(context).push(MaterialPageRoute<void>(
+      builder: (_) => ProfileScreen(
+        authService: widget.authService,
+        userService: widget.userService,
+        onLogout: widget.onLogout,
+      ),
+    )).then((_) => _loadAvatar());
+  }
+
 
   void _navigateToTab(int index) {
     if (index >= 0 && index < 5) {
@@ -108,6 +142,7 @@ class _AppShellState extends State<AppShell> {
           ApiClient()..setAuthService(widget.authService),
         ),
         userName: widget.userName,
+        showHeader: false,
         onNavigateToTab: _navigateToTab,
         onOpenFeature: _openDashboardFeature,
       ),
@@ -132,6 +167,57 @@ class _AppShellState extends State<AppShell> {
     ];
 
     return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.public, color: AppTheme.primaryColor),
+            SizedBox(width: 8),
+            Text('ExpatOne', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        actions: [
+          IconButton(
+            tooltip: 'Reminders',
+            onPressed: () => _navigateToTab(3),
+            icon: const Icon(Icons.notifications_outlined),
+          ),
+          PopupMenuButton<String>(
+            tooltip: 'Account menu',
+            onSelected: (value) {
+              switch (value) {
+                case 'profile':
+                  _openProfile();
+                case 'settings':
+                case 'language':
+                  _navigateToTab(4);
+                case 'logout':
+                  _signOut();
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'profile', child: Text('My Profile')),
+              PopupMenuItem(value: 'settings', child: Text('Settings & preferences')),
+              PopupMenuItem(value: 'language', child: Text('Language & region')),
+              PopupMenuDivider(),
+              PopupMenuItem(value: 'logout', child: Text('Logout')),
+            ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ProfileAvatar(imageUrl: _avatarUrl, displayName: widget.userName, radius: 17),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.keyboard_arrow_down),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
       body: IndexedStack(index: _currentIndex, children: screens),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
