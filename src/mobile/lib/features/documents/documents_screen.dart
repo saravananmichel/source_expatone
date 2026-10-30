@@ -41,12 +41,22 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _loadWalletExtras() async {
+    // Sharing and family requests are independent APIs. A failure in one
+    // must not hide the other tab's successful results.
     try {
       final shared = await widget.documentService.getSharedWithMe();
-      final requests = await widget.documentService.familyService.requests();
-      if (mounted) setState(() { _sharedWithMe = shared; _familyRequests = requests; _tabError = null; });
+      if (mounted) setState(() => _sharedWithMe = shared);
     } catch (_) {
-      if (mounted) setState(() => _tabError = 'Unable to load sharing information. Pull to refresh or retry.');
+      if (mounted) setState(() => _sharedWithMe = []);
+    }
+    try {
+      final requests = await widget.documentService.familyService.requests();
+      if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
+    } catch (_) {
+      if (mounted) setState(() {
+        _familyRequests = [];
+        _tabError = 'Unable to load family requests. Retry to refresh.';
+      });
     }
   }
 
@@ -183,10 +193,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   Widget _sharingBody() {
-    if (_tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+    if (_walletTab == 3 && _tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Text(_tabError!), TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
     ]));
-    if (_sharedWithMe == null || _familyRequests == null || (_walletTab == 2 && _isLoading)) {
+    if ((_walletTab == 1 && _sharedWithMe == null) ||
+        (_walletTab == 2 && _isLoading) ||
+        (_walletTab == 3 && _familyRequests == null)) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_walletTab == 1) {
