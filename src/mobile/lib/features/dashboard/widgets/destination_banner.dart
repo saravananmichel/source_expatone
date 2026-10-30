@@ -10,12 +10,15 @@ class DestinationBanner extends StatefulWidget {
   final DestinationService service;
   final String greeting;
   final String? userId, preferredCountry;
+  final int completedSteps, totalSteps;
   const DestinationBanner({
     super.key,
     required this.service,
     required this.greeting,
     this.userId,
     this.preferredCountry,
+    this.completedSteps = 0,
+    this.totalSteps = 0,
   });
   @override
   State<DestinationBanner> createState() => _DestinationBannerState();
@@ -266,7 +269,35 @@ class _DestinationBannerState extends State<DestinationBanner>
                   ),
                 ),
               ),
-              const SizedBox(height: 100),
+              if (widget.totalSteps > 0)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 310),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0D244B).withValues(alpha: .86),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Your journey progress',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 8),
+                        Text('Progress: ${widget.completedSteps} / ${widget.totalSteps}',
+                          style: const TextStyle(color: Colors.white)),
+                        const SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: widget.completedSteps / widget.totalSteps,
+                          color: const Color(0xFF18C788),
+                          backgroundColor: Colors.white24,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              const SizedBox(height: 20),
               if (_loading)
                 const LinearProgressIndicator()
               else if (_error != null)
