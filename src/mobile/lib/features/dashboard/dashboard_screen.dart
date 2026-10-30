@@ -43,6 +43,7 @@ class DashboardScreen extends StatefulWidget {
   final ReminderService reminderService;
   final DestinationService? destinationService;
   final String? userName;
+  final bool showHeader;
   final ValueChanged<int>? onNavigateToTab;
   final ValueChanged<DashboardFeature>? onOpenFeature;
 
@@ -53,6 +54,7 @@ class DashboardScreen extends StatefulWidget {
     required this.reminderService,
     this.destinationService,
     this.userName,
+    this.showHeader = true,
     this.onNavigateToTab,
     this.onOpenFeature,
   });
@@ -144,7 +146,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: ListView(
             padding: EdgeInsets.zero,
             children: [
-              _buildHeader(),
+              if (widget.showHeader) _buildHeader(),
               const SizedBox(height: 12),
               if (widget.destinationService == null) _buildGreeting(),
               if (widget.destinationService != null) ...[
@@ -171,10 +173,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     _buildJourneyOverview(),
                     const SizedBox(height: 20),
                     _buildUpcomingReminders(),
-                    if (_checklist.isNotEmpty) ...[
-                      const SizedBox(height: 28),
-                      _buildChecklistSection(),
-                    ],
+
                     const SizedBox(height: 28),
                     _buildQuickActions(),
                     const SizedBox(height: 20),
