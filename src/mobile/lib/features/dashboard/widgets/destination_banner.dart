@@ -12,6 +12,7 @@ class DestinationBanner extends StatefulWidget {
   final String? userId, preferredCountry;
   final int completedSteps, totalSteps;
   final List<String> checklistPreview;
+  final List<bool> checklistCompleted;
   final VoidCallback? onViewChecklist;
   const DestinationBanner({
     super.key,
@@ -22,6 +23,7 @@ class DestinationBanner extends StatefulWidget {
     this.completedSteps = 0,
     this.totalSteps = 0,
     this.checklistPreview = const [],
+    this.checklistCompleted = const [],
     this.onViewChecklist,
   });
   @override
@@ -307,13 +309,16 @@ class _DestinationBannerState extends State<DestinationBanner>
                           const Expanded(child: Text('Your relocation checklist',
                             style: TextStyle(color: Colors.white, fontSize: 13))),
                         ]),
-                        for (final label in widget.checklistPreview.take(4))
+                        for (var index = 0; index < widget.checklistPreview.length && index < 4; index++)
                           Padding(
                             padding: const EdgeInsets.only(top: 7),
                             child: Row(children: [
-                              const Icon(Icons.check_circle_outline, color: Color(0xFF18C788), size: 16),
+                              Icon(index < widget.checklistCompleted.length && widget.checklistCompleted[index]
+                                ? Icons.check_circle : Icons.radio_button_unchecked,
+                                color: index < widget.checklistCompleted.length && widget.checklistCompleted[index]
+                                  ? const Color(0xFF18C788) : Colors.white70, size: 16),
                               const SizedBox(width: 7),
-                              Expanded(child: Text(label,
+                              Expanded(child: Text(widget.checklistPreview[index],
                                 style: const TextStyle(color: Colors.white, fontSize: 12),
                                 maxLines: 1, overflow: TextOverflow.ellipsis)),
                             ]),
