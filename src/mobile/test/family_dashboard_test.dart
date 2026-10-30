@@ -118,6 +118,12 @@ void main() {
         await tester.pumpAndSettle();
       }
       expect(find.text('My passport'), findsNothing);
+      if (sharedVisa.evaluate().isEmpty) {
+        final collapsedGroup = find.byType(ExpansionTile).last;
+        await tester.ensureVisible(collapsedGroup);
+        await tester.tap(collapsedGroup);
+        await tester.pumpAndSettle();
+      }
       expect(sharedVisa, findsOneWidget);
       expect(find.text('Confirm expiry date'), findsNothing);
     },
