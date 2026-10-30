@@ -288,34 +288,51 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       ]);
     }
     if (_walletTab == 2) {
-      final docs = (_documents ?? []).where((d) => !d.isSharedWithMe && d.activeShareCount > 0).toList();
+      final activeFamily = (_familyRequests ?? [])
+          .where((r) => r.status == 'Accepted' && !r.isExpired).toList();
+      final familyDocumentIds = <String>{
+        for (final r in activeFamily) ...r.documentIds,
+      };
+      final docs = (_documents ?? []).where((d) => !d.isSharedWithMe &&
+          (d.activeShareCount > 0 || familyDocumentIds.contains(d.id))).toList();
       if (docs.isEmpty) return const Center(child: Text('No documents shared by you yet.'));
       return ListView(padding: const EdgeInsets.all(16), children: [
+        Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(columns: const [
+            DataColumn(label: Text('Document')),
+            DataColumn(label: Text('Type')),
+            DataColumn(label: Text('Expiry Date')),
+            DataColumn(label: Text('Sharing')),
+            DataColumn(label: Text('Actions')),
+          ], rows: docs.map((doc) => DataRow(cells: [
+            DataCell(Text(doc.name)),
+            DataCell(Text(doc.documentType)),
+            DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
+            DataCell(Text(doc.activeShareCount > 0 ? '${doc.activeShareCount} direct' : 'Family')),
+            DataCell(TextButton(onPressed: () => _navigateToDetail(doc), child: const Text('View'))),
+          ])).toList()))),
         for (final doc in docs) Card(child: ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
           title: Text(doc.name),
-          subtitle: Text('Active shares: ${doc.activeShareCount}'),
+          subtitle: const Text('View sharing recipients'),
           children: [
-            FutureBuilder<List<DocumentShare>>(
+            for (final request in activeFamily.where((r) => r.documentIds.contains(doc.id)))
+              ListTile(
+                leading: const Icon(Icons.family_restroom_outlined),
+                title: Text(request.isIncoming
+                    ? (request.requester.displayName ?? request.requester.email)
+                    : (request.recipient.displayName ?? request.recipient.email)),
+                subtitle: Text('${request.relationship} • Family access'),
+              ),
+            if (doc.activeShareCount > 0) FutureBuilder<List<DocumentShare>>(
               future: _recipientsFor(doc.id),
               builder: (context, snapshot) {
-                if (snapshot.hasError) return const ListTile(
-                  leading: Icon(Icons.error_outline),
-                  title: Text('Unable to load recipients'),
-                  subtitle: Text('Refresh the wallet to try again.'),
-                );
-                if (!snapshot.hasData) return const ListTile(
-                  leading: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                  title: Text('Loading recipients...'),
-                );
-                final activeShares = snapshot.data!.where((share) => share.isActive).toList();
-                if (activeShares.isEmpty) return const ListTile(title: Text('No active recipients found.'));
-                return Column(children: [
-                  for (final share in activeShares)
-                    ListTile(title: Text(share.sharedWithEmail ?? share.sharedWithUserId),
-                      subtitle: Text(share.permission),
-                      onTap: () => _navigateToDetail(doc)),
-                ]);
+                if (snapshot.hasError) return const ListTile(title: Text('Unable to load direct recipients'));
+                if (!snapshot.hasData) return const ListTile(title: Text('Loading recipients...'));
+                return Column(children: [for (final share in snapshot.data!.where((x) => x.isActive))
+                  ListTile(title: Text(share.sharedWithEmail ?? share.sharedWithUserId),
+                    subtitle: Text(share.permission))]);
               },
             ),
           ],
