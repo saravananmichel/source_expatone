@@ -545,14 +545,16 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
             const SizedBox(height: 16),
             if (members.isEmpty) const Text('No documents match this filter.'),
             for (final documents in members) ...[
-              Text(
-                documents.first.isOwned
-                    ? 'My documents'
-                    : documents.first.owner.displayName ??
-                          documents.first.owner.email,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              Text(documents.first.owner.email),
+              Card(child: ExpansionTile(
+                key: PageStorageKey('family-documents-${documents.first.owner.id}'),
+                leading: CircleAvatar(
+                  child: Text((documents.first.owner.displayName?.isNotEmpty == true
+                      ? documents.first.owner.displayName!
+                      : documents.first.owner.email).substring(0, 1).toUpperCase()),
+                ),
+                title: Text('${documents.first.isOwned ? 'My documents' : (documents.first.owner.displayName ?? documents.first.owner.email)} (${documents.length})'),
+                subtitle: Text(documents.first.owner.email),
+                children: [
               ...documents.map(
                 (d) => Card(
                   child: Padding(
@@ -609,6 +611,8 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
                   ),
                 ),
               ),
+                ],
+              )),
               const SizedBox(height: 16),
             ],
           ],
