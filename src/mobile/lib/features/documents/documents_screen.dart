@@ -12,8 +12,9 @@ import 'package:url_launcher/url_launcher.dart';
 class DocumentsScreen extends StatefulWidget {
   final DocumentService documentService;
   final ReminderService? reminderService;
+  final void Function(Widget screen)? onOpenNested;
 
-  const DocumentsScreen({super.key, required this.documentService, this.reminderService});
+  const DocumentsScreen({super.key, required this.documentService, this.reminderService, this.onOpenNested});
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -138,13 +139,22 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               switch (action) {
                 case 'application':
                   if (_selected.isEmpty || _isLoading || _error != null) return;
-                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                    ApplicationAssistantScreen(documentService: widget.documentService,
-                      selectedDocumentIds: _selected.toList())));
+                  final application = ApplicationAssistantScreen(documentService: widget.documentService,
+                    selectedDocumentIds: _selected.toList());
+                  if (widget.onOpenNested != null) {
+                    widget.onOpenNested!(application);
+                  } else {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => application));
+                  }
                   if (mounted) _loadDocuments();
                 case 'family':
-                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                    FamilyScreen(documentService: widget.documentService)));
+                  final family = FamilyScreen(documentService: widget.documentService,
+                    onOpenNested: widget.onOpenNested);
+                  if (widget.onOpenNested != null) {
+                    widget.onOpenNested!(family);
+                  } else {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => family));
+                  }
                   if (mounted) { _loadDocuments(); _loadWalletExtras(); }
                 case 'refresh':
                   _loadDocuments();
