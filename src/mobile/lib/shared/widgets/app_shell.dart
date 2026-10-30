@@ -122,6 +122,52 @@ class _AppShellState extends State<AppShell> {
     }
   }
 
+  void _openNestedFeature(Widget screen) {
+    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => Scaffold(
+      appBar: AppBar(
+        title: const Text('ExpatOne'),
+        actions: [
+          IconButton(tooltip: 'Reminders', icon: const Icon(Icons.notifications_outlined),
+            onPressed: () { Navigator.of(context).popUntil((route) => route.isFirst); _navigateToTab(3); }),
+          PopupMenuButton<String>(tooltip: 'Account menu',
+            onSelected: (value) {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+              switch (value) {
+                case 'profile': _openProfile();
+                case 'settings': _openSettings();
+                case 'language': _openLanguageRegion();
+                case 'logout': _signOut();
+              }
+            },
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'profile', child: Text('My Profile')),
+              PopupMenuItem(value: 'settings', child: Text('Settings & preferences')),
+              PopupMenuItem(value: 'language', child: Text('Language & region')),
+              PopupMenuDivider(),
+              PopupMenuItem(value: 'logout', child: Text('Logout')),
+            ],
+            icon: const Icon(Icons.account_circle_outlined),
+          ),
+        ],
+      ),
+      body: screen,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+          _navigateToTab(index);
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.home_outlined), label: 'Home'),
+          NavigationDestination(icon: Icon(Icons.folder_outlined), label: 'Documents'),
+          NavigationDestination(icon: Icon(Icons.account_balance_outlined), label: 'Assistant'),
+          NavigationDestination(icon: Icon(Icons.notifications_outlined), label: 'Reminders'),
+          NavigationDestination(icon: Icon(Icons.more_horiz), label: 'More'),
+        ],
+      ),
+    )));
+  }
+
   void _openDashboardFeature(DashboardFeature feature) {
     late final Widget screen;
 
@@ -137,7 +183,7 @@ class _AppShellState extends State<AppShell> {
         );
         break;
       case DashboardFeature.family:
-        screen = FamilyScreen(documentService: widget.documentService);
+        screen = FamilyScreen(documentService: widget.documentService, onOpenNested: _openNestedFeature);
         break;
       case DashboardFeature.emergency:
         screen = EmergencyScreen(emergencyService: widget.emergencyService);
@@ -236,6 +282,7 @@ class _AppShellState extends State<AppShell> {
         key: ValueKey(_documentRefresh),
         documentService: widget.documentService,
         reminderService: widget.reminderService,
+        onOpenNested: _openNestedFeature,
       ),
       AssistantScreen(assistantService: widget.assistantService),
       RemindersScreen(
@@ -249,6 +296,7 @@ class _AppShellState extends State<AppShell> {
         translationService: widget.translationService,
         emergencyService: widget.emergencyService,
         onLogout: widget.onLogout,
+        onOpenFeature: _openDashboardFeature,
       ),
     ];
 

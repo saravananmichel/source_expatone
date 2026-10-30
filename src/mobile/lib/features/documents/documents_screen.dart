@@ -12,8 +12,9 @@ import 'package:url_launcher/url_launcher.dart';
 class DocumentsScreen extends StatefulWidget {
   final DocumentService documentService;
   final ReminderService? reminderService;
+  final void Function(Widget screen)? onOpenNested;
 
-  const DocumentsScreen({super.key, required this.documentService, this.reminderService});
+  const DocumentsScreen({super.key, required this.documentService, this.reminderService, this.onOpenNested});
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -27,6 +28,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   int _walletTab = 0;
   List<SharedDocument>? _sharedWithMe;
   List<FamilyRequest>? _familyRequests;
+  List<FamilyDashboardDocument>? _familyDashboardDocs;
   String? _tabError;
   String? _sharedTabError;
   final Map<String, Future<List<DocumentShare>>> _shareRecipients = {};
@@ -42,26 +44,32 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Future<void> _loadWalletExtras() async {
-    // Sharing and family requests are independent APIs. A failure in one
-    // must not hide the other tab's successful results.
-    try {
-      final shared = await widget.documentService.getSharedWithMe();
-      if (mounted) setState(() { _sharedWithMe = shared; _sharedTabError = null; });
-    } catch (_) {
-      if (mounted) setState(() {
-        _sharedWithMe = [];
-        _sharedTabError = 'Unable to load documents shared with you. Retry to refresh.';
-      });
-    }
-    try {
-      final requests = await widget.documentService.familyService.requests();
-      if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
-    } catch (_) {
-      if (mounted) setState(() {
-        _familyRequests = [];
-        _tabError = 'Unable to load family requests. Retry to refresh.';
-      });
-    }
+    // Fetch independently so a failed source does not block the other tabs.
+    // Each future handles its own error immediately (no unhandled rejection
+    // while another network request is still pending).
+    await Future.wait<void>([
+      widget.documentService.familyService.dashboard().then((family) {
+        if (mounted) setState(() => _familyDashboardDocs = family);
+      }).catchError((Object _) {
+        if (mounted) setState(() => _familyDashboardDocs = []);
+      }),
+      widget.documentService.getSharedWithMe().then((direct) {
+        if (mounted) setState(() { _sharedWithMe = direct; _sharedTabError = null; });
+      }).catchError((Object _) {
+        if (mounted) setState(() {
+          _sharedWithMe = [];
+          _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
+        });
+      }),
+      widget.documentService.familyService.requests().then((requests) {
+        if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
+      }).catchError((Object _) {
+        if (mounted) setState(() {
+          _familyRequests = [];
+          _tabError = 'Unable to load family requests. Retry to refresh.';
+        });
+      }),
+    ]);
   }
 
   Future<void> _loadDocuments() async {
@@ -121,22 +129,45 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       appBar: AppBar(
         title: Text(_selected.isEmpty ? 'Document Wallet' : '${_selected.length} selected'),
         actions: [
-          IconButton(icon: const Icon(Icons.assignment_outlined), tooltip: 'Prepare application',
-            onPressed: _selected.isEmpty || _isLoading || _error != null ? null : () async {
-              await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                ApplicationAssistantScreen(documentService: widget.documentService, selectedDocumentIds: _selected.toList())));
-              if (mounted) _loadDocuments();
-            }),
-          IconButton(icon: const Icon(Icons.family_restroom_outlined), tooltip: 'Friends & Family',
-            onPressed: () async {
-              await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-                FamilyScreen(documentService: widget.documentService)));
-              if (mounted) { _loadDocuments(); _loadWalletExtras(); }
-            }),
-          IconButton(icon: const Icon(Icons.refresh), tooltip: 'Refresh wallet',
-            onPressed: () { _loadDocuments(); _loadWalletExtras(); }),
-          IconButton(icon: const Icon(Icons.add_circle_outline), tooltip: 'Add document',
-            onPressed: _navigateToAdd),
+          PopupMenuButton<String>(
+            tooltip: 'Wallet actions',
+            icon: const Icon(Icons.more_vert),
+            onSelected: (action) async {
+              switch (action) {
+                case 'application':
+                  if (_selected.isEmpty || _isLoading || _error != null) return;
+                  final application = ApplicationAssistantScreen(documentService: widget.documentService,
+                    selectedDocumentIds: _selected.toList());
+                  if (widget.onOpenNested != null) {
+                    widget.onOpenNested!(application);
+                  } else {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => application));
+                  }
+                  if (mounted) _loadDocuments();
+                case 'family':
+                  final family = FamilyScreen(documentService: widget.documentService,
+                    onOpenNested: widget.onOpenNested);
+                  if (widget.onOpenNested != null) {
+                    widget.onOpenNested!(family);
+                  } else {
+                    await Navigator.push(context, MaterialPageRoute(builder: (_) => family));
+                  }
+                  if (mounted) { _loadDocuments(); _loadWalletExtras(); }
+                case 'refresh':
+                  _loadDocuments();
+                  _loadWalletExtras();
+                case 'add':
+                  _navigateToAdd();
+              }
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'application', enabled: _selected.isNotEmpty && !_isLoading && _error == null,
+                child: const Text('Prepare application')),
+              const PopupMenuItem(value: 'family', child: Text('Friends & Family')),
+              const PopupMenuItem(value: 'refresh', child: Text('Refresh wallet')),
+              const PopupMenuItem(value: 'add', child: Text('Add document')),
+            ],
+          ),
         ],
       ),
       body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -197,7 +228,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   Widget _sharingBody() {
-    if (_walletTab == 1 && _sharedTabError != null) {
+    if (_walletTab == 1 && _sharedTabError != null && (_familyDashboardDocs ?? []).isEmpty) {
       return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
         Text(_sharedTabError!),
         TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
@@ -206,67 +237,130 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (_walletTab == 3 && _tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Text(_tabError!), TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
     ]));
-    if ((_walletTab == 1 && _sharedWithMe == null) ||
+    if ((_walletTab == 1 && _sharedWithMe == null && _familyDashboardDocs == null) ||
         (_walletTab == 2 && _isLoading) ||
         (_walletTab == 3 && _familyRequests == null)) {
       return const Center(child: CircularProgressIndicator());
     }
     if (_walletTab == 1) {
-      final docs = _sharedWithMe!;
-      if (docs.isEmpty) return const Center(child: Text('No documents shared with you yet.'));
+      final direct = _sharedWithMe ?? [];
+      final directIds = direct.map((d) => d.documentId).toSet();
+      final family = (_familyDashboardDocs ?? [])
+          .where((d) => !d.isOwned && !directIds.contains(d.id)).toList();
+      if (direct.isEmpty && family.isEmpty) {
+        return const Center(child: Text('No documents shared with you yet.'));
+      }
       return ListView(padding: const EdgeInsets.all(16), children: [
-        Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(scrollDirection: Axis.horizontal,
-          child: DataTable(columns: const [
-            DataColumn(label: Text('Document')),
-            DataColumn(label: Text('Shared By')),
-            DataColumn(label: Text('Expiry Date')),
-            DataColumn(label: Text('Use in Visa')),
-            DataColumn(label: Text('Actions')),
-          ], rows: docs.map((doc) => DataRow(cells: [
-            DataCell(Text(doc.documentName)),
-            DataCell(Text(doc.ownerEmail ?? 'Family connection')),
-            DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
-            DataCell(Text(doc.permission)),
-            DataCell(TextButton(onPressed: () => _openShared(doc), child: const Text('View'))),
-          ])).toList()))),
+        for (final ownerId in family.map((d) => d.owner.id).toSet())
+          Card(child: ExpansionTile(
+          leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+          title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
+          subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
+          children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
+            child: DataTable(columns: const [
+              DataColumn(label: Text('Document')),
+              DataColumn(label: Text('Type')),
+              DataColumn(label: Text('Expiry Date')),
+              DataColumn(label: Text('Sharing')),
+              DataColumn(label: Text('Actions')),
+            ], rows: family.where((d) => d.owner.id == ownerId).map((d) => DataRow(cells: [
+              DataCell(Text(d.name)),
+              DataCell(Text(d.documentType)),
+              DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
+              const DataCell(Text('Family access')),
+              DataCell(TextButton(onPressed: () async {
+                try {
+                  final document = await widget.documentService.getDocument(d.id);
+                  if (!context.mounted) return;
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) =>
+                    DocumentDetailScreen(document: document, documentService: widget.documentService,
+                      reminderService: widget.reminderService)));
+                } catch (_) {
+                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Unable to open family document.')));
+                }
+              }, child: const Text('View'))),
+            ])).toList()))],
+        )),
+        for (final owner in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
+          Card(child: ExpansionTile(
+            initiallyExpanded: true,
+            leading: const CircleAvatar(child: Icon(Icons.person_outline)),
+            title: Text('${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
+            subtitle: const Text('Direct document shares'),
+            children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
+              child: DataTable(columns: const [
+                DataColumn(label: Text('Document')),
+                DataColumn(label: Text('Type')),
+                DataColumn(label: Text('Expiry Date')),
+                DataColumn(label: Text('Sharing')),
+                DataColumn(label: Text('Actions')),
+              ], rows: direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner)
+                .map((d) => DataRow(cells: [
+                  DataCell(Text(d.documentName)),
+                  DataCell(Text(d.documentType)),
+                  DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
+                  DataCell(Text(d.permission)),
+                  DataCell(TextButton(onPressed: () => _openShared(d), child: const Text('View'))),
+                ])).toList()))],
+          )),
       ]);
     }
     if (_walletTab == 2) {
-      final docs = (_documents ?? []).where((d) => !d.isSharedWithMe && d.activeShareCount > 0).toList();
+      // Incoming requests are accepted by this account and grant access to its documents.
+      // Outgoing requests describe documents owned by the other account.
+      final activeFamily = (_familyRequests ?? [])
+          .where((r) => r.status == 'Accepted' && !r.isExpired && r.isIncoming).toList();
+      final familyDocumentIds = <String>{
+        for (final r in activeFamily) ...r.documentIds,
+      };
+      final docs = (_documents ?? []).where((d) => !d.isSharedWithMe &&
+          (d.activeShareCount > 0 || familyDocumentIds.contains(d.id))).toList();
       if (docs.isEmpty) return const Center(child: Text('No documents shared by you yet.'));
       return ListView(padding: const EdgeInsets.all(16), children: [
+        Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(columns: const [
+            DataColumn(label: Text('Document')),
+            DataColumn(label: Text('Type')),
+            DataColumn(label: Text('Expiry Date')),
+            DataColumn(label: Text('Sharing')),
+            DataColumn(label: Text('Actions')),
+          ], rows: docs.map((doc) => DataRow(cells: [
+            DataCell(Text(doc.name)),
+            DataCell(Text(doc.documentType)),
+            DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
+            DataCell(Text(doc.activeShareCount > 0 ? '${doc.activeShareCount} direct' : 'Family')),
+            DataCell(TextButton(onPressed: () => _navigateToDetail(doc), child: const Text('View'))),
+          ])).toList()))),
         for (final doc in docs) Card(child: ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
           title: Text(doc.name),
-          subtitle: Text('Active shares: ${doc.activeShareCount}'),
+          subtitle: const Text('View sharing recipients'),
           children: [
-            FutureBuilder<List<DocumentShare>>(
+            for (final request in activeFamily.where((r) => r.documentIds.contains(doc.id)))
+              ListTile(
+                leading: const Icon(Icons.family_restroom_outlined),
+                title: Text(request.isIncoming
+                    ? (request.requester.displayName ?? request.requester.email)
+                    : (request.recipient.displayName ?? request.recipient.email)),
+                subtitle: Text('${request.relationship} • Family access'),
+              ),
+            if (doc.activeShareCount > 0) FutureBuilder<List<DocumentShare>>(
               future: _recipientsFor(doc.id),
               builder: (context, snapshot) {
-                if (snapshot.hasError) return const ListTile(
-                  leading: Icon(Icons.error_outline),
-                  title: Text('Unable to load recipients'),
-                  subtitle: Text('Refresh the wallet to try again.'),
-                );
-                if (!snapshot.hasData) return const ListTile(
-                  leading: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
-                  title: Text('Loading recipients...'),
-                );
-                final activeShares = snapshot.data!.where((share) => share.isActive).toList();
-                if (activeShares.isEmpty) return const ListTile(title: Text('No active recipients found.'));
-                return Column(children: [
-                  for (final share in activeShares)
-                    ListTile(title: Text(share.sharedWithEmail ?? share.sharedWithUserId),
-                      subtitle: Text(share.permission),
-                      onTap: () => _navigateToDetail(doc)),
-                ]);
+                if (snapshot.hasError) return const ListTile(title: Text('Unable to load direct recipients'));
+                if (!snapshot.hasData) return const ListTile(title: Text('Loading recipients...'));
+                return Column(children: [for (final share in snapshot.data!.where((x) => x.isActive))
+                  ListTile(title: Text(share.sharedWithEmail ?? share.sharedWithUserId),
+                    subtitle: Text(share.permission))]);
               },
             ),
           ],
         )),
       ]);
     }
-    final requests = _familyRequests!;
+    final requests = _familyRequests ?? [];
     final filtered = requests.where((r) => r.status == 'Pending').toList();
     if (filtered.isEmpty) return Center(child: Text(
       'No pending connection requests.'));
@@ -279,8 +373,13 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         subtitle: Text('${r.relationship} • ${r.status} • ${r.documentIds.length} document(s)'),
         trailing: const Icon(Icons.chevron_right),
         onTap: () async {
-          await Navigator.push(context, MaterialPageRoute(builder: (_) =>
-            FamilyScreen(documentService: widget.documentService)));
+          final family = FamilyScreen(documentService: widget.documentService,
+            onOpenNested: widget.onOpenNested);
+          if (widget.onOpenNested != null) {
+            widget.onOpenNested!(family);
+          } else {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => family));
+          }
           if (mounted) _loadWalletExtras();
         },
       )),

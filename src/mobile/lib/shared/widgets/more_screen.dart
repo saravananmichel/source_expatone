@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../features/dashboard/dashboard_screen.dart';
 import '../../core/networking/api_client.dart';
 import '../../core/services/corporate_service.dart';
 import '../../features/corporate/corporate_screen.dart';
@@ -21,6 +22,7 @@ class MoreScreen extends StatelessWidget {
   final TranslationService translationService;
   final EmergencyService emergencyService;
   final VoidCallback onLogout;
+  final ValueChanged<DashboardFeature>? onOpenFeature;
 
   const MoreScreen({
     super.key,
@@ -30,6 +32,7 @@ class MoreScreen extends StatelessWidget {
     required this.translationService,
     required this.emergencyService,
     required this.onLogout,
+    this.onOpenFeature,
   });
 
   @override
@@ -44,7 +47,7 @@ class MoreScreen extends StatelessWidget {
         children: [
           // Emergency is safety-critical — displayed at the top with distinct styling
           _EmergencyCard(
-            onTap: () => Navigator.push(
+            onTap: () => onOpenFeature != null ? onOpenFeature!(DashboardFeature.emergency) : Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => EmergencyScreen(
@@ -57,12 +60,12 @@ class MoreScreen extends StatelessWidget {
           if (documentService != null) _MenuTile(
             icon: Icons.family_restroom, iconColor: AppTheme.primaryColor,
             title: 'Family', subtitle: 'Requests and document access',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => FamilyScreen(documentService: documentService!))),
+            onTap: () => onOpenFeature != null ? onOpenFeature!(DashboardFeature.family) : Navigator.push(context, MaterialPageRoute(builder: (_) => FamilyScreen(documentService: documentService!))),
           ),
           if (documentService != null) _MenuTile(
             icon: Icons.assignment_outlined, iconColor: AppTheme.primaryColor,
             title: 'Application Assistant', subtitle: 'Visa forms and readiness checklists',
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ApplicationAssistantScreen(documentService: documentService!))),
+            onTap: () => onOpenFeature != null ? onOpenFeature!(DashboardFeature.visaAssistant) : Navigator.push(context, MaterialPageRoute(builder: (_) => ApplicationAssistantScreen(documentService: documentService!))),
           ),
           _MenuTile(
             icon: Icons.business_center_outlined,
@@ -70,15 +73,14 @@ class MoreScreen extends StatelessWidget {
             title: 'ExpatOne Business',
             subtitle: 'Corporate invitations, HR dashboard & employee tasks',
             onTap: () {
+              if (onOpenFeature != null) {
+                onOpenFeature!(DashboardFeature.corporate);
+                return;
+              }
               final api = ApiClient()..setAuthService(authService);
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => CorporateScreen(
-                    service: CorporateService(api),
-                  ),
-                ),
-              );
+              Navigator.push(context, MaterialPageRoute(
+                builder: (_) => CorporateScreen(service: CorporateService(api)),
+              ));
             },
           ),
           const Divider(height: 1, indent: 56),
@@ -88,7 +90,7 @@ class MoreScreen extends StatelessWidget {
             iconColor: AppTheme.primaryColor,
             title: 'Translation',
             subtitle: 'Translate text between 8 languages',
-            onTap: () => Navigator.push(
+            onTap: () => onOpenFeature != null ? onOpenFeature!(DashboardFeature.translation) : Navigator.push(
               context,
               MaterialPageRoute(
                 builder: (_) => TranslationScreen(
