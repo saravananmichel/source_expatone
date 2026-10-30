@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../core/services/user_service.dart';
+import '../../core/services/destination_service.dart';
 
 /// Account preferences persisted in the existing user profile API.
 class LanguageRegionScreen extends StatefulWidget {
   final UserService userService;
-  const LanguageRegionScreen({super.key, required this.userService});
+  final DestinationService? destinationService;
+  const LanguageRegionScreen({super.key, required this.userService, this.destinationService});
 
   @override
   State<LanguageRegionScreen> createState() => _LanguageRegionScreenState();
@@ -15,6 +17,7 @@ class _LanguageRegionScreenState extends State<LanguageRegionScreen> {
   String? _country;
   bool _busy = true;
   String? _error;
+  Map<String, String> _availableCountries = _countries;
 
   static const _languages = {
     'en': 'English',
@@ -41,8 +44,23 @@ class _LanguageRegionScreenState extends State<LanguageRegionScreen> {
   Future<void> _load() async {
     try {
       final profile = await widget.userService.getMe();
+      Map<String, String> countries = _countries;
+      if (widget.destinationService != null) {
+        try {
+          final destinations = await widget.destinationService!.getDestinations();
+          if (destinations.isNotEmpty) {
+            countries = {for (final destination in destinations) destination.code: destination.name};
+            if (!countries.containsKey(profile.countryCode)) {
+              countries[profile.countryCode] = _countries[profile.countryCode] ?? profile.countryCode;
+            }
+          }
+        } catch (_) {
+          // Fall back to the supported country labels if destinations are offline.
+        }
+      }
       if (!mounted) return;
       setState(() {
+        _availableCountries = countries;
         _language = profile.preferredLanguage;
         _country = profile.countryCode;
         _busy = false;
@@ -91,9 +109,9 @@ class _LanguageRegionScreenState extends State<LanguageRegionScreen> {
         ),
         const SizedBox(height: 18),
         DropdownButtonFormField<String>(
-          value: _countries.containsKey(_country) ? _country : null,
+          value: _availableCountries.containsKey(_country) ? _country : null,
           decoration: const InputDecoration(labelText: 'Region'),
-          items: _countries.entries.map((e) => DropdownMenuItem(
+          items: _availableCountries.entries.map((e) => DropdownMenuItem(
             value: e.key, child: Text(e.value))).toList(),
           onChanged: (v) => setState(() => _country = v),
         ),
