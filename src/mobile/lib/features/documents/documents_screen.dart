@@ -28,6 +28,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   List<SharedDocument>? _sharedWithMe;
   List<FamilyRequest>? _familyRequests;
   String? _tabError;
+  String? _sharedTabError;
   final Map<String, Future<List<DocumentShare>>> _shareRecipients = {};
 
   Future<List<DocumentShare>> _recipientsFor(String documentId) =>
@@ -45,9 +46,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     // must not hide the other tab's successful results.
     try {
       final shared = await widget.documentService.getSharedWithMe();
-      if (mounted) setState(() => _sharedWithMe = shared);
+      if (mounted) setState(() { _sharedWithMe = shared; _sharedTabError = null; });
     } catch (_) {
-      if (mounted) setState(() => _sharedWithMe = []);
+      if (mounted) setState(() {
+        _sharedWithMe = [];
+        _sharedTabError = 'Unable to load documents shared with you. Retry to refresh.';
+      });
     }
     try {
       final requests = await widget.documentService.familyService.requests();
@@ -193,6 +197,12 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   Widget _sharingBody() {
+    if (_walletTab == 1 && _sharedTabError != null) {
+      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        Text(_sharedTabError!),
+        TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
+      ]));
+    }
     if (_walletTab == 3 && _tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
       Text(_tabError!), TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
     ]));
