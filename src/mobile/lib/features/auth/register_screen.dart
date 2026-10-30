@@ -103,15 +103,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         }
       }
       // Firebase signs in newly registered users automatically.
-      // Best-effort sign-out so signup still returns to login if cleanup fails.
-      try {
-        await widget.authService.signOut();
-      } catch (_) {
-        // Account creation succeeded; don't present it as a registration failure.
-      }
-
+      // Return to the root auth-state-driven screen. The app will show
+      // onboarding or Home without leaving registration on the route stack.
       if (mounted) {
-        Navigator.of(context).pop();
+        widget.onRegisterSuccess();
+        Navigator.of(context).popUntil((route) => route.isFirst);
       }
     } on AuthServiceException catch (e) {
       if (mounted) setState(() => _errorMessage = e.message);
