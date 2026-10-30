@@ -332,7 +332,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             title: Text('${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
             subtitle: const Text('Direct document shares'),
             children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-              child: DataTable(columns: const [
+              child: _richTable(const [
                 DataColumn(label: Text('Document')),
                 DataColumn(label: Text('Type')),
                 DataColumn(label: Text('Expiry Date')),
@@ -363,7 +363,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       return ListView(padding: const EdgeInsets.all(16), children: [
         Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
-          child: DataTable(columns: const [
+          child: _richTable(const [
             DataColumn(label: Text('Document')),
             DataColumn(label: Text('Type')),
             DataColumn(label: Text('Expiry Date')),
