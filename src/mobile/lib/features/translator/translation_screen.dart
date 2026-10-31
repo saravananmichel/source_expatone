@@ -47,6 +47,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
   int _conversationEpoch = 0;
   String _lastRecognized = '';
   String _voiceStatus = 'Ready';
+  int _turnNumber = 0;
   late ITtsService _ttsService;
 
   static const _languages = [
@@ -250,6 +251,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     if (_conversationMode) {
       _conversationMode = false;
       _conversationEpoch++;
+      _turnNumber++;
       _silenceTimer?.cancel();
       _resumeTimer?.cancel();
       _processingTurn = false;
@@ -281,13 +283,14 @@ class _TranslationScreenState extends State<TranslationScreen> {
       return;
     }
     final epoch = _conversationEpoch;
+    final turn = ++_turnNumber;
     _lastRecognized = '';
     _silenceTimer?.cancel();
     setState(() => _voiceStatus = 'Listening...');
     final started = await _speechService.startListening(
       languageCode: _sourceLanguage,
       onResult: (text) {
-        if (!mounted || !_conversationMode || epoch != _conversationEpoch || _processingTurn || text.trim().isEmpty) return;
+        if (!mounted || !_conversationMode || epoch != _conversationEpoch || turn != _turnNumber || _processingTurn || text.trim().isEmpty) return;
         if (text.trim() == _lastRecognized) return;
         _lastRecognized = text.trim();
         setState(() => _inputController.text = _lastRecognized);
@@ -295,7 +298,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
         _silenceTimer = Timer(const Duration(seconds: 2), _finishTurn);
       },
       onDone: () {
-        if (!mounted || !_conversationMode || epoch != _conversationEpoch || _processingTurn) return;
+        if (!mounted || !_conversationMode || epoch != _conversationEpoch || turn != _turnNumber || _processingTurn) return;
         _silenceTimer?.cancel();
         setState(() => _isListening = false);
         if (_lastRecognized.isNotEmpty) {
