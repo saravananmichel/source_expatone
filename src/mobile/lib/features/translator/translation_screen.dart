@@ -267,6 +267,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     if (_isListening) await _speechService.stopListening();
     _conversationMode = true;
     _conversationEpoch++;
+    if (mounted) setState(() => _voiceStatus = 'Starting microphone...');
     await _listenTurn();
   }
 
@@ -325,8 +326,10 @@ class _TranslationScreenState extends State<TranslationScreen> {
       await _ttsService.speak(result.translatedText, _targetLanguage);
       if (!_ttsService.isSpeaking) _resumeConversation();
     } catch (_) {
-      if (mounted) setState(() { _isLoading = false; _error = 'Voice translation failed'; });
-      _resumeConversation();
+      if (mounted && _conversationMode && epoch == _conversationEpoch) {
+        setState(() { _isLoading = false; _error = 'Voice translation failed'; });
+        _resumeConversation();
+      }
     }
   }
 
