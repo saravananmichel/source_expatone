@@ -282,7 +282,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildLanguageSelector(),
-              _conversationControls(),
+
               const SizedBox(height: 16),
               _buildInputCard(),
               const SizedBox(height: 12),
