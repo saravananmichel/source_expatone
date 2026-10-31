@@ -428,7 +428,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                                 style: const TextStyle(fontSize: 14)),
                           ))
                       .toList(),
-                  onChanged: (value) {
+                  onChanged: _conversationMode ? null : (value) {
                     if (value != null) {
                       setState(() => _sourceLanguage = value);
                     }
@@ -443,7 +443,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     ? AppTheme.textSecondary.withValues(alpha: 0.4)
                     : AppTheme.primaryColor,
               ),
-              onPressed: _sourceLanguage == 'auto' ? null : _swapLanguages,
+              onPressed: _conversationMode || _sourceLanguage == 'auto' ? null : _swapLanguages,
               tooltip: 'Swap languages',
             ),
             Expanded(
@@ -460,7 +460,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                                 textAlign: TextAlign.end),
                           ))
                       .toList(),
-                  onChanged: (value) {
+                  onChanged: _conversationMode ? null : (value) {
                     if (value != null) {
                       setState(() => _targetLanguage = value);
                     }
