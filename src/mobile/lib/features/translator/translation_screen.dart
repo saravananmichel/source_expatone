@@ -242,6 +242,22 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
   }
 
+  Widget _conversationControls() => Card(
+    child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+      const Text('Live Voice Translator', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      const Text('Speak, pause for 2 seconds, hear the translation, then speak again.'),
+      const SizedBox(height: 12),
+      Icon(_isSpeaking ? Icons.volume_up : _isListening ? Icons.graphic_eq : Icons.mic,
+        size: 44, color: AppTheme.primaryColor),
+      Text(_voiceStatus),
+      const SizedBox(height: 8),
+      FilledButton.icon(onPressed: _toggleConversation,
+        icon: Icon(_conversationMode ? Icons.stop : Icons.mic),
+        label: Text(_conversationMode ? 'Stop conversation' : 'Start conversation')),
+    ])),
+  );
+
   // ── TTS ─────────────────────────────────────────────────────────────────────
 
   Future<void> _toggleSpeaking() async {
@@ -282,6 +298,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildLanguageSelector(),
+              _conversationControls(),
 
               const SizedBox(height: 16),
               _buildInputCard(),
