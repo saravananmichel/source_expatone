@@ -255,7 +255,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
       _processingTurn = false;
       await _speechService.stopListening();
       await _ttsService.stop();
-      if (mounted) setState(() { _isListening = false; _isSpeaking = false; _voiceStatus = 'Stopped'; });
+      if (mounted) setState(() { _isListening = false; _isSpeaking = false; _isLoading = false; _voiceStatus = 'Stopped'; });
       return;
     }
     if (!_speechAvailable) {
@@ -264,6 +264,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
       return;
     }
     if (_sourceLanguage == 'auto') setState(() => _sourceLanguage = 'en');
+    _error = null;
     if (_isListening) {
       await _speechService.stopListening();
       if (mounted) setState(() => _isListening = false);
@@ -310,6 +311,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
     if (!started) {
       _conversationMode = false;
+      _conversationEpoch++;
+      _resumeTimer?.cancel();
       setState(() => _voiceStatus = 'Could not start microphone');
     } else {
       setState(() => _isListening = true);
