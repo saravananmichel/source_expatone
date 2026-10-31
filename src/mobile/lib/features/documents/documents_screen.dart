@@ -59,9 +59,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     Align(alignment: Alignment.centerLeft, child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        headingRowColor: WidgetStateProperty.all(const Color(0xFFF1F5F9)),
+        headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF2FF)),
         dataRowMinHeight: 56, dataRowMaxHeight: 72,
-        dividerThickness: 0.5, columnSpacing: 28,
+        dividerThickness: 0.5, columnSpacing: 38,
         showBottomBorder: true, columns: columns, rows: rows)));
 
   Future<void> _showDocumentPreview(DocumentItem document) async {
