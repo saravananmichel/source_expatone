@@ -43,6 +43,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
   bool _conversationMode = false;
   bool _processingTurn = false;
   Timer? _silenceTimer;
+  Timer? _resumeTimer;
+  int _conversationEpoch = 0;
   String _lastRecognized = '';
   String _voiceStatus = 'Ready';
   late ITtsService _ttsService;
@@ -93,6 +95,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
   void dispose() {
     _conversationMode = false;
     _silenceTimer?.cancel();
+    _resumeTimer?.cancel();
     _inputController.dispose();
     // Clear callback before stop() to avoid setState on a disposed element.
     _ttsService.onStopped = null;
@@ -246,7 +249,9 @@ class _TranslationScreenState extends State<TranslationScreen> {
   Future<void> _toggleConversation() async {
     if (_conversationMode) {
       _conversationMode = false;
+      _conversationEpoch++;
       _silenceTimer?.cancel();
+      _resumeTimer?.cancel();
       _processingTurn = false;
       await _speechService.stopListening();
       await _ttsService.stop();
@@ -261,18 +266,20 @@ class _TranslationScreenState extends State<TranslationScreen> {
     if (_sourceLanguage == 'auto') setState(() => _sourceLanguage = 'en');
     if (_isListening) await _speechService.stopListening();
     _conversationMode = true;
+    _conversationEpoch++;
     await _listenTurn();
   }
 
   Future<void> _listenTurn() async {
     if (!mounted || !_conversationMode || _processingTurn || _isListening) return;
+    final epoch = _conversationEpoch;
     _lastRecognized = '';
     _silenceTimer?.cancel();
     setState(() => _voiceStatus = 'Listening...');
     final started = await _speechService.startListening(
       languageCode: _sourceLanguage,
       onResult: (text) {
-        if (!mounted || !_conversationMode || _processingTurn || text.trim().isEmpty) return;
+        if (!mounted || !_conversationMode || epoch != _conversationEpoch || _processingTurn || text.trim().isEmpty) return;
         if (text.trim() == _lastRecognized) return;
         _lastRecognized = text.trim();
         setState(() => _inputController.text = _lastRecognized);
@@ -280,19 +287,17 @@ class _TranslationScreenState extends State<TranslationScreen> {
         _silenceTimer = Timer(const Duration(seconds: 2), _finishTurn);
       },
       onDone: () {
-        if (!mounted || !_conversationMode || _processingTurn) return;
+        if (!mounted || !_conversationMode || epoch != _conversationEpoch || _processingTurn) return;
         _silenceTimer?.cancel();
         setState(() => _isListening = false);
         if (_lastRecognized.isNotEmpty) {
           _finishTurn();
         } else {
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted && _conversationMode) _listenTurn();
-          });
+          _scheduleResume();
         }
       },
     );
-    if (!mounted || !_conversationMode) {
+    if (!mounted || !_conversationMode || epoch != _conversationEpoch) {
       if (started) await _speechService.stopListening();
       return;
     }
@@ -310,11 +315,12 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _processingTurn = true;
     setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
     await _speechService.stopListening();
+    final epoch = _conversationEpoch;
     try {
       final result = await widget.translationService.translate(
         text: _lastRecognized, sourceLanguage: _sourceLanguage,
         targetLanguage: _targetLanguage);
-      if (!mounted || !_conversationMode) return;
+      if (!mounted || !_conversationMode || epoch != _conversationEpoch) return;
       setState(() { _result = result; _isLoading = false; _isSpeaking = true; _voiceStatus = 'Speaking...'; });
       await _ttsService.speak(result.translatedText, _targetLanguage);
       if (!_ttsService.isSpeaking) _resumeConversation();
@@ -328,8 +334,14 @@ class _TranslationScreenState extends State<TranslationScreen> {
     if (!mounted || !_conversationMode || !_processingTurn) return;
     _processingTurn = false;
     setState(() { _isSpeaking = false; _voiceStatus = 'Ready for next phrase'; });
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted && _conversationMode) _listenTurn();
+    _scheduleResume();
+  }
+
+  void _scheduleResume() {
+    _resumeTimer?.cancel();
+    final epoch = _conversationEpoch;
+    _resumeTimer = Timer(const Duration(milliseconds: 650), () {
+      if (mounted && _conversationMode && epoch == _conversationEpoch) _listenTurn();
     });
   }
 
