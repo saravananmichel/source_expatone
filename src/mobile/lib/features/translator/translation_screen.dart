@@ -77,6 +77,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _ttsService = widget.ttsService ?? TtsService();
     _ttsService.onStopped = () {
       if (mounted) setState(() => _isSpeaking = false);
+      _resumeConversation();
     };
     _initSpeech();
   }
@@ -300,6 +301,35 @@ class _TranslationScreenState extends State<TranslationScreen> {
     } else {
       setState(() => _isListening = true);
     }
+  }
+
+  Future<void> _finishTurn() async {
+    _silenceTimer?.cancel();
+    if (!_conversationMode || _processingTurn || _lastRecognized.isEmpty) return;
+    _processingTurn = true;
+    setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
+    await _speechService.stopListening();
+    try {
+      final result = await widget.translationService.translate(
+        text: _lastRecognized, sourceLanguage: _sourceLanguage,
+        targetLanguage: _targetLanguage);
+      if (!mounted || !_conversationMode) return;
+      setState(() { _result = result; _isLoading = false; _isSpeaking = true; _voiceStatus = 'Speaking...'; });
+      await _ttsService.speak(result.translatedText, _targetLanguage);
+      if (!_ttsService.isSpeaking) _resumeConversation();
+    } catch (_) {
+      if (mounted) setState(() { _isLoading = false; _error = 'Voice translation failed'; });
+      _resumeConversation();
+    }
+  }
+
+  void _resumeConversation() {
+    if (!mounted || !_conversationMode || !_processingTurn) return;
+    _processingTurn = false;
+    setState(() => _isSpeaking = false);
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted && _conversationMode) _listenTurn();
+    });
   }
 
   Widget _conversationControls() => Card(
