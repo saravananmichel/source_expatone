@@ -56,13 +56,14 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   }
 
   Widget _richTable(List<DataColumn> columns, List<DataRow> rows) =>
-    Align(alignment: Alignment.centerLeft, child: SingleChildScrollView(
+    SizedBox(width: double.infinity, child: Align(alignment: Alignment.centerLeft,
+      child: SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
         headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF2FF)),
         dataRowMinHeight: 56, dataRowMaxHeight: 72,
         dividerThickness: 0.5, columnSpacing: 38,
-        showBottomBorder: true, columns: columns, rows: rows)));
+        showBottomBorder: true, columns: columns, rows: rows))));
 
   Future<void> _showDocumentPreview(DocumentItem document) async {
     await showDialog<void>(context: context, builder: (dialogContext) => Dialog(
