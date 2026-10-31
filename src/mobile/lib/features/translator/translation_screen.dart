@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/error/app_exception.dart';
@@ -39,6 +40,11 @@ class _TranslationScreenState extends State<TranslationScreen> {
 
   // TTS state
   bool _isSpeaking = false;
+  bool _conversationMode = false;
+  bool _processingTurn = false;
+  Timer? _silenceTimer;
+  String _lastRecognized = '';
+  String _voiceStatus = 'Ready';
   late ITtsService _ttsService;
 
   static const _languages = [
@@ -84,6 +90,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
 
   @override
   void dispose() {
+    _conversationMode = false;
+    _silenceTimer?.cancel();
     _inputController.dispose();
     // Clear callback before stop() to avoid setState on a disposed element.
     _ttsService.onStopped = null;
@@ -274,6 +282,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildLanguageSelector(),
+              _conversationControls(),
               const SizedBox(height: 16),
               _buildInputCard(),
               const SizedBox(height: 12),
