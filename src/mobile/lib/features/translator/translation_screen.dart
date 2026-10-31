@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../core/error/app_exception.dart';
@@ -39,6 +40,14 @@ class _TranslationScreenState extends State<TranslationScreen> {
 
   // TTS state
   bool _isSpeaking = false;
+  bool _conversationMode = false;
+  bool _processingTurn = false;
+  Timer? _silenceTimer;
+  Timer? _resumeTimer;
+  int _conversationEpoch = 0;
+  String _lastRecognized = '';
+  String _voiceStatus = 'Ready';
+  int _turnNumber = 0;
   late ITtsService _ttsService;
 
   static const _languages = [
@@ -71,6 +80,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _ttsService = widget.ttsService ?? TtsService();
     _ttsService.onStopped = () {
       if (mounted) setState(() => _isSpeaking = false);
+      _resumeConversation();
     };
     _initSpeech();
   }
@@ -84,6 +94,9 @@ class _TranslationScreenState extends State<TranslationScreen> {
 
   @override
   void dispose() {
+    _conversationMode = false;
+    _silenceTimer?.cancel();
+    _resumeTimer?.cancel();
     _inputController.dispose();
     // Clear callback before stop() to avoid setState on a disposed element.
     _ttsService.onStopped = null;
@@ -234,6 +247,135 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
   }
 
+  Future<void> _toggleConversation() async {
+    if (_conversationMode) {
+      _conversationMode = false;
+      _conversationEpoch++;
+      _turnNumber++;
+      _silenceTimer?.cancel();
+      _resumeTimer?.cancel();
+      _processingTurn = false;
+      await _speechService.stopListening();
+      await _ttsService.stop();
+      if (mounted) setState(() { _isListening = false; _isSpeaking = false; _isLoading = false; _voiceStatus = 'Stopped'; });
+      return;
+    }
+    if (!_speechAvailable) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Microphone unavailable or permission denied.')));
+      return;
+    }
+    if (_sourceLanguage == 'auto') setState(() => _sourceLanguage = 'en');
+    _error = null;
+    if (_isListening) {
+      await _speechService.stopListening();
+      if (mounted) setState(() => _isListening = false);
+    }
+    _conversationMode = true;
+    _conversationEpoch++;
+    if (mounted) setState(() => _voiceStatus = 'Starting microphone...');
+    await _listenTurn();
+  }
+
+  Future<void> _listenTurn() async {
+    if (!mounted || !_conversationMode || _processingTurn || _isListening || _speechService.isListening) {
+      if (mounted && _conversationMode && !_processingTurn) _scheduleResume();
+      return;
+    }
+    final epoch = _conversationEpoch;
+    final turn = ++_turnNumber;
+    _lastRecognized = '';
+    _silenceTimer?.cancel();
+    setState(() => _voiceStatus = 'Listening...');
+    final started = await _speechService.startListening(
+      languageCode: _sourceLanguage,
+      onResult: (text) {
+        if (!mounted || !_conversationMode || epoch != _conversationEpoch || turn != _turnNumber || _processingTurn || text.trim().isEmpty) return;
+        if (text.trim() == _lastRecognized) return;
+        _lastRecognized = text.trim();
+        setState(() => _inputController.text = _lastRecognized);
+        _silenceTimer?.cancel();
+        _silenceTimer = Timer(const Duration(seconds: 2), _finishTurn);
+      },
+      onDone: () {
+        if (!mounted || !_conversationMode || epoch != _conversationEpoch || turn != _turnNumber || _processingTurn) return;
+        _silenceTimer?.cancel();
+        setState(() => _isListening = false);
+        if (_lastRecognized.isNotEmpty) {
+          _finishTurn();
+        } else {
+          _scheduleResume();
+        }
+      },
+    );
+    if (!mounted || !_conversationMode || epoch != _conversationEpoch) {
+      if (started) await _speechService.stopListening();
+      return;
+    }
+    if (!started) {
+      _conversationMode = false;
+      _conversationEpoch++;
+      _resumeTimer?.cancel();
+      setState(() => _voiceStatus = 'Could not start microphone');
+    } else {
+      setState(() => _isListening = true);
+    }
+  }
+
+  Future<void> _finishTurn() async {
+    _silenceTimer?.cancel();
+    if (!_conversationMode || _processingTurn || _lastRecognized.isEmpty) return;
+    _processingTurn = true;
+    setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
+    final epoch = _conversationEpoch;
+    await _speechService.stopListening();
+    try {
+      final result = await widget.translationService.translate(
+        text: _lastRecognized, sourceLanguage: _sourceLanguage,
+        targetLanguage: _targetLanguage);
+      if (!mounted || !_conversationMode || epoch != _conversationEpoch) return;
+      setState(() { _result = result; _isLoading = false; _isSpeaking = true; _voiceStatus = 'Speaking...'; });
+      await _ttsService.speak(result.translatedText, _targetLanguage);
+      if (!_ttsService.isSpeaking) _resumeConversation();
+    } catch (_) {
+      if (mounted && _conversationMode && epoch == _conversationEpoch) {
+        setState(() { _isLoading = false; _error = 'Voice translation failed'; });
+        _resumeConversation();
+      }
+    }
+  }
+
+  void _resumeConversation() {
+    if (!mounted || !_conversationMode || !_processingTurn) return;
+    _processingTurn = false;
+    setState(() { _isSpeaking = false; _voiceStatus = 'Ready for next phrase'; });
+    _scheduleResume();
+  }
+
+  void _scheduleResume() {
+    _resumeTimer?.cancel();
+    final epoch = _conversationEpoch;
+    _resumeTimer = Timer(const Duration(milliseconds: 650), () {
+      if (mounted && _conversationMode && epoch == _conversationEpoch) _listenTurn();
+    });
+  }
+
+  Widget _conversationControls() => Card(
+    child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
+      const Text('Live Voice Translator', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 8),
+      const Text('Speak, pause for 2 seconds, hear the translation, then speak again.'),
+      const SizedBox(height: 12),
+      Icon(_isSpeaking ? Icons.volume_up : _isListening ? Icons.graphic_eq : Icons.mic,
+        size: 44, color: AppTheme.primaryColor),
+      Text(_voiceStatus),
+      const SizedBox(height: 8),
+      FilledButton.icon(onPressed: _toggleConversation,
+        icon: Icon(_conversationMode ? Icons.stop : Icons.mic),
+        label: Text(_conversationMode ? 'Stop conversation' : 'Start conversation')),
+    ])),
+  );
+
   // ── TTS ─────────────────────────────────────────────────────────────────────
 
   Future<void> _toggleSpeaking() async {
@@ -274,6 +416,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildLanguageSelector(),
+              _conversationControls(),
+
               const SizedBox(height: 16),
               _buildInputCard(),
               const SizedBox(height: 12),
@@ -311,7 +455,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                                 style: const TextStyle(fontSize: 14)),
                           ))
                       .toList(),
-                  onChanged: (value) {
+                  onChanged: _conversationMode ? null : (value) {
                     if (value != null) {
                       setState(() => _sourceLanguage = value);
                     }
@@ -326,7 +470,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                     ? AppTheme.textSecondary.withValues(alpha: 0.4)
                     : AppTheme.primaryColor,
               ),
-              onPressed: _sourceLanguage == 'auto' ? null : _swapLanguages,
+              onPressed: _conversationMode || _sourceLanguage == 'auto' ? null : _swapLanguages,
               tooltip: 'Swap languages',
             ),
             Expanded(
@@ -343,7 +487,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                                 textAlign: TextAlign.end),
                           ))
                       .toList(),
-                  onChanged: (value) {
+                  onChanged: _conversationMode ? null : (value) {
                     if (value != null) {
                       setState(() => _targetLanguage = value);
                     }
@@ -435,7 +579,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                                   : AppTheme.textSecondary
                                       .withValues(alpha: 0.4)),
                         ),
-                        onPressed: _toggleListening,
+                        onPressed: _conversationMode ? null : _toggleListening,
                         tooltip: _isListening ? 'Stop listening' : 'Voice input',
                       ),
                     ),
@@ -454,7 +598,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     return SizedBox(
       height: 48,
       child: ElevatedButton(
-        onPressed: canTranslate ? _translate : null,
+        onPressed: canTranslate && !_conversationMode ? _translate : null,
         child: _isLoading
             ? const SizedBox(
                 height: 20,

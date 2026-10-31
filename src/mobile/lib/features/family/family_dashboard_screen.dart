@@ -501,7 +501,6 @@ class _FamilyDashboardScreenState extends State<FamilyDashboardScreen>
               ),
             ),
             const SizedBox(height: 16),
-            const SizedBox(height: 16),
             Wrap(
               spacing: 8,
               runSpacing: 8,

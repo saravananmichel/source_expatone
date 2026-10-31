@@ -83,7 +83,7 @@ class SpeechService implements ISpeechService {
         listenOptions: SpeechListenOptions(
           localeId: localeId,
           listenFor: const Duration(seconds: 60),
-          pauseFor: const Duration(seconds: 3),
+          pauseFor: const Duration(seconds: 2),
         ),
       );
       _speech.statusListener = (status) {
