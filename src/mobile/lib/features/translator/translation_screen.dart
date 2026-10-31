@@ -242,6 +242,66 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
   }
 
+  Future<void> _toggleConversation() async {
+    if (_conversationMode) {
+      _conversationMode = false;
+      _silenceTimer?.cancel();
+      _processingTurn = false;
+      await _speechService.stopListening();
+      await _ttsService.stop();
+      if (mounted) setState(() { _isListening = false; _isSpeaking = false; _voiceStatus = 'Stopped'; });
+      return;
+    }
+    if (!_speechAvailable) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Microphone unavailable or permission denied.')));
+      return;
+    }
+    if (_sourceLanguage == 'auto') _sourceLanguage = 'en';
+    _conversationMode = true;
+    await _listenTurn();
+  }
+
+  Future<void> _listenTurn() async {
+    if (!mounted || !_conversationMode || _processingTurn) return;
+    _lastRecognized = '';
+    _silenceTimer?.cancel();
+    setState(() => _voiceStatus = 'Listening...');
+    final started = await _speechService.startListening(
+      languageCode: _sourceLanguage,
+      onResult: (text) {
+        if (!mounted || !_conversationMode || _processingTurn || text.trim().isEmpty) return;
+        if (text.trim() == _lastRecognized) return;
+        _lastRecognized = text.trim();
+        setState(() => _inputController.text = _lastRecognized);
+        _silenceTimer?.cancel();
+        _silenceTimer = Timer(const Duration(seconds: 2), _finishTurn);
+      },
+      onDone: () {
+        if (!mounted || !_conversationMode || _processingTurn) return;
+        _silenceTimer?.cancel();
+        setState(() => _isListening = false);
+        if (_lastRecognized.isNotEmpty) {
+          _finishTurn();
+        } else {
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (mounted && _conversationMode) _listenTurn();
+          });
+        }
+      },
+    );
+    if (!mounted || !_conversationMode) {
+      if (started) await _speechService.stopListening();
+      return;
+    }
+    if (!started) {
+      _conversationMode = false;
+      setState(() => _voiceStatus = 'Could not start microphone');
+    } else {
+      setState(() => _isListening = true);
+    }
+  }
+
   Widget _conversationControls() => Card(
     child: Padding(padding: const EdgeInsets.all(16), child: Column(children: [
       const Text('Live Voice Translator', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
