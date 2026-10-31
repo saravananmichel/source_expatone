@@ -258,13 +258,14 @@ class _TranslationScreenState extends State<TranslationScreen> {
         const SnackBar(content: Text('Microphone unavailable or permission denied.')));
       return;
     }
-    if (_sourceLanguage == 'auto') _sourceLanguage = 'en';
+    if (_sourceLanguage == 'auto') setState(() => _sourceLanguage = 'en');
+    if (_isListening) await _speechService.stopListening();
     _conversationMode = true;
     await _listenTurn();
   }
 
   Future<void> _listenTurn() async {
-    if (!mounted || !_conversationMode || _processingTurn) return;
+    if (!mounted || !_conversationMode || _processingTurn || _isListening) return;
     _lastRecognized = '';
     _silenceTimer?.cancel();
     setState(() => _voiceStatus = 'Listening...');
@@ -326,7 +327,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
   void _resumeConversation() {
     if (!mounted || !_conversationMode || !_processingTurn) return;
     _processingTurn = false;
-    setState(() => _isSpeaking = false);
+    setState(() { _isSpeaking = false; _voiceStatus = 'Ready for next phrase'; });
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted && _conversationMode) _listenTurn();
     });
@@ -551,7 +552,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                                   : AppTheme.textSecondary
                                       .withValues(alpha: 0.4)),
                         ),
-                        onPressed: _toggleListening,
+                        onPressed: _conversationMode ? null : _toggleListening,
                         tooltip: _isListening ? 'Stop listening' : 'Voice input',
                       ),
                     ),
@@ -570,7 +571,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     return SizedBox(
       height: 48,
       child: ElevatedButton(
-        onPressed: canTranslate ? _translate : null,
+        onPressed: canTranslate && !_conversationMode ? _translate : null,
         child: _isLoading
             ? const SizedBox(
                 height: 20,
