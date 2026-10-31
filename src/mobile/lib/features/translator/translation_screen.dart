@@ -324,8 +324,8 @@ class _TranslationScreenState extends State<TranslationScreen> {
     if (!_conversationMode || _processingTurn || _lastRecognized.isEmpty) return;
     _processingTurn = true;
     setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
-    await _speechService.stopListening();
     final epoch = _conversationEpoch;
+    await _speechService.stopListening();
     try {
       final result = await widget.translationService.translate(
         text: _lastRecognized, sourceLanguage: _sourceLanguage,
