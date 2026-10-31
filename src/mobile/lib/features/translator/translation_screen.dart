@@ -264,7 +264,10 @@ class _TranslationScreenState extends State<TranslationScreen> {
       return;
     }
     if (_sourceLanguage == 'auto') setState(() => _sourceLanguage = 'en');
-    if (_isListening) await _speechService.stopListening();
+    if (_isListening) {
+      await _speechService.stopListening();
+      if (mounted) setState(() => _isListening = false);
+    }
     _conversationMode = true;
     _conversationEpoch++;
     if (mounted) setState(() => _voiceStatus = 'Starting microphone...');
@@ -272,7 +275,10 @@ class _TranslationScreenState extends State<TranslationScreen> {
   }
 
   Future<void> _listenTurn() async {
-    if (!mounted || !_conversationMode || _processingTurn || _isListening) return;
+    if (!mounted || !_conversationMode || _processingTurn || _isListening || _speechService.isListening) {
+      if (mounted && _conversationMode && !_processingTurn) _scheduleResume();
+      return;
+    }
     final epoch = _conversationEpoch;
     _lastRecognized = '';
     _silenceTimer?.cancel();
