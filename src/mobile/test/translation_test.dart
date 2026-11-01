@@ -16,12 +16,14 @@ import 'package:expatone_app/services/tts_service.dart';
 
 class MockSpeechService implements ISpeechService {
   int starts = 0;
+  Future<void>? stopDelay;
   bool _listening = false;
   final bool _available;
   void Function(String)? _onResult;
   void Function()? _onDone;
 
-  MockSpeechService({bool available = true}) : _available = available; // ignore: prefer_initializing_formals
+  MockSpeechService({bool available = true})
+    : _available = available; // ignore: prefer_initializing_formals
 
   @override
   bool get isListening => _listening;
@@ -50,6 +52,7 @@ class MockSpeechService implements ISpeechService {
   Future<void> stopListening() async {
     _listening = false;
     _onDone?.call();
+    await stopDelay;
   }
 
   @override
@@ -111,7 +114,8 @@ const _mockTranslationResponse = {
 };
 
 TranslationService _buildService({http.Client? httpClient}) {
-  final mockClient = httpClient ??
+  final mockClient =
+      httpClient ??
       http_testing.MockClient((request) async {
         final path = request.url.path;
 
@@ -157,32 +161,19 @@ Widget _buildScreen({
 }
 
 Future<void> _tapTranslate(WidgetTester tester) async {
-  final button = find.widgetWithText(
-    ElevatedButton,
-    'Translate',
-  );
+  final button = find.widgetWithText(ElevatedButton, 'Translate');
 
   await tester.ensureVisible(button);
   await tester.pumpAndSettle();
   await tester.tap(button);
 }
 
-Future<void> _scrollIntoView(
-  WidgetTester tester,
-  Finder target,
-) async {
+Future<void> _scrollIntoView(WidgetTester tester, Finder target) async {
   final scrollable = find
-      .ancestor(
-        of: target,
-        matching: find.byType(Scrollable),
-      )
+      .ancestor(of: target, matching: find.byType(Scrollable))
       .first;
 
-  await tester.scrollUntilVisible(
-    target,
-    300,
-    scrollable: scrollable,
-  );
+  await tester.scrollUntilVisible(target, 300, scrollable: scrollable);
   await tester.pumpAndSettle();
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -196,61 +187,104 @@ void main() {
   });
 
   group('Continuous conversation', () {
-    for (final stopDuringPlayback in [false, true]) {
-      testWidgets(stopDuringPlayback
-          ? 'Stop rejects old playback completion during the next session'
-          : 'one pause translates and speaks once, then resumes listening once',
-          (tester) async {
-        final speech = MockSpeechService();
+    testWidgets(
+      'translation starts while the mic stops; speech waits for both',
+      (tester) async {
+        final stopped = Completer<void>();
+        final speech = MockSpeechService()..stopDelay = stopped.future;
         final tts = MockTtsService();
-        await tester.pumpWidget(_buildScreen(speechService: speech, ttsService: tts));
+        var requests = 0;
+        final client = http_testing.MockClient((request) async {
+          requests++;
+          return http.Response(
+            jsonEncode(_mockTranslationResponse),
+            200,
+            headers: {'content-type': 'application/json'},
+          );
+        });
+        await tester.pumpWidget(
+          _buildScreen(
+            speechService: speech,
+            ttsService: tts,
+            translationService: _buildService(httpClient: client),
+          ),
+        );
         await tester.pump();
         await tester.tap(find.text('Start conversation'));
         await tester.pump();
-        expect(speech.starts, 1);
         speech.simulateResult('Good morning');
-        await tester.pump(const Duration(milliseconds: 1999));
+        await tester.pump(const Duration(seconds: 2));
+        await tester.pump();
+        expect(requests, 1);
         expect(tts.lastSpokenText, isNull);
-        await tester.pump(const Duration(milliseconds: 1));
+        stopped.complete();
         await tester.pump();
         expect(tts.lastSpokenText, 'Selamat pagi');
-        expect(tts.lastLanguage, 'ms');
-        final oldCompletion = tts._onStopped!;
-        if (stopDuringPlayback) {
-          await tester.tap(find.text('Stop conversation'));
-          await tester.pump();
-          oldCompletion();
-          await tester.pump(const Duration(seconds: 1));
-          expect(speech.starts, 1);
-          await tester.tap(find.text('Start conversation'));
-          await tester.pump();
-          speech.simulateResult('Another phrase');
-          await tester.pump(const Duration(seconds: 2));
-          await tester.pump();
-          expect(tts.isSpeaking, isTrue);
-          oldCompletion();
-          await tester.pump(const Duration(seconds: 1));
-          expect(speech.starts, 2);
-          expect(find.text('Speaking...'), findsOneWidget);
-        } else {
-          await tts.stop(); // Complete the active fake utterance.
-          oldCompletion(); // Duplicate completion for the same turn.
-          await tester.pump(const Duration(milliseconds: 650));
-          await tester.pump(const Duration(seconds: 1));
-          expect(speech.starts, 2);
-          expect(speech.isListening, isTrue);
-        }
         await tester.tap(find.text('Stop conversation'));
         await tester.pump();
-      });
+      },
+    );
+
+    for (final stopDuringPlayback in [false, true]) {
+      testWidgets(
+        stopDuringPlayback
+            ? 'Stop rejects old playback completion during the next session'
+            : 'one pause translates and speaks once, then resumes listening once',
+        (tester) async {
+          final speech = MockSpeechService();
+          final tts = MockTtsService();
+          await tester.pumpWidget(
+            _buildScreen(speechService: speech, ttsService: tts),
+          );
+          await tester.pump();
+          await tester.tap(find.text('Start conversation'));
+          await tester.pump();
+          expect(speech.starts, 1);
+          speech.simulateResult('Good morning');
+          await tester.pump(const Duration(milliseconds: 1999));
+          expect(tts.lastSpokenText, isNull);
+          await tester.pump(const Duration(milliseconds: 1));
+          await tester.pump();
+          expect(tts.lastSpokenText, 'Selamat pagi');
+          expect(tts.lastLanguage, 'ms');
+          final oldCompletion = tts._onStopped!;
+          if (stopDuringPlayback) {
+            await tester.tap(find.text('Stop conversation'));
+            await tester.pump();
+            oldCompletion();
+            await tester.pump(const Duration(seconds: 1));
+            expect(speech.starts, 1);
+            await tester.tap(find.text('Start conversation'));
+            await tester.pump();
+            speech.simulateResult('Another phrase');
+            await tester.pump(const Duration(seconds: 2));
+            await tester.pump();
+            expect(tts.isSpeaking, isTrue);
+            oldCompletion();
+            await tester.pump(const Duration(seconds: 1));
+            expect(speech.starts, 2);
+            expect(find.text('Speaking...'), findsOneWidget);
+          } else {
+            await tts.stop(); // Complete the active fake utterance.
+            oldCompletion(); // Duplicate completion for the same turn.
+            await tester.pump(const Duration(milliseconds: 650));
+            await tester.pump(const Duration(seconds: 1));
+            expect(speech.starts, 2);
+            expect(speech.isListening, isTrue);
+          }
+          await tester.tap(find.text('Stop conversation'));
+          await tester.pump();
+        },
+      );
     }
   });
 
   group('TranslationScreen', () {
     // ── Original 11 tests (preserved unchanged) ────────────────────────────
 
-    testWidgets('renders initial state with language selectors and input',
-        (tester) async {
+    testWidgets('renders initial state with language selectors and input', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       expect(find.text('Auto-detect'), findsOneWidget);
@@ -263,8 +297,9 @@ void main() {
       expect(find.widgetWithText(ElevatedButton, 'Translate'), findsOneWidget);
     });
 
-    testWidgets('swap button is disabled when source is auto-detect',
-        (tester) async {
+    testWidgets('swap button is disabled when source is auto-detect', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       final iconButton = tester.widget<IconButton>(
@@ -273,8 +308,9 @@ void main() {
       expect(iconButton.onPressed, isNull);
     });
 
-    testWidgets('translate button is disabled when input is empty',
-        (tester) async {
+    testWidgets('translate button is disabled when input is empty', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       final button = tester.widget<ElevatedButton>(
@@ -283,8 +319,9 @@ void main() {
       expect(button.onPressed, isNull);
     });
 
-    testWidgets('translate button is enabled when input has text',
-        (tester) async {
+    testWidgets('translate button is enabled when input has text', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       await tester.enterText(find.byType(TextField), 'Good morning');
@@ -296,8 +333,9 @@ void main() {
       expect(button.onPressed, isNotNull);
     });
 
-    testWidgets('shows translation result after successful translate',
-        (tester) async {
+    testWidgets('shows translation result after successful translate', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       await tester.enterText(find.byType(TextField), 'Good morning');
@@ -370,22 +408,25 @@ void main() {
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-      completer.complete(http.Response(
-        jsonEncode(_mockTranslationResponse),
-        200,
-        headers: {'content-type': 'application/json'},
-      ));
+      completer.complete(
+        http.Response(
+          jsonEncode(_mockTranslationResponse),
+          200,
+          headers: {'content-type': 'application/json'},
+        ),
+      );
       await tester.pumpAndSettle();
     });
 
     testWidgets('copy button triggers clipboard copy', (tester) async {
       final List<MethodCall> clipboardLog = [];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform,
-              (MethodCall methodCall) async {
-        clipboardLog.add(methodCall);
-        return null;
-      });
+          .setMockMethodCallHandler(SystemChannels.platform, (
+            MethodCall methodCall,
+          ) async {
+            clipboardLog.add(methodCall);
+            return null;
+          });
 
       await tester.pumpWidget(_buildScreen());
 
@@ -400,10 +441,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pumpAndSettle();
 
-      expect(
-        clipboardLog.any((c) => c.method == 'Clipboard.setData'),
-        isTrue,
-      );
+      expect(clipboardLog.any((c) => c.method == 'Clipboard.setData'), isTrue);
       expect(find.text('Translation copied to clipboard'), findsOneWidget);
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
@@ -446,8 +484,9 @@ void main() {
       expect(find.byIcon(Icons.mic_none), findsOneWidget);
     });
 
-    testWidgets('2. renders speaker button when translation result exists',
-        (tester) async {
+    testWidgets('2. renders speaker button when translation result exists', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       // No result yet — speaker should not be visible
@@ -465,10 +504,11 @@ void main() {
       );
     });
 
-    testWidgets('3. microphone permission denied does not crash', (tester) async {
+    testWidgets('3. microphone permission denied does not crash', (
+      tester,
+    ) async {
       final unavailableSpeech = MockSpeechService(available: false);
-      await tester.pumpWidget(
-          _buildScreen(speechService: unavailableSpeech));
+      await tester.pumpWidget(_buildScreen(speechService: unavailableSpeech));
 
       await tester.tap(find.byIcon(Icons.mic_none));
       await tester.pumpAndSettle();
@@ -504,7 +544,9 @@ void main() {
       expect(listeningMic, findsOneWidget);
     });
 
-    testWidgets('6. speaker button disabled when no translation', (tester) async {
+    testWidgets('6. speaker button disabled when no translation', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       // No result → no speaker button rendered
@@ -512,8 +554,9 @@ void main() {
       expect(find.byIcon(Icons.volume_up), findsNothing);
     });
 
-    testWidgets('7. speaker button shows active state while speaking',
-        (tester) async {
+    testWidgets('7. speaker button shows active state while speaking', (
+      tester,
+    ) async {
       final tts = MockTtsService();
       await tester.pumpWidget(_buildScreen(ttsService: tts));
 
@@ -550,15 +593,17 @@ void main() {
       expect(find.byType(TranslationScreen), findsOneWidget);
     });
 
-    testWidgets('9. existing copy translation functionality still works',
-        (tester) async {
+    testWidgets('9. existing copy translation functionality still works', (
+      tester,
+    ) async {
       final List<MethodCall> clipboardLog = [];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(SystemChannels.platform,
-              (MethodCall methodCall) async {
-        clipboardLog.add(methodCall);
-        return null;
-      });
+          .setMockMethodCallHandler(SystemChannels.platform, (
+            MethodCall methodCall,
+          ) async {
+            clipboardLog.add(methodCall);
+            return null;
+          });
 
       await tester.pumpWidget(_buildScreen());
 
@@ -573,17 +618,15 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pumpAndSettle();
 
-      expect(
-        clipboardLog.any((c) => c.method == 'Clipboard.setData'),
-        isTrue,
-      );
+      expect(clipboardLog.any((c) => c.method == 'Clipboard.setData'), isTrue);
 
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(SystemChannels.platform, null);
     });
 
-    testWidgets('10. existing translation functionality still works',
-        (tester) async {
+    testWidgets('10. existing translation functionality still works', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       await tester.enterText(find.byType(TextField), 'Good morning');
@@ -608,8 +651,9 @@ void main() {
       expect(find.text('Malay'), findsOneWidget);
     });
 
-    testWidgets('12. existing 5000-character validation still works',
-        (tester) async {
+    testWidgets('12. existing 5000-character validation still works', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildScreen());
 
       expect(find.text('0 / 5000'), findsOneWidget);
@@ -636,8 +680,7 @@ class _BrokenStartSpeechService implements ISpeechService {
     required String languageCode,
     required void Function(String text) onResult,
     required void Function() onDone,
-  }) async =>
-      false; // simulates a failed start
+  }) async => false; // simulates a failed start
   @override
   Future<void> stopListening() async {}
   @override

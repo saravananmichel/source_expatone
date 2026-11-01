@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/services/document_service.dart';
 import '../../core/services/reminder_service.dart';
 import '../../core/theme/app_theme.dart';
@@ -7,6 +8,7 @@ import 'document_detail_screen.dart';
 import '../family/family_screen.dart';
 import '../applications/application_assistant_screen.dart';
 import '../../core/services/family_service.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 class DocumentsScreen extends StatefulWidget {
@@ -14,7 +16,12 @@ class DocumentsScreen extends StatefulWidget {
   final ReminderService? reminderService;
   final void Function(Widget screen)? onOpenNested;
 
-  const DocumentsScreen({super.key, required this.documentService, this.reminderService, this.onOpenNested});
+  const DocumentsScreen({
+    super.key,
+    required this.documentService,
+    this.reminderService,
+    this.onOpenNested,
+  });
 
   @override
   State<DocumentsScreen> createState() => _DocumentsScreenState();
@@ -35,51 +42,86 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   final Map<String, String?> _memberPhotos = {};
 
   Widget _personAvatar(String email, {String? userId}) {
-    final url = userId == null ? null : (_memberPhotos[userId] ?? (_familyDashboardDocs ?? <FamilyDashboardDocument>[]).where((d) => d.owner.id == userId).map((d) => d.owner.profilePhotoUrl).whereType<String>().firstOrNull);
-    return CircleAvatar(radius: 21,
+    final url = userId == null
+        ? null
+        : (_memberPhotos[userId] ??
+              (_familyDashboardDocs ?? <FamilyDashboardDocument>[])
+                  .where((d) => d.owner.id == userId)
+                  .map((d) => d.owner.profilePhotoUrl)
+                  .whereType<String>()
+                  .firstOrNull);
+    return CircleAvatar(
+      radius: 21,
       foregroundImage: url == null || url.isEmpty ? null : NetworkImage(url),
-      child: Text(email.isEmpty ? '?' : email[0].toUpperCase()));
+      child: Text(email.isEmpty ? '?' : email[0].toUpperCase()),
+    );
   }
 
   Future<void> _loadMemberPhotos(List<FamilyRequest> requests) async {
     final people = <String, FamilyUser>{};
-    for (final request in requests.where((r) => r.status == 'Accepted' && !r.isExpired)) {
+    for (final request in requests.where(
+      (r) => r.status == 'Accepted' && !r.isExpired,
+    )) {
       final person = request.isIncoming ? request.requester : request.recipient;
       people[person.id] = person;
     }
     for (final person in people.values) {
       if (_memberPhotos.containsKey(person.id)) continue;
-      final url = await widget.documentService.familyService.memberPhotoUrl(person.id);
+      final url = await widget.documentService.familyService.memberPhotoUrl(
+        person.id,
+      );
       if (!mounted) return;
       setState(() => _memberPhotos[person.id] = url);
     }
   }
 
-  Widget _richTable(List<DataColumn> columns, List<DataRow> rows) =>
-    SizedBox(width: double.infinity, child: Align(alignment: Alignment.centerLeft,
+  Widget _richTable(List<DataColumn> columns, List<DataRow> rows) => SizedBox(
+    width: double.infinity,
+    child: Align(
+      alignment: Alignment.centerLeft,
       child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF2FF)),
-        dataRowMinHeight: 56, dataRowMaxHeight: 72,
-        dividerThickness: 0.5, columnSpacing: 38,
-        showBottomBorder: true, columns: columns, rows: rows))));
+        scrollDirection: Axis.horizontal,
+        child: DataTable(
+          headingRowColor: WidgetStateProperty.all(const Color(0xFFEAF2FF)),
+          dataRowMinHeight: 56,
+          dataRowMaxHeight: 72,
+          dividerThickness: 0.5,
+          columnSpacing: 38,
+          showBottomBorder: true,
+          columns: columns,
+          rows: rows,
+        ),
+      ),
+    ),
+  );
 
   Future<void> _showDocumentPreview(DocumentItem document) async {
-    await showDialog<void>(context: context, builder: (dialogContext) => Dialog(
-      insetPadding: const EdgeInsets.all(20),
-      child: SizedBox(width: 950, height: 680, child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: DocumentDetailScreen(document: document,
-          documentService: widget.documentService,
-          reminderService: widget.reminderService))),
-    ));
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        insetPadding: const EdgeInsets.all(20),
+        child: SizedBox(
+          width: 950,
+          height: 680,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: DocumentDetailScreen(
+              document: document,
+              documentService: widget.documentService,
+              reminderService: widget.reminderService,
+            ),
+          ),
+        ),
+      ),
+    );
     if (mounted) _loadDocuments();
   }
 
-
   Future<List<DocumentShare>> _recipientsFor(String documentId) =>
-      _shareRecipients.putIfAbsent(documentId, () => widget.documentService.getShares(documentId));
+      _shareRecipients.putIfAbsent(
+        documentId,
+        () => widget.documentService.getShares(documentId),
+      );
 
   @override
   void initState() {
@@ -93,32 +135,52 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     // Each future handles its own error immediately (no unhandled rejection
     // while another network request is still pending).
     await Future.wait<void>([
-      widget.documentService.familyService.dashboard().then((family) {
-        if (mounted) setState(() => _familyDashboardDocs = family);
-      }).catchError((Object _) {
-        if (mounted) setState(() => _familyDashboardDocs = []);
-      }),
-      widget.documentService.getSharedWithMe().then((direct) {
-        if (mounted) setState(() { _sharedWithMe = direct; _sharedTabError = null; });
-      }).catchError((Object _) {
-        if (mounted) setState(() {
-          _sharedWithMe = [];
-          _sharedTabError = 'Unable to load direct shares. Retry to refresh.';
-        });
-      }),
-      widget.documentService.familyService.requests().then((requests) async {
-        if (mounted) setState(() { _familyRequests = requests; _tabError = null; });
-        try {
-          await _loadMemberPhotos(requests);
-        } catch (_) {
-          // Profile photos are optional; keep family requests available.
-        }
-      }).catchError((Object _) {
-        if (mounted) setState(() {
-          _familyRequests = [];
-          _tabError = 'Unable to load family requests. Retry to refresh.';
-        });
-      }),
+      widget.documentService.familyService
+          .dashboard()
+          .then((family) {
+            if (mounted) setState(() => _familyDashboardDocs = family);
+          })
+          .catchError((Object _) {
+            if (mounted) setState(() => _familyDashboardDocs = []);
+          }),
+      widget.documentService
+          .getSharedWithMe()
+          .then((direct) {
+            if (mounted)
+              setState(() {
+                _sharedWithMe = direct;
+                _sharedTabError = null;
+              });
+          })
+          .catchError((Object _) {
+            if (mounted)
+              setState(() {
+                _sharedWithMe = [];
+                _sharedTabError =
+                    'Unable to load direct shares. Retry to refresh.';
+              });
+          }),
+      widget.documentService.familyService
+          .requests()
+          .then((requests) async {
+            if (mounted)
+              setState(() {
+                _familyRequests = requests;
+                _tabError = null;
+              });
+            try {
+              await _loadMemberPhotos(requests);
+            } catch (_) {
+              // Profile photos are optional; keep family requests available.
+            }
+          })
+          .catchError((Object _) {
+            if (mounted)
+              setState(() {
+                _familyRequests = [];
+                _tabError = 'Unable to load family requests. Retry to refresh.';
+              });
+          }),
     ]);
   }
 
@@ -152,7 +214,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => AddDocumentScreen(documentService: widget.documentService),
+        builder: (_) =>
+            AddDocumentScreen(documentService: widget.documentService),
       ),
     );
     if (result == true) _loadDocuments();
@@ -174,10 +237,19 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const labels = ['My Documents', 'Shared With Me', 'Shared By Me', 'Requests'];
+    const labels = [
+      'My Documents',
+      'Shared With Me',
+      'Shared By Me',
+      'Requests',
+    ];
     return Scaffold(
       appBar: AppBar(
-        title: Text(_selected.isEmpty ? 'Document Wallet' : '${_selected.length} selected'),
+        title: Text(
+          _selected.isEmpty
+              ? 'Document Wallet'
+              : '${_selected.length} selected',
+        ),
         actions: [
           PopupMenuButton<String>(
             tooltip: 'Wallet actions',
@@ -186,23 +258,36 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               switch (action) {
                 case 'application':
                   if (_selected.isEmpty || _isLoading || _error != null) return;
-                  final application = ApplicationAssistantScreen(documentService: widget.documentService,
-                    selectedDocumentIds: _selected.toList());
+                  final application = ApplicationAssistantScreen(
+                    documentService: widget.documentService,
+                    selectedDocumentIds: _selected.toList(),
+                  );
                   if (widget.onOpenNested != null) {
                     widget.onOpenNested!(application);
                   } else {
-                    await Navigator.push(context, MaterialPageRoute(builder: (_) => application));
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => application),
+                    );
                   }
                   if (mounted) _loadDocuments();
                 case 'family':
-                  final family = FamilyScreen(documentService: widget.documentService,
-                    onOpenNested: widget.onOpenNested);
+                  final family = FamilyScreen(
+                    documentService: widget.documentService,
+                    onOpenNested: widget.onOpenNested,
+                  );
                   if (widget.onOpenNested != null) {
                     widget.onOpenNested!(family);
                   } else {
-                    await Navigator.push(context, MaterialPageRoute(builder: (_) => family));
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => family),
+                    );
                   }
-                  if (mounted) { _loadDocuments(); _loadWalletExtras(); }
+                  if (mounted) {
+                    _loadDocuments();
+                    _loadWalletExtras();
+                  }
                 case 'refresh':
                   _loadDocuments();
                   _loadWalletExtras();
@@ -211,31 +296,56 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               }
             },
             itemBuilder: (_) => [
-              PopupMenuItem(value: 'application', enabled: _selected.isNotEmpty && !_isLoading && _error == null,
-                child: const Text('Prepare application')),
-              const PopupMenuItem(value: 'family', child: Text('Friends & Family')),
-              const PopupMenuItem(value: 'refresh', child: Text('Refresh wallet')),
+              PopupMenuItem(
+                value: 'application',
+                enabled: _selected.isNotEmpty && !_isLoading && _error == null,
+                child: const Text('Prepare application'),
+              ),
+              const PopupMenuItem(
+                value: 'family',
+                child: Text('Friends & Family'),
+              ),
+              const PopupMenuItem(
+                value: 'refresh',
+                child: Text('Refresh wallet'),
+              ),
               const PopupMenuItem(value: 'add', child: Text('Add document')),
             ],
           ),
         ],
       ),
-      body: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        Padding(padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text('Secure documents and family sharing',
-            style: Theme.of(context).textTheme.bodyMedium)),
-        SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          scrollDirection: Axis.horizontal,
-          child: Row(children: [
-            for (var i = 0; i < labels.length; i++)
-              Padding(padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(label: Text(labels[i]), selected: _walletTab == i,
-                  onSelected: (_) => setState(() => _walletTab = i))),
-          ]),
-        ),
-        Expanded(child: _walletTab == 0 ? _myDocumentsBody() : _sharingBody()),
-      ]),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: Text(
+              'Secure documents and family sharing',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var i = 0; i < labels.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(labels[i]),
+                      selected: _walletTab == i,
+                      onSelected: (_) => setState(() => _walletTab = i),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _walletTab == 0 ? _myDocumentsBody() : _sharingBody(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -243,51 +353,129 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     if (_isLoading) return const Center(child: CircularProgressIndicator());
     if (_error != null) return _buildErrorState();
     if (_documents == null || _documents!.isEmpty) return _buildEmptyState();
-    return LayoutBuilder(builder: (context, constraints) {
-      if (constraints.maxWidth < 650) return _buildDocumentList();
-      final docs = _documents!.where((d) => !d.isSharedWithMe).toList();
-      return RefreshIndicator(onRefresh: _loadDocuments,
-        child: ListView(padding: const EdgeInsets.all(16), children: [
-          Card(
-              clipBehavior: Clip.antiAlias,
-              child: _richTable(const [
-              DataColumn(label: Text('Document')),
-              DataColumn(label: Text('Type')),
-              DataColumn(label: Text('Expiry Date')),
-              DataColumn(label: Text('Sharing')),
-              DataColumn(label: Text('Actions')),
-            ], docs.map((doc) => DataRow(cells: [
-              DataCell(Row(children: [
-                Checkbox(value: _selected.contains(doc.id), onChanged: (v) =>
-                  setState(() { if (v == true) { _selected.add(doc.id); } else { _selected.remove(doc.id); } })),
-                const Icon(Icons.description_outlined, color: Color(0xFF2563EB)),
-                const SizedBox(width: 8),
-                SizedBox(width: 180, child: Text(doc.name, overflow: TextOverflow.ellipsis)),
-              ])),
-              DataCell(Text(doc.documentType)),
-              DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
-              DataCell(Text(doc.activeShareCount > 0 ? 'Shared' : 'Private')),
-              DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
-            ])).toList()),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 650) return _buildDocumentList();
+        final docs = _documents!.where((d) => !d.isSharedWithMe).toList();
+        return RefreshIndicator(
+          onRefresh: _loadDocuments,
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              Card(
+                clipBehavior: Clip.antiAlias,
+                child: _richTable(
+                  const [
+                    DataColumn(label: Text('Document')),
+                    DataColumn(label: Text('Type')),
+                    DataColumn(label: Text('Expiry Date')),
+                    DataColumn(label: Text('Sharing')),
+                    DataColumn(label: Text('Actions')),
+                  ],
+                  docs
+                      .map(
+                        (doc) => DataRow(
+                          cells: [
+                            DataCell(
+                              Row(
+                                children: [
+                                  Checkbox(
+                                    value: _selected.contains(doc.id),
+                                    onChanged: (v) => setState(() {
+                                      if (v == true) {
+                                        _selected.add(doc.id);
+                                      } else {
+                                        _selected.remove(doc.id);
+                                      }
+                                    }),
+                                  ),
+                                  const Icon(
+                                    Icons.description_outlined,
+                                    color: Color(0xFF2563EB),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  SizedBox(
+                                    width: 180,
+                                    child: Text(
+                                      doc.name,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            DataCell(Text(doc.documentType)),
+                            DataCell(
+                              Text(
+                                doc.expiryDate == null
+                                    ? '—'
+                                    : _formatWalletDate(doc.expiryDate!),
+                              ),
+                            ),
+                            DataCell(
+                              Text(
+                                doc.activeShareCount > 0 ? 'Shared' : 'Private',
+                              ),
+                            ),
+                            DataCell(
+                              TextButton.icon(
+                                onPressed: () => _showDocumentPreview(doc),
+                                icon: const Icon(
+                                  Icons.visibility_outlined,
+                                  size: 18,
+                                ),
+                                label: const Text('Preview'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ],
           ),
-        ]));
-    });
+        );
+      },
+    );
   }
 
   String _formatWalletDate(DateTime date) =>
-    '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   Widget _sharingBody() {
-    if (_walletTab == 1 && _sharedTabError != null && (_familyDashboardDocs ?? []).isEmpty) {
-      return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-        Text(_sharedTabError!),
-        TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
-      ]));
+    if (_walletTab == 1 &&
+        _sharedTabError != null &&
+        (_familyDashboardDocs ?? []).isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_sharedTabError!),
+            TextButton(
+              onPressed: _loadWalletExtras,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
     }
-    if (_walletTab == 3 && _tabError != null) return Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-      Text(_tabError!), TextButton(onPressed: _loadWalletExtras, child: const Text('Retry')),
-    ]));
-    if ((_walletTab == 1 && _sharedWithMe == null && _familyDashboardDocs == null) ||
+    if (_walletTab == 3 && _tabError != null)
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_tabError!),
+            TextButton(
+              onPressed: _loadWalletExtras,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    if ((_walletTab == 1 &&
+            _sharedWithMe == null &&
+            _familyDashboardDocs == null) ||
         (_walletTab == 2 && _isLoading) ||
         (_walletTab == 3 && _familyRequests == null)) {
       return const Center(child: CircularProgressIndicator());
@@ -296,175 +484,377 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       final direct = _sharedWithMe ?? [];
       final directIds = direct.map((d) => d.documentId).toSet();
       final family = (_familyDashboardDocs ?? [])
-          .where((d) => !d.isOwned && !directIds.contains(d.id)).toList();
+          .where((d) => !d.isOwned && !directIds.contains(d.id))
+          .toList();
       if (direct.isEmpty && family.isEmpty) {
         return const Center(child: Text('No documents shared with you yet.'));
       }
-      return ListView(padding: const EdgeInsets.all(16), children: [
-        for (final ownerId in family.map((d) => d.owner.id).toSet())
-          Card(child: ExpansionTile(
-          leading: _personAvatar(family.firstWhere((d) => d.owner.id == ownerId).owner.email, userId: ownerId),
-          title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
-          subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
-          children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-            child: _richTable(const [
-              DataColumn(label: Text('Document')),
-              DataColumn(label: Text('Type')),
-              DataColumn(label: Text('Expiry Date')),
-              DataColumn(label: Text('Sharing')),
-              DataColumn(label: Text('Actions')),
-            ], family.where((d) => d.owner.id == ownerId).map((d) => DataRow(cells: [
-              DataCell(Text(d.name)),
-              DataCell(Text(d.documentType)),
-              DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
-              const DataCell(Text('Family access')),
-              DataCell(TextButton(onPressed: () async {
-                try {
-                  final document = await widget.documentService.getDocument(d.id);
-                  if (!context.mounted) return;
-                  await _showDocumentPreview(document);
-                } catch (_) {
-                  if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Unable to open family document.')));
-                }
-              }, child: const Text('View'))),
-            ])).toList()))],
-        )),
-        for (final owner in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
-          Card(child: ExpansionTile(
-            initiallyExpanded: true,
-            leading: _personAvatar(owner, userId: (() { for (final r in _familyRequests ?? <FamilyRequest>[]) { final person = r.isIncoming ? r.requester : r.recipient; if (person.email.toLowerCase() == owner.toLowerCase()) return person.id; } return null; })()),
-            title: Text('${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
-            subtitle: const Text('Direct document shares'),
-            children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-              child: _richTable(const [
-                DataColumn(label: Text('Document')),
-                DataColumn(label: Text('Type')),
-                DataColumn(label: Text('Expiry Date')),
-                DataColumn(label: Text('Sharing')),
-                DataColumn(label: Text('Actions')),
-              ], direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner)
-                .map((d) => DataRow(cells: [
-                  DataCell(Text(d.documentName)),
-                  DataCell(Text(d.documentType)),
-                  DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
-                  DataCell(Text(d.permission)),
-                  DataCell(TextButton.icon(onPressed: () => _showSharedPreview(d), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
-                ])).toList()))],
-          )),
-      ]);
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          for (final ownerId in family.map((d) => d.owner.id).toSet())
+            Card(
+              child: ExpansionTile(
+                leading: _personAvatar(
+                  family.firstWhere((d) => d.owner.id == ownerId).owner.email,
+                  userId: ownerId,
+                ),
+                title: Text(
+                  '${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})',
+                ),
+                subtitle: Text(
+                  family.firstWhere((d) => d.owner.id == ownerId).owner.email,
+                ),
+                children: [
+                  _richTable(
+                    const [
+                      DataColumn(label: Text('Document')),
+                      DataColumn(label: Text('Type')),
+                      DataColumn(label: Text('Expiry Date')),
+                      DataColumn(label: Text('Sharing')),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    family
+                        .where((d) => d.owner.id == ownerId)
+                        .map(
+                          (d) => DataRow(
+                            cells: [
+                              DataCell(Text(d.name)),
+                              DataCell(Text(d.documentType)),
+                              DataCell(
+                                Text(
+                                  d.expiryDate == null
+                                      ? '—'
+                                      : _formatWalletDate(d.expiryDate!),
+                                ),
+                              ),
+                              const DataCell(Text('Family access')),
+                              DataCell(
+                                TextButton(
+                                  onPressed: () async {
+                                    try {
+                                      final document = await widget
+                                          .documentService
+                                          .getDocument(d.id);
+                                      if (!context.mounted) return;
+                                      await _showDocumentPreview(document);
+                                    } catch (_) {
+                                      if (context.mounted)
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Unable to open family document.',
+                                            ),
+                                          ),
+                                        );
+                                    }
+                                  },
+                                  child: const Text('View'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+          for (final owner
+              in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
+            Card(
+              child: ExpansionTile(
+                initiallyExpanded: true,
+                leading: _personAvatar(
+                  owner,
+                  userId: (() {
+                    for (final r in _familyRequests ?? <FamilyRequest>[]) {
+                      final person = r.isIncoming ? r.requester : r.recipient;
+                      if (person.email.toLowerCase() == owner.toLowerCase())
+                        return person.id;
+                    }
+                    return null;
+                  })(),
+                ),
+                title: Text(
+                  '${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})',
+                ),
+                subtitle: const Text('Direct document shares'),
+                children: [
+                  _richTable(
+                    const [
+                      DataColumn(label: Text('Document')),
+                      DataColumn(label: Text('Type')),
+                      DataColumn(label: Text('Expiry Date')),
+                      DataColumn(label: Text('Sharing')),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    direct
+                        .where(
+                          (d) => (d.ownerEmail ?? 'Shared contact') == owner,
+                        )
+                        .map(
+                          (d) => DataRow(
+                            cells: [
+                              DataCell(Text(d.documentName)),
+                              DataCell(Text(d.documentType)),
+                              DataCell(
+                                Text(
+                                  d.expiryDate == null
+                                      ? '—'
+                                      : _formatWalletDate(d.expiryDate!),
+                                ),
+                              ),
+                              DataCell(Text(d.permission)),
+                              DataCell(
+                                TextButton.icon(
+                                  onPressed: () => _showSharedPreview(d),
+                                  icon: const Icon(
+                                    Icons.visibility_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('Preview'),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      );
     }
     if (_walletTab == 2) {
       // Incoming requests are accepted by this account and grant access to its documents.
       // Outgoing requests describe documents owned by the other account.
       final activeFamily = (_familyRequests ?? [])
-          .where((r) => r.status == 'Accepted' && !r.isExpired && r.isIncoming).toList();
+          .where((r) => r.status == 'Accepted' && !r.isExpired && r.isIncoming)
+          .toList();
       final familyDocumentIds = <String>{
         for (final r in activeFamily) ...r.documentIds,
       };
-      final docs = (_documents ?? []).where((d) => !d.isSharedWithMe &&
-          (d.activeShareCount > 0 || familyDocumentIds.contains(d.id))).toList();
-      if (docs.isEmpty) return const Center(child: Text('No documents shared by you yet.'));
-      return ListView(padding: const EdgeInsets.all(16), children: [
-        Card(
+      final docs = (_documents ?? [])
+          .where(
+            (d) =>
+                !d.isSharedWithMe &&
+                (d.activeShareCount > 0 || familyDocumentIds.contains(d.id)),
+          )
+          .toList();
+      if (docs.isEmpty)
+        return const Center(child: Text('No documents shared by you yet.'));
+      return ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          Card(
             clipBehavior: Clip.antiAlias,
-            child: _richTable(const [
-            DataColumn(label: Text('Document')),
-            DataColumn(label: Text('Type')),
-            DataColumn(label: Text('Expiry Date')),
-            DataColumn(label: Text('Sharing')),
-            DataColumn(label: Text('Actions')),
-          ], docs.map((doc) => DataRow(cells: [
-            DataCell(Text(doc.name)),
-            DataCell(Text(doc.documentType)),
-            DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
-            DataCell(Text(doc.activeShareCount > 0 ? '${doc.activeShareCount} direct' : 'Family')),
-            DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
-          ])).toList())),
-        for (final doc in docs) Card(child: ExpansionTile(
-          leading: const Icon(Icons.folder_shared_outlined),
-          title: Text(doc.name),
-          subtitle: const Text('View sharing recipients'),
-          children: [
-            for (final request in activeFamily.where((r) => r.documentIds.contains(doc.id)))
-              ListTile(
-                leading: _personAvatar(request.requester.email, userId: request.requester.id),
-                title: Text(request.isIncoming
-                    ? (request.requester.displayName ?? request.requester.email)
-                    : (request.recipient.displayName ?? request.recipient.email)),
-                subtitle: Text('${request.relationship} • Family access'),
-              ),
-            if (doc.activeShareCount > 0) FutureBuilder<List<DocumentShare>>(
-              future: _recipientsFor(doc.id),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) return const ListTile(title: Text('Unable to load direct recipients'));
-                if (!snapshot.hasData) return const ListTile(title: Text('Loading recipients...'));
-                return Column(children: [for (final share in snapshot.data!.where((x) => x.isActive))
-                  ListTile(title: Text(share.sharedWithEmail ?? share.sharedWithUserId),
-                    subtitle: Text(share.permission))]);
-              },
+            child: _richTable(
+              const [
+                DataColumn(label: Text('Document')),
+                DataColumn(label: Text('Type')),
+                DataColumn(label: Text('Expiry Date')),
+                DataColumn(label: Text('Sharing')),
+                DataColumn(label: Text('Actions')),
+              ],
+              docs
+                  .map(
+                    (doc) => DataRow(
+                      cells: [
+                        DataCell(Text(doc.name)),
+                        DataCell(Text(doc.documentType)),
+                        DataCell(
+                          Text(
+                            doc.expiryDate == null
+                                ? '—'
+                                : _formatWalletDate(doc.expiryDate!),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            doc.activeShareCount > 0
+                                ? '${doc.activeShareCount} direct'
+                                : 'Family',
+                          ),
+                        ),
+                        DataCell(
+                          TextButton.icon(
+                            onPressed: () => _showDocumentPreview(doc),
+                            icon: const Icon(
+                              Icons.visibility_outlined,
+                              size: 18,
+                            ),
+                            label: const Text('Preview'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .toList(),
             ),
-          ],
-        )),
-      ]);
+          ),
+          for (final doc in docs)
+            Card(
+              child: ExpansionTile(
+                leading: const Icon(Icons.folder_shared_outlined),
+                title: Text(doc.name),
+                subtitle: const Text('View sharing recipients'),
+                children: [
+                  for (final request in activeFamily.where(
+                    (r) => r.documentIds.contains(doc.id),
+                  ))
+                    ListTile(
+                      leading: _personAvatar(
+                        request.requester.email,
+                        userId: request.requester.id,
+                      ),
+                      title: Text(
+                        request.isIncoming
+                            ? (request.requester.displayName ??
+                                  request.requester.email)
+                            : (request.recipient.displayName ??
+                                  request.recipient.email),
+                      ),
+                      subtitle: Text('${request.relationship} • Family access'),
+                    ),
+                  if (doc.activeShareCount > 0)
+                    FutureBuilder<List<DocumentShare>>(
+                      future: _recipientsFor(doc.id),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError)
+                          return const ListTile(
+                            title: Text('Unable to load direct recipients'),
+                          );
+                        if (!snapshot.hasData)
+                          return const ListTile(
+                            title: Text('Loading recipients...'),
+                          );
+                        return Column(
+                          children: [
+                            for (final share in snapshot.data!.where(
+                              (x) => x.isActive,
+                            ))
+                              ListTile(
+                                title: Text(
+                                  share.sharedWithEmail ??
+                                      share.sharedWithUserId,
+                                ),
+                                subtitle: Text(share.permission),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                ],
+              ),
+            ),
+        ],
+      );
     }
     final requests = _familyRequests ?? [];
     final filtered = requests.where((r) => r.status == 'Pending').toList();
-    if (filtered.isEmpty) return Center(child: Text(
-      'No pending connection requests.'));
-    return ListView(padding: const EdgeInsets.all(16), children: [
-      for (final r in filtered) Card(child: ListTile(
-        leading: Icon(Icons.mark_email_unread_outlined,
-          color: const Color(0xFF2563EB)),
-        title: Text(r.isIncoming ? (r.requester.displayName ?? r.requester.email)
-          : (r.recipient.displayName ?? r.recipient.email)),
-        subtitle: Text('${r.relationship} • ${r.status} • ${r.documentIds.length} document(s)'),
-        trailing: const Icon(Icons.chevron_right),
-        onTap: () async {
-          final family = FamilyScreen(documentService: widget.documentService,
-            onOpenNested: widget.onOpenNested);
-          if (widget.onOpenNested != null) {
-            widget.onOpenNested!(family);
-          } else {
-            await Navigator.push(context, MaterialPageRoute(builder: (_) => family));
-          }
-          if (mounted) _loadWalletExtras();
-        },
-      )),
-    ]);
+    if (filtered.isEmpty)
+      return Center(child: Text('No pending connection requests.'));
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        for (final r in filtered)
+          Card(
+            child: ListTile(
+              leading: Icon(
+                Icons.mark_email_unread_outlined,
+                color: const Color(0xFF2563EB),
+              ),
+              title: Text(
+                r.isIncoming
+                    ? (r.requester.displayName ?? r.requester.email)
+                    : (r.recipient.displayName ?? r.recipient.email),
+              ),
+              subtitle: Text(
+                '${r.relationship} • ${r.status} • ${r.documentIds.length} document(s)',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () async {
+                final family = FamilyScreen(
+                  documentService: widget.documentService,
+                  onOpenNested: widget.onOpenNested,
+                );
+                if (widget.onOpenNested != null) {
+                  widget.onOpenNested!(family);
+                } else {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => family),
+                  );
+                }
+                if (mounted) _loadWalletExtras();
+              },
+            ),
+          ),
+      ],
+    );
   }
 
   Future<void> _showSharedPreview(SharedDocument doc) async {
-    await showDialog<void>(context: context, builder: (dialogContext) => AlertDialog(
-      title: Text(doc.documentName),
-      content: SizedBox(width: 440, child: Column(mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Owner: ${doc.ownerEmail ?? 'Shared contact'}'),
-          const SizedBox(height: 8),
-          Text('Type: ${doc.documentType}'),
-          Text('Permission: ${doc.permission}'),
-          Text('Expiry: ${doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!)}'),
-          const SizedBox(height: 12),
-          const Text('The document opens securely in your browser using its access link.'),
-        ])),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Close')),
-        FilledButton.icon(onPressed: () { Navigator.pop(dialogContext); _openShared(doc); },
-          icon: const Icon(Icons.open_in_new), label: const Text('Open document')),
-      ],
-    ));
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(doc.documentName),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Owner: ${doc.ownerEmail ?? 'Shared contact'}'),
+              const SizedBox(height: 8),
+              Text('Type: ${doc.documentType}'),
+              Text('Permission: ${doc.permission}'),
+              Text(
+                'Expiry: ${doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!)}',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'The document opens securely in your browser using its access link.',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _openShared(doc);
+            },
+            icon: const Icon(Icons.open_in_new),
+            label: const Text('Open document'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _openShared(SharedDocument doc) async {
     try {
-      final url = await widget.documentService.getSharedDocumentAccessUrl(doc.documentId);
+      final url = await widget.documentService.getSharedDocumentAccessUrl(
+        doc.documentId,
+      );
       final uri = Uri.parse(url);
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         throw StateError('Unable to launch document');
       }
     } catch (_) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Unable to open shared document.')));
+      if (mounted)
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to open shared document.')),
+        );
     }
   }
 
@@ -490,7 +880,11 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.folder_open_outlined, size: 72, color: AppTheme.textSecondary.withValues(alpha: 0.5)),
+            Icon(
+              Icons.folder_open_outlined,
+              size: 72,
+              color: AppTheme.textSecondary.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 24),
             Text(
               'No documents yet',
@@ -500,9 +894,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             Text(
               'Keep your important documents safely\nin one place.',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: AppTheme.textSecondary,
-                  ),
+              style: Theme.of(context).textTheme.bodyLarge
+                  ?.copyWith(color: AppTheme.textSecondary),
             ),
             const SizedBox(height: 24),
             ElevatedButton.icon(
@@ -524,10 +917,27 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
         itemCount: _documents!.length,
         itemBuilder: (context, index) {
           final doc = _documents![index];
-          return Row(children: [
-            Checkbox(semanticLabel: 'Select ${doc.name} for an application', value: _selected.contains(doc.id), onChanged: (value) => setState(() { if (value == true) { _selected.add(doc.id); } else { _selected.remove(doc.id); } })),
-            Expanded(child: _DocumentCard(document: doc, onTap: () => _navigateToDetail(doc))),
-          ]);
+          return Row(
+            children: [
+              Checkbox(
+                semanticLabel: 'Select ${doc.name} for an application',
+                value: _selected.contains(doc.id),
+                onChanged: (value) => setState(() {
+                  if (value == true) {
+                    _selected.add(doc.id);
+                  } else {
+                    _selected.remove(doc.id);
+                  }
+                }),
+              ),
+              Expanded(
+                child: _DocumentCard(
+                  document: doc,
+                  onTap: () => _navigateToDetail(doc),
+                ),
+              ),
+            ],
+          );
         },
       ),
     );
@@ -580,8 +990,11 @@ class _DocumentCard extends StatelessWidget {
                   color: AppTheme.primaryColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(_iconForType(document.documentType),
-                    color: AppTheme.primaryColor, size: 22),
+                child: Icon(
+                  _iconForType(document.documentType),
+                  color: AppTheme.primaryColor,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -593,11 +1006,17 @@ class _DocumentCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             document.name,
-                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
                           ),
                         ),
                         if (isExpired)
-                          _StatusBadge(label: 'EXPIRED', color: AppTheme.errorColor)
+                          _StatusBadge(
+                            label: 'EXPIRED',
+                            color: AppTheme.errorColor,
+                          )
                         else if (isExpiringSoon)
                           _StatusBadge(label: 'EXPIRING', color: Colors.orange),
                       ],
@@ -608,33 +1027,62 @@ class _DocumentCard extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     if (document.isSharedWithMe)
-                      Text('Family • ${document.ownerDisplayName ?? document.ownerEmail ?? "Shared"} • Read-only',
-                        style: const TextStyle(fontSize: 12)),
+                      Text(
+                        'Family • ${document.ownerDisplayName ?? document.ownerEmail ?? "Shared"} • Read-only',
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     if (document.expiryDate != null) ...[
                       const SizedBox(height: 2),
                       Text(
                         'Expires: ${_formatDate(document.expiryDate!)}',
                         style: TextStyle(
                           fontSize: 12,
-                          color: isExpired ? AppTheme.errorColor : isExpiringSoon ? Colors.orange : AppTheme.textSecondary,
-                          fontWeight: (isExpired || isExpiringSoon) ? FontWeight.w600 : FontWeight.normal,
+                          color: isExpired
+                              ? AppTheme.errorColor
+                              : isExpiringSoon
+                              ? Colors.orange
+                              : AppTheme.textSecondary,
+                          fontWeight: (isExpired || isExpiringSoon)
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
-                    if (document.versionCount > 1 || document.activeShareCount > 0) ...[
+                    if (document.versionCount > 1 ||
+                        document.activeShareCount > 0) ...[
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           if (document.versionCount > 1) ...[
-                            Icon(Icons.history, size: 12, color: AppTheme.textSecondary),
+                            Icon(
+                              Icons.history,
+                              size: 12,
+                              color: AppTheme.textSecondary,
+                            ),
                             const SizedBox(width: 3),
-                            Text('v${document.versionCount}', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                            Text(
+                              'v${document.versionCount}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
                             const SizedBox(width: 8),
                           ],
                           if (document.activeShareCount > 0) ...[
-                            Icon(Icons.people_outline, size: 12, color: AppTheme.textSecondary),
+                            Icon(
+                              Icons.people_outline,
+                              size: 12,
+                              color: AppTheme.textSecondary,
+                            ),
                             const SizedBox(width: 3),
-                            Text('Shared', style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                            Text(
+                              'Shared',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
                           ],
                         ],
                       ),
@@ -651,8 +1099,20 @@ class _DocumentCard extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
@@ -673,7 +1133,11 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
