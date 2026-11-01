@@ -80,7 +80,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _ttsService = widget.ttsService ?? TtsService();
     _ttsService.onStopped = () {
       if (mounted) setState(() => _isSpeaking = false);
-      _resumeConversation();
     };
     _initSpeech();
   }
@@ -100,7 +99,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _inputController.dispose();
     // Clear callback before stop() to avoid setState on a disposed element.
     _ttsService.onStopped = null;
-    _ttsService.stop();
     _speechService.dispose();
     _ttsService.dispose();
     super.dispose();
@@ -356,6 +354,7 @@ Future<void> _toggleListening() async {
     _processingTurn = true;
     setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
     final epoch = _conversationEpoch;
+    final turn = _turnNumber;
     await _speechService.stopListening();
     try {
       final result = await widget.translationService.translate(
@@ -363,8 +362,13 @@ Future<void> _toggleListening() async {
         targetLanguage: _targetLanguage);
       if (!mounted || !_conversationMode || epoch != _conversationEpoch) return;
       setState(() { _result = result; _isLoading = false; _isSpeaking = true; _voiceStatus = 'Speaking...'; });
+      _ttsService.onStopped = () {
+        if (mounted && _conversationMode && epoch == _conversationEpoch && turn == _turnNumber) {
+          _resumeConversation();
+        }
+      };
       await _ttsService.speak(result.translatedText, _targetLanguage);
-      if (!_ttsService.isSpeaking) _resumeConversation();
+      if (epoch == _conversationEpoch && turn == _turnNumber && !_ttsService.isSpeaking) _resumeConversation();
     } catch (_) {
       if (mounted && _conversationMode && epoch == _conversationEpoch) {
         setState(() { _isLoading = false; _error = 'Voice translation failed'; });
@@ -416,6 +420,9 @@ Future<void> _toggleListening() async {
     }
 
     setState(() => _isSpeaking = true);
+    _ttsService.onStopped = () {
+      if (mounted && !_conversationMode) setState(() => _isSpeaking = false);
+    };
     await _ttsService.speak(_result!.translatedText, _targetLanguage);
     // _isSpeaking is reset via the onStopped callback.
   }
@@ -696,7 +703,7 @@ Future<void> _toggleListening() async {
                           ? AppTheme.primaryColor
                           : AppTheme.primaryColor.withValues(alpha: 0.7),
                     ),
-                    onPressed: _result != null ? _toggleSpeaking : null,
+                    onPressed: !_conversationMode && _result != null ? _toggleSpeaking : null,
                     tooltip: _isSpeaking ? 'Stop speaking' : 'Read aloud',
                   ),
                 ),
