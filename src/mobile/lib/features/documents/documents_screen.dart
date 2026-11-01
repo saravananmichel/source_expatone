@@ -244,9 +244,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
       final docs = _documents!.where((d) => !d.isSharedWithMe).toList();
       return RefreshIndicator(onRefresh: _loadDocuments,
         child: ListView(padding: const EdgeInsets.all(16), children: [
-          Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _richTable(const [
+          Card(
+              clipBehavior: Clip.antiAlias,
+              child: _richTable(const [
               DataColumn(label: Text('Document')),
               DataColumn(label: Text('Type')),
               DataColumn(label: Text('Expiry Date')),
@@ -265,7 +265,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
               DataCell(Text(doc.activeShareCount > 0 ? 'Shared' : 'Private')),
               DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
             ])).toList()),
-          )),
+          ),
         ]));
     });
   }
@@ -362,9 +362,9 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           (d.activeShareCount > 0 || familyDocumentIds.contains(d.id))).toList();
       if (docs.isEmpty) return const Center(child: Text('No documents shared by you yet.'));
       return ListView(padding: const EdgeInsets.all(16), children: [
-        Card(clipBehavior: Clip.antiAlias, child: SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: _richTable(const [
+        Card(
+            clipBehavior: Clip.antiAlias,
+            child: _richTable(const [
             DataColumn(label: Text('Document')),
             DataColumn(label: Text('Type')),
             DataColumn(label: Text('Expiry Date')),
@@ -376,7 +376,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             DataCell(Text(doc.expiryDate == null ? '—' : _formatWalletDate(doc.expiryDate!))),
             DataCell(Text(doc.activeShareCount > 0 ? '${doc.activeShareCount} direct' : 'Family')),
             DataCell(TextButton.icon(onPressed: () => _showDocumentPreview(doc), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
-          ])).toList()))),
+          ])).toList())),
         for (final doc in docs) Card(child: ExpansionTile(
           leading: const Icon(Icons.folder_shared_outlined),
           title: Text(doc.name),

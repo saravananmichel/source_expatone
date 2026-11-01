@@ -201,28 +201,33 @@ class _TranslationScreenState extends State<TranslationScreen> {
 
   // ── Voice input ─────────────────────────────────────────────────────────────
 
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await _speechService.stopListening();
-      if (mounted) setState(() => _isListening = false);
-      return;
-    }
+  
+Future<void> _toggleListening() async {
+  if (_isListening) {
+    await _speechService.stopListening();
+    if (mounted) setState(() => _isListening = false);
+    return;
+  }
 
-    if (!_speechAvailable) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Speech recognition is not available on this device.'),
-          duration: Duration(seconds: 3),
+  if (!_speechAvailable) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Speech recognition is not available on this device.',
         ),
-      );
-      return;
-    }
+        duration: Duration(seconds: 3),
+      ),
+    );
+    return;
+  }
 
-    // Use the selected source language; fall back to English for auto-detect.
-    final locale = _sourceLanguage == 'auto' ? 'en' : _sourceLanguage;
+  final locale = _sourceLanguage == 'auto'
+      ? 'en'
+      : _sourceLanguage;
 
-    setState(() => _isListening = true);
+  setState(() => _isListening = true);
 
+  try {
     final started = await _speechService.startListening(
       languageCode: locale,
       onResult: (text) {
@@ -231,21 +236,44 @@ class _TranslationScreenState extends State<TranslationScreen> {
         }
       },
       onDone: () {
-        if (mounted) setState(() => _isListening = false);
+        if (mounted) {
+          setState(() => _isListening = false);
+        }
       },
     );
 
-    if (!started && mounted) {
+    if (!mounted) return;
+
+    if (!started) {
       setState(() => _isListening = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Could not start speech recognition. Check microphone permissions.'),
+            'Could not start speech recognition. '
+            'Check microphone permissions.',
+          ),
           duration: Duration(seconds: 3),
         ),
       );
     }
+  } catch (_) {
+    if (!mounted) return;
+
+    setState(() => _isListening = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Could not start speech recognition. '
+          'Check microphone permissions.',
+        ),
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
+}
+
 
   Future<void> _toggleConversation() async {
     if (_conversationMode) {
