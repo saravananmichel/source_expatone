@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/profile/profile_screen.dart';
 import 'profile_avatar.dart';
+import 'expatone_brand_header.dart';
 import 'language_region_screen.dart';
 import 'settings_screen.dart';
 
@@ -125,7 +126,7 @@ class _AppShellState extends State<AppShell> {
   void _openNestedFeature(Widget screen) {
     Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => Scaffold(
       appBar: AppBar(
-        title: const Text('ExpatOne'),
+        title: const ExpatOneBrandHeader(height: 40),
         actions: [
           IconButton(tooltip: 'Reminders', icon: const Icon(Icons.notifications_outlined),
             onPressed: () { Navigator.of(context).popUntil((route) => route.isFirst); _navigateToTab(3); }),
@@ -202,10 +203,7 @@ class _AppShellState extends State<AppShell> {
             child: SafeArea(bottom: false, child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
               child: Row(children: [
-                const Icon(Icons.public, color: AppTheme.primaryColor),
-                const SizedBox(width: 8),
-                const Expanded(child: Text('ExpatOne',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18))),
+                const Expanded(child: ExpatOneBrandHeader(height: 44)),
                 IconButton(
                   tooltip: 'Reminders',
                   icon: const Icon(Icons.notifications_outlined),
@@ -304,14 +302,7 @@ class _AppShellState extends State<AppShell> {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
-        title: const Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.public, color: AppTheme.primaryColor),
-            SizedBox(width: 8),
-            Text('ExpatOne', style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
+        title: const ExpatOneBrandHeader(height: 44),
         actions: [
           IconButton(
             tooltip: 'Reminders',
