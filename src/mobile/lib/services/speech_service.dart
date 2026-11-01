@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 // Maps translation language codes to BCP-47 locales for speech recognition.
@@ -42,6 +43,10 @@ class SpeechService implements ISpeechService {
   Future<bool> initialize() async {
     try {
       _available = await _speech.initialize(
+        // Android browsers can include the entire phrase in every update.
+        options: kIsWeb && defaultTargetPlatform == TargetPlatform.android
+            ? [SpeechToText.webDoNotAggregate]
+            : null,
         onError: (_) {},
         onStatus: (_) {},
       );
