@@ -16,6 +16,7 @@ import 'package:expatone_app/services/tts_service.dart';
 
 class MockSpeechService implements ISpeechService {
   int starts = 0;
+  Future<void>? stopDelay;
   bool _listening = false;
   final bool _available;
   void Function(String)? _onResult;
@@ -50,6 +51,7 @@ class MockSpeechService implements ISpeechService {
   Future<void> stopListening() async {
     _listening = false;
     _onDone?.call();
+    await stopDelay;
   }
 
   @override
@@ -196,6 +198,33 @@ void main() {
   });
 
   group('Continuous conversation', () {
+    testWidgets('translation starts while the mic stops; speech waits for both', (tester) async {
+      final stopped = Completer<void>();
+      final speech = MockSpeechService()..stopDelay = stopped.future;
+      final tts = MockTtsService();
+      var requests = 0;
+      final client = http_testing.MockClient((request) async {
+        requests++;
+        return http.Response(jsonEncode(_mockTranslationResponse), 200,
+            headers: {'content-type': 'application/json'});
+      });
+      await tester.pumpWidget(_buildScreen(speechService: speech, ttsService: tts,
+          translationService: _buildService(httpClient: client)));
+      await tester.pump();
+      await tester.tap(find.text('Start conversation'));
+      await tester.pump();
+      speech.simulateResult('Good morning');
+      await tester.pump(const Duration(seconds: 2));
+      await tester.pump();
+      expect(requests, 1);
+      expect(tts.lastSpokenText, isNull);
+      stopped.complete();
+      await tester.pump();
+      expect(tts.lastSpokenText, 'Selamat pagi');
+      await tester.tap(find.text('Stop conversation'));
+      await tester.pump();
+    });
+
     for (final stopDuringPlayback in [false, true]) {
       testWidgets(stopDuringPlayback
           ? 'Stop rejects old playback completion during the next session'

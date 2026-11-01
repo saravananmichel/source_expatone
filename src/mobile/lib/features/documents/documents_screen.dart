@@ -302,8 +302,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           leading: _personAvatar(family.firstWhere((d) => d.owner.id == ownerId).owner.email, userId: ownerId),
           title: Text('${family.firstWhere((d) => d.owner.id == ownerId).owner.displayName ?? family.firstWhere((d) => d.owner.id == ownerId).owner.email} (${family.where((d) => d.owner.id == ownerId).length})'),
           subtitle: Text(family.firstWhere((d) => d.owner.id == ownerId).owner.email),
-          children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-            child: _richTable(const [
+          children: [_richTable(const [
               DataColumn(label: Text('Document')),
               DataColumn(label: Text('Type')),
               DataColumn(label: Text('Expiry Date')),
@@ -324,7 +323,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                     const SnackBar(content: Text('Unable to open family document.')));
                 }
               }, child: const Text('View'))),
-            ])).toList()))],
+            ])).toList())],
         )),
         for (final owner in direct.map((d) => d.ownerEmail ?? 'Shared contact').toSet())
           Card(child: ExpansionTile(
@@ -332,8 +331,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
             leading: _personAvatar(owner, userId: (() { for (final r in _familyRequests ?? <FamilyRequest>[]) { final person = r.isIncoming ? r.requester : r.recipient; if (person.email.toLowerCase() == owner.toLowerCase()) return person.id; } return null; })()),
             title: Text('${owner} (${direct.where((d) => (d.ownerEmail ?? 'Shared contact') == owner).length})'),
             subtitle: const Text('Direct document shares'),
-            children: [SingleChildScrollView(scrollDirection: Axis.horizontal,
-              child: _richTable(const [
+            children: [_richTable(const [
                 DataColumn(label: Text('Document')),
                 DataColumn(label: Text('Type')),
                 DataColumn(label: Text('Expiry Date')),
@@ -346,7 +344,7 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
                   DataCell(Text(d.expiryDate == null ? '—' : _formatWalletDate(d.expiryDate!))),
                   DataCell(Text(d.permission)),
                   DataCell(TextButton.icon(onPressed: () => _showSharedPreview(d), icon: const Icon(Icons.visibility_outlined, size: 18), label: const Text('Preview'))),
-                ])).toList()))],
+                ])).toList())],
           )),
       ]);
     }

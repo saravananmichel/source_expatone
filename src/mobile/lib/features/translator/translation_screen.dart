@@ -355,11 +355,19 @@ Future<void> _toggleListening() async {
     setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
     final epoch = _conversationEpoch;
     final turn = _turnNumber;
-    await _speechService.stopListening();
+    final elapsed = Stopwatch()..start();
     try {
-      final result = await widget.translationService.translate(
-        text: _lastRecognized, sourceLanguage: _sourceLanguage,
-        targetLanguage: _targetLanguage);
+      // Start both immediately; playback still waits for microphone shutdown.
+      final (_, result) = await (
+        _speechService.stopListening().whenComplete(() {
+          debugPrint('Voice turn $turn: mic stopped after ${elapsed.elapsedMilliseconds} ms');
+        }),
+        widget.translationService.translate(
+          text: _lastRecognized, sourceLanguage: _sourceLanguage,
+          targetLanguage: _targetLanguage).whenComplete(() {
+          debugPrint('Voice turn $turn: translation request finished after ${elapsed.elapsedMilliseconds} ms');
+        }),
+      ).wait;
       if (!mounted || !_conversationMode || epoch != _conversationEpoch) return;
       setState(() { _result = result; _isLoading = false; _isSpeaking = true; _voiceStatus = 'Speaking...'; });
       _ttsService.onStopped = () {
