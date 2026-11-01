@@ -80,7 +80,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _ttsService = widget.ttsService ?? TtsService();
     _ttsService.onStopped = () {
       if (mounted) setState(() => _isSpeaking = false);
-      _resumeConversation();
     };
     _initSpeech();
   }
@@ -100,7 +99,6 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _inputController.dispose();
     // Clear callback before stop() to avoid setState on a disposed element.
     _ttsService.onStopped = null;
-    _ttsService.stop();
     _speechService.dispose();
     _ttsService.dispose();
     super.dispose();
@@ -201,28 +199,33 @@ class _TranslationScreenState extends State<TranslationScreen> {
 
   // ── Voice input ─────────────────────────────────────────────────────────────
 
-  Future<void> _toggleListening() async {
-    if (_isListening) {
-      await _speechService.stopListening();
-      if (mounted) setState(() => _isListening = false);
-      return;
-    }
 
-    if (!_speechAvailable) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Speech recognition is not available on this device.'),
-          duration: Duration(seconds: 3),
+Future<void> _toggleListening() async {
+  if (_isListening) {
+    await _speechService.stopListening();
+    if (mounted) setState(() => _isListening = false);
+    return;
+  }
+
+  if (!_speechAvailable) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Speech recognition is not available on this device.',
         ),
-      );
-      return;
-    }
+        duration: Duration(seconds: 3),
+      ),
+    );
+    return;
+  }
 
-    // Use the selected source language; fall back to English for auto-detect.
-    final locale = _sourceLanguage == 'auto' ? 'en' : _sourceLanguage;
+  final locale = _sourceLanguage == 'auto'
+      ? 'en'
+      : _sourceLanguage;
 
-    setState(() => _isListening = true);
+  setState(() => _isListening = true);
 
+  try {
     final started = await _speechService.startListening(
       languageCode: locale,
       onResult: (text) {
@@ -231,21 +234,44 @@ class _TranslationScreenState extends State<TranslationScreen> {
         }
       },
       onDone: () {
-        if (mounted) setState(() => _isListening = false);
+        if (mounted) {
+          setState(() => _isListening = false);
+        }
       },
     );
 
-    if (!started && mounted) {
+    if (!mounted) return;
+
+    if (!started) {
       setState(() => _isListening = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-              'Could not start speech recognition. Check microphone permissions.'),
+            'Could not start speech recognition. '
+            'Check microphone permissions.',
+          ),
           duration: Duration(seconds: 3),
         ),
       );
     }
+  } catch (_) {
+    if (!mounted) return;
+
+    setState(() => _isListening = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Could not start speech recognition. '
+          'Check microphone permissions.',
+        ),
+        duration: Duration(seconds: 3),
+      ),
+    );
   }
+}
+
 
   Future<void> _toggleConversation() async {
     if (_conversationMode) {
@@ -328,6 +354,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
     _processingTurn = true;
     setState(() { _isListening = false; _isLoading = true; _voiceStatus = 'Translating...'; });
     final epoch = _conversationEpoch;
+    final turn = _turnNumber;
     await _speechService.stopListening();
     try {
       final result = await widget.translationService.translate(
@@ -335,8 +362,13 @@ class _TranslationScreenState extends State<TranslationScreen> {
         targetLanguage: _targetLanguage);
       if (!mounted || !_conversationMode || epoch != _conversationEpoch) return;
       setState(() { _result = result; _isLoading = false; _isSpeaking = true; _voiceStatus = 'Speaking...'; });
+      _ttsService.onStopped = () {
+        if (mounted && _conversationMode && epoch == _conversationEpoch && turn == _turnNumber) {
+          _resumeConversation();
+        }
+      };
       await _ttsService.speak(result.translatedText, _targetLanguage);
-      if (!_ttsService.isSpeaking) _resumeConversation();
+      if (epoch == _conversationEpoch && turn == _turnNumber && !_ttsService.isSpeaking) _resumeConversation();
     } catch (_) {
       if (mounted && _conversationMode && epoch == _conversationEpoch) {
         setState(() { _isLoading = false; _error = 'Voice translation failed'; });
@@ -388,6 +420,9 @@ class _TranslationScreenState extends State<TranslationScreen> {
     }
 
     setState(() => _isSpeaking = true);
+    _ttsService.onStopped = () {
+      if (mounted && !_conversationMode) setState(() => _isSpeaking = false);
+    };
     await _ttsService.speak(_result!.translatedText, _targetLanguage);
     // _isSpeaking is reset via the onStopped callback.
   }
@@ -668,7 +703,7 @@ class _TranslationScreenState extends State<TranslationScreen> {
                           ? AppTheme.primaryColor
                           : AppTheme.primaryColor.withValues(alpha: 0.7),
                     ),
-                    onPressed: _result != null ? _toggleSpeaking : null,
+                    onPressed: !_conversationMode && _result != null ? _toggleSpeaking : null,
                     tooltip: _isSpeaking ? 'Stop speaking' : 'Read aloud',
                   ),
                 ),

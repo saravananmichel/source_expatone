@@ -15,6 +15,7 @@ import 'package:expatone_app/services/tts_service.dart';
 // ── Mock speech service ──────────────────────────────────────────────────────
 
 class MockSpeechService implements ISpeechService {
+  int starts = 0;
   bool _listening = false;
   final bool _available;
   void Function(String)? _onResult;
@@ -38,6 +39,7 @@ class MockSpeechService implements ISpeechService {
     required void Function() onDone,
   }) async {
     if (!_available) return false;
+    starts++;
     _listening = true;
     _onResult = onResult;
     _onDone = onDone;
@@ -154,9 +156,96 @@ Widget _buildScreen({
   );
 }
 
+Future<void> _tapTranslate(WidgetTester tester) async {
+  final button = find.widgetWithText(
+    ElevatedButton,
+    'Translate',
+  );
+
+  await tester.ensureVisible(button);
+  await tester.pumpAndSettle();
+  await tester.tap(button);
+}
+
+Future<void> _scrollIntoView(
+  WidgetTester tester,
+  Finder target,
+) async {
+  final scrollable = find
+      .ancestor(
+        of: target,
+        matching: find.byType(Scrollable),
+      )
+      .first;
+
+  await tester.scrollUntilVisible(
+    target,
+    300,
+    scrollable: scrollable,
+  );
+  await tester.pumpAndSettle();
+}
 // ─────────────────────────────────────────────────────────────────────────────
 
 void main() {
+  test('TTS picks the exact installed locale, then a regional alternative', () {
+    expect(selectTtsLocale('en', ['en-GB', 'en_US']), 'en_US');
+    expect(selectTtsLocale('en', ['en_GB']), 'en_GB');
+    expect(selectTtsLocale('ta', ['fr-FR', 'en-AU']), 'en-AU');
+    expect(selectTtsLocale('ta', ['fr-FR']), isNull);
+  });
+
+  group('Continuous conversation', () {
+    for (final stopDuringPlayback in [false, true]) {
+      testWidgets(stopDuringPlayback
+          ? 'Stop rejects old playback completion during the next session'
+          : 'one pause translates and speaks once, then resumes listening once',
+          (tester) async {
+        final speech = MockSpeechService();
+        final tts = MockTtsService();
+        await tester.pumpWidget(_buildScreen(speechService: speech, ttsService: tts));
+        await tester.pump();
+        await tester.tap(find.text('Start conversation'));
+        await tester.pump();
+        expect(speech.starts, 1);
+        speech.simulateResult('Good morning');
+        await tester.pump(const Duration(milliseconds: 1999));
+        expect(tts.lastSpokenText, isNull);
+        await tester.pump(const Duration(milliseconds: 1));
+        await tester.pump();
+        expect(tts.lastSpokenText, 'Selamat pagi');
+        expect(tts.lastLanguage, 'ms');
+        final oldCompletion = tts._onStopped!;
+        if (stopDuringPlayback) {
+          await tester.tap(find.text('Stop conversation'));
+          await tester.pump();
+          oldCompletion();
+          await tester.pump(const Duration(seconds: 1));
+          expect(speech.starts, 1);
+          await tester.tap(find.text('Start conversation'));
+          await tester.pump();
+          speech.simulateResult('Another phrase');
+          await tester.pump(const Duration(seconds: 2));
+          await tester.pump();
+          expect(tts.isSpeaking, isTrue);
+          oldCompletion();
+          await tester.pump(const Duration(seconds: 1));
+          expect(speech.starts, 2);
+          expect(find.text('Speaking...'), findsOneWidget);
+        } else {
+          await tts.stop(); // Complete the active fake utterance.
+          oldCompletion(); // Duplicate completion for the same turn.
+          await tester.pump(const Duration(milliseconds: 650));
+          await tester.pump(const Duration(seconds: 1));
+          expect(speech.starts, 2);
+          expect(speech.isListening, isTrue);
+        }
+        await tester.tap(find.text('Stop conversation'));
+        await tester.pump();
+      });
+    }
+  });
+
   group('TranslationScreen', () {
     // ── Original 11 tests (preserved unchanged) ────────────────────────────
 
@@ -213,7 +302,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       expect(find.text('Translation'), findsOneWidget);
@@ -235,7 +324,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Hello');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
@@ -257,7 +346,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Hello');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
@@ -276,7 +365,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Hello');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pump();
 
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -302,10 +391,13 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.copy));
+      final copyButton = find.byIcon(Icons.copy);
+      await _scrollIntoView(tester, copyButton);
+      await tester.tap(copyButton);
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
 
       expect(
@@ -334,7 +426,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       expect(find.text('Selamat pagi'), findsOneWidget);
@@ -363,7 +455,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       expect(
@@ -404,7 +496,12 @@ void main() {
       await tester.pump();
 
       expect(find.text('Listening...'), findsOneWidget);
-      expect(find.byIcon(Icons.mic), findsOneWidget);
+      final listeningMic = find.descendant(
+        of: find.byTooltip('Stop listening'),
+        matching: find.byIcon(Icons.mic),
+      );
+
+      expect(listeningMic, findsOneWidget);
     });
 
     testWidgets('6. speaker button disabled when no translation', (tester) async {
@@ -422,10 +519,13 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.volume_up_outlined));
+      final speakerButton = find.byIcon(Icons.volume_up_outlined);
+      await _scrollIntoView(tester, speakerButton);
+      await tester.tap(speakerButton);
+      await tester.pumpAndSettle();
       await tester.pump();
 
       // After tapping speak, isSpeaking=true → icon switches to filled volume_up
@@ -438,11 +538,13 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       // Should not crash even when TTS fails
-      await tester.tap(find.byIcon(Icons.volume_up_outlined));
+      final speakerButton = find.byIcon(Icons.volume_up_outlined);
+      await _scrollIntoView(tester, speakerButton);
+      await tester.tap(speakerButton);
       await tester.pumpAndSettle();
 
       expect(find.byType(TranslationScreen), findsOneWidget);
@@ -462,10 +564,13 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byIcon(Icons.copy));
+      final copyButton = find.byIcon(Icons.copy);
+      await _scrollIntoView(tester, copyButton);
+      await tester.tap(copyButton);
+      await tester.pumpAndSettle();
       await tester.pumpAndSettle();
 
       expect(
@@ -483,7 +588,7 @@ void main() {
 
       await tester.enterText(find.byType(TextField), 'Good morning');
       await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Translate'));
+      await _tapTranslate(tester);
       await tester.pumpAndSettle();
 
       expect(find.text('Selamat pagi'), findsOneWidget);
