@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_tts/flutter_tts.dart';
 
 // Maps translation language codes to BCP-47 TTS locales.
@@ -43,9 +45,15 @@ class TtsService implements ITtsService {
   final FlutterTts _tts;
   int _generation = 0;
   bool _speaking = false;
+  Completer<void>? _interrupt;
   void Function()? _onStopped;
 
   TtsService({FlutterTts? tts}) : _tts = tts ?? FlutterTts();
+
+  void _endPendingPlayback() {
+    final pending = _interrupt;
+    if (pending != null && !pending.isCompleted) pending.complete();
+  }
 
   @override
   bool get isSpeaking => _speaking;
@@ -56,6 +64,7 @@ class TtsService implements ITtsService {
   @override
   Future<void> speak(String text, String languageCode) async {
     if (text.isEmpty) return;
+    _endPendingPlayback();
     final turn = ++_generation;
     final notify = _onStopped;
     final interrupt = _speaking;
@@ -74,11 +83,25 @@ class TtsService implements ITtsService {
       if (turn != _generation) return;
       await _tts.setVolume(1.0);
       if (turn != _generation) return;
-      await _tts.speak(text);
+      final interrupted = Completer<void>();
+      _interrupt = interrupted;
+      _tts.setErrorHandler((message) {
+        if (turn != _generation || interrupted.isCompleted) return;
+        // Cancel/interrupt notifications can belong to the previous playback.
+        final reason = message.toString().toLowerCase();
+        if (!reason.contains('cancel') && !reason.contains('interrupt')) {
+          interrupted.complete();
+        }
+      });
+      await Future.any<void>([
+        _tts.speak(text).then<void>((_) {}),
+        interrupted.future,
+      ]);
     } catch (_) {
       // Engine failures end this turn just like normal completion.
     } finally {
       if (turn == _generation) {
+        _interrupt = null;
         _speaking = false;
         notify?.call();
       }
@@ -88,6 +111,8 @@ class TtsService implements ITtsService {
   @override
   Future<void> stop() async {
     final stopping = ++_generation;
+    _endPendingPlayback();
+    _interrupt = null;
     final notify = _speaking ? _onStopped : null;
     _speaking = false;
     try {
