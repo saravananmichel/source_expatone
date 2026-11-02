@@ -341,5 +341,15 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         if(await Validate(user,s)==null || VisaRules.Assess(await Pack(a),s,Today).Blockers.Count>0) throw new InvalidOperationException("Resolve application checklist items first.");
         a.Submitted=true;await Save(a,s);return await GetAsync(user,id);
     }
-    public async Task DeleteAsync(Guid user,Guid id,Guid revision) { var a=await Find(user,id);Revision(a,revision);db.Remove(a);await db.SaveChangesAsync(); }
+    public async Task DeleteAsync(Guid user, Guid id, Guid revision)
+    {
+        var application = await Find(user, id);
+        Revision(application, revision);
+        if (application.Submitted)
+            throw new InvalidOperationException("Submitted visa applications cannot be deleted.");
+        if (await db.CorporateCases.AnyAsync(c => c.VisaApplicationId == id))
+            throw new InvalidOperationException("This visa application is linked to a corporate task and cannot be deleted.");
+        db.Remove(application);
+        await db.SaveChangesAsync();
+    }
 }
