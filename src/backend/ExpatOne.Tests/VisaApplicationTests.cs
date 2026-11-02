@@ -24,7 +24,20 @@ public class VisaApplicationTests : IDisposable
     public void Dispose() {db.Dispose();client.Dispose();}
     private static JsonElement J(object value)=>JsonSerializer.SerializeToElement(value,VisaRules.Json);
     private async Task<JsonElement> Create(Guid user)=>J(await service.CreateAsync(user,new VisaCreateDto{Documents=[new(){Id=doc,Role="Passport"}]}));
-    private async Task<FamilyRequestDto> Share() {var f=new FamilyService(db);var r=await f.SendAsync(viewer,"owner@visa.test");return await f.RespondAsync(owner,r.Id,new FamilyDecisionDto{Revision=r.Revision,Accept=true,DocumentIds=[doc],AccessExpiresAt=DateTimeOffset.UtcNow.AddHours(1)});}
+    private async Task<FamilyRequestDto> Share()
+    {
+        var f = new FamilyService(db);
+        var r = await f.SendAsync(viewer, "owner@visa.test");
+
+        return await f.RespondAsync(owner, r.Id, new FamilyDecisionDto
+        {
+            Revision = r.Revision,
+            Accept = true,
+            DocumentIds = [doc],
+            AccessExpiresAt = DateTimeOffset.UtcNow.AddHours(1),
+            AllowVisaApplicationUse = true
+        });
+    }
     [Fact] public async Task PriorityCountryDraftsUseTheirOwnTemplateAndRejectSingaporeExport() {
         var templates = await db.VisaTemplates.Where(t => t.CountryCode != "SG").ToListAsync();
         Assert.Equal(12, templates.Count);
