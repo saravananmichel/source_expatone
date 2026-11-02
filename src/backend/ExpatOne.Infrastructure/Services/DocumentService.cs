@@ -184,6 +184,16 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(d => d.Id == documentId && d.UserId == userId)
             ?? throw new KeyNotFoundException("Document not found.");
 
+        // Until recoverable deletion is implemented, never permanently remove a
+        // document that is shared or referenced by a visa application.
+        if (await _dbContext.DocumentShares.AnyAsync(s => s.DocumentId == documentId) ||
+            await _dbContext.FamilyDocumentGrants.AnyAsync(g => g.DocumentId == documentId))
+            throw new InvalidOperationException("Shared documents cannot be permanently deleted.");
+
+        var documentIdText = documentId.ToString("D");
+        if (await _dbContext.VisaApplications.AnyAsync(a => a.StateJson.Contains(documentIdText)))
+            throw new InvalidOperationException("A visa application references this document. Deletion is blocked.");
+
         var allS3Keys = new List<string> { document.S3ObjectKey };
         allS3Keys.AddRange(document.Versions.Select(v => v.S3ObjectKey));
         var distinctKeys = allS3Keys.Distinct().ToList();
