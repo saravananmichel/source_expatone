@@ -46,6 +46,32 @@ public sealed class CorporateController(
         => Ok(await corporate.ListMembersAsync(await UserId(), companyId));
 
 
+    // Return only a short-lived URL and only to active corporate administrators/HR/viewers.
+    [HttpGet("companies/{companyId:guid}/members/{memberUserId:guid}/photo")]
+    public async Task<IActionResult> GetMemberPhoto(Guid companyId, Guid memberUserId, CancellationToken ct)
+    {
+        var callerId = await UserId();
+        var caller = await db.CorporateMemberships.AsNoTracking().AnyAsync(m =>
+            m.CompanyId == companyId && m.UserId == callerId && m.Status == "Active" &&
+            (m.Role == "Admin" || m.Role == "Owner" || m.Role == "HR" || m.Role == "Viewer"), ct);
+        if (!caller) return Forbid();
+
+        var member = await db.CorporateMemberships.AsNoTracking().AnyAsync(m =>
+            m.CompanyId == companyId && m.UserId == memberUserId && m.Status == "Active", ct);
+        if (!member) return NotFound();
+
+        var photo = await db.Users.AsNoTracking()
+            .Where(u => u.Id == memberUserId && u.IsActive)
+            .Select(u => new { u.ProfilePhotoKey, u.ProfilePhotoUpdatedAt })
+            .SingleOrDefaultAsync(ct);
+        if (photo == null || string.IsNullOrEmpty(photo.ProfilePhotoKey)) return NotFound();
+        Response.Headers.CacheControl = "no-store";
+        return Ok(new {
+            url = await storage.GeneratePresignedUrlAsync(photo.ProfilePhotoKey, TimeSpan.FromMinutes(5)),
+            updatedAt = photo.ProfilePhotoUpdatedAt
+        });
+    }
+
     [HttpPost("companies/{companyId:guid}/members")]
     public async Task<IActionResult> AddMember(
         Guid companyId, AddCorporateMemberDto dto)
