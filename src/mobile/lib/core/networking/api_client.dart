@@ -118,8 +118,11 @@ class ApiClient {
     return _handleResponse(response);
   }
 
-  Future<Map<String, dynamic>> delete(String path) async {
-    final uri = _buildUri(path);
+  Future<Map<String, dynamic>> delete(
+    String path, {
+    Map<String, String>? queryParams,
+  }) async {
+    final uri = _buildUri(path, queryParams);
     final headers = await _getHeaders();
     final response = await _httpClient
         .delete(uri, headers: headers)
