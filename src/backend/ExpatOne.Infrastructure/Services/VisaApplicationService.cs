@@ -85,7 +85,7 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         var result=new List<object>();
         foreach(var a in apps) { var state=Read<VisaState>(a.StateJson); var valid=await Validate(user,state)!=null;
             var assessment=VisaRules.Assess(await Pack(a),state,Today);
-            result.Add(new{a.Id,a.TemplateId,a.UpdatedAt,status=!valid?"AccessBlocked":a.Submitted&&assessment.Blockers.Count==0?"Submitted":assessment.Status}); }
+            result.Add(new{a.Id,a.TemplateId,a.Revision,a.CreatedAt,a.UpdatedAt,a.Submitted,linkedToCorporateTask=await db.CorporateCases.AnyAsync(c=>c.VisaApplicationId==a.Id),status=!valid?"AccessBlocked":a.Submitted&&assessment.Blockers.Count==0?"Submitted":assessment.Status}); }
         return result;
     }
     public async Task<object> GetAsync(Guid user,Guid id) {
@@ -341,5 +341,5 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         if(await Validate(user,s)==null || VisaRules.Assess(await Pack(a),s,Today).Blockers.Count>0) throw new InvalidOperationException("Resolve application checklist items first.");
         a.Submitted=true;await Save(a,s);return await GetAsync(user,id);
     }
-    public async Task DeleteAsync(Guid user,Guid id,Guid revision) { var a=await Find(user,id);Revision(a,revision);db.Remove(a);await db.SaveChangesAsync(); }
+    public async Task DeleteAsync(Guid user,Guid id,Guid revision) { var a=await Find(user,id);Revision(a,revision); if(a.Submitted || await db.CorporateCases.AnyAsync(c=>c.VisaApplicationId==id)) throw new InvalidOperationException("Only unsubmitted, unlinked drafts can be deleted."); db.Remove(a);await db.SaveChangesAsync(); }
 }

@@ -61,8 +61,9 @@ public class UsersController : ControllerBase
             !(uri.Host.Equals("lh3.googleusercontent.com", StringComparison.OrdinalIgnoreCase) ||
               uri.Host.EndsWith(".googleusercontent.com", StringComparison.OrdinalIgnoreCase)))
             return BadRequest("Unsupported Google photo URL.");
-        if (user.ProfilePhotoKey != null && user.GooglePhotoReference == reference)
-            return Ok(new { profilePhotoSource = "google", unchanged = true });
+        // Google can update the image bytes without changing the profile photo URL.
+        // Do not treat an unchanged URL as proof that the stored photo is current.
+        // The client invokes this endpoint on sign-in to refresh the stored image.
 
         using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
         { Timeout = TimeSpan.FromSeconds(10) };

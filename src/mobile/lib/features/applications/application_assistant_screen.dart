@@ -28,6 +28,9 @@ class _ApplicationAssistantScreenState
   String _country = 'SG', _purpose = 'Tourism';
   bool _busy = false;
   String? _error;
+  String _search = '';
+  bool _newestFirst = true;
+  final Set<String> _collapsedCountries = {};
   VisaService get _service => widget.documentService.visaService;
   @override
   void initState() {
@@ -93,6 +96,136 @@ class _ApplicationAssistantScreenState
     return (template?['rules'] as Map?)?['title']?.toString() ??
         draft['templateId']?.toString() ??
         'Visa application';
+  }
+
+  String _countryFor(Map<String, dynamic> draft) {
+    final templates = (_catalog?['templates'] as List? ?? []);
+    for (final item in templates) {
+      final t = Map<String, dynamic>.from(item as Map);
+      if (t['id'] == draft['templateId']) return t['countryCode']?.toString() ?? 'Other';
+    }
+    return 'Other';
+  }
+
+  String _countryName(String code) {
+    for (final item in (_catalog?['countries'] as List? ?? [])) {
+      final country = Map<String, dynamic>.from(item as Map);
+      if (country['code'] == code) return country['name']?.toString() ?? code;
+    }
+    return code;
+  }
+
+  DateTime _created(Map<String, dynamic> draft) =>
+      DateTime.tryParse(draft['createdAt']?.toString() ?? '') ??
+      DateTime.tryParse(draft['updatedAt']?.toString() ?? '') ??
+      DateTime.fromMillisecondsSinceEpoch(0);
+
+  Future<void> _deleteFromGrid(Map<String, dynamic> draft) async {
+    if (draft['submitted'] == true || draft['linkedToCorporateTask'] == true) return;
+    final confirmed = await showDialog<bool>(context: context, builder: (context) => AlertDialog(
+      title: const Text('Delete draft visa application?'),
+      content: Text('Permanently delete ${_titleFor(draft)}? Original wallet documents will remain.'),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete draft')),
+      ],
+    ));
+    if (confirmed != true || !mounted) return;
+    setState(() => _busy = true);
+    try {
+      final latest = await _service.get(draft['id'].toString());
+      await _service.delete(draft['id'].toString(), latest['revision'].toString());
+      await _load();
+    } catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Widget _applicationGrid() {
+    final filtered = _drafts.where((d) {
+      final q = _search.trim().toLowerCase();
+      return q.isEmpty || _titleFor(d).toLowerCase().contains(q) ||
+          _countryName(_countryFor(d)).toLowerCase().contains(q) ||
+          (d['status']?.toString().toLowerCase().contains(q) ?? false);
+    }).toList()..sort((a, b) => _newestFirst
+        ? _created(b).compareTo(_created(a))
+        : _created(a).compareTo(_created(b)));
+    final groups = <String, List<Map<String, dynamic>>>{};
+    for (final draft in filtered) {
+      groups.putIfAbsent(_countryFor(draft), () => []).add(draft);
+    }
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      TextField(
+        decoration: const InputDecoration(prefixIcon: Icon(Icons.search), labelText: 'Search applications', border: OutlineInputBorder()),
+        onChanged: (value) => setState(() => _search = value),
+      ),
+      const SizedBox(height: 10),
+      Align(alignment: Alignment.centerRight, child: TextButton.icon(
+        onPressed: () => setState(() => _newestFirst = !_newestFirst),
+        icon: const Icon(Icons.sort),
+        label: Text(_newestFirst ? 'Newest first' : 'Oldest first'),
+      )),
+      if (filtered.isEmpty && !_busy) const Padding(
+        padding: EdgeInsets.all(16), child: Text('No matching applications.')),
+      ...groups.entries.map((group) => Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        clipBehavior: Clip.antiAlias,
+        child: Column(children: [
+          ListTile(
+            leading: const Icon(Icons.public),
+            title: Text(_countryName(group.key), style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text('${group.value.length} applications'),
+            trailing: Icon(_collapsedCountries.contains(group.key) ? Icons.expand_more : Icons.expand_less),
+            onTap: () => setState(() {
+              if (!_collapsedCountries.add(group.key)) _collapsedCountries.remove(group.key);
+            }),
+          ),
+          AnimatedSize(duration: const Duration(milliseconds: 220), curve: Curves.easeInOut,
+            child: _collapsedCountries.contains(group.key) ? const SizedBox(width: double.infinity) :
+              Padding(padding: const EdgeInsets.all(12), child: LayoutBuilder(builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 900 ? 3 : constraints.maxWidth >= 560 ? 2 : 1;
+                return GridView.builder(
+                  shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
+                  itemCount: group.value.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: columns, crossAxisSpacing: 12, mainAxisSpacing: 12,
+                    mainAxisExtent: 166,
+                  ),
+                  itemBuilder: (context, index) {
+                    final d = group.value[index];
+                    final deletable = d['submitted'] != true && d['linkedToCorporateTask'] != true;
+                    return Card(
+                      elevation: 0, color: Theme.of(context).colorScheme.surfaceContainerLow,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant)),
+                      child: Padding(padding: const EdgeInsets.all(12), child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(_titleFor(d), maxLines: 2, overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 5),
+                        Text('${d['status'] ?? 'Draft'}  ·  ${_created(d).toLocal().toIso8601String().split('T').first}',
+                          style: Theme.of(context).textTheme.bodySmall),
+                        const Spacer(),
+                        Wrap(spacing: 4, children: [
+                          TextButton.icon(onPressed: _busy ? null : () => _open(d),
+                            icon: const Icon(Icons.visibility_outlined, size: 17), label: const Text('View')),
+                          TextButton.icon(onPressed: _busy || d['submitted'] == true ? null : () => _open(d),
+                            icon: const Icon(Icons.edit_outlined, size: 17), label: const Text('Edit')),
+                          IconButton(tooltip: deletable ? 'Delete draft' : 'Deletion restricted',
+                            onPressed: _busy || !deletable ? null : () => _deleteFromGrid(d),
+                            icon: const Icon(Icons.delete_outline, size: 19)),
+                        ]),
+                      ])),
+                    );
+                  },
+                );
+              })),
+          ),
+        ]),
+      )),
+    ]);
   }
 
   Future<void> _create() async {
@@ -219,24 +352,7 @@ class _ApplicationAssistantScreenState
             'Saved applications',
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
-          if (_drafts.isEmpty && !_busy)
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('No applications yet.'),
-            ),
-          ..._drafts.map(
-            (d) => Card(
-              child: ListTile(
-                leading: const Icon(Icons.description_outlined),
-                title: Text(_titleFor(d)),
-                subtitle: Text(
-                  '${d['status']} · ${d['updatedAt']?.toString().split('T').first ?? ''}',
-                ),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: _busy ? null : () => _open(d),
-              ),
-            ),
-          ),
+          _applicationGrid(),
         ],
       ),
     );
