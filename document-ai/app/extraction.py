@@ -62,6 +62,9 @@ def ocr(image, page_number):
     blocks = []
     for indices in lines.values():
         text = ' '.join(data['text'][i] for i in indices)
+        text = suppress_repetitive_ocr_noise(text).strip()
+        if not text:
+            continue
         x = min(data['left'][i] for i in indices)
         y = min(data['top'][i] for i in indices)
         right = max(data['left'][i] + data['width'][i] for i in indices)
@@ -69,6 +72,28 @@ def ocr(image, page_number):
         blocks.append(Block(text=text, boundingBox=[x,y,right,bottom], kind=block_kind(text)))
     return Page(page=page_number, text='\n'.join(b.text for b in blocks), width=image.width,
         height=image.height, extraction='ocr', rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels', extractionConfidence=max(0,min(1,best_score/100)), blocks=blocks)
+
+def repetitive_ocr_noise(text: str) -> bool:
+    """Identify implausibly repeated OCR tokens without rejecting valid codes.
+
+    Repetition alone is not enough: require a long contiguous repeated
+    alphabetic sequence, such as a corrupted watermark or logo extraction.
+    """
+    normalized = ''.join(text.split())
+    if len(normalized) < 36:
+        return False
+    return bool(re.search(r'([A-Za-z]{3,12})\1{5,}', normalized, flags=re.IGNORECASE))
+
+
+def suppress_repetitive_ocr_noise(text: str) -> str:
+    """Remove only long repeated alphabetic runs, preserving nearby fields."""
+    return re.sub(
+        r'([A-Za-z]{3,12})\1{5,}',
+        '',
+        text,
+        flags=re.IGNORECASE,
+    )
+
 
 def corrupted_text_layer(text: str) -> bool:
     """Detect strongly garbled text layers before trusting their length.
@@ -94,6 +119,8 @@ def corrupted_text_layer(text: str) -> bool:
     suspicious = sum(bool(re.search(r'[<>|;#~]', token)) for token in tokens)
     # Corrupted embedded fonts can retain long English boilerplate while
     # surrounding labels become punctuation-heavy nonsense.
+    if repetitive_ocr_noise(normalized):
+        return True
     if len(tokens) >= 8 and suspicious / len(tokens) >= 0.22:
         return True
     return (

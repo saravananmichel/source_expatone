@@ -117,6 +117,18 @@ def validate_grounding(semantic, pages):
             bare = num.replace(',', '')
             if num not in source and bare not in source.replace(',', ''): raise ValueError('unsupported_number')
     if any(ref not in evidence for ref in refs): raise ValueError('missing_evidence')
+    # Explicit document-title evidence takes precedence over incidental passport
+    # identifiers. A Malaysian ePASS often includes the holder's passport number,
+    # but that does not make the issued document a passport.
+    source_text = ' '.join(page.text for page in pages).casefold()
+    has_epass_title = bool(re.search(r'\b(?:e\s*-?\s*pass|electronic pass)\b', source_text))
+    has_employment_title = bool(re.search(r'\bemployment\s+pass\b', source_text))
+    has_issuer = ('malaysia immigration' in source_text
+                  or 'government of malaysia' in source_text
+                  or 'immigration department of malaysia' in source_text)
+    if semantic.documentCategory == 'Passport' and has_epass_title and has_issuer:
+        semantic.documentCategory = 'Employment Pass' if has_employment_title else 'Immigration Document'
+        semantic.classificationConfidence = min(semantic.classificationConfidence, 0.8)
     if semantic.classificationConfidence < .65: semantic.documentCategory = 'Unknown'
     return semantic
 
@@ -335,7 +347,7 @@ def render(semantic, pages, model):
             # Prefer concise verified labels/values over model-generated strings
             # that may repeat adjacent OCR columns or unrelated date fields.
             preferred=[s for s in facts if s.kind=='fact' and any(t in s.label.lower() for t in ('name','number','nationality','type','category'))]
-            chosen=preferred[:2] or [s for s in facts if s.kind=='fact'][:2]
+            chosen=preferred[:2] or [s for s in facts if s.kind=='fact' and s.label != 'Extracted source text'][:2]
             summary+=' '.join(f'{s.label}: {s.originalValue}.' for s in chosen)+' '
         # Key dates
         if dates:
@@ -345,9 +357,27 @@ def render(semantic, pages, model):
         if attention: summary+=' '+attention[0].text
         summary=summary.strip()
     else:
-        # Last resort: use evidence quotes rather than unverified statements
-        evidence_texts='; '.join(e.sourceText for e in semantic.evidence[:3])
-        summary=f'This document appears to be a {semantic.documentCategory}. Source details: {evidence_texts}. Verify important information with the relevant authority.'
+        # Do not dump raw OCR or personally identifying source text into a
+        # summary when semantic understanding produced no verified facts.
+        if semantic.documentCategory == 'Unknown':
+            summary=('Document type could not be verified. Review the extracted text '
+                     'and confirm important information against the original document.')
+        else:
+            # Preserve short, source-backed evidence for known document types.
+            # Avoid long or repetitive OCR dumps in the prominent summary.
+            from .extraction import repetitive_ocr_noise
+            quotes=[e.sourceText.strip() for e in semantic.evidence
+                    if e.sourceText.strip() and len(e.sourceText.strip()) <= 180
+                    and not repetitive_ocr_noise(e.sourceText)]
+            summary=f'This document appears to be a {semantic.documentCategory}. '
+            if quotes:
+                summary+='Source details: '+'; '.join(quotes[:2])+'. '
+            summary+='Verify important information against the original document.'
+    if model == 'source-only-private-fallback' and not any(
+        s.label != 'Extracted source text' for s in facts
+    ):
+        summary = ('Document type could not be verified. Review the original '
+                   'document and its extracted text before using these details.')
     # Plain-language explanation: all supported clause/interpretation/relationship statements
     plain_parts=[]
     for s in explanations:
