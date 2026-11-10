@@ -1,6 +1,7 @@
 from . import ollama
 from .ollama import post_chat, InferenceOutputError
 from .config import ollama_base_url, ollama_timeout
+from .cloud_run_auth import ollama_auth_headers
 import json
 import logging
 logger = logging.getLogger("uvicorn.error")
@@ -260,7 +261,7 @@ async def reason(pages):
         classificationEvidenceIds=[value for r in matching for value in r.classificationEvidenceIds],
         statements=[s for r in results for s in r.statements], evidence=[e for r in results for e in r.evidence])
     async with httpx.AsyncClient(timeout=ollama_timeout(5)) as client:
-        metadata=await client.get(ollama_base_url()+'/api/tags')
+        metadata=await client.get(ollama_base_url()+'/api/tags', headers=await ollama_auth_headers())
         metadata.raise_for_status()
         digest=next(item['digest'] for item in metadata.json()['models'] if item['name']==model)
     import time
