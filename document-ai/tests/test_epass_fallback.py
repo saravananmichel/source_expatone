@@ -1,4 +1,4 @@
-"""Regression checks for conservative ePASS source fallback."""
+"""Source-only fallback remains country-agnostic and never invents fields."""
 from app.private_fallback import source_fallback
 from app.schemas import Page
 
@@ -8,35 +8,26 @@ def page(text):
                 extraction='native', blocks=[])
 
 
-def test_epass_explicit_same_line_fields():
-    text = (
-        "Electronic Pass ePASS Government of Malaysia\n"
-        "EMPLOYMENT PASS Category (I)\n"
-        "Name: SAMPLE PERSON\nPassport No: A1234567\n"
-        "Nationality: INDIA\nWith: EXAMPLE COMPANY SDN BHD"
-    )
-    result = source_fallback([page(text)])
-    fields = {item.label: item.originalValue for item in result.statements}
-    assert result.documentCategory == 'Employment Pass'
-    assert fields['Holder name'] == 'SAMPLE PERSON'
-    assert fields['Passport number'] == 'A1234567'
-    assert fields['Employer'] == 'EXAMPLE COMPANY SDN BHD'
+def test_generic_labeled_fields_from_different_countries():
+    for text in (
+        'Republic of India\nName: SAMPLE PERSON\nDocument Number: A1234567',
+        'Singapore\nName: SAMPLE PERSON\nPass Number: S1234567',
+        'United Arab Emirates\nName: SAMPLE PERSON\nPermit Number: U1234567',
+        'Vanuatu\nName: SAMPLE PERSON\nReference Number: V1234567',
+        'China\nName: SAMPLE PERSON\nVisa Number: C1234567',
+    ):
+        result = source_fallback([page(text)])
+        values = {s.label: s.originalValue for s in result.statements}
+        assert values['Name'] == 'SAMPLE PERSON'
+        assert any(v.endswith('1234567') for v in values.values())
+        assert result.documentCategory == 'Unknown'
 
 
-def test_unrelated_document_not_classified_as_epass():
-    result = source_fallback([page('Invoice\nName: SAMPLE PERSON\nPassport No: A1234567')])
-    assert result.documentCategory == 'Unknown'
+def test_unlabeled_values_not_assigned_to_fields():
+    result = source_fallback([page('Name\nSAMPLE PERSON\nA1234567')])
+    assert all(s.label != 'Name' for s in result.statements)
 
 
-def test_missing_fields_are_not_invented():
-    text = 'ePASS Government of Malaysia\nEMPLOYMENT PASS\nName: SAMPLE PERSON'
-    result = source_fallback([page(text)])
-    labels = {item.label for item in result.statements}
-    assert 'Holder name' in labels
-    assert 'Passport number' not in labels
-
-
-def test_separate_label_and_value_lines_not_guessed():
-    text = 'ePASS Government of Malaysia\nEMPLOYMENT PASS\nName\nPassport No\nSAMPLE PERSON\nA1234567'
-    result = source_fallback([page(text)])
-    assert result.documentCategory == 'Unknown'
+def test_missing_fields_not_invented():
+    result = source_fallback([page('Name: SAMPLE PERSON')])
+    assert all(s.label != 'Passport number' for s in result.statements)
