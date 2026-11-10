@@ -37,6 +37,9 @@ def _plausible_field(label, value):
         and value_chars >= 3
         and value_chars / max(1, len(value)) >= 0.6
         and not re.search(r'[<>~\\\\]{2,}', label + value)
+        and not re.search(r'[<>|;#]{1,}', label)
+        and not re.search(r'[<>|]{1,}', value)
+        and len(re.findall(r'[A-Za-z]{2,}', label)) >= 1
     )
 
 
