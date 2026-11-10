@@ -60,3 +60,23 @@ def test_legitimate_passport_and_cjk_native_text_are_retained():
     chinese = "中华人民共和国 护照 签发日期 有效期至 姓名 性别 国籍 证件号码 " * 5
     assert not corrupted_text_layer(chinese)
     assert prefer_native_pdf_text(chinese, has_images=True)
+
+
+def test_mixed_english_boilerplate_and_corrupt_font_layer_uses_ocr():
+    from app.extraction import corrupted_text_layer
+    text = ("REQUIRE IN THE NAME OF THE PRESIDENT OF THE REPUBLIC. "
+            "BEARER TO PASS FREELY WITHOUT LET OR HINDRANCE. "
+            "<li;;T11lr.: srr;vlt # fiRqr; p;# "
+            "cl<1i<liPrrf: ;r2;j7#an:1-jfT/~: "
+            "cl<1i<liPrrf: ;r2;j7#an:1-jfT/~: ")
+    assert corrupted_text_layer(text)
+    assert not prefer_native_pdf_text(text, has_images=False)
+    assert not prefer_native_pdf_text(text, has_images=True)
+
+
+def test_clean_passport_with_punctuation_not_rejected():
+    from app.extraction import corrupted_text_layer
+    text = ("PASSPORT REPUBLIC OF EXAMPLE\nName: SAMPLE PERSON\n"
+            "Passport No: X1234567\nDate of Birth: 09 NOV 1983\n"
+            "Date of Expiry: 22 DEC 2031\n")
+    assert not corrupted_text_layer(text)

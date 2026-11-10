@@ -81,9 +81,9 @@ def corrupted_text_layer(text: str) -> bool:
         return False
     tokens = normalized.split()
     cjk = sum(
-        '\\u4e00' <= ch <= '\\u9fff'
-        or '\\u3040' <= ch <= '\\u30ff'
-        or '\\uac00' <= ch <= '\\ud7af'
+        '\u4e00' <= ch <= '\u9fff'
+        or '\u3040' <= ch <= '\u30ff'
+        or '\uac00' <= ch <= '\ud7af'
         for ch in normalized
     )
     if cjk >= 12:
@@ -91,6 +91,11 @@ def corrupted_text_layer(text: str) -> bool:
     alphabetic = sum(ch.isalpha() for ch in normalized)
     punctuation = sum(not ch.isalnum() and not ch.isspace() for ch in normalized)
     short_tokens = sum(len(token) <= 2 for token in tokens)
+    suspicious = sum(bool(re.search(r'[<>|;#~]', token)) for token in tokens)
+    # Corrupted embedded fonts can retain long English boilerplate while
+    # surrounding labels become punctuation-heavy nonsense.
+    if len(tokens) >= 8 and suspicious / len(tokens) >= 0.22:
+        return True
     return (
         len(tokens) >= 12
         and punctuation / len(normalized) > 0.20

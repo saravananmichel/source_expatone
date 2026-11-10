@@ -37,6 +37,9 @@ def _plausible_field(label, value):
         and value_chars >= 3
         and value_chars / max(1, len(value)) >= 0.6
         and not re.search(r'[<>~\\\\]{2,}', label + value)
+        and not re.search(r'[<>|;#]{1,}', label)
+        and not re.search(r'[<>|]{1,}', value)
+        and len(re.findall(r'[A-Za-z]{2,}', label)) >= 1
     )
 
 
@@ -99,7 +102,9 @@ def source_fallback(pages):
             break
     if not evidence:
         for page in pages:
-            if page.text.strip():
+            # Do not elevate visibly corrupted OCR into a supported fact.
+            from .extraction import corrupted_text_layer
+            if page.text.strip() and not corrupted_text_layer(page.text):
                 snippet = page.text.strip()[:180]
                 evidence.append(Evidence(id='e0', page=page.page,
                                          sourceText=snippet))
@@ -112,7 +117,9 @@ def source_fallback(pages):
                 ))
                 break
     if not evidence:
-        raise ValueError('no_source_text')
+        if not any(page.text.strip() for page in pages):
+            raise ValueError('no_source_text')
+        raise ValueError('no_reliable_source_text')
     return SemanticDocument(documentCategory='Unknown',
         classificationConfidence=0, classificationEvidenceIds=[evidence[0].id],
         statements=statements, evidence=evidence)
