@@ -318,17 +318,17 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         ],
         _buildReviewNotice(),
         _buildSummarySection(),
+        // Structured details must not disappear merely because V4 returned
+        // one generic evidence-backed statement.
+        _buildStructuredFieldsSection(),
+        _buildKeyInformationSection(),
+        _buildImportantDatesSection(),
         _buildGroundedStatements(),
-        if ((analysis['statements'] as List? ?? []).isEmpty) ...[
-          _buildStructuredFieldsSection(),
-          _buildKeyInformationSection(),
-          _buildImportantDatesSection(),
-          _buildRequiredActionsSection(),
-          _buildDeadlinesSection(),
-          _buildWarningsSection(),
-          _buildTerminologySection(),
-          _buildExplanationSection(),
-        ],
+        _buildRequiredActionsSection(),
+        _buildDeadlinesSection(),
+        _buildWarningsSection(),
+        _buildTerminologySection(),
+        _buildExplanationSection(),
         _buildMissingInformation(),
         _buildConfidenceBadge(),
         if (kDebugMode) _buildQualityPanel(),
@@ -441,7 +441,20 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
                 ],
               ),
             ] else if (text.trim().isNotEmpty)
-              SelectableText(text, style: const TextStyle(height: 1.5))
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text('View original extracted text'),
+                subtitle: const Text('Raw OCR and PDF text; may contain recognition errors'),
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SelectableText(
+                      text,
+                      style: const TextStyle(height: 1.5),
+                    ),
+                  ),
+                ],
+              )
             else if (_extractionStatus == 'FAILED')
               const Text(
                 'Text extraction failed. You can still retry AI analysis.',
@@ -626,10 +639,25 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
     final statements = _analysis?['statements'] as List? ?? [];
     final evidence = _analysis?['evidence'] as List? ?? [];
     if (statements.isEmpty) return const SizedBox.shrink();
+    // A raw OCR dump is evidence, not a useful fact. Keep it accessible in
+    // Extracted Text without promoting it to a headline insight.
+    final usefulStatements = statements.where((raw) {
+      if (raw is! Map) return false;
+      final label = (raw['label'] ?? '').toString().trim().toLowerCase();
+      return label != 'extracted source text' && label != 'source text';
+    }).toList();
+    if (usefulStatements.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.only(bottom: 16),
+        child: Text(
+          'No verified document insights were identified. Review the extracted text and source document.',
+        ),
+      );
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        ..._groupStatements(statements).entries.map(
+        ..._groupStatements(usefulStatements).entries.map(
           (group) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

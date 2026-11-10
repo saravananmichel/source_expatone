@@ -70,6 +70,37 @@ def ocr(image, page_number):
     return Page(page=page_number, text='\n'.join(b.text for b in blocks), width=image.width,
         height=image.height, extraction='ocr', rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels', extractionConfidence=max(0,min(1,best_score/100)), blocks=blocks)
 
+def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
+    """Keep a readable PDF text layer even when logos, photos or QR codes exist.
+
+    A previous image-presence heuristic sent short but perfectly searchable
+    one-page passes through OCR. A scanned page with only a small searchable
+    header should still use OCR.
+    """
+    normalized = ' '.join(text.split())
+    if len(normalized) < 40:
+        return False
+    if not has_images:
+        return True
+    # Substantial text layers are generally more faithful than raster OCR.
+    if len(normalized) >= 350:
+        return True
+    # Country-neutral signal: multiple readable lines/words from a text layer.
+    # Do not infer that a portrait, seal, stamp or QR code makes the PDF a scan.
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    words = re.findall(r'\w+', normalized, flags=re.UNICODE)
+    # CJK scripts may not separate words with whitespace.
+    cjk_chars = sum(
+        '\u4e00' <= char <= '\u9fff'
+        or '\u3040' <= char <= '\u30ff'
+        or '\uac00' <= char <= '\ud7af'
+        for char in normalized
+    )
+    readable = len(words) >= 16 or cjk_chars >= 30
+    return len(normalized) >= 120 and readable and (
+        len(lines) >= 3 or len(normalized) >= 180 or cjk_chars >= 30
+    )
+
 def extract(data: bytes, content_type: str):
     if content_type == 'application/pdf':
         if not data.startswith(b'%PDF-'): raise ValueError('invalid_file')
@@ -85,9 +116,10 @@ def extract(data: bytes, content_type: str):
                     textpage = page.get_textpage()
                     try:
                         text = textpage.get_text_range()
-                        # Mixed scanned/native pages must not be accepted just for a typed header.
-                        has_scan=bool(native.images) and len(text.strip())<1000
-                        if len(text.strip()) >= 40 and not has_scan:
+                        # Embedded images (photos, logos, QR codes) do not
+                        # imply the text layer is a scan. Prefer searchable
+                        # text for structured documents from any country.
+                        if prefer_native_pdf_text(text, bool(native.images)):
                             blocks = []
                             for j in range(textpage.count_rects()):
                                 x0,y0,x1,y1 = textpage.get_rect(j)
