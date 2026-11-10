@@ -364,6 +364,11 @@ def render(semantic, pages, model):
                  if semantic.documentCategory == 'Unknown'
                  else f'This document appears to be a {semantic.documentCategory}. '
                       'Review the original document to verify important information.')
+    if model == 'source-only-private-fallback' and not any(
+        s.label != 'Extracted source text' for s in facts
+    ):
+        summary = ('Document type could not be verified. Review the original '
+                   'document and its extracted text before using these details.')
     # Plain-language explanation: all supported clause/interpretation/relationship statements
     plain_parts=[]
     for s in explanations:
