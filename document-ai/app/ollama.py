@@ -36,6 +36,11 @@ async def post_chat(client, payload):
             raw = response.json()
             logger.info("Ollama metrics stage=%s output_tokens=%s done_reason=%s",
                         stage, raw.get('eval_count'), raw.get('done_reason'))
+            logger.info("Ollama timing stage=%s threads=%d total_ms=%.0f load_ms=%.0f prompt_tokens=%s prompt_ms=%.0f eval_tokens=%s eval_ms=%.0f",
+                        stage, threads, (raw.get("total_duration") or 0) / 1e6,
+                        (raw.get("load_duration") or 0) / 1e6,
+                        raw.get("prompt_eval_count"), (raw.get("prompt_eval_duration") or 0) / 1e6,
+                        raw.get("eval_count"), (raw.get("eval_duration") or 0) / 1e6)
             seconds = (raw.get("eval_duration") or 0) / 1e9
             speed = (raw.get("eval_count") or 0) / seconds if seconds else 0
             logger.info("Ollama speed stage=%s threads=%d tokens_per_second=%.2f",
