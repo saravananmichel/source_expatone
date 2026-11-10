@@ -38,3 +38,20 @@ def test_invalid_calendar_date_is_not_a_deadline():
     assert not _valid_single_date('2026-13-01')
     assert _valid_single_date('22/12/2031')
     assert _valid_single_date('30 MAR 2027')
+
+
+def test_passport_number_alias_is_not_reported_missing():
+    from app.pipeline import missing_information
+    from app.schemas import Statement
+    document = SemanticDocument.model_validate({
+        'documentCategory': 'Passport',
+        'classificationConfidence': .9,
+        'classificationEvidenceIds': ['e1'],
+        'evidence': [{'id': 'e1', 'page': 1, 'sourceText': 'Passport No: X1234567'}],
+        'statements': [
+            {'id': 's1', 'kind': 'fact', 'label': 'Passport No',
+             'text': 'Passport No: X1234567.', 'originalValue': 'X1234567',
+             'confidence': .9, 'evidenceIds': ['e1']}
+        ]
+    })
+    assert not any('Passport number' in warning for warning in missing_information(document, []))
