@@ -135,8 +135,8 @@ async def ready():
         logger.error("Readiness failed: model_connection_error")
     except ValueError:
         logger.error("Readiness failed: model_configuration_error")
-    except Exception:
-        logger.error("Readiness failed: model_unexpected_error")
+    except Exception as exc:
+        logger.error("Readiness failed: model_unexpected_error exception_type=%s", type(exc).__name__)
     raise HTTPException(503, 'Service not ready') from None
 
 @app.post('/analyze')
