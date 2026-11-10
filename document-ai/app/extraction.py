@@ -62,6 +62,9 @@ def ocr(image, page_number):
     blocks = []
     for indices in lines.values():
         text = ' '.join(data['text'][i] for i in indices)
+        text = suppress_repetitive_ocr_noise(text).strip()
+        if not text:
+            continue
         x = min(data['left'][i] for i in indices)
         y = min(data['top'][i] for i in indices)
         right = max(data['left'][i] + data['width'][i] for i in indices)
