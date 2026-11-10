@@ -25,7 +25,7 @@ def selected_profile() -> InferenceProfile:
             model=os.getenv("DOCUMENT_AI_DEV_MODEL", "qwen3:0.6b"),
             context_tokens=2048,
             output_tokens=450,
-            inference_seconds=45,
+            inference_seconds=int(os.getenv("DOCUMENT_AI_DEV_INFERENCE_SECONDS", "120")),
             reasoning_enabled=False,
         )
     if mode == "production":

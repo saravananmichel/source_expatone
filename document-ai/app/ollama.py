@@ -1,5 +1,6 @@
 """Shared private Ollama transport. Never logs request or response contents."""
 import json
+import os
 import time
 import logging
 logger = logging.getLogger("uvicorn.error")
@@ -18,7 +19,9 @@ def check_completion(raw):
 
 
 async def post_chat(client, payload):
-    payload = {**payload, "options": {**payload.get("options", {}), "num_thread": 4}}
+    threads = int(os.getenv("OLLAMA_NUM_THREAD", "2" if os.getenv("DOCUMENT_AI_PROFILE", "").lower() == "development" else "4"))
+    payload = {**payload, "keep_alive": os.getenv("OLLAMA_KEEP_ALIVE", "30m"),
+               "options": {**payload.get("options", {}), "num_thread": threads}}
     schema = payload.get('format', {})
     stage = schema.get('title', 'unknown') if isinstance(schema, dict) else 'unknown'
     started = time.monotonic()
@@ -35,8 +38,8 @@ async def post_chat(client, payload):
                         stage, raw.get('eval_count'), raw.get('done_reason'))
             seconds = (raw.get("eval_duration") or 0) / 1e9
             speed = (raw.get("eval_count") or 0) / seconds if seconds else 0
-            logger.info("Ollama speed stage=%s threads=4 tokens_per_second=%.2f",
-                        stage, speed)
+            logger.info("Ollama speed stage=%s threads=%d tokens_per_second=%.2f",
+                        stage, threads, speed)
             check_completion(raw)
         return response
     except BaseException as error:
@@ -46,7 +49,9 @@ async def post_chat(client, payload):
         raise
 
 async def stream_chat(client, payload, metrics=None):
-    payload = {**payload, "options": {**payload.get("options", {}), "num_thread": 4}}
+    threads = int(os.getenv("OLLAMA_NUM_THREAD", "2" if os.getenv("DOCUMENT_AI_PROFILE", "").lower() == "development" else "4"))
+    payload = {**payload, "keep_alive": os.getenv("OLLAMA_KEEP_ALIVE", "30m"),
+               "options": {**payload.get("options", {}), "num_thread": threads}}
     started = time.monotonic()
     first_token = None
     content = []
