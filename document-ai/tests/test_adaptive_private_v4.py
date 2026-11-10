@@ -13,7 +13,7 @@ def test_dev_profile(monkeypatch):
     monkeypatch.setenv('DOCUMENT_AI_PROFILE', 'development')
     p = selected_profile()
     assert p.model == 'qwen3:0.6b'
-    assert p.inference_seconds == 45
+    assert p.inference_seconds == 120
     assert p.reasoning_enabled is False
 
 
