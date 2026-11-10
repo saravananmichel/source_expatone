@@ -52,6 +52,42 @@ public class DocumentAnalysisServiceTests
         local.Verify(x => x.AskAsync(It.Is<DocumentAskRequestDto>(r => r.Context.Count <= 6 &&
             r.Context.Sum(c => c.Text.Length) <= 6000 && r.Context.Any(c => c.Text.Contains("12,000"))), It.IsAny<CancellationToken>()), Times.Once);
     }
+    [Fact]
+    public async Task V4DocumentEngineAnalysisIsAvailableForResultsAndQuestions()
+    {
+        var (db, doc, service, jobs, local) = Fixture();
+        var v4 = Analysis();
+        v4.AnalyzerVersion = "document-engine-v2";
+        v4.ModelVersion = "v4-local-model";
+        db.DocumentAnalysisRuns.Single().ResultJson = JsonSerializer.Serialize(v4);
+        db.SaveChanges();
+
+        var result = await service.GetDocumentAnalysisAsync(doc.UserId, doc.Id);
+        Assert.NotNull(result);
+        Assert.Equal("document-engine-v2", result.AnalyzerVersion);
+        Assert.Equal("v4-local-model", result.ModelVersion);
+
+        var answer = await service.AskDocumentAsync(doc.UserId, doc.Id, "What is the salary?");
+        Assert.True(answer.Grounded);
+        jobs.VerifyNoOtherCalls();
+        local.Verify(x => x.AskAsync(It.IsAny<DocumentAskRequestDto>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task V4AnalysisWithoutModelVersionIsNotReturned()
+    {
+        var (db, doc, service, jobs, local) = Fixture();
+        var v4 = Analysis();
+        v4.AnalyzerVersion = "document-engine-v2";
+        v4.ModelVersion = "";
+        db.DocumentAnalysisRuns.Single().ResultJson = JsonSerializer.Serialize(v4);
+        db.SaveChanges();
+
+        Assert.Null(await service.GetDocumentAnalysisAsync(doc.UserId, doc.Id));
+        jobs.VerifyNoOtherCalls();
+        local.VerifyNoOtherCalls();
+    }
+
     [Theory]
     [InlineData("missing")][InlineData("Gemini")][InlineData("stale")][InlineData("wrong_model")][InlineData("corrupt")][InlineData("version")]
     public async Task InvalidAnalysisQueuesLocalAndDoesNotAskAnyProvider(string reason)
