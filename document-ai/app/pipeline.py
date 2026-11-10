@@ -283,7 +283,16 @@ async def reason(pages):
     merged=validate_grounding(merged,pages)
     logger.info("document_ai stage=reasoning event=completed elapsed_ms=%d", reasoning_ms)
     logger.info("document_ai stage=support event=start")
-    quality=await review_support(merged) if profile.reasoning_enabled else {'supportValidationMs':0, 'supportStatus':'skipped: development profile'}
+    if profile.reasoning_enabled:
+        quality=await review_support(merged)
+    else:
+        # No model judge in DEV: do not claim semantic entailment is verified.
+        # Exact source values remain available as cited, unreviewed statements.
+        for statement in merged.statements:
+            statement.supportStatus='UNCERTAIN'
+            statement.supportReason='Semantic support review skipped in lightweight development mode.'
+        quality={'supportValidationMs':0, 'supportMethod':'not-performed-dev',
+                 'verdictCoverage':0.0, 'supportModel':None}
     logger.info("document_ai stage=support event=completed elapsed_ms=%d", quality["supportValidationMs"])
     # Private per-result diagnostics are returned to authenticated users, never logged.
     merged_quality={'extractionInferenceMs':round((time.monotonic()-extraction_started)*1000)-reasoning_ms-quality['supportValidationMs'],
