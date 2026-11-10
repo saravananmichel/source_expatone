@@ -48,7 +48,7 @@ def _source_fields(text):
     """
     lines = [line.strip() for line in text.splitlines() if line.strip()]
     for i, line in enumerate(lines):
-        match = re.fullmatch(r'([^:\\n]{2,60})\\s*:\\s*(.{1,180})', line)
+        match = re.fullmatch(r'([^:\n]{2,60})\s*:\s*(.{1,180})', line)
         if match:
             label, value = match.group(1).strip(), match.group(2).strip()
             if value and not value.startswith(':') and _plausible_field(label, value):
@@ -57,17 +57,17 @@ def _source_fields(text):
         if i + 1 >= len(lines):
             continue
         label = line[:-1].strip() if line.endswith(':') else line
-        if not (2 <= len(label) <= 60 and re.fullmatch(r'[\\w /().-]+', label)):
+        if not (2 <= len(label) <= 60 and re.fullmatch(r'[\w /().-]+', label)):
             continue
         next_line = lines[i + 1]
         if next_line == ':':
             if i + 2 >= len(lines):
                 continue
             value = lines[i + 2].lstrip(': ').strip()
-            source = '\\n'.join(lines[i:i + 3])
+            source = '\n'.join(lines[i:i + 3])
         elif next_line.startswith(':'):
             value = next_line[1:].strip()
-            source = '\\n'.join(lines[i:i + 2])
+            source = '\n'.join(lines[i:i + 2])
         else:
             continue
         if value and len(value) <= 180 and ':' not in value and _plausible_field(label, value):
