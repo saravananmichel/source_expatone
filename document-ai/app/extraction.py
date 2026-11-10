@@ -88,11 +88,18 @@ def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
     # Country-neutral signal: multiple readable lines/words from a text layer.
     # Do not infer that a portrait, seal, stamp or QR code makes the PDF a scan.
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    words = re.findall(r'\\w+', normalized, flags=re.UNICODE)
-    return len(normalized) >= 120 and len(words) >= 16 and (
-        len(lines) >= 3 or len(normalized) >= 220
+    words = re.findall(r'\w+', normalized, flags=re.UNICODE)
+    # CJK scripts may not separate words with whitespace.
+    cjk_chars = sum(
+        '\u4e00' <= char <= '\u9fff'
+        or '\u3040' <= char <= '\u30ff'
+        or '\uac00' <= char <= '\ud7af'
+        for char in normalized
     )
-
+    readable = len(words) >= 16 or cjk_chars >= 30
+    return len(normalized) >= 120 and readable and (
+        len(lines) >= 3 or len(normalized) >= 180
+    )
 
 def extract(data: bytes, content_type: str):
     if content_type == 'application/pdf':
