@@ -85,13 +85,13 @@ def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
     # Substantial text layers are generally more faithful than raster OCR.
     if len(normalized) >= 350:
         return True
-    # Short structured forms often contain images but have meaningful text.
-    labels = (
-        'passport no', 'nationality', 'date of issue', 'place of issue',
-        'employment pass', 'multiple entry visa', 'ePass Holder Information',
+    # Country-neutral signal: multiple readable lines/words from a text layer.
+    # Do not infer that a portrait, seal, stamp or QR code makes the PDF a scan.
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    words = re.findall(r'\\w+', normalized, flags=re.UNICODE)
+    return len(normalized) >= 120 and len(words) >= 16 and (
+        len(lines) >= 3 or len(normalized) >= 220
     )
-    lower = normalized.lower()
-    return len(normalized) >= 120 and sum(label.lower() in lower for label in labels) >= 2
 
 
 def extract(data: bytes, content_type: str):
@@ -111,7 +111,7 @@ def extract(data: bytes, content_type: str):
                         text = textpage.get_text_range()
                         # Embedded images (photos, logos, QR codes) do not
                         # imply the text layer is a scan. Prefer searchable
-                        # text for structured ePASS/visa documents.
+                        # text for structured documents from any country.
                         if prefer_native_pdf_text(text, bool(native.images)):
                             blocks = []
                             for j in range(textpage.count_rects()):
