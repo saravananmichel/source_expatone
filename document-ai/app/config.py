@@ -14,6 +14,9 @@ def ollama_base_url():
     url = urlsplit(value)
     if url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password or url.query or url.fragment:
         raise ValueError('Invalid Ollama base URL')
+    audience = cloud_run_audience()
+    if audience and value != audience:
+        raise ValueError('Authenticated Ollama URL must exactly match Cloud Run token audience')
     if os.getenv('DOCUMENT_AI_ENVIRONMENT') == 'Production':
         host = url.hostname
         try:
