@@ -33,7 +33,7 @@ def test_production_rejects_other_models(monkeypatch):
 
 def test_model_readiness_checks_exact_tag(monkeypatch):
     monkeypatch.setenv('OLLAMA_MODEL', 'qwen3:4b')
-    async def get(self, url):
+    async def get(self, url, **kwargs):
         return httpx.Response(200, json={'models': [{'name': 'qwen3:8b'}]}, request=httpx.Request('GET', url))
     monkeypatch.setattr(httpx.AsyncClient, 'get', get)
     with pytest.raises(ValueError): asyncio.run(check_model())
