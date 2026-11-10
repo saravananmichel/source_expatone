@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'feature/document-ai-v41-readable-results-20261110'
+      - 'feature/document-ai-v42-evidence-fields-20261111'
     paths:
       - 'document-ai/**'
       - '.github/workflows/document-ai-python-validation.yml'

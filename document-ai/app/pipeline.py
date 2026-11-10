@@ -332,10 +332,14 @@ def render(semantic, pages, model):
         if salary_facts: summary+=' '.join(s.text for s in salary_facts[:2])+' '
         elif amounts: summary+=' '.join(s.text for s in amounts[:2])+' '
         elif not parties and not identity:
-            # No identity or money matched: use the most informative facts available
-            summary+=' '.join(s.text for s in facts[:3])+' '
+            # Prefer concise verified labels/values over model-generated strings
+            # that may repeat adjacent OCR columns or unrelated date fields.
+            preferred=[s for s in facts if s.kind=='fact' and any(t in s.label.lower() for t in ('name','number','nationality','type','category'))]
+            chosen=preferred[:2] or [s for s in facts if s.kind=='fact'][:2]
+            summary+=' '.join(f'{s.label}: {s.originalValue}.' for s in chosen)+' '
         # Key dates
-        if dates: summary+=' '.join(s.text for s in dates[:2])+' '
+        if dates:
+            summary+=' '.join(f'{s.label}: {s.originalValue}.' for s in dates[:2])+' '
         # Add first explanation/clause for context
         if explanations: summary+=explanations[0].text
         if attention: summary+=' '+attention[0].text
@@ -388,7 +392,7 @@ def missing_information(semantic,pages):
     expected={
         'Employment Contract': [('compensation',('salary','compensation','pay','remuneration')),('termination notice',('notice','termination'))],
         'Offer Letter':[('acceptance deadline',('accept','deadline')),('start date',('start','commencement'))],
-        'Passport':[('expiry date',('expir',)),('passport number',('passport number',))],
+        'Passport':[('expiry date',('expir',)),('passport number',('passport number','passport no','passport #','passport num'))],
         'Employment Pass':[('expiry date',('expir','valid until')),('sponsor',('sponsor','employer'))],
         'Insurance Document':[('exclusions',('exclusion','excluded')),('claim procedure',('claim',))],
         'Tenancy Agreement':[('deposit refund conditions',('refund','return of deposit')),('termination notice',('notice',))],

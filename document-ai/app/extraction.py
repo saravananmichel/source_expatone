@@ -70,6 +70,35 @@ def ocr(image, page_number):
     return Page(page=page_number, text='\n'.join(b.text for b in blocks), width=image.width,
         height=image.height, extraction='ocr', rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels', extractionConfidence=max(0,min(1,best_score/100)), blocks=blocks)
 
+def corrupted_text_layer(text: str) -> bool:
+    """Detect strongly garbled text layers before trusting their length.
+
+    This deliberately requires multiple independent signals to avoid rejecting
+    valid short codes, machine-readable zones and non-Latin documents.
+    """
+    normalized = ' '.join(text.split())
+    if len(normalized) < 40:
+        return False
+    tokens = normalized.split()
+    cjk = sum(
+        '\\u4e00' <= ch <= '\\u9fff'
+        or '\\u3040' <= ch <= '\\u30ff'
+        or '\\uac00' <= ch <= '\\ud7af'
+        for ch in normalized
+    )
+    if cjk >= 12:
+        return False
+    alphabetic = sum(ch.isalpha() for ch in normalized)
+    punctuation = sum(not ch.isalnum() and not ch.isspace() for ch in normalized)
+    short_tokens = sum(len(token) <= 2 for token in tokens)
+    return (
+        len(tokens) >= 12
+        and punctuation / len(normalized) > 0.20
+        and short_tokens / len(tokens) > 0.55
+        and alphabetic / len(normalized) < 0.42
+    )
+
+
 def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
     """Keep a readable PDF text layer even when logos, photos or QR codes exist.
 
@@ -78,7 +107,7 @@ def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
     header should still use OCR.
     """
     normalized = ' '.join(text.split())
-    if len(normalized) < 40:
+    if len(normalized) < 40 or corrupted_text_layer(text):
         return False
     if not has_images:
         return True
