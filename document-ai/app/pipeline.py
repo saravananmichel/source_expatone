@@ -121,8 +121,8 @@ def validate_grounding(semantic, pages):
     # identifiers. A Malaysian ePASS often includes the holder's passport number,
     # but that does not make the issued document a passport.
     source_text = ' '.join(page.text for page in pages).casefold()
-    has_epass_title = bool(re.search(r'\\b(?:e\\s*-?\\s*pass|electronic pass)\\b', source_text))
-    has_employment_title = bool(re.search(r'\\bemployment\\s+pass\\b', source_text))
+    has_epass_title = bool(re.search(r'\b(?:e\s*-?\s*pass|electronic pass)\b', source_text))
+    has_employment_title = bool(re.search(r'\bemployment\s+pass\b', source_text))
     has_issuer = ('malaysia immigration' in source_text
                   or 'government of malaysia' in source_text
                   or 'immigration department of malaysia' in source_text)
