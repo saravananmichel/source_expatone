@@ -113,14 +113,31 @@ async def health():
 
 @app.get('/ready')
 async def ready():
-    model=selected_profile().model
-    if not model or not os.getenv('DOCUMENT_AI_SERVICE_KEY') or not shutil.which('tesseract'):
-        raise HTTPException(503,'Service not ready')
+    model = selected_profile().model
+    if not model:
+        logger.error("Readiness failed: model_not_configured")
+        raise HTTPException(503, 'Service not ready')
+    if not os.getenv('DOCUMENT_AI_SERVICE_KEY'):
+        logger.error("Readiness failed: service_key_missing")
+        raise HTTPException(503, 'Service not ready')
+    if not shutil.which('tesseract'):
+        logger.error("Readiness failed: tesseract_missing")
+        raise HTTPException(503, 'Service not ready')
     try:
         await check_model()
-        return {'status':'ready'}
+        logger.info("Readiness passed: all_dependencies_available")
+        return {'status': 'ready'}
+    except httpx.TimeoutException:
+        logger.error("Readiness failed: model_timeout")
+    except httpx.HTTPStatusError as exc:
+        logger.error("Readiness failed: model_http_status_%s", exc.response.status_code)
+    except httpx.RequestError:
+        logger.error("Readiness failed: model_connection_error")
+    except ValueError:
+        logger.error("Readiness failed: model_configuration_error")
     except Exception:
-        raise HTTPException(503,'Service not ready') from None
+        logger.error("Readiness failed: model_unexpected_error")
+    raise HTTPException(503, 'Service not ready') from None
 
 @app.post('/analyze')
 async def analyze(request: Request, file: UploadFile = File(...),
