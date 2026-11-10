@@ -8,3 +8,5 @@ pypdfium2==5.13.0
 Pillow==12.3.0
 pytesseract==0.3.13
 pytest==9.1.1
+
+google-auth==2.43.0
