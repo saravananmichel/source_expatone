@@ -16,3 +16,10 @@ def test_disconnected_labels_are_not_assigned_values():
 def test_explicit_colon_pair_is_retained():
     fields = list(_source_fields("Passport No: A12345678\nName: SAMPLE USER"))
     assert ("Passport No", "A12345678", "Passport No: A12345678") in fields
+
+
+def test_repetitive_ocr_line_is_not_promoted_to_supported_field():
+    text = "Name: SAMPLE USER\n" + ("JIM" * 25) + ": GARBLED\nPassport No: A12345678"
+    fields = list(_source_fields(text))
+    assert len(fields) == 2
+    assert [field[0] for field in fields] == ["Name", "Passport No"]
