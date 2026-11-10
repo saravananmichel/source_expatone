@@ -1,10 +1,9 @@
 import httpx
-import pytest
+import asyncio
 from app import ollama
 
 
-@pytest.mark.asyncio
-async def test_dev_chat_tuning(monkeypatch):
+def test_dev_chat_tuning(monkeypatch):
     monkeypatch.setenv("DOCUMENT_AI_PROFILE", "development")
     monkeypatch.delenv("OLLAMA_NUM_THREAD", raising=False)
     monkeypatch.delenv("OLLAMA_KEEP_ALIVE", raising=False)
@@ -18,6 +17,7 @@ async def test_dev_chat_tuning(monkeypatch):
         assert payload["options"]["num_thread"] == 2
         assert payload["keep_alive"] == "30m"
         return httpx.Response(200, json={"done": True, "done_reason": "stop", "eval_count": 1, "eval_duration": 1000000000})
-    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
-        response = await ollama.post_chat(client, {"model": "qwen3:0.6b", "options": {}})
-    assert response.status_code == 200
+    async def run():
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            return await ollama.post_chat(client, {"model": "qwen3:0.6b", "options": {}})
+    assert asyncio.run(run()).status_code == 200
