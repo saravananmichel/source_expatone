@@ -246,7 +246,8 @@ if (builder.Configuration["DocumentIntelligence:Enabled"] == "true")
     .AddHttpMessageHandler(sp => new DocumentAiCloudRunAuthHandler(
         sp.GetRequiredService<IConfiguration>(), "DocumentIntelligence:CloudRunAudience"));
     builder.Services.AddScoped<IDocumentIntelligenceService>(sp => sp.GetRequiredService<DocumentIntelligenceService>());
-    builder.Services.AddHostedService<DocumentIntelligenceWorker>();
+    if (builder.Configuration.GetValue("DocumentIntelligence:WorkerEnabled", true))
+        builder.Services.AddHostedService<DocumentIntelligenceWorker>();
 }
 
 // Independent document text extraction; does not depend on Ollama analysis.
@@ -278,7 +279,8 @@ if (builder.Configuration["DocumentTextExtraction:Enabled"] == "true")
     .AddHttpMessageHandler(sp => new DocumentAiCloudRunAuthHandler(
         sp.GetRequiredService<IConfiguration>(), "DocumentTextExtraction:CloudRunAudience"));
 
-    builder.Services.AddHostedService<DocumentTextExtractionWorker>();
+    if (builder.Configuration.GetValue("DocumentTextExtraction:WorkerEnabled", true))
+        builder.Services.AddHostedService<DocumentTextExtractionWorker>();
 }
 
 var isDatabaseInitialization = args.Contains("--initialize-database");
