@@ -9,6 +9,8 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Request
 from .schemas import Page
+from .adaptive_profile import selected_profile
+from .private_fallback import source_fallback
 from .limits import IngestionLimits
 from .pipeline import reason, render
 from .ollama import InferenceOutputError
@@ -107,11 +109,11 @@ async def extract_document(file: UploadFile = File(...),
 
 @app.get('/health')
 async def health():
-    return {'status':'ok','configured':bool(os.getenv('OLLAMA_MODEL') and os.getenv('DOCUMENT_AI_SERVICE_KEY'))}
+    return {'status':'ok','configured':bool(selected_profile().model and os.getenv('DOCUMENT_AI_SERVICE_KEY'))}
 
 @app.get('/ready')
 async def ready():
-    model=os.getenv('OLLAMA_MODEL')
+    model=selected_profile().model
     if not model or not os.getenv('DOCUMENT_AI_SERVICE_KEY') or not shutil.which('tesseract'):
         raise HTTPException(503,'Service not ready')
     try:
@@ -167,12 +169,14 @@ async def _analyze_impl(file, x_service_key):
             if os.getenv("DOCUMENT_AI_ENVIRONMENT") == "Production": validate_config()
             data = await file.read(10*1024*1024+1)
             if len(data)>10*1024*1024: raise HTTPException(413,'File too large')
-            if not os.getenv('OLLAMA_MODEL'): raise HTTPException(503,'Model not configured')
-            # Fail before parsing sensitive uploads when inference is unavailable.
+            profile = selected_profile()
+            model_available = True
             try:
                 await check_model()
             except (httpx.HTTPError, ValueError, KeyError):
-                raise HTTPException(503, 'Document model unavailable; retry later') from None
+                if profile.name != 'development':
+                    raise HTTPException(503, 'Document model unavailable; retry later') from None
+                model_available = False
             stage_started = time.monotonic()
             process = await asyncio.create_subprocess_exec(sys.executable, '-m', 'app.extract_worker', file.content_type,
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
@@ -188,7 +192,17 @@ async def _analyze_impl(file, x_service_key):
             logger.info("Extraction completed pages=%d bytes=%d duration_ms=%d",len(pages),len(data),int((time.monotonic()-stage_started)*1000))
             extraction_ms=round((time.monotonic()-stage_started)*1000)
             stage_started=time.monotonic()
-            semantic, model = await reason(pages)
+            if profile.name == 'development':
+                try:
+                    if not model_available:
+                        raise ValueError('model_unavailable')
+                    semantic, model = await asyncio.wait_for(reason(pages), timeout=profile.inference_seconds + 2)
+                except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError):
+                    logger.warning('DEV model analysis unavailable; returning source-only result')
+                    semantic, model = source_fallback(pages), 'source-only-private-fallback'
+                    semantic._quality = {'reasoningStatus':'skipped: fallback', 'supportMethod':'exact-source-only', 'verdictCoverage':0.0}
+            else:
+                semantic, model = await reason(pages)
             logger.info("Understanding completed duration_ms=%d",int((time.monotonic()-stage_started)*1000))
             result=render(semantic,pages,model)
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
