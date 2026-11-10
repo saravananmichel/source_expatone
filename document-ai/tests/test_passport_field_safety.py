@@ -55,3 +55,28 @@ def test_passport_number_alias_is_not_reported_missing():
         ]
     })
     assert not any('Passport number' in warning for warning in missing_information(document, []))
+
+
+def test_passport_summary_uses_short_verified_fields():
+    from app.pipeline import render
+    from app.schemas import Page
+    doc = SemanticDocument.model_validate({
+        'documentCategory': 'Passport',
+        'classificationConfidence': .9,
+        'classificationEvidenceIds': ['e1'],
+        'evidence': [{'id': 'e1', 'page': 1, 'sourceText': 'Passport No: X1234567'}],
+        'statements': [
+            {'id': 's1', 'kind': 'fact', 'label': 'Passport No',
+             'text': 'Passport No: X1234567.', 'originalValue': 'X1234567',
+             'confidence': .9, 'evidenceIds': ['e1'], 'supportStatus': 'SUPPORTED'},
+            {'id': 's2', 'kind': 'date', 'label': 'Date of Expiry',
+             'text': 'Date of Expiry: 22/12/2031.', 'originalValue': '22/12/2031',
+             'confidence': .9, 'evidenceIds': ['e1'], 'supportStatus': 'SUPPORTED'}
+        ]
+    })
+    pages = [Page(page=1, text='Passport No: X1234567',
+                  width=600, height=800, extraction='native', blocks=[])]
+    output = render(doc, pages, 'test-model')
+    assert 'Passport No: X1234567' in output['summary']
+    assert output['summary'].count('22/12/2031') == 1
+    assert not any('Passport number' in item for item in output['missingInformation'])
