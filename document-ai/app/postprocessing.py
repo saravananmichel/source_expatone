@@ -4,12 +4,37 @@ from datetime import date, datetime, timezone
 from decimal import Decimal, InvalidOperation
 from .schemas import Statement
 
+def _valid_single_date(value):
+    """Only treat a single calendar date as a date; never merge nearby fields."""
+    value = value.strip()
+    for pattern, fmt in (
+        (r'\\d{4}-\\d{2}-\\d{2}', '%Y-%m-%d'),
+        (r'\\d{1,2}/\\d{1,2}/\\d{4}', '%d/%m/%Y'),
+        (r'\\d{1,2} [A-Za-z]{3} \\d{4}', '%d %b %Y'),
+    ):
+        if re.fullmatch(pattern, value, flags=re.IGNORECASE):
+            try:
+                datetime.strptime(value.title(), fmt)
+                return True
+            except ValueError:
+                return False
+    return False
+
+
 def enrich(semantic, today=None):
     today=today or datetime.now(timezone.utc).date()
     statements=semantic.statements
     for item in statements:
         original=item.originalValue.strip()
         label=item.label.lower()
+        # The model sometimes tags locations as dates or merges two date
+        # columns into one value. Never advertise those as deadlines.
+        if item.kind == 'date' and (
+            'place' in label or 'location' in label
+            or not _valid_single_date(original)
+        ):
+            item.kind = 'fact'
+            item.normalizedValue = None
         if item.kind in ('fact','entity','date','money'):
             if any(t in label for t in ('date','expiry','valid until')) and re.search(r'\d{4}-\d{2}-\d{2}',original): item.kind='date'
             if re.search(r'(?:RM|MYR|USD|EUR|GBP)\s*\d',original) and any(t in label for t in ('salary','rent','deposit','premium','balance','amount','limit','income','deduct')): item.kind='money'
