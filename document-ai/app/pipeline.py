@@ -117,6 +117,16 @@ def validate_grounding(semantic, pages):
             bare = num.replace(',', '')
             if num not in source and bare not in source.replace(',', ''): raise ValueError('unsupported_number')
     if any(ref not in evidence for ref in refs): raise ValueError('missing_evidence')
+    # Explicit document-title evidence takes precedence over incidental passport
+    # identifiers. A Malaysian ePASS often includes the holder's passport number,
+    # but that does not make the issued document a passport.
+    source_text = ' '.join(page.text for page in pages).casefold()
+    if semantic.documentCategory == 'Passport' and (
+        ('epass' in source_text or 'electronic pass' in source_text)
+        and ('employment pass' in source_text or 'immigration' in source_text)
+    ):
+        semantic.documentCategory = 'Employment Pass' if 'employment pass' in source_text else 'Immigration Document'
+        semantic.classificationConfidence = min(semantic.classificationConfidence, 0.8)
     if semantic.classificationConfidence < .65: semantic.documentCategory = 'Unknown'
     return semantic
 
