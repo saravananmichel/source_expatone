@@ -214,8 +214,12 @@ async def _analyze_impl(file, x_service_key):
                     if not model_available:
                         raise ValueError('model_unavailable')
                     semantic, model = await asyncio.wait_for(reason(pages), timeout=profile.inference_seconds + 2)
-                except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError):
-                    logger.warning('DEV model analysis unavailable; returning source-only result')
+                except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError) as error:
+                    # Log only the exception class: model errors may include source text.
+                    logger.warning(
+                        'document_ai stage=reasoning event=fallback reason_type=%s',
+                        type(error).__name__,
+                    )
                     semantic, model = source_fallback(pages), 'source-only-private-fallback'
                     semantic._quality = {'reasoningStatus':'skipped: fallback', 'supportMethod':'exact-source-only', 'verdictCoverage':0.0}
             else:
