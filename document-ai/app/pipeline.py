@@ -347,7 +347,7 @@ def render(semantic, pages, model):
             # Prefer concise verified labels/values over model-generated strings
             # that may repeat adjacent OCR columns or unrelated date fields.
             preferred=[s for s in facts if s.kind=='fact' and any(t in s.label.lower() for t in ('name','number','nationality','type','category'))]
-            chosen=preferred[:2] or [s for s in facts if s.kind=='fact'][:2]
+            chosen=preferred[:2] or [s for s in facts if s.kind=='fact' and s.label != 'Extracted source text'][:2]
             summary+=' '.join(f'{s.label}: {s.originalValue}.' for s in chosen)+' '
         # Key dates
         if dates:
@@ -357,9 +357,13 @@ def render(semantic, pages, model):
         if attention: summary+=' '+attention[0].text
         summary=summary.strip()
     else:
-        # Last resort: use evidence quotes rather than unverified statements
-        evidence_texts='; '.join(e.sourceText for e in semantic.evidence[:3])
-        summary=f'This document appears to be a {semantic.documentCategory}. Source details: {evidence_texts}. Verify important information with the relevant authority.'
+        # Do not dump raw OCR or personally identifying source text into a
+        # summary when semantic understanding produced no verified facts.
+        summary=('Document type could not be verified. Review the extracted text '
+                 'and confirm important information against the original document.'
+                 if semantic.documentCategory == 'Unknown'
+                 else f'This document appears to be a {semantic.documentCategory}. '
+                      'Review the original document to verify important information.')
     # Plain-language explanation: all supported clause/interpretation/relationship statements
     plain_parts=[]
     for s in explanations:
