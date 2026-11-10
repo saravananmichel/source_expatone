@@ -102,7 +102,9 @@ def source_fallback(pages):
             break
     if not evidence:
         for page in pages:
-            if page.text.strip():
+            # Do not elevate visibly corrupted OCR into a supported fact.
+            from .extraction import corrupted_text_layer
+            if page.text.strip() and not corrupted_text_layer(page.text):
                 snippet = page.text.strip()[:180]
                 evidence.append(Evidence(id='e0', page=page.page,
                                          sourceText=snippet))
@@ -115,7 +117,7 @@ def source_fallback(pages):
                 ))
                 break
     if not evidence:
-        raise ValueError('no_source_text')
+        raise ValueError('no_reliable_source_text')
     return SemanticDocument(documentCategory='Unknown',
         classificationConfidence=0, classificationEvidenceIds=[evidence[0].id],
         statements=statements, evidence=evidence)
