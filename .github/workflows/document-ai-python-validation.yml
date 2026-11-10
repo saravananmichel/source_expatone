@@ -33,8 +33,9 @@ jobs:
       - name: Install OCR engine
         run: |
           sudo apt-get update
-          sudo apt-get install -y tesseract-ocr tesseract-ocr-eng
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-eng tesseract-ocr-msa tesseract-ocr-tam tesseract-ocr-chi-sim
           tesseract --version
+          tesseract --list-langs
       - name: Install Python dependencies
         run: python -m pip install -r requirements.txt
       - name: Compile Document AI Python modules
