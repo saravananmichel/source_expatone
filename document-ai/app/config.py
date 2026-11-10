@@ -4,6 +4,7 @@ import ipaddress
 from urllib.parse import urlsplit
 
 import httpx
+from .adaptive_profile import selected_profile
 
 
 def ollama_base_url():
@@ -29,7 +30,7 @@ def ollama_timeout(read_seconds):
 
 
 async def check_model():
-    model = os.getenv('OLLAMA_MODEL')
+    model = selected_profile().model
     if not model:
         raise ValueError('Model not configured')
     async with httpx.AsyncClient(timeout=ollama_timeout(3)) as client:
@@ -41,11 +42,11 @@ async def check_model():
 
 def validate_config():
     ollama_base_url()
-    if not os.getenv('DOCUMENT_AI_SERVICE_KEY') or not os.getenv('OLLAMA_MODEL'):
+    if not os.getenv('DOCUMENT_AI_SERVICE_KEY') or not selected_profile().model:
         raise ValueError('Service key and model must be configured')
     if os.getenv('DOCUMENT_AI_ENVIRONMENT') == 'Production':
         key = os.getenv('DOCUMENT_AI_SERVICE_KEY', '')
         if len(key) < 32 or key.startswith(('YOUR_', 'REPLACE_')):
             raise ValueError('Production requires a strong service key')
-        if os.getenv('OLLAMA_MODEL') != 'qwen3:4b' or os.getenv('SUPPORT_MODEL', 'qwen3:4b') != 'qwen3:4b':
+        if selected_profile().name == 'production' and (os.getenv('OLLAMA_MODEL') != 'qwen3:4b' or os.getenv('SUPPORT_MODEL', 'qwen3:4b') != 'qwen3:4b'):
             raise ValueError('Production requires qwen3:4b')
