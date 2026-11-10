@@ -28,19 +28,28 @@ def exact_support(semantic):
     return semantic
 
 
-def _epass_fields(pages):
-    """Extract only explicit label/value pairs from a Malaysia ePASS text layer.
 
-    This is a conservative source-only parser, not verification of pass validity.
-    """
-    joined = '\n'.join(p.text for p in pages)
-    if not (re.search(r'(?i)ePASS Government of Malaysia', joined)
-            and re.search(r'(?i)EMPLOYMENT PASS', joined)):
-        return []
-    patterns = (
-        ('Holder name', r'(?im)^\s*Name\s*:\s*([^\n]+)', 'entity'),
-        ('Gender', r'(?im)^\s*Gender\s*:\s*([^\n]+)', 'fact'),
-        ('Passport number', r'(?im)^\s*Passport\s*No\s*:\s*([A-Z0-9]+)\s*
+def _epass_fields(pages):
+    """Return source-backed Malaysia ePASS fields without inferring missing values."""
+    fields = (
+        ('Holder name', 'Name', 'entity'),
+        ('Gender', 'Gender', 'fact'),
+        ('Passport number', 'Passport No', 'fact'),
+        ('Nationality', 'Nationality', 'fact'),
+        ('Employer', 'With', 'entity'),
+        ('Issue date', 'Date Of Issue', 'date'),
+    )
+    found = []
+    for page in pages:
+        text = page.text
+        if not (re.search(r'ePASS\\s+Government of Malaysia', text, re.I)
+                and re.search(r'EMPLOYMENT PASS', text, re.I)):
+            continue
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        # In native PDFs labels may be listed first and their values separately.
+        # Only accept same-line label/value pairs to avoid accidental association.
+        for label, source_label, kind in fields:
+            pattern = r'^' + re.escape(source_label) + r'\\s*:\\s*(\\S.*)
     passages = source_passages(pages)
     if not passages:
         raise ValueError('no_source_text')
@@ -76,22 +85,20 @@ def _epass_fields(pages):
             break
     if not evidence:
         raise ValueError('no_source_text')
-    # Prefer exact, field-specific source statements for a recognizable ePASS.
-    # Do not infer immigration status or invent absent fields.
-    epass = _epass_fields(pages)
-    if epass:
+    epass_fields = _epass_fields(pages)
+    if epass_fields:
         structured = []
-        for label, value, kind, page_number in epass:
-            matching = next((e for e in evidence
-                             if e.page == page_number and value in e.sourceText), None)
-            if matching is None:
+        for label, value, kind, page_number in epass_fields:
+            supporting = next((item for item in evidence
+                               if item.page == page_number and value in item.sourceText), None)
+            if supporting is None:
                 continue
             structured.append(Statement(
                 id=f'epass-{len(structured)}', kind=kind,
                 label=label, text=f'{label}: {value}.',
                 originalValue=value, confidence=0.7,
-                evidenceIds=[matching.id], supportStatus='SUPPORTED',
-                supportReason='Exact source value; document not independently verified.'
+                evidenceIds=[supporting.id], supportStatus='SUPPORTED',
+                supportReason='Exact source quotation; not independent verification.'
             ))
         if structured:
             return SemanticDocument(
@@ -113,24 +120,19 @@ def _epass_fields(pages):
     return SemanticDocument(documentCategory='Unknown',
         classificationConfidence=0, classificationEvidenceIds=[evidence[0].id],
         statements=statements, evidence=evidence)
-, 'fact'),
-        ('Nationality', r'(?im)^\s*Nationality\s*:\s*([^\n]+)', 'fact'),
-        ('Employer', r'(?im)^\s*With\s*:\s*([^\n]+)', 'entity'),
-        ('Issue date', r'(?im)^\s*Date\s*Of\s*Issue\s*:\s*(\d{1,2}\s+[A-Z]{3}\s+\d{4})', 'date'),
-        ('Valid until', r'(?i)until\s+(\d{1,2}\s+[A-Za-z]{3}\s+\d{4})', 'date'),
-    )
-    found = []
-    for label, pattern, kind in patterns:
-        match = re.search(pattern, joined)
-        if not match:
-            continue
-        value = match.group(1).strip()
-        if not value or len(value) > 120:
-            continue
-        page = next((p for p in pages if value in p.text), None)
-        if page is None:
-            continue
-        found.append((label, value, kind, page.page))
+
+            for line in lines:
+                match = re.match(pattern, line, re.I)
+                if match:
+                    value = match.group(1).strip()
+                    if len(value) <= 120:
+                        found.append((label, value, kind, page.page))
+                    break
+        for line in lines:
+            match = re.search(r'\\buntil\\s+(\\d{1,2}\\s+[A-Za-z]{3}\\s+\\d{4})\\b', line, re.I)
+            if match:
+                found.append(('Valid until', match.group(1), 'date', page.page))
+                break
     return found
 
 
