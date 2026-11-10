@@ -70,6 +70,30 @@ def ocr(image, page_number):
     return Page(page=page_number, text='\n'.join(b.text for b in blocks), width=image.width,
         height=image.height, extraction='ocr', rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels', extractionConfidence=max(0,min(1,best_score/100)), blocks=blocks)
 
+def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
+    """Keep a readable PDF text layer even when logos, photos or QR codes exist.
+
+    A previous image-presence heuristic sent short but perfectly searchable
+    one-page passes through OCR. A scanned page with only a small searchable
+    header should still use OCR.
+    """
+    normalized = ' '.join(text.split())
+    if len(normalized) < 40:
+        return False
+    if not has_images:
+        return True
+    # Substantial text layers are generally more faithful than raster OCR.
+    if len(normalized) >= 350:
+        return True
+    # Short structured forms often contain images but have meaningful text.
+    labels = (
+        'passport no', 'nationality', 'date of issue', 'place of issue',
+        'employment pass', 'multiple entry visa', 'ePass Holder Information',
+    )
+    lower = normalized.lower()
+    return len(normalized) >= 120 and sum(label.lower() in lower for label in labels) >= 2
+
+
 def extract(data: bytes, content_type: str):
     if content_type == 'application/pdf':
         if not data.startswith(b'%PDF-'): raise ValueError('invalid_file')
@@ -85,9 +109,10 @@ def extract(data: bytes, content_type: str):
                     textpage = page.get_textpage()
                     try:
                         text = textpage.get_text_range()
-                        # Mixed scanned/native pages must not be accepted just for a typed header.
-                        has_scan=bool(native.images) and len(text.strip())<1000
-                        if len(text.strip()) >= 40 and not has_scan:
+                        # Embedded images (photos, logos, QR codes) do not
+                        # imply the text layer is a scan. Prefer searchable
+                        # text for structured ePASS/visa documents.
+                        if prefer_native_pdf_text(text, bool(native.images)):
                             blocks = []
                             for j in range(textpage.count_rects()):
                                 x0,y0,x1,y1 = textpage.get_rect(j)
