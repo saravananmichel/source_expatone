@@ -79,13 +79,13 @@ def repetitive_ocr_noise(text: str) -> bool:
     normalized = ''.join(text.split())
     if len(normalized) < 36:
         return False
-    return bool(re.search(r'([A-Za-z]{3,12})\\1{5,}', normalized, flags=re.IGNORECASE))
+    return bool(re.search(r'([A-Za-z]{3,12})\1{5,}', normalized, flags=re.IGNORECASE))
 
 
 def suppress_repetitive_ocr_noise(text: str) -> str:
     """Remove only long repeated alphabetic runs, preserving nearby fields."""
     return re.sub(
-        r'([A-Za-z]{3,12})\\1{5,}',
+        r'([A-Za-z]{3,12})\1{5,}',
         '',
         text,
         flags=re.IGNORECASE,
