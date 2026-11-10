@@ -28,6 +28,18 @@ def exact_support(semantic):
     return semantic
 
 
+def _plausible_field(label, value):
+    """Reject obvious OCR punctuation noise without inventing semantics."""
+    letters = sum(char.isalpha() for char in label)
+    value_chars = sum(char.isalnum() for char in value)
+    return (
+        letters >= 2 and letters / max(1, len(label)) >= 0.45
+        and value_chars >= 3
+        and value_chars / max(1, len(value)) >= 0.6
+        and not re.search(r'[<>~\\\\]{2,}', label + value)
+    )
+
+
 def _source_fields(text):
     """Recover literal label/value pairs from native PDF reading order.
 
@@ -39,7 +51,7 @@ def _source_fields(text):
         match = re.fullmatch(r'([^:\\n]{2,60})\\s*:\\s*(.{1,180})', line)
         if match:
             label, value = match.group(1).strip(), match.group(2).strip()
-            if value and not value.startswith(':'):
+            if value and not value.startswith(':') and _plausible_field(label, value):
                 yield label, value, line
             continue
         if i + 1 >= len(lines):
@@ -58,7 +70,7 @@ def _source_fields(text):
             source = '\\n'.join(lines[i:i + 2])
         else:
             continue
-        if value and len(value) <= 180 and ':' not in value:
+        if value and len(value) <= 180 and ':' not in value and _plausible_field(label, value):
             yield label, value, source
 
 
