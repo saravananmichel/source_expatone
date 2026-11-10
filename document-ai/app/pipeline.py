@@ -121,11 +121,13 @@ def validate_grounding(semantic, pages):
     # identifiers. A Malaysian ePASS often includes the holder's passport number,
     # but that does not make the issued document a passport.
     source_text = ' '.join(page.text for page in pages).casefold()
-    if semantic.documentCategory == 'Passport' and (
-        ('epass' in source_text or 'electronic pass' in source_text)
-        and ('employment pass' in source_text or 'immigration' in source_text)
-    ):
-        semantic.documentCategory = 'Employment Pass' if 'employment pass' in source_text else 'Immigration Document'
+    has_epass_title = bool(re.search(r'\\b(?:e\\s*-?\\s*pass|electronic pass)\\b', source_text))
+    has_employment_title = bool(re.search(r'\\bemployment\\s+pass\\b', source_text))
+    has_issuer = ('malaysia immigration' in source_text
+                  or 'government of malaysia' in source_text
+                  or 'immigration department of malaysia' in source_text)
+    if semantic.documentCategory == 'Passport' and has_epass_title and has_issuer:
+        semantic.documentCategory = 'Employment Pass' if has_employment_title else 'Immigration Document'
         semantic.classificationConfidence = min(semantic.classificationConfidence, 0.8)
     if semantic.classificationConfidence < .65: semantic.documentCategory = 'Unknown'
     return semantic
