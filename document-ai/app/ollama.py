@@ -4,6 +4,7 @@ import time
 import logging
 logger = logging.getLogger("uvicorn.error")
 from .config import ollama_base_url
+from .cloud_run_auth import ollama_auth_headers
 
 class InferenceOutputError(ValueError):
     """Deterministic output failure; do not retry the same request unchanged."""
@@ -24,7 +25,7 @@ async def post_chat(client, payload):
     logger.info("Ollama start stage=%s max_tokens=%s",
                 stage, payload.get('options', {}).get('num_predict'))
     try:
-        response = await client.post(ollama_base_url() + '/api/chat', json=payload)
+        response = await client.post(ollama_base_url() + '/api/chat', json=payload, headers=await ollama_auth_headers())
         logger.info("Ollama response stage=%s status=%s duration_ms=%d",
                     stage, response.status_code,
                     int((time.monotonic()-started)*1000))
@@ -50,7 +51,7 @@ async def stream_chat(client, payload, metrics=None):
     first_token = None
     content = []
     final = None
-    async with client.stream('POST', ollama_base_url() + '/api/chat', json={**payload, 'stream': True}) as response:
+    async with client.stream('POST', ollama_base_url() + '/api/chat', json={**payload, 'stream': True}, headers=await ollama_auth_headers()) as response:
         response.raise_for_status()
         async for line in response.aiter_lines():
             if not line: continue
