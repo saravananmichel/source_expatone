@@ -117,6 +117,8 @@ def source_fallback(pages):
                 ))
                 break
     if not evidence:
+        if not any(page.text.strip() for page in pages):
+            raise ValueError('no_source_text')
         raise ValueError('no_reliable_source_text')
     return SemanticDocument(documentCategory='Unknown',
         classificationConfidence=0, classificationEvidenceIds=[evidence[0].id],
