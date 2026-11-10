@@ -359,11 +359,20 @@ def render(semantic, pages, model):
     else:
         # Do not dump raw OCR or personally identifying source text into a
         # summary when semantic understanding produced no verified facts.
-        summary=('Document type could not be verified. Review the extracted text '
-                 'and confirm important information against the original document.'
-                 if semantic.documentCategory == 'Unknown'
-                 else f'This document appears to be a {semantic.documentCategory}. '
-                      'Review the original document to verify important information.')
+        if semantic.documentCategory == 'Unknown':
+            summary=('Document type could not be verified. Review the extracted text '
+                     'and confirm important information against the original document.')
+        else:
+            # Preserve short, source-backed evidence for known document types.
+            # Avoid long or repetitive OCR dumps in the prominent summary.
+            from .extraction import repetitive_ocr_noise
+            quotes=[e.sourceText.strip() for e in semantic.evidence
+                    if e.sourceText.strip() and len(e.sourceText.strip()) <= 180
+                    and not repetitive_ocr_noise(e.sourceText)]
+            summary=f'This document appears to be a {semantic.documentCategory}. '
+            if quotes:
+                summary+='Source details: '+'; '.join(quotes[:2])+'. '
+            summary+='Verify important information against the original document.'
     if model == 'source-only-private-fallback' and not any(
         s.label != 'Extracted source text' for s in facts
     ):
