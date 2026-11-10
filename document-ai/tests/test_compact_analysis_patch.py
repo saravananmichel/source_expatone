@@ -57,9 +57,10 @@ def test_compact_schema_has_no_generated_evidence_or_server_fields():
 
 
 @pytest.mark.parametrize('text', [
-    'A ' * 3100, '中文文件。不得退款。' * 600,
-    'لا يجوز استرداد المبلغ بعد المغادرة.\n' * 200,
-    'Bayaran RM35.00. Tiada bayaran balik.\n' * 200,
+    pytest.param('A ' * 3100, id='long-latin'),
+    pytest.param('中文文件。不得退款。' * 600, id='long-chinese'),
+    pytest.param('لا يجوز استرداد المبلغ بعد المغادرة.\n' * 200, id='long-arabic'),
+    pytest.param('Bayaran RM35.00. Tiada bayaran balik.\n' * 200, id='long-malay'),
 ])
 def test_every_source_character_and_page_is_preserved(text):
     passages = compact.source_passages([page(text, 1), page('Second page', 2)])

@@ -4,6 +4,8 @@ import ipaddress
 from urllib.parse import urlsplit
 
 import httpx
+from .adaptive_profile import selected_profile
+from .cloud_run_auth import cloud_run_audience, ollama_auth_headers
 
 
 def ollama_base_url():
@@ -12,6 +14,9 @@ def ollama_base_url():
     url = urlsplit(value)
     if url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password or url.query or url.fragment:
         raise ValueError('Invalid Ollama base URL')
+    audience = cloud_run_audience()
+    if audience and value != audience:
+        raise ValueError('Authenticated Ollama URL must exactly match Cloud Run token audience')
     if os.getenv('DOCUMENT_AI_ENVIRONMENT') == 'Production':
         host = url.hostname
         try:
@@ -20,7 +25,8 @@ def ollama_base_url():
                 ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16') if address.version == 4)
         except ValueError:
             private = host in ('ollama', 'localhost')
-        if not private: raise ValueError('Production Ollama must use a private address')
+        if not private and not (cloud_run_audience() == value and url.scheme == 'https'):
+            raise ValueError('Production Ollama must use a private address or authenticated Cloud Run service')
     return value
 
 
@@ -29,11 +35,11 @@ def ollama_timeout(read_seconds):
 
 
 async def check_model():
-    model = os.getenv('OLLAMA_MODEL')
+    model = selected_profile().model
     if not model:
         raise ValueError('Model not configured')
     async with httpx.AsyncClient(timeout=ollama_timeout(3)) as client:
-        response = await client.get(ollama_base_url() + '/api/tags')
+        response = await client.get(ollama_base_url() + '/api/tags', headers=await ollama_auth_headers())
         response.raise_for_status()
         if model not in [item.get('name') for item in response.json()['models']]:
             raise ValueError('Model unavailable')
@@ -41,11 +47,11 @@ async def check_model():
 
 def validate_config():
     ollama_base_url()
-    if not os.getenv('DOCUMENT_AI_SERVICE_KEY') or not os.getenv('OLLAMA_MODEL'):
+    if not os.getenv('DOCUMENT_AI_SERVICE_KEY') or not selected_profile().model:
         raise ValueError('Service key and model must be configured')
     if os.getenv('DOCUMENT_AI_ENVIRONMENT') == 'Production':
         key = os.getenv('DOCUMENT_AI_SERVICE_KEY', '')
         if len(key) < 32 or key.startswith(('YOUR_', 'REPLACE_')):
             raise ValueError('Production requires a strong service key')
-        if os.getenv('OLLAMA_MODEL') != 'qwen3:4b' or os.getenv('SUPPORT_MODEL', 'qwen3:4b') != 'qwen3:4b':
+        if selected_profile().name == 'production' and (os.getenv('OLLAMA_MODEL') != 'qwen3:4b' or os.getenv('SUPPORT_MODEL', 'qwen3:4b') != 'qwen3:4b'):
             raise ValueError('Production requires qwen3:4b')
