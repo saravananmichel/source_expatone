@@ -39,7 +39,6 @@ def _plausible_field(label, value):
         and not re.search(r'[<>~\\\\]{2,}', label + value)
         and not re.search(r'[<>|;#]{1,}', label)
         and not re.search(r'[<>|]{1,}', value)
-        and any(char.isalpha() for char in label)
     )
 
 
@@ -49,7 +48,9 @@ def _source_fields(text):
     Some PDFs put the label, colon, and value on separate lines. Only accept
     adjacent source fragments; do not infer missing or translated values.
     """
-    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    from .extraction import repetitive_ocr_noise
+    lines = [line.strip() for line in text.splitlines()
+             if line.strip() and not repetitive_ocr_noise(line)]
     # PDF reading order sometimes lists several labels first and their values
     # afterward. Without layout evidence, pairing by position is speculative;
     # preserve only explicit colon-delimited pairs.
