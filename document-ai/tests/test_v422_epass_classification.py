@@ -35,3 +35,8 @@ def test_genuine_passport_stays_passport():
 def test_low_confidence_remains_unknown():
     result = _classify("ePASS EMPLOYMENT PASS Passport No: ABC123", confidence=0.4)
     assert result.documentCategory == "Unknown"
+
+
+def test_passport_with_unrelated_epass_reference_is_not_reclassified():
+    text = "PASSPORT issued by Example Country. ePASS application guidance. Passport No: ABC123"
+    assert _classify(text).documentCategory == "Passport"
