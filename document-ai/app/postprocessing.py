@@ -36,7 +36,7 @@ def enrich(semantic, today=None):
             item.kind = 'fact'
             item.normalizedValue = None
         if item.kind in ('fact','entity','date','money'):
-            if any(t in label for t in ('date','expiry','valid until')) and re.search(r'\d{4}-\d{2}-\d{2}',original): item.kind='date'
+            if ('place' not in label and 'location' not in label and any(t in label for t in ('date','expiry','valid until')) and _valid_single_date(original)): item.kind='date'
             if re.search(r'(?:RM|MYR|USD|EUR|GBP)\s*\d',original) and any(t in label for t in ('salary','rent','deposit','premium','balance','amount','limit','income','deduct')): item.kind='money'
         # Identity transliterations/aliases cannot be verified merely by quoting an original-script name.
         if any(t in label for t in ('name','employee','candidate','policyholder','account holder','patient','tenant','landlord')) and item.kind in ('fact','entity','relationship'):
