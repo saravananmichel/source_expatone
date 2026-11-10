@@ -98,7 +98,7 @@ def prefer_native_pdf_text(text: str, has_images: bool) -> bool:
     )
     readable = len(words) >= 16 or cjk_chars >= 30
     return len(normalized) >= 120 and readable and (
-        len(lines) >= 3 or len(normalized) >= 180
+        len(lines) >= 3 or len(normalized) >= 180 or cjk_chars >= 30
     )
 
 def extract(data: bytes, content_type: str):
