@@ -5,6 +5,7 @@ from urllib.parse import urlsplit
 
 import httpx
 from .adaptive_profile import selected_profile
+from .cloud_run_auth import cloud_run_audience, ollama_auth_headers
 
 
 def ollama_base_url():
@@ -21,7 +22,8 @@ def ollama_base_url():
                 ('10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16') if address.version == 4)
         except ValueError:
             private = host in ('ollama', 'localhost')
-        if not private: raise ValueError('Production Ollama must use a private address')
+        if not private and not (cloud_run_audience() == value and url.scheme == 'https'):
+            raise ValueError('Production Ollama must use a private address or authenticated Cloud Run service')
     return value
 
 
@@ -34,7 +36,7 @@ async def check_model():
     if not model:
         raise ValueError('Model not configured')
     async with httpx.AsyncClient(timeout=ollama_timeout(3)) as client:
-        response = await client.get(ollama_base_url() + '/api/tags')
+        response = await client.get(ollama_base_url() + '/api/tags', headers=await ollama_auth_headers())
         response.raise_for_status()
         if model not in [item.get('name') for item in response.json()['models']]:
             raise ValueError('Model unavailable')
