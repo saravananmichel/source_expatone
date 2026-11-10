@@ -226,19 +226,25 @@ if (!string.IsNullOrEmpty(geminiApiKey))
     builder.Services.AddScoped<IEmergencyAssistService, EmergencyAssistService>();
 }
 
-if (storageProvider == StorageProviderResolver.Aws && builder.Configuration["DocumentIntelligence:Enabled"] == "true")
+if (builder.Configuration["DocumentIntelligence:Enabled"] == "true")
 {
     builder.Services.AddScoped<IDocumentAnalysisJobs, DocumentAnalysisJobs>();
     builder.Services.AddScoped<IDocumentAnalysisService, DocumentAnalysisService>();
     builder.Services.AddHttpClient<DocumentIntelligenceService>(client =>
     {
         var address = new Uri(builder.Configuration["DocumentIntelligence:ServiceUrl"] ?? "http://localhost:8090/");
-        if (!builder.Environment.IsDevelopment() && !address.IsLoopback)
-            throw new InvalidOperationException("Document model transport must use private loopback outside local development.");
+        if (storageProvider == StorageProviderResolver.Aws && !builder.Environment.IsDevelopment() && !address.IsLoopback)
+            throw new InvalidOperationException("AWS document model transport must use private loopback.");
+        if (storageProvider == StorageProviderResolver.Gcp &&
+            (address.Scheme != Uri.UriSchemeHttps || address.IsLoopback ||
+             !address.Host.EndsWith(".run.app", StringComparison.OrdinalIgnoreCase)))
+            throw new InvalidOperationException("GCP Document AI requires a Cloud Run HTTPS endpoint.");
         client.BaseAddress = address;
         client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
         client.Timeout = TimeSpan.FromMinutes(16);
-    });
+    })
+    .AddHttpMessageHandler(sp => new DocumentAiCloudRunAuthHandler(
+        sp.GetRequiredService<IConfiguration>(), "DocumentIntelligence:CloudRunAudience"));
     builder.Services.AddScoped<IDocumentIntelligenceService>(sp => sp.GetRequiredService<DocumentIntelligenceService>());
     builder.Services.AddHostedService<DocumentIntelligenceWorker>();
 }
@@ -268,7 +274,9 @@ if (builder.Configuration["DocumentTextExtraction:Enabled"] == "true")
         client.BaseAddress = address;
         client.Timeout = TimeSpan.FromSeconds(130);
         client.MaxResponseContentBufferSize = 8 * 1024 * 1024;
-    });
+    })
+    .AddHttpMessageHandler(sp => new DocumentAiCloudRunAuthHandler(
+        sp.GetRequiredService<IConfiguration>(), "DocumentTextExtraction:CloudRunAudience"));
 
     builder.Services.AddHostedService<DocumentTextExtractionWorker>();
 }
@@ -489,3 +497,41 @@ if (args.Contains("--seed-knowledge"))
 app.Run();
 
 public partial class Program { }
+
+
+// Keyless Cloud Run IAM auth is opt-in; an empty audience preserves existing behavior.
+internal sealed class DocumentAiCloudRunAuthHandler(IConfiguration configuration, string audienceKey)
+    : DelegatingHandler
+{
+    private Google.Apis.Auth.OAuth2.OidcToken? _token;
+    private readonly SemaphoreSlim _lock = new(1, 1);
+
+    protected override async Task<HttpResponseMessage> SendAsync(
+        HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        var audience = configuration[audienceKey];
+        if (string.IsNullOrWhiteSpace(audience))
+            return await base.SendAsync(request, cancellationToken);
+
+        if (request.RequestUri is null ||
+            request.RequestUri.Scheme != Uri.UriSchemeHttps ||
+            !string.Equals(request.RequestUri.GetLeftPart(UriPartial.Authority).TrimEnd('/'),
+                audience.TrimEnd('/'), StringComparison.Ordinal))
+            throw new InvalidOperationException("Document AI Cloud Run audience must match request origin.");
+
+        await _lock.WaitAsync(cancellationToken);
+        try
+        {
+            _token ??= await GoogleCredential.GetApplicationDefault()
+                .GetOidcTokenAsync(OidcTokenOptions.FromTargetAudience(audience));
+            var tokenValue = await _token.GetAccessTokenAsync(cancellationToken);
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", tokenValue);
+        }
+        finally
+        {
+            _lock.Release();
+        }
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
