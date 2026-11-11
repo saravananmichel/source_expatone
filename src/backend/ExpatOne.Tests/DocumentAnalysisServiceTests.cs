@@ -84,6 +84,7 @@ public class DocumentAnalysisServiceTests
               "analyzerVersion": "document-engine-v2",
               "documentCategory": "Unknown",
               "summary": "Synthetic broadband bill",
+              "semanticDocument": { "pages": [{ "page": 1, "text": "Amount Due: RM 125.60", "blocks": [] }] },
               "structuredFields": [
                 {
                   "field": "amount_due",
