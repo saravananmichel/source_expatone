@@ -491,6 +491,36 @@ Date of Expiry
     );
   });
 
+  testWidgets('passport displays grounded identity fields and hides uncertain model claims', (tester) async {
+    docService.mockAnalysis = {
+      'documentCategory': 'Passport',
+      'title': 'Passport Analysis',
+      'structuredFields': [
+        {'field': 'surname', 'value': 'SAMPLE', 'page': 1, 'sourceText': 'SAMPLE', 'requiresConfirmation': true},
+        {'field': 'given_names', 'value': 'TEST PERSON', 'page': 1, 'sourceText': 'TEST PERSON', 'requiresConfirmation': true},
+        {'field': 'place_of_birth', 'value': 'TEST CITY', 'page': 1, 'sourceText': 'TEST CITY', 'requiresConfirmation': true},
+        {'field': 'sex', 'value': 'F', 'page': 1, 'sourceText': '02/03/1990 F', 'requiresConfirmation': true},
+      ],
+      'statements': [
+        {'kind': 'fact', 'label': 'Issue Date', 'originalValue': '00000000', 'supportStatus': 'UNCERTAIN'},
+      ],
+      'keyInformation': [
+        {'label': 'PIN', 'value': '000000, EXAMPLE COUNTRY', 'isExtracted': true},
+      ],
+    };
+    await tester.pumpWidget(MaterialApp(
+      home: DocumentAnalysisScreen(document: analyzedDoc, documentService: docService),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Surname'), findsOneWidget);
+    expect(find.text('Given names'), findsOneWidget);
+    expect(find.text('Place of birth'), findsOneWidget);
+    expect(find.text('Sex'), findsOneWidget);
+    expect(find.text('SAMPLE'), findsOneWidget);
+    expect(find.text('Interpretation needs review'), findsNothing);
+    expect(find.text('PIN'), findsNothing);
+  });
+
   group('DocumentQAScreen', () {
     testWidgets('shows empty state with example questions', (tester) async {
       await tester.pumpWidget(MaterialApp(
