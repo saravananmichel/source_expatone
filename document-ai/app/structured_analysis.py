@@ -23,7 +23,7 @@ RULES = tuple((field, re.compile(r"(?<!\w)(?:"+label+r")\s*[:#-]?\s*("+value+r")
 
 # Passport OCR often puts the label and value on separate lines. Only accept
 # short, immediate neighbours; never infer a number from an unlabelled line.
-PASSPORT_LABEL = re.compile(r"(?<!\w)(?:passport\s*(?:no\\.?|number|#)|no\\.?\s*pasport|nombor\s+pasport)\b", re.I)
+PASSPORT_LABEL = re.compile(r"(?<!\w)(?:passport\s*(?:no\.?|number|#)|no\.?\s*pasport|nombor\s+pasport)\b", re.I)
 PASSPORT_VALUE = re.compile(r"^[A-Z][0-9]{6,8}$|^[0-9]{7,9}$", re.I)
 DATE_LABELS = {
     "date_of_birth": re.compile(r"(?:date\s+of\s+birth|tarikh\s+lahir)", re.I),
