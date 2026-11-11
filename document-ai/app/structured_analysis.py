@@ -21,11 +21,59 @@ PATTERNS = (
 )
 RULES = tuple((field, re.compile(r"(?<!\w)(?:"+label+r")\s*[:#-]?\s*("+value+r")", re.I)) for field,label,value in PATTERNS)
 
+# Passport OCR often puts the label and value on separate lines. Only accept
+# short, immediate neighbours; never infer a number from an unlabelled line.
+PASSPORT_LABEL = re.compile(r"(?<!\\w)(?:passport\\s*(?:no\\.?|number|#)|no\\.?\\s*pasport|nombor\\s+pasport)\\b", re.I)
+PASSPORT_VALUE = re.compile(r"^[A-Z][0-9]{6,8}$|^[0-9]{7,9}$", re.I)
+DATE_LABELS = {
+    "date_of_birth": re.compile(r"(?:date\\s+of\\s+birth|tarikh\\s+lahir)", re.I),
+    "issue_date": re.compile(r"(?:date\\s+of\\s+issue|tarikh\\s+dikeluarkan)", re.I),
+    "expiry_date": re.compile(r"(?:date\\s+of\\s+expiry|date\\s+of\\s+expiration|tarikh\\s+luput)", re.I),
+}
+DATE_VALUE = re.compile(DATE, re.I)
+
+def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
+    results = []
+    for index, line in enumerate(lines):
+        if len(line) > 180:
+            continue
+        # Require a label, followed by the very next OCR line. Avoid old
+        # passport references and long unrelated numbers on the reverse page.
+        if PASSPORT_LABEL.search(line) and index + 1 < len(lines):
+            candidate = lines[index + 1].strip().upper()
+            if PASSPORT_VALUE.fullmatch(candidate):
+                results.append({"field": "passport_number", "value": candidate,
+                                "page": page, "sourceText": lines[index + 1],
+                                "requiresConfirmation": True})
+        for field, label in DATE_LABELS.items():
+            if label.search(line) and index + 1 < len(lines):
+                neighbour = lines[index + 1].strip()
+                match = DATE_VALUE.fullmatch(neighbour)
+                if match:
+                    results.append({"field": field, "value": match.group(0),
+                                    "page": page, "sourceText": lines[index + 1],
+                                    "requiresConfirmation": True})
+        # A combined issue/expiry label is common on passports. Accept only
+        # two immediately adjacent dates in left-to-right label order.
+        if DATE_LABELS["issue_date"].search(line) and DATE_LABELS["expiry_date"].search(line):
+            dates = DATE_VALUE.findall(line)
+            if len(dates) == 2:
+                for field, value in zip(("issue_date", "expiry_date"), dates):
+                    results.append({"field": field, "value": value, "page": page,
+                                    "sourceText": line, "requiresConfirmation": True})
+    return results
+
 def structured_fields(pages: list[Page]) -> list[dict]:
     results = []
     seen = set()
     for page in pages:
-        for raw in page.text.splitlines():
+        lines = page.text.splitlines()
+        for suggestion in _passport_neighbour_fields(lines, page.page):
+            key = (suggestion["field"], suggestion["value"], page.page)
+            if key not in seen:
+                seen.add(key)
+                results.append(suggestion)
+        for raw in lines:
             line = raw.strip()
             if not line or len(line) > 300:
                 continue
