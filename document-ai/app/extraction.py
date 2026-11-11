@@ -37,6 +37,7 @@ def ocr(image, page_number):
         words=[(text,float(result['conf'][i])) for i,text in enumerate(result['text']) if text.strip()]
         total=sum(len(text) for text,_ in words)
         return sum(len(text)*max(0,confidence) for text,confidence in words)/max(1,total)
+    best_score = quality(data)
     # Retry low-confidence scans with conservative cleanup. Preserve the original
     # when preprocessing does not improve OCR confidence; never mutate native PDF text.
     # Median filtering removes isolated pixel speckles; autocontrast improves faint
@@ -60,7 +61,6 @@ def ocr(image, page_number):
             pass
     # Short pages often cannot support OSD. Compare alternate rotations only when the
     # recognized text is uncertain, avoiding repeated OCR for clear upright pages.
-    best_score=quality(data)
     if best_score<85:
         original=image
         original_rotation=rotation
