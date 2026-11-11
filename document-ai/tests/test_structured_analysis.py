@@ -48,3 +48,37 @@ def test_combined_issue_and_expiry_are_separate():
 def test_unlabelled_or_distant_numbers_are_not_passport_numbers():
     fields = structured_fields([page("PASSPORT\nSome unrelated heading\n33726657\nOld Passport\n33726657")])
     assert not any(f["field"] == "passport_number" for f in fields)
+
+
+def test_passport_ocr_paired_dates_on_following_line():
+    fields = structured_fields([page("Date of Issue / Date of Expiry\n01/02/2020 31/01/2030")])
+    values = {f["field"]: f["value"] for f in fields}
+    assert values["issue_date"] == "01/02/2020"
+    assert values["expiry_date"] == "31/01/2030"
+    assert all(f["value"] in f["sourceText"] for f in fields)
+
+
+def test_passport_ocr_birth_date_with_sex_suffix():
+    fields = structured_fields([page("Date of Birth\n02/03/1990 M")])
+    assert any(f["field"] == "date_of_birth" and f["value"] == "02/03/1990" for f in fields)
+
+
+def test_old_passport_number_never_promoted_as_current():
+    for text in (
+        "Old Passport No: Z0000000",
+        "Old Passport No\nZ0000000",
+        "Old Passport\nNo. with Date and Place of issue\nZ0000000 01/02/2010",
+    ):
+        fields = structured_fields([page(text)])
+        assert not any(f["field"] == "passport_number" for f in fields)
+
+
+def test_current_passport_number_and_historical_number_disambiguated():
+    pages = [
+        page("PASSPORT\nPassport No\nK1234567"),
+        Page(page=2, text="Old Passport No: Z0000000", width=100,
+             height=100, extraction="native", blocks=[]),
+    ]
+    fields = structured_fields(pages)
+    numbers = [f["value"] for f in fields if f["field"] == "passport_number"]
+    assert numbers == ["K1234567"]

@@ -45,6 +45,24 @@ slots = asyncio.Semaphore(1)
 logger = logging.getLogger("uvicorn.error")
 
 
+def _fallback_reason(error):
+    """Bounded diagnostic code; never expose exception text or source values."""
+    if isinstance(error, asyncio.TimeoutError):
+        return 'deadline_exceeded'
+    if isinstance(error, httpx.TimeoutException):
+        return 'model_http_timeout'
+    if isinstance(error, httpx.HTTPStatusError):
+        return 'model_http_status'
+    if isinstance(error, httpx.RequestError):
+        return 'model_transport_error'
+    if isinstance(error, InferenceOutputError):
+        return 'incomplete_or_invalid_inference'
+    if isinstance(error, ValueError):
+        return 'model_unavailable' if str(error) == 'model_unavailable' else 'validation_error'
+    return 'unexpected_model_error'
+
+
+
 # Independent text extraction: deliberately separate from Ollama analysis.
 extraction_busy = False
 
@@ -198,6 +216,7 @@ async def _analyze_impl(file, x_service_key):
                 if profile.name != 'development':
                     raise HTTPException(503, 'Document model unavailable; retry later') from None
                 model_available = False
+            logger.info('document_ai stage=model_check available=%s profile=%s', model_available, profile.name)
             stage_started = time.monotonic()
             process = await asyncio.create_subprocess_exec(sys.executable, '-m', 'app.extract_worker', file.content_type,
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
@@ -221,11 +240,12 @@ async def _analyze_impl(file, x_service_key):
                 except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError) as error:
                     # Log only the exception class: model errors may include source text.
                     logger.warning(
-                        'document_ai stage=reasoning event=fallback reason_type=%s',
-                        type(error).__name__,
+                        'document_ai stage=reasoning event=fallback reason_type=%s reason_code=%s',
+                        type(error).__name__, _fallback_reason(error),
                     )
                     semantic, model = source_fallback(pages), 'source-only-private-fallback'
-                    semantic._quality = {'reasoningStatus':'skipped: fallback', 'supportMethod':'exact-source-only', 'verdictCoverage':0.0}
+                    semantic._quality = {'reasoningStatus':'skipped: fallback', 'fallbackReason': _fallback_reason(error),
+                                         'supportMethod':'exact-source-only', 'verdictCoverage':0.0}
             else:
                 semantic, model = await reason(pages)
             logger.info("Understanding completed duration_ms=%d",int((time.monotonic()-stage_started)*1000))
@@ -237,6 +257,10 @@ async def _analyze_impl(file, x_service_key):
             result['suggestedDocumentCategory'] = (
                 'Utility Bill' if billing_category(pages, suggestions) else None
             )
+            # Log only counts and statuses; never log OCR text or document values.
+            logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
+                        result.get('documentCategory', 'Unknown'), len(suggestions),
+                        model == 'source-only-private-fallback')
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
             return result
         except HTTPException: raise

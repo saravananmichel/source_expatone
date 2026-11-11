@@ -31,6 +31,8 @@ DATE_LABELS = {
     "expiry_date": re.compile(r"(?:date\s+of\s+expiry|date\s+of\s+expiration|tarikh\s+luput)", re.I),
 }
 DATE_VALUE = re.compile(DATE, re.I)
+HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canceled)\s+passport\b", re.I)
+
 
 def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
     results = []
@@ -39,7 +41,9 @@ def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
             continue
         # Require a label, followed by the very next OCR line. Avoid old
         # passport references and long unrelated numbers on the reverse page.
-        if PASSPORT_LABEL.search(line) and index + 1 < len(lines):
+        if (PASSPORT_LABEL.search(line) and not HISTORICAL_PASSPORT.search(line)
+                and not any(HISTORICAL_PASSPORT.search(previous) for previous in lines[max(0, index-3):index])
+                and index + 1 < len(lines)):
             candidate = lines[index + 1].strip().upper()
             if PASSPORT_VALUE.fullmatch(candidate):
                 results.append({"field": "passport_number", "value": candidate,
@@ -48,7 +52,9 @@ def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
         for field, label in DATE_LABELS.items():
             if label.search(line) and index + 1 < len(lines):
                 neighbour = lines[index + 1].strip()
-                match = DATE_VALUE.fullmatch(neighbour)
+                match = DATE_VALUE.match(neighbour)
+                if match and neighbour[match.end():].strip() not in ("", "M", "F", "X"):
+                    match = None
                 if match:
                     results.append({"field": field, "value": match.group(0),
                                     "page": page, "sourceText": lines[index + 1],
@@ -57,10 +63,18 @@ def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
         # two immediately adjacent dates in left-to-right label order.
         if DATE_LABELS["issue_date"].search(line) and DATE_LABELS["expiry_date"].search(line):
             dates = DATE_VALUE.findall(line)
+            if not dates and index + 1 < len(lines):
+                dates = DATE_VALUE.findall(lines[index + 1])
+                if len(dates) == 2 and not DATE_VALUE.fullmatch(lines[index + 1].strip()):
+                    source_line = lines[index + 1]
+                else:
+                    source_line = line
+            else:
+                source_line = line
             if len(dates) == 2:
                 for field, value in zip(("issue_date", "expiry_date"), dates):
                     results.append({"field": field, "value": value, "page": page,
-                                    "sourceText": line, "requiresConfirmation": True})
+                                    "sourceText": source_line, "requiresConfirmation": True})
     return results
 
 def structured_fields(pages: list[Page]) -> list[dict]:
@@ -73,7 +87,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
             if key not in seen:
                 seen.add(key)
                 results.append(suggestion)
-        for raw in lines:
+        for line_index, raw in enumerate(lines):
             line = raw.strip()
             if not line or len(line) > 300:
                 continue
@@ -84,6 +98,9 @@ def structured_fields(pages: list[Page]) -> list[dict]:
                             and len(DATE_VALUE.findall(line)) == 2)
             for field, pattern in RULES:
                 if paired_dates and field in ("issue_date", "expiry_date"):
+                    continue
+                if field == "passport_number" and (HISTORICAL_PASSPORT.search(line)
+                        or any(HISTORICAL_PASSPORT.search(previous) for previous in lines[max(0, line_index-3):line_index])):
                     continue
                 match = pattern.search(line)
                 if not match:
