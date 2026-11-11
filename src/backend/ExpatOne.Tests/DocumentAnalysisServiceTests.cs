@@ -74,6 +74,58 @@ public class DocumentAnalysisServiceTests
     }
 
     [Fact]
+    public async Task V45StructuredFieldsSurviveWorkerDtoAndAnalysisReadback()
+    {
+        // Simulates the camelCase JSON emitted by the private Python /analyze API.
+        const string workerResponse = """
+            {
+              "provider": "Local",
+              "modelVersion": "v4-local-model",
+              "analyzerVersion": "document-engine-v2",
+              "documentCategory": "Unknown",
+              "summary": "Synthetic broadband bill",
+              "semanticDocument": { "pages": [{ "page": 1, "text": "Amount Due: RM 125.60", "blocks": [] }] },
+              "structuredFields": [
+                {
+                  "field": "amount_due",
+                  "value": "RM 125.60",
+                  "page": 1,
+                  "sourceText": "Amount Due: RM 125.60",
+                  "requiresConfirmation": true
+                }
+              ],
+              "suggestedDocumentCategory": "Utility Bill"
+            }
+            """;
+        var analysis = JsonSerializer.Deserialize<DocumentAnalysisDto>(workerResponse,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.NotNull(analysis);
+        Assert.Single(analysis.StructuredFields);
+        Assert.Equal("RM 125.60", analysis.StructuredFields[0].Value);
+        Assert.True(analysis.StructuredFields[0].RequiresConfirmation);
+
+        var (db, doc, service, jobs, local) = Fixture();
+        db.DocumentAnalysisRuns.Single().ResultJson = JsonSerializer.Serialize(analysis);
+        db.SaveChanges();
+
+        var readback = await service.GetDocumentAnalysisAsync(doc.UserId, doc.Id);
+        Assert.NotNull(readback);
+        Assert.Equal("Utility Bill", readback.SuggestedDocumentCategory);
+        var field = Assert.Single(readback.StructuredFields);
+        Assert.Equal("amount_due", field.Field);
+        Assert.Equal(1, field.Page);
+        Assert.Equal("Amount Due: RM 125.60", field.SourceText);
+
+        var flutterJson = JsonSerializer.Serialize(readback,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        using var json = JsonDocument.Parse(flutterJson);
+        Assert.Equal("RM 125.60", json.RootElement.GetProperty("structuredFields")[0].GetProperty("value").GetString());
+        Assert.Equal("Utility Bill", json.RootElement.GetProperty("suggestedDocumentCategory").GetString());
+        jobs.VerifyNoOtherCalls();
+        local.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task V4AnalysisWithoutModelVersionIsNotReturned()
     {
         var (db, doc, service, jobs, local) = Fixture();
