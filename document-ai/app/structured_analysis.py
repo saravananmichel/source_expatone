@@ -50,6 +50,7 @@ IDENTITY_INLINE = {
     for field, label in IDENTITY_LABELS.items()
 }
 NAME_VALUE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,65}$")
+PLACE_VALUE = re.compile(r"^[A-Za-z][A-Za-z ,.'-]{1,85}$")
 SEX_VALUE = re.compile(r"^[MFX]$", re.I)
 
 
@@ -57,7 +58,7 @@ def _identity_value(field: str, candidate: str) -> bool:
     value = candidate.strip()
     if field == "sex":
         return bool(SEX_VALUE.fullmatch(value))
-    if not NAME_VALUE.fullmatch(value):
+    if not (PLACE_VALUE if field in ('place_of_birth', 'place_of_issue') else NAME_VALUE).fullmatch(value):
         return False
     if re.search(r"\b(?:passport|date|surname|nationality|birth|issue|expiry|given|place|sex)\b", value, re.I):
         return False
