@@ -182,6 +182,36 @@ def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
     return results
 
 
+
+def _passport_ocr_additional_fields(lines: list[str], page: int) -> list[dict]:
+    """Conservative first-page passport recovery, without guessed identity."""
+    if page != 1 or not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+        return []
+    found = []
+    for index, line in enumerate(lines):
+        # Sex is often printed on the same OCR row as DOB; do not use
+        # an unlabelled standalone letter elsewhere on the page.
+        if index and DATE_LABELS["date_of_birth"].search(lines[index - 1]):
+            match = re.fullmatch(r"\s*(" + DATE + r")\s+([MFX])\s*", line, re.I)
+            if match:
+                found.append({"field": "sex", "value": match.group(2),
+                              "page": page, "sourceText": line,
+                              "requiresConfirmation": True})
+        # Only accept a clean, adjacent passport number. Never strip or
+        # reconstruct noisy OCR fragments, and never use historical numbers.
+        if PASSPORT_LABEL.search(line) and not HISTORICAL_PASSPORT.search(line):
+            if any(HISTORICAL_PASSPORT.search(previous)
+                   for previous in lines[max(0, index - 3):index]):
+                continue
+            if index + 1 < len(lines):
+                candidate = lines[index + 1].strip()
+                if PASSPORT_VALUE.fullmatch(candidate):
+                    found.append({"field": "passport_number", "value": candidate,
+                                  "page": page, "sourceText": lines[index + 1],
+                                  "requiresConfirmation": True})
+    return found
+
+
 def _passport_spatial_fields(page: Page) -> list[dict]:
     """Recover label/value pairs from OCR geometry, never arbitrary nearby text."""
     if page.page != 1 or page.extraction != "ocr" or not page.blocks:
@@ -230,7 +260,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_spatial_fields(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
