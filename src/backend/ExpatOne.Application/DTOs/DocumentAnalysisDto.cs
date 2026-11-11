@@ -17,6 +17,9 @@ public class DocumentAnalysisDto
     public List<string> MissingInformation { get; set; } = [];
     public string? ExplanationLanguage { get; set; }
     public System.Text.Json.JsonElement? QualityDiagnostics { get; set; }
+    // Source-grounded suggestions from Document AI V4.5. These are not verified facts.
+    public List<StructuredDocumentFieldDto> StructuredFields { get; set; } = [];
+    public string? SuggestedDocumentCategory { get; set; }
     public Guid DocumentId { get; set; }
     public string DocumentCategory { get; set; } = "";
     public string Summary { get; set; } = "";
@@ -84,4 +87,13 @@ public class DocumentAnswerDto
     public required string Answer { get; set; }
     public bool Grounded { get; set; }
     public string? DocumentName { get; set; }
+}
+
+public class StructuredDocumentFieldDto
+{
+    public string Field { get; set; } = "";
+    public string Value { get; set; } = "";
+    public int Page { get; set; }
+    public string SourceText { get; set; } = "";
+    public bool RequiresConfirmation { get; set; } = true;
 }
