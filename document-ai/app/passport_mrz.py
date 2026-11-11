@@ -25,7 +25,7 @@ def _suggest(field: str, value: str, source: str, page: int) -> dict:
 def mrz_fields(pages) -> list[dict]:
     result = []
     for page in pages:
-        lines = [line.strip().upper().replace(" ", "") for line in page.text.splitlines()]
+        lines = [line.strip().upper() for line in page.text.splitlines()]
         for index in range(len(lines) - 1):
             first, second = lines[index:index + 2]
             if not (MRZ_LINE.fullmatch(first) and MRZ_LINE.fullmatch(second)
