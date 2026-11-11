@@ -86,7 +86,7 @@ def test_current_passport_number_and_historical_number_disambiguated():
 
 def test_passport_identity_fields_only_when_grounded():
     from app.structured_analysis import passport_category
-    pages = [page("REPUBLIC OF INDIA\\nPASSPORT\\nSurname\\nSAMPLE\\nGiven Names\\nTEST USER\\nNationality\\nINDIAN\\nSex\\nM\\nPlace of Birth\\nTEST CITY\\nPlace of Issue\\nTEST OFFICE\\nDate of Birth\\n02/03/1990\\nDate of Issue\\n01/02/2020\\nDate of Expiry\\n31/01/2030")]
+    pages = [page("REPUBLIC OF INDIA\nPASSPORT\nSurname\nSAMPLE\nGiven Names\nTEST USER\nNationality\nINDIAN\nSex\nM\nPlace of Birth\nTEST CITY\nPlace of Issue\nTEST OFFICE\nDate of Birth\n02/03/1990\nDate of Issue\n01/02/2020\nDate of Expiry\n31/01/2030")]
     fields = structured_fields(pages)
     values = {f["field"]: f["value"] for f in fields}
     assert values["surname"] == "SAMPLE"
@@ -100,17 +100,17 @@ def test_passport_identity_fields_only_when_grounded():
 
 
 def test_passport_identity_fields_reject_unrelated_lines():
-    fields = structured_fields([page("PASSPORT\\nSurname\\nDate of Birth\\nNationality\\nPassport No\\nOld Passport No: Z0000000")])
+    fields = structured_fields([page("PASSPORT\nSurname\nDate of Birth\nNationality\nPassport No\nOld Passport No: Z0000000")])
     assert not any(f["field"] in ("surname", "nationality", "passport_number") for f in fields)
 
 
 def test_passport_hint_does_not_override_employment_pass():
     from app.structured_analysis import passport_category
-    pages = [page("Employment Pass\\nPassport No: K1234567\\nDate of Birth: 02/03/1990\\nDate of Expiry: 01/12/2030")]
+    pages = [page("Employment Pass\nPassport No: K1234567\nDate of Birth: 02/03/1990\nDate of Expiry: 01/12/2030")]
     assert not passport_category(pages, structured_fields(pages))
 
 
 def test_no_passport_hint_without_strong_field_evidence():
     from app.structured_analysis import passport_category
-    pages = [page("PASSPORT\\nRandom administrative text")]
+    pages = [page("PASSPORT\nRandom administrative text")]
     assert not passport_category(pages, structured_fields(pages))
