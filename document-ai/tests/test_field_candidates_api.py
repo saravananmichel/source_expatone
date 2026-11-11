@@ -16,7 +16,7 @@ def test_extract_returns_evidence_candidates_without_model(monkeypatch):
         async def communicate(self, data):
             assert data == b"%PDF-synthetic"
             pages = [{
-                "page": 1, "text": "Due Date: 15/12/2026\\nAmount Due: RM 1,250.60",
+                "page": 1, "text": "Due Date: 15/12/2026\nAmount Due: RM 1,250.60",
                 "width": 100, "height": 100, "extraction": "native",
                 "blocks": [],
             }]
