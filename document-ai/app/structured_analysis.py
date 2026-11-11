@@ -40,12 +40,12 @@ PASSPORT_CONTEXT = re.compile(r"\b(?:passport|republic\s+of\s+india)\b", re.I)
 # Header OCR is often fragmented by security printing. This hint is only used
 # to attempt evidence-backed extraction; it never verifies a document category.
 PASSPORT_HEADER_FRAGMENT = re.compile(
-    r"\\brepublic\\s+of\\s*[|:/-]?\\s*india\\b|\\bpassport\\s*(?:no|number)\\b", re.I)
+    r"\brepublic\s+of\s*[|:/-]?\s*india\b|\bpassport\s*(?:no|number)\b", re.I)
 
 
 def _passport_context(lines: list[str]) -> bool:
     text = " ".join(lines[:35])
-    if re.search(r"\\b(?:e\\s*-?\\s*pass|employment\\s+pass|electronic\\s+pass)\\b", text, re.I):
+    if re.search(r"\b(?:e\s*-?\s*pass|employment\s+pass|electronic\s+pass)\b", text, re.I):
         return False
     return bool(PASSPORT_CONTEXT.search(text) or PASSPORT_HEADER_FRAGMENT.search(text))
 
