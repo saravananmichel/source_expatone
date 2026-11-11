@@ -82,3 +82,35 @@ def test_current_passport_number_and_historical_number_disambiguated():
     fields = structured_fields(pages)
     numbers = [f["value"] for f in fields if f["field"] == "passport_number"]
     assert numbers == ["K1234567"]
+
+
+def test_passport_identity_fields_only_when_grounded():
+    from app.structured_analysis import passport_category
+    pages = [page("REPUBLIC OF INDIA\\nPASSPORT\\nSurname\\nSAMPLE\\nGiven Names\\nTEST USER\\nNationality\\nINDIAN\\nSex\\nM\\nPlace of Birth\\nTEST CITY\\nPlace of Issue\\nTEST OFFICE\\nDate of Birth\\n02/03/1990\\nDate of Issue\\n01/02/2020\\nDate of Expiry\\n31/01/2030")]
+    fields = structured_fields(pages)
+    values = {f["field"]: f["value"] for f in fields}
+    assert values["surname"] == "SAMPLE"
+    assert values["given_names"] == "TEST USER"
+    assert values["nationality"] == "INDIAN"
+    assert values["sex"] == "M"
+    assert values["place_of_birth"] == "TEST CITY"
+    assert values["place_of_issue"] == "TEST OFFICE"
+    assert passport_category(pages, fields)
+    assert all(f["requiresConfirmation"] and f["value"] in f["sourceText"] for f in fields)
+
+
+def test_passport_identity_fields_reject_unrelated_lines():
+    fields = structured_fields([page("PASSPORT\\nSurname\\nDate of Birth\\nNationality\\nPassport No\\nOld Passport No: Z0000000")])
+    assert not any(f["field"] in ("surname", "nationality", "passport_number") for f in fields)
+
+
+def test_passport_hint_does_not_override_employment_pass():
+    from app.structured_analysis import passport_category
+    pages = [page("Employment Pass\\nPassport No: K1234567\\nDate of Birth: 02/03/1990\\nDate of Expiry: 01/12/2030")]
+    assert not passport_category(pages, structured_fields(pages))
+
+
+def test_no_passport_hint_without_strong_field_evidence():
+    from app.structured_analysis import passport_category
+    pages = [page("PASSPORT\\nRandom administrative text")]
+    assert not passport_category(pages, structured_fields(pages))
