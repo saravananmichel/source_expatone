@@ -1,0 +1,21 @@
+# Manual Cloud Build validation for Document AI feature branches.
+# This configuration runs tests only; it does not build, push or deploy a service.
+steps:
+  - id: document-ai-ocr-regression
+    name: python:3.12-slim
+    entrypoint: bash
+    args:
+      - -euc
+      - |
+        export DEBIAN_FRONTEND=noninteractive
+        apt-get update
+        apt-get install -y --no-install-recommends \
+          tesseract-ocr tesseract-ocr-eng tesseract-ocr-msa \
+          tesseract-ocr-tam tesseract-ocr-chi-sim
+        python -m pip install --no-cache-dir -r document-ai/requirements.txt
+        tesseract --version
+        cd document-ai
+        python -m pytest tests/test_ocr_cleanup.py tests/test_pipeline.py -q
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY
