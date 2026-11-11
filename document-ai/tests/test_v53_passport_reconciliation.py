@@ -54,3 +54,20 @@ def test_fallback_diagnostics_contain_no_identity_values():
         fields("given_names"), "source-only-private-fallback")
     assert output["qualityDiagnostics"]["classificationSource"] == "source_fallback"
     assert "TEST" not in str(output["qualityDiagnostics"])
+
+
+def test_conflicting_model_category_is_explicitly_flagged():
+    output = reconcile_passport_result(
+        result("Certificate"), [page("Given Names\\nTEST")],
+        fields("given_names"), "test-model")
+    assert output["documentCategory"] == "Certificate"
+    assert output["qualityDiagnostics"]["classificationConflict"] is True
+    assert output["qualityDiagnostics"]["passportSuggestionNeedsReview"] is True
+
+
+def test_unknown_passport_suggestion_requires_review_without_false_conflict():
+    output = reconcile_passport_result(
+        result("Unknown"), [page("Given Names\\nTEST")],
+        fields("given_names"), "test-model")
+    assert output["qualityDiagnostics"]["classificationConflict"] is False
+    assert output["qualityDiagnostics"]["passportSuggestionNeedsReview"] is True
