@@ -10,7 +10,7 @@ import httpx
 from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Request
 from .schemas import Page
 from .field_candidates import field_candidates
-from .structured_analysis import structured_fields, billing_category
+from .structured_analysis import structured_fields, billing_category, passport_category
 from .adaptive_profile import selected_profile
 from .private_fallback import source_fallback
 from .limits import IngestionLimits
@@ -255,7 +255,7 @@ async def _analyze_impl(file, x_service_key):
             suggestions = structured_fields(pages)
             result['structuredFields'] = suggestions
             result['suggestedDocumentCategory'] = (
-                'Utility Bill' if billing_category(pages, suggestions) else None
+                'Utility Bill' if billing_category(pages, suggestions) else\n                'Passport' if passport_category(pages, suggestions) else None
             )
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
