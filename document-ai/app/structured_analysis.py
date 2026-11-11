@@ -93,11 +93,19 @@ def passport_category(pages: list[Page], fields: list[dict]) -> bool:
     text = " ".join(page.text for page in pages)
     if re.search(r"\b(?:e\s*-?\s*pass|employment\s+pass|electronic\s+pass)\b", text, re.I):
         return False
-    header = " ".join(page.text[:350] for page in pages[:1])
-    if not re.search(r"\bpassport\b", header, re.I):
-        return False
+    first_page = pages[0].text if pages else ""
+    header = first_page[:700]
+    explicit = bool(re.search(r"\bpassport\b", header, re.I))
+    mrz_prefix = bool(re.search(r"(?m)^\s*P<[A-Z<]{3}", first_page, re.I))
+    identity_labels = sum(bool(re.search(pattern, first_page, re.I)) for pattern in (
+        r"\bsurname\b", r"\bgiven\s+names?\b",
+        r"\bdate\s+of\s+birth\b", r"\bplace\s+of\s+birth\b",
+        r"\bdate\s+of\s+issue\b", r"\bdate\s+of\s+expiry\b"))
     names = {f["field"] for f in fields if f["page"] == pages[0].page} if pages else set()
-    return len(names.intersection({"date_of_birth", "issue_date", "expiry_date", "passport_number"})) >= 2
+    dated = len(names.intersection({"date_of_birth", "issue_date", "expiry_date", "passport_number"}))
+    return ((explicit and (dated >= 2 or identity_labels >= 3))
+            or (mrz_prefix and identity_labels >= 2)
+            or (identity_labels >= 4 and dated >= 1))
 
 
 def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
