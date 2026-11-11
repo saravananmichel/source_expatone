@@ -41,15 +41,6 @@ def mrz_fields(pages) -> list[dict]:
             if not number or not re.fullmatch(r"[A-Z0-9]{6,9}", number):
                 continue
             result.append(_suggest("passport_number", number, second, page.page))
-            names = first[5:].split("<<", 1)
-            if len(names) == 2:
-                surname = names[0].replace("<", " ").strip()
-                given = names[1].replace("<", " ").strip()
-                if surname:
-                    # Display names are reconstructed from MRZ separators, so
-                    # their sourceText is the exact MRZ line, not an exact substring.
-                    # Do not add these to strict literal-substring suggestions.
-                    pass
             # Dates are YYMMDD; without century evidence, avoid guessing.
             # Expose only the fully validated passport number for now.
             return result
