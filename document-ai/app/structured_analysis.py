@@ -37,6 +37,19 @@ HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canc
 
 # Strict label-grounded identity extraction. These are suggestions, never verified data.
 PASSPORT_CONTEXT = re.compile(r"\b(?:passport|republic\s+of\s+india)\b", re.I)
+# Header OCR is often fragmented by security printing. This hint is only used
+# to attempt evidence-backed extraction; it never verifies a document category.
+PASSPORT_HEADER_FRAGMENT = re.compile(
+    r"\brepublic\s+of\s*[|:/-]?\s*india\b|\bpassport\s*(?:no|number)\b", re.I)
+
+
+def _passport_context(lines: list[str]) -> bool:
+    text = " ".join(lines[:35])
+    if re.search(r"\b(?:e\s*-?\s*pass|employment\s+pass|electronic\s+pass)\b", text, re.I):
+        return False
+    return bool(PASSPORT_CONTEXT.search(text) or PASSPORT_HEADER_FRAGMENT.search(text))
+
+
 IDENTITY_LABELS = {
     "surname": re.compile(r"^(?:surname|family\s+name)\s*[:/-]?\s*$", re.I),
     "given_names": re.compile(r"^(?:given\s+names?|first\s+names?)\s*[:/-]?\s*$", re.I),
@@ -66,7 +79,7 @@ def _identity_value(field: str, candidate: str) -> bool:
 
 
 def _passport_identity_fields(lines: list[str], page: int) -> list[dict]:
-    if not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+    if not _passport_context(lines):
         return []
     found = []
     for index, raw in enumerate(lines):
@@ -103,9 +116,14 @@ def passport_category(pages: list[Page], fields: list[dict]) -> bool:
         r"\bdate\s+of\s+issue\b", r"\bdate\s+of\s+expiry\b"))
     names = {f["field"] for f in fields if f["page"] == pages[0].page} if pages else set()
     dated = len(names.intersection({"date_of_birth", "issue_date", "expiry_date", "passport_number"}))
+    # OCR may break the country header or the word PASSPORT. Require several
+    # independent passport-specific labels before suggesting the category.
+    header_fragment = bool(PASSPORT_HEADER_FRAGMENT.search(header))
+    passport_number_label = bool(PASSPORT_LABEL.search(first_page))
     return ((explicit and (dated >= 2 or identity_labels >= 3))
             or (mrz_prefix and identity_labels >= 2)
-            or (identity_labels >= 4 and dated >= 1))
+            or (identity_labels >= 4 and dated >= 1)
+            or (header_fragment and passport_number_label and identity_labels >= 2))
 
 
 def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
@@ -170,7 +188,7 @@ OCR_DATE_SUFFIX = {
 
 def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
     """Use source-grounded OCR label suffixes; never infer missing values."""
-    if page != 1 or not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+    if page != 1 or not _passport_context(lines):
         return []
     results = []
     for index, line in enumerate(lines[:-1]):
@@ -193,7 +211,7 @@ def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
 
 def _passport_ocr_additional_fields(lines: list[str], page: int) -> list[dict]:
     """Conservative first-page passport recovery, without guessed identity."""
-    if page != 1 or not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+    if page != 1 or not _passport_context(lines):
         return []
     found = []
     for index, line in enumerate(lines):
@@ -221,18 +239,23 @@ def _passport_ocr_additional_fields(lines: list[str], page: int) -> list[dict]:
 
 
 def _passport_spatial_fields(page: Page) -> list[dict]:
-    """Recover label/value pairs from OCR geometry, never arbitrary nearby text."""
+    """Recover unambiguous, source-grounded OCR values from nearby text blocks."""
     if page.page != 1 or page.extraction != "ocr" or not page.blocks:
         return []
-    if not PASSPORT_CONTEXT.search(page.text[:600]):
+    if not _passport_context(page.text.splitlines()):
         return []
     found = []
     for label_block in page.blocks:
         label_text = label_block.text.strip()
-        labels = [field for field, pattern in IDENTITY_LABELS.items()
-                  if pattern.fullmatch(label_text)]
-        if not labels:
+        labels = [field for field, pattern in OCR_IDENTITY_SUFFIX.items()
+                  if pattern.search(label_text)]
+        labels += [field for field, pattern in OCR_DATE_SUFFIX.items()
+                   if pattern.search(label_text)]
+        if PASSPORT_LABEL.search(label_text) and not HISTORICAL_PASSPORT.search(label_text):
+            labels.append("passport_number")
+        if len(labels) != 1:
             continue
+        field = labels[0]
         lx0, ly0, lx1, ly1 = label_block.boundingBox
         height = max(1, ly1 - ly0)
         candidates = []
@@ -240,8 +263,6 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
             if block is label_block:
                 continue
             x0, y0, x1, y1 = block.boundingBox
-            # Prefer values directly beneath their label, within one text row,
-            # or immediately to its right on the same row.
             below = (y0 >= ly1 - height * 0.2 and y0 <= ly1 + height * 2
                      and abs(x0 - lx0) <= height * 2)
             right = (x0 >= lx1 and x0 - lx1 <= height * 7
@@ -249,15 +270,21 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
             if not (below or right):
                 continue
             value = block.text.strip()
-            if not _identity_value(labels[0], value):
+            if field == "passport_number":
+                valid = bool(PASSPORT_VALUE.fullmatch(value))
+            elif field in OCR_DATE_SUFFIX:
+                valid = bool(DATE_VALUE.fullmatch(value))
+            else:
+                valid = _identity_value(field, value)
+            if not valid:
                 continue
             distance = (max(0, y0 - ly1) + abs(x0 - lx0)) if below else (x0 - lx1)
             candidates.append((distance, block))
+        # A competing plausible value must be shown as missing, not guessed.
         if len(candidates) != 1:
-            # Ambiguous geometry must not silently choose a person's identity.
             continue
         block = candidates[0][1]
-        found.append({"field": labels[0], "value": block.text.strip(),
+        found.append({"field": field, "value": block.text.strip(),
                       "page": page.page, "sourceText": block.text,
                       "requiresConfirmation": True})
     return found
