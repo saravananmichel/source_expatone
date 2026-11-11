@@ -13,7 +13,15 @@ def reconcile_passport_result(result, pages, fields, model):
     )
     diagnostics["classificationReconciliation"] = "unchanged"
     diagnostics["structuredFieldCount"] = len(fields)
-    if not pages or result.get("suggestedDocumentCategory") != "Passport":
+    suggested = result.get("suggestedDocumentCategory")
+    original = result.get("documentCategory", "Unknown")
+    diagnostics["classificationConflict"] = bool(
+        suggested and original not in (suggested, "Unknown")
+    )
+    diagnostics["passportSuggestionNeedsReview"] = bool(
+        suggested == "Passport" and original != "Passport"
+    )
+    if not pages or suggested != "Passport":
         return result
     text = pages[0].text
     if re.search(r"\b(?:e\s*-?\s*pass|employment\s+pass|electronic\s+pass)\b", text, re.I):
