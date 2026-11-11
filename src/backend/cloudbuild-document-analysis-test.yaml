@@ -1,0 +1,17 @@
+# One-off non-deploying .NET 8 validation for the V4.5 analysis contract.
+steps:
+  - id: dotnet-analysis-contract-tests
+    name: mcr.microsoft.com/dotnet/sdk:8.0
+    entrypoint: bash
+    args:
+      - -euc
+      - |
+        dotnet --info
+        dotnet restore src/backend/ExpatOne.Tests/ExpatOne.Tests.csproj
+        dotnet test src/backend/ExpatOne.Tests/ExpatOne.Tests.csproj \
+          --no-restore --configuration Release \
+          --filter FullyQualifiedName~DocumentAnalysisServiceTests \
+          --logger "console;verbosity=normal"
+timeout: 1200s
+options:
+  logging: CLOUD_LOGGING_ONLY
