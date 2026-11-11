@@ -198,6 +198,7 @@ async def _analyze_impl(file, x_service_key):
                 if profile.name != 'development':
                     raise HTTPException(503, 'Document model unavailable; retry later') from None
                 model_available = False
+            logger.info('document_ai stage=model_check available=%s profile=%s', model_available, profile.name)
             stage_started = time.monotonic()
             process = await asyncio.create_subprocess_exec(sys.executable, '-m', 'app.extract_worker', file.content_type,
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
@@ -237,6 +238,10 @@ async def _analyze_impl(file, x_service_key):
             result['suggestedDocumentCategory'] = (
                 'Utility Bill' if billing_category(pages, suggestions) else None
             )
+            # Log only counts and statuses; never log OCR text or document values.
+            logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
+                        result.get('documentCategory', 'Unknown'), len(suggestions),
+                        model == 'source-only-private-fallback')
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
             return result
         except HTTPException: raise
