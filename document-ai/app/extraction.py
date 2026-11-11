@@ -2,7 +2,7 @@ import io
 import math
 import os
 import re
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFilter
 from pypdf import PdfReader
 import pypdfium2 as pdfium
 import pytesseract
@@ -37,6 +37,27 @@ def ocr(image, page_number):
         words=[(text,float(result['conf'][i])) for i,text in enumerate(result['text']) if text.strip()]
         total=sum(len(text) for text,_ in words)
         return sum(len(text)*max(0,confidence) for text,confidence in words)/max(1,total)
+    # Retry low-confidence scans with conservative cleanup. Preserve the original
+    # when preprocessing does not improve OCR confidence; never mutate native PDF text.
+    # Median filtering removes isolated pixel speckles; autocontrast improves faint
+    # text on uneven backgrounds. Keep dimensions unchanged for OCR bounding boxes.
+    if best_score < 85:
+        try:
+            cleaned = ImageOps.autocontrast(
+                image.convert('L').filter(ImageFilter.MedianFilter(size=3)),
+                cutoff=1,
+            )
+            cleaned_data = pytesseract.image_to_data(
+                cleaned, lang=os.getenv('OCR_LANGUAGES', 'eng'),
+                config='--psm 3', output_type=pytesseract.Output.DICT, timeout=40,
+            )
+            cleaned_score = quality(cleaned_data)
+            if cleaned_score > best_score + 2:
+                image = cleaned
+                data = cleaned_data
+                best_score = cleaned_score
+        except (pytesseract.TesseractError, RuntimeError, ValueError):
+            pass
     # Short pages often cannot support OSD. Compare alternate rotations only when the
     # recognized text is uncertain, avoiding repeated OCR for clear upright pages.
     best_score=quality(data)
