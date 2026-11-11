@@ -258,6 +258,10 @@ async def _analyze_impl(file, x_service_key):
                 'Utility Bill' if billing_category(pages, suggestions) else
                 'Passport' if passport_category(pages, suggestions) else None
             )
+            # V5.3: reconcile only strongly evidenced passport classifications.
+            # A weak suggestion must never override a model's document category.
+            from .passport_reconciliation import reconcile_passport_result
+            reconcile_passport_result(result, pages, suggestions, model)
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
                         result.get('documentCategory', 'Unknown'), len(suggestions),
