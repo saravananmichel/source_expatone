@@ -148,17 +148,17 @@ def test_passport_spatial_ocr_ambiguous_candidates_are_ignored():
 def test_passport_json_ocr_bilingual_prefix_labels():
     # Synthetic OCR response shape; no real identity information.
     sample = Page(page=1, text=(
-        "REPUBLIC OF EXAMPLE\\n"
-        "PASSPORT\\n"
-        "sample text / Surname\\n"
-        "EXAMPLE\\n"
-        "untranslated text / Given Name(s)\\n"
-        "TESTUSER\\n"
-        "foreign label / Date of Birth\\n"
-        "02/03/1990 M\\n"
-        "foreign label / Place of Birth\\n"
-        "TESTCITY\\n"
-        "Date of Issue / Date of Expiry\\n"
+        "REPUBLIC OF EXAMPLE\n"
+        "PASSPORT\n"
+        "sample text / Surname\n"
+        "EXAMPLE\n"
+        "untranslated text / Given Name(s)\n"
+        "TESTUSER\n"
+        "foreign label / Date of Birth\n"
+        "02/03/1990 M\n"
+        "foreign label / Place of Birth\n"
+        "TESTCITY\n"
+        "Date of Issue / Date of Expiry\n"
         "01/02/2020 31/01/2030"
     ), width=1200, height=1700, extraction="ocr", blocks=[])
     fields = structured_fields([sample])
@@ -174,6 +174,6 @@ def test_passport_json_ocr_bilingual_prefix_labels():
 
 
 def test_passport_json_ocr_does_not_promote_old_passport():
-    sample = Page(page=2, text="Old Passport\\nNo. with Date and Place of issue\\nZ0000000 01/02/2010",
+    sample = Page(page=2, text="Old Passport\nNo. with Date and Place of issue\nZ0000000 01/02/2010",
                   width=1200, height=1700, extraction="ocr", blocks=[])
     assert not any(field["field"] == "passport_number" for field in structured_fields([sample]))
