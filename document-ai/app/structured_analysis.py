@@ -87,7 +87,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
             if key not in seen:
                 seen.add(key)
                 results.append(suggestion)
-        for raw in lines:
+        for line_index, raw in enumerate(lines):
             line = raw.strip()
             if not line or len(line) > 300:
                 continue
@@ -100,7 +100,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
                 if paired_dates and field in ("issue_date", "expiry_date"):
                     continue
                 if field == "passport_number" and (HISTORICAL_PASSPORT.search(line)
-                        or any(HISTORICAL_PASSPORT.search(previous) for previous in lines[max(0, lines.index(raw)-3):lines.index(raw)])):
+                        or any(HISTORICAL_PASSPORT.search(previous) for previous in lines[max(0, line_index-3):line_index])):
                     continue
                 match = pattern.search(line)
                 if not match:
