@@ -320,6 +320,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         _buildSummarySection(),
         // Structured details must not disappear merely because V4 returned
         // one generic evidence-backed statement.
+        _buildSourceBackedFieldsSection(),
         _buildStructuredFieldsSection(),
         _buildKeyInformationSection(),
         _buildImportantDatesSection(),
@@ -917,6 +918,117 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
           Text(summary, style: const TextStyle(fontSize: 15, height: 1.5)),
         const SizedBox(height: 24),
       ],
+    );
+  }
+
+  Widget _buildSourceBackedFieldsSection() {
+    final rawFields = _analysis?['structuredFields'];
+    if (rawFields is! List || rawFields.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    const labels = <String, String>{
+      'passport_number': 'Passport number',
+      'date_of_birth': 'Date of birth',
+      'issue_date': 'Date of issue',
+      'expiry_date': 'Date of expiry',
+      'account_number': 'Account number',
+      'invoice_number': 'Invoice number',
+      'amount_due': 'Amount due',
+      'due_date': 'Payment due date',
+      'billing_period': 'Billing period',
+    };
+    final fields = rawFields.whereType<Map>().where((field) {
+      final name = field['field'];
+      final value = field['value'];
+      final evidence = field['sourceText'];
+      return name is String &&
+          labels.containsKey(name) &&
+          value is String &&
+          value.trim().isNotEmpty &&
+          evidence is String &&
+          evidence.contains(value);
+    }).toList();
+    if (fields.isEmpty) return const SizedBox.shrink();
+
+    final suggestedCategory = _analysis?['suggestedDocumentCategory'];
+    return _buildSection(
+      title: 'Extracted fields to verify',
+      icon: Icons.fact_check_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (suggestedCategory is String &&
+              suggestedCategory.isNotEmpty) ...[
+            Text(
+              'Possible document type: $suggestedCategory (not verified)',
+              style: TextStyle(color: AppTheme.textSecondary),
+            ),
+            const SizedBox(height: 12),
+          ],
+          const Text(
+            'These are suggestions from document text, not verified facts. '
+            'Compare each value with the original before using it.',
+          ),
+          const SizedBox(height: 12),
+          ...fields.map((field) {
+            final name = field['field'] as String;
+            final value = field['value'] as String;
+            final page = field['page'];
+            final sourceText = field['sourceText'] as String;
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(labels[name]!, style: TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    )),
+                    const SizedBox(height: 4),
+                    SelectableText(value,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        )),
+                    const SizedBox(height: 6),
+                    Text('Needs confirmation • Page ${page ?? '?'}',
+                        style: TextStyle(color: AppTheme.textSecondary)),
+                    TextButton.icon(
+                      onPressed: () => showModalBottomSheet<void>(
+                        context: context,
+                        isScrollControlled: true,
+                        builder: (context) => SafeArea(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(20),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('Exact source text',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w600,
+                                    )),
+                                const SizedBox(height: 12),
+                                SelectableText(sourceText),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      icon: const Icon(Icons.find_in_page_outlined),
+                      label: const Text('View evidence'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
