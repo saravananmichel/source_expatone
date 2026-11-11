@@ -146,17 +146,17 @@ def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
 # OCR often prepends untranslated script or decorative characters before
 # English passport labels. Anchor to the *end* of the line, not its start.
 OCR_IDENTITY_SUFFIX = {
-    "surname": re.compile(r"\\b(?:surname|family\\s+name)\\s*[:/-]?\\s*$", re.I),
-    "given_names": re.compile(r"\\b(?:given\\s+name\\s*\\(s\\)|given\\s+names?|first\\s+names?)\\s*[:/-]?\\s*$", re.I),
-    "nationality": re.compile(r"\\bnationality\\s*[:/-]?\\s*$", re.I),
-    "place_of_birth": re.compile(r"\\bplace\\s+of\\s+birth\\s*[:/-]?\\s*$", re.I),
-    "place_of_issue": re.compile(r"\\bplace\\s+of\\s+issue\\s*[:/-]?\\s*$", re.I),
-    "sex": re.compile(r"\\b(?:sex|gender)\\s*[:/-]?\\s*$", re.I),
+    "surname": re.compile(r"\b(?:surname|family\s+name)\s*[:/-]?\s*$", re.I),
+    "given_names": re.compile(r"\b(?:given\s+name\s*\(s\)|given\s+names?|first\s+names?)\s*[:/-]?\s*$", re.I),
+    "nationality": re.compile(r"\bnationality\s*[:/-]?\s*$", re.I),
+    "place_of_birth": re.compile(r"\bplace\s+of\s+birth\s*[:/-]?\s*$", re.I),
+    "place_of_issue": re.compile(r"\bplace\s+of\s+issue\s*[:/-]?\s*$", re.I),
+    "sex": re.compile(r"\b(?:sex|gender)\s*[:/-]?\s*$", re.I),
 }
 OCR_DATE_SUFFIX = {
-    "date_of_birth": re.compile(r"\\bdate\\s+of\\s+birth\\s*[:/-]?\\s*$", re.I),
-    "issue_date": re.compile(r"\\bdate\\s+of\\s+issue\\s*[:/-]?\\s*$", re.I),
-    "expiry_date": re.compile(r"\\bdate\\s+of\\s+expiry\\s*[:/-]?\\s*$", re.I),
+    "date_of_birth": re.compile(r"\bdate\s+of\s+birth\s*[:/-]?\s*$", re.I),
+    "issue_date": re.compile(r"\bdate\s+of\s+issue\s*[:/-]?\s*$", re.I),
+    "expiry_date": re.compile(r"\bdate\s+of\s+expiry\s*[:/-]?\s*$", re.I),
 }
 
 
