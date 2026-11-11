@@ -177,3 +177,22 @@ def test_passport_json_ocr_does_not_promote_old_passport():
     sample = Page(page=2, text="Old Passport\nNo. with Date and Place of issue\nZ0000000 01/02/2010",
                   width=1200, height=1700, extraction="ocr", blocks=[])
     assert not any(field["field"] == "passport_number" for field in structured_fields([sample]))
+
+
+def test_passport_v50_sex_from_dob_row_only():
+    fields = structured_fields([page("PASSPORT\nDate of Birth\n02/03/1990 F\nPlace of Birth\nTEST CITY")])
+    values = {field["field"]: field["value"] for field in fields}
+    assert values["sex"] == "F"
+    assert values["date_of_birth"] == "02/03/1990"
+    assert all(field["requiresConfirmation"] and field["value"] in field["sourceText"]
+               for field in fields)
+
+
+def test_passport_v50_no_unlabelled_sex_guess():
+    fields = structured_fields([page("PASSPORT\nF\nDate of Birth\n02/03/1990")])
+    assert not any(field["field"] == "sex" for field in fields)
+
+
+def test_passport_v50_no_reconstruction_from_noisy_number():
+    fields = structured_fields([page("PASSPORT\nPassport No\nAN v 5073795")])
+    assert not any(field["field"] == "passport_number" for field in fields)
