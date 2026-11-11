@@ -26,12 +26,8 @@ def reconcile_passport_result(result, pages, fields, model):
     dates = len(field_names & {"date_of_birth", "issue_date", "expiry_date"})
     identity = len(field_names & {"surname", "given_names", "nationality", "place_of_birth"})
     header = bool(re.search(r"\bpassport\b", text[:700], re.I))
-    # The MRZ parser only emits a passport number after checksum validation.
-    validated_mrz = any(f.get("field") == "passport_number"
-                        and "MRZ" in str(f.get("sourceText", "")).upper()
-                        for f in fields)
     strong = (header and dates >= 2 and identity >= 2
-              and "passport_number" in field_names) or (validated_mrz and identity >= 2)
+              and "passport_number" in field_names)
     if not strong:
         diagnostics["classificationReconciliation"] = "insufficient_evidence"
         return result
@@ -45,6 +41,6 @@ def reconcile_passport_result(result, pages, fields, model):
     )
     diagnostics["classificationSource"] = "passport_evidence_reconciliation"
     diagnostics["classificationReconciliation"] = "strong_evidence"
-    # Do not mutate semanticDocument: it preserves the model's original opinion.
-    # This distinction remains visible in diagnostics for investigation.
+    # Preserve the model's original semantic assessment separately for audit.
+    # Reconciliation is explicitly recorded in diagnostics.
     return result
