@@ -5,6 +5,7 @@ All values must be literal substrings of their source line.
 """
 import re
 from .schemas import Page
+from .passport_mrz import mrz_fields
 
 DATE = r"(?:\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,12}\s+\d{4})"
 AMOUNT = r"(?:(?:RM|MYR|USD|SGD|GBP|EUR|INR|AED|\$|£|€)\s*)?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?"
@@ -141,12 +142,55 @@ def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
                                     "sourceText": source_line, "requiresConfirmation": True})
     return results
 
+def _passport_spatial_fields(page: Page) -> list[dict]:
+    """Recover label/value pairs from OCR geometry, never arbitrary nearby text."""
+    if page.page != 1 or page.extraction != "ocr" or not page.blocks:
+        return []
+    if not PASSPORT_CONTEXT.search(page.text[:600]):
+        return []
+    found = []
+    for label_block in page.blocks:
+        label_text = label_block.text.strip()
+        labels = [field for field, pattern in IDENTITY_LABELS.items()
+                  if pattern.fullmatch(label_text)]
+        if not labels:
+            continue
+        lx0, ly0, lx1, ly1 = label_block.boundingBox
+        height = max(1, ly1 - ly0)
+        candidates = []
+        for block in page.blocks:
+            if block is label_block:
+                continue
+            x0, y0, x1, y1 = block.boundingBox
+            # Prefer values directly beneath their label, within one text row,
+            # or immediately to its right on the same row.
+            below = (y0 >= ly1 - height * 0.2 and y0 <= ly1 + height * 2
+                     and abs(x0 - lx0) <= height * 2)
+            right = (x0 >= lx1 and x0 - lx1 <= height * 7
+                     and abs(y0 - ly0) <= height * 0.6)
+            if not (below or right):
+                continue
+            value = block.text.strip()
+            if not _identity_value(labels[0], value):
+                continue
+            distance = (max(0, y0 - ly1) + abs(x0 - lx0)) if below else (x0 - lx1)
+            candidates.append((distance, block))
+        if len(candidates) != 1:
+            # Ambiguous geometry must not silently choose a person's identity.
+            continue
+        block = candidates[0][1]
+        found.append({"field": labels[0], "value": block.text.strip(),
+                      "page": page.page, "sourceText": block.text,
+                      "requiresConfirmation": True})
+    return found
+
+
 def structured_fields(pages: list[Page]) -> list[dict]:
     results = []
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_spatial_fields(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
@@ -178,6 +222,11 @@ def structured_fields(pages: list[Page]) -> list[dict]:
                 seen.add(key)
                 results.append({"field":field, "value":value, "page":page.page,
                                 "sourceText":line, "requiresConfirmation":True})
+    for suggestion in mrz_fields(pages[:1]):
+        key = (suggestion['field'], suggestion['value'], suggestion['page'])
+        if key not in seen:
+            seen.add(key)
+            results.append(suggestion)
     return results
 
 def billing_category(pages: list[Page], fields: list[dict]) -> bool:

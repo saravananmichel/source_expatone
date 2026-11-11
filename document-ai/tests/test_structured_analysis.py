@@ -114,3 +114,32 @@ def test_no_passport_hint_without_strong_field_evidence():
     from app.structured_analysis import passport_category
     pages = [page("PASSPORT\nRandom administrative text")]
     assert not passport_category(pages, structured_fields(pages))
+
+
+def test_passport_spatial_ocr_right_hand_field():
+    from app.schemas import Block
+    blocks = [
+        Block(text="PASSPORT", boundingBox=[10, 5, 100, 20]),
+        Block(text="Surname", boundingBox=[10, 40, 90, 60]),
+        Block(text="SAMPLE", boundingBox=[110, 40, 180, 60]),
+    ]
+    scanned = Page(page=1, text="PASSPORT\nSurname\nSAMPLE", width=400, height=200,
+                   extraction="ocr", blocks=blocks)
+    matches = [f for f in structured_fields([scanned]) if f["field"] == "surname"]
+    assert len(matches) >= 1
+    assert matches[0]["value"] == "SAMPLE"
+    assert matches[0]["value"] in matches[0]["sourceText"]
+
+
+def test_passport_spatial_ocr_ambiguous_candidates_are_ignored():
+    from app.schemas import Block
+    blocks = [
+        Block(text="PASSPORT", boundingBox=[10, 5, 100, 20]),
+        Block(text="Surname", boundingBox=[10, 40, 90, 60]),
+        Block(text="SAMPLE", boundingBox=[110, 40, 180, 60]),
+        Block(text="OTHER", boundingBox=[115, 41, 185, 61]),
+    ]
+    scanned = Page(page=1, text="PASSPORT\nSurname\nSAMPLE\nOTHER", width=400, height=200,
+                   extraction="ocr", blocks=blocks)
+    assert not any(f["field"] == "surname" and f["value"] == "OTHER"
+                   for f in structured_fields([scanned]))
