@@ -31,7 +31,7 @@ def test_bill_title_alone_does_not_override_category():
 
 
 def test_passport_adjacent_label_and_value():
-    fields = structured_fields([page("PASSPORT\\nPassport No\\nK1234567\\nDate of Birth\\n09/11/1983")])
+    fields = structured_fields([page("PASSPORT\nPassport No\nK1234567\nDate of Birth\n09/11/1983")])
     values = {f["field"]: f["value"] for f in fields}
     assert values["passport_number"] == "K1234567"
     assert values["date_of_birth"] == "09/11/1983"
@@ -46,5 +46,5 @@ def test_combined_issue_and_expiry_are_separate():
 
 
 def test_unlabelled_or_distant_numbers_are_not_passport_numbers():
-    fields = structured_fields([page("PASSPORT\\nSome unrelated heading\\n33726657\\nOld Passport\\n33726657")])
+    fields = structured_fields([page("PASSPORT\nSome unrelated heading\n33726657\nOld Passport\n33726657")])
     assert not any(f["field"] == "passport_number" for f in fields)
