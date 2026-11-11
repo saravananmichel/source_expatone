@@ -34,6 +34,70 @@ DATE_VALUE = re.compile(DATE, re.I)
 HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canceled)\s+passport\b", re.I)
 
 
+# Strict label-grounded identity extraction. These are suggestions, never verified data.
+PASSPORT_CONTEXT = re.compile(r"\\b(?:passport|republic\\s+of\\s+india)\\b", re.I)
+IDENTITY_LABELS = {
+    "surname": re.compile(r"^(?:surname|family\\s+name)\\s*[:/-]?\\s*$", re.I),
+    "given_names": re.compile(r"^(?:given\\s+names?|first\\s+names?)\\s*[:/-]?\\s*$", re.I),
+    "nationality": re.compile(r"^nationality\\s*[:/-]?\\s*$", re.I),
+    "place_of_birth": re.compile(r"^place\\s+of\\s+birth\\s*[:/-]?\\s*$", re.I),
+    "place_of_issue": re.compile(r"^place\\s+of\\s+issue\\s*[:/-]?\\s*$", re.I),
+    "sex": re.compile(r"^(?:sex|gender)\\s*[:/-]?\\s*$", re.I),
+}
+IDENTITY_INLINE = {
+    field: re.compile(label.pattern.replace(r"\\s*[:/-]?\\s*$", r"\\s*[:/-]\\s*(.+)$"), re.I)
+    for field, label in IDENTITY_LABELS.items()
+}
+NAME_VALUE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,65}$")
+SEX_VALUE = re.compile(r"^[MFX]$", re.I)
+
+
+def _identity_value(field: str, candidate: str) -> bool:
+    value = candidate.strip()
+    if field == "sex":
+        return bool(SEX_VALUE.fullmatch(value))
+    if not NAME_VALUE.fullmatch(value):
+        return False
+    if re.search(r"\\b(?:passport|date|surname|nationality|birth|issue|expiry|given|place|sex)\\b", value, re.I):
+        return False
+    return True
+
+
+def _passport_identity_fields(lines: list[str], page: int) -> list[dict]:
+    if not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+        return []
+    found = []
+    for index, raw in enumerate(lines):
+        line = raw.strip()
+        if len(line) > 100:
+            continue
+        for field, label in IDENTITY_LABELS.items():
+            candidate = None
+            source = line
+            inline = IDENTITY_INLINE[field].fullmatch(line)
+            if inline:
+                candidate = inline.group(1).strip()
+            elif label.fullmatch(line) and index + 1 < len(lines):
+                candidate = lines[index + 1].strip()
+                source = lines[index + 1]
+            if candidate and _identity_value(field, candidate):
+                found.append({"field": field, "value": candidate, "page": page,
+                              "sourceText": source, "requiresConfirmation": True})
+    return found
+
+
+def passport_category(pages: list[Page], fields: list[dict]) -> bool:
+    """Conservative fallback hint; do not confuse immigration passes with passports."""
+    text = " ".join(page.text for page in pages)
+    if re.search(r"\\b(?:e\\s*-?\\s*pass|employment\\s+pass|electronic\\s+pass)\\b", text, re.I):
+        return False
+    header = " ".join(page.text[:350] for page in pages[:1])
+    if not re.search(r"\\bpassport\\b", header, re.I):
+        return False
+    names = {f["field"] for f in fields if f["page"] == pages[0].page} if pages else set()
+    return len(names.intersection({"date_of_birth", "issue_date", "expiry_date", "passport_number"})) >= 2
+
+
 def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
     results = []
     for index, line in enumerate(lines):
@@ -82,7 +146,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
