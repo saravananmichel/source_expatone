@@ -9,6 +9,7 @@ from contextlib import asynccontextmanager
 import httpx
 from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Request
 from .schemas import Page
+from .field_candidates import field_candidates
 from .adaptive_profile import selected_profile
 from .private_fallback import source_fallback
 from .limits import IngestionLimits
@@ -92,9 +93,11 @@ async def extract_document(file: UploadFile = File(...),
             extracted_text = '\n\n'.join(
                 page.get('text', '') for page in pages
             )
+            validated_pages = [Page.model_validate(page) for page in pages]
             return {
                 'extractedText': extracted_text,
-                'pageCount': len(pages)
+                'pageCount': len(validated_pages),
+                'fieldCandidates': field_candidates(validated_pages),
             }
         except HTTPException:
             raise
