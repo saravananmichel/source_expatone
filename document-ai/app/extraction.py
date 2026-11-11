@@ -59,21 +59,32 @@ def ocr(image, page_number):
                 best_score = cleaned_score
         except (pytesseract.TesseractError, RuntimeError, ValueError):
             pass
-    # Short pages often cannot support OSD. Compare alternate rotations only when the
-    # recognized text is uncertain, avoiding repeated OCR for clear upright pages.
-    if best_score<85:
-        original=image
-        original_rotation=rotation
-        for angle in (90,180,270):
-            candidate=original.rotate(-angle,expand=True,fillcolor='white')
+    # Compare each orientation against the same original image. Never rotate
+    # later candidates relative to an already selected candidate.
+    if best_score < 85:
+        original = image
+        original_rotation = rotation
+        def passport_evidence(result):
+            joined = ' '.join(str(t).upper() for t in result['text'] if str(t).strip())
+            return sum(bool(re.search(pattern, joined)) for pattern in (
+                r'\bPASSPORT\b', r'\bSURNAME\b', r'\bGIVEN\b',
+                r'\bBIRTH\b', r'\bEXPIRY\b', r'\bNATIONALITY\b'))
+        best_rank = (passport_evidence(data), best_score)
+        for angle in (90, 180, 270):
+            candidate = original.rotate(-angle, expand=True, fillcolor='white')
             try:
-                candidate_data=pytesseract.image_to_data(candidate,lang=os.getenv('OCR_LANGUAGES','eng'),
-                    config='--psm 3',output_type=pytesseract.Output.DICT,timeout=30)
-                candidate_score=quality(candidate_data)
-                if candidate_score>best_score+5:
-                    image=candidate;data=candidate_data;best_score=candidate_score
-                    rotation=(original_rotation+angle)%360
-            except (pytesseract.TesseractError,RuntimeError):
+                candidate_data = pytesseract.image_to_data(
+                    candidate, lang=os.getenv('OCR_LANGUAGES', 'eng'),
+                    config='--psm 3', output_type=pytesseract.Output.DICT, timeout=30)
+                candidate_score = quality(candidate_data)
+                candidate_rank = (passport_evidence(candidate_data), candidate_score)
+                if (candidate_rank[0] >= best_rank[0] + 2
+                        or (candidate_rank[0] == best_rank[0]
+                            and candidate_score > best_rank[1] + 5)):
+                    image, data, best_score = candidate, candidate_data, candidate_score
+                    rotation = (original_rotation + angle) % 360
+                    best_rank = candidate_rank
+            except (pytesseract.TesseractError, RuntimeError):
                 continue
     lines = {}
     for i, value in enumerate(data['text']):
