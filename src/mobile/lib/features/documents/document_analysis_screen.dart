@@ -639,6 +639,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
   Widget _buildGroundedStatements() {
     final statements = _analysis?['statements'] as List? ?? [];
     final evidence = _analysis?['evidence'] as List? ?? [];
+    // Uncertain passport model interpretations can confuse historical numbers
+    // with current identity fields. Show only source-backed suggestions instead.
+    if (_analysis?['documentCategory'] == 'Passport' ||
+        _analysis?['suggestedDocumentCategory'] == 'Passport') {
+      return const SizedBox.shrink();
+    }
     if (statements.isEmpty) return const SizedBox.shrink();
     // A raw OCR dump is evidence, not a useful fact. Keep it accessible in
     // Extracted Text without promoting it to a headline insight.
@@ -929,6 +935,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
 
     const labels = <String, String>{
       'passport_number': 'Passport number',
+      'surname': 'Surname',
+      'given_names': 'Given names',
+      'nationality': 'Nationality',
+      'sex': 'Sex',
+      'place_of_birth': 'Place of birth',
+      'place_of_issue': 'Place of issue',
       'date_of_birth': 'Date of birth',
       'issue_date': 'Date of issue',
       'expiry_date': 'Date of expiry',
@@ -1096,13 +1108,19 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
 
   Widget _buildKeyInformationSection() {
     final items = _analysis!['keyInformation'] as List<dynamic>? ?? [];
-    if (items.isEmpty) return const SizedBox.shrink();
+    final passport = _analysis?['documentCategory'] == 'Passport' ||
+        _analysis?['suggestedDocumentCategory'] == 'Passport';
+    final visibleItems = passport
+        ? items.where((item) => item is Map &&
+            (item['label'] ?? '').toString().toLowerCase() != 'pin').toList()
+        : items;
+    if (visibleItems.isEmpty) return const SizedBox.shrink();
 
     return _buildSection(
       title: 'Key Information',
       icon: Icons.info_outlined,
       child: Column(
-        children: items.map<Widget>((item) {
+        children: visibleItems.map<Widget>((item) {
           final map = item as Map<String, dynamic>;
           final isExtracted = map['isExtracted'] as bool? ?? true;
           return Padding(
