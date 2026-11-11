@@ -5,6 +5,7 @@ All values must be literal substrings of their source line.
 """
 import re
 from .schemas import Page
+from .passport_mrz import mrz_fields
 
 DATE = r"(?:\d{4}[-/]\d{1,2}[-/]\d{1,2}|\d{1,2}[-/.]\d{1,2}[-/.]\d{2,4}|\d{1,2}\s+[A-Za-z]{3,12}\s+\d{4})"
 AMOUNT = r"(?:(?:RM|MYR|USD|SGD|GBP|EUR|INR|AED|\$|£|€)\s*)?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d{1,2})?"
@@ -178,6 +179,11 @@ def structured_fields(pages: list[Page]) -> list[dict]:
                 seen.add(key)
                 results.append({"field":field, "value":value, "page":page.page,
                                 "sourceText":line, "requiresConfirmation":True})
+    for suggestion in mrz_fields(pages[:1]):
+        key = (suggestion['field'], suggestion['value'], suggestion['page'])
+        if key not in seen:
+            seen.add(key)
+            results.append(suggestion)
     return results
 
 def billing_category(pages: list[Page], fields: list[dict]) -> bool:
