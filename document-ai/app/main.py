@@ -10,6 +10,7 @@ import httpx
 from fastapi import FastAPI, File, UploadFile, Header, HTTPException, Request
 from .schemas import Page
 from .field_candidates import field_candidates
+from .structured_analysis import structured_fields, billing_category
 from .adaptive_profile import selected_profile
 from .private_fallback import source_fallback
 from .limits import IngestionLimits
@@ -229,6 +230,13 @@ async def _analyze_impl(file, x_service_key):
                 semantic, model = await reason(pages)
             logger.info("Understanding completed duration_ms=%d",int((time.monotonic()-stage_started)*1000))
             result=render(semantic,pages,model)
+            # Independent, evidence-backed suggestions for the existing analysis
+            # UI. Never silently overwrite model classification or persist fields.
+            suggestions = structured_fields(pages)
+            result['structuredFields'] = suggestions
+            result['suggestedDocumentCategory'] = (
+                'Utility Bill' if billing_category(pages, suggestions) else None
+            )
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
             return result
         except HTTPException: raise
