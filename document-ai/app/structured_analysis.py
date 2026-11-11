@@ -50,6 +50,7 @@ IDENTITY_INLINE = {
     for field, label in IDENTITY_LABELS.items()
 }
 NAME_VALUE = re.compile(r"^[A-Za-z][A-Za-z .'-]{1,65}$")
+PLACE_VALUE = re.compile(r"^[A-Za-z][A-Za-z ,.'-]{1,85}$")
 SEX_VALUE = re.compile(r"^[MFX]$", re.I)
 
 
@@ -57,7 +58,7 @@ def _identity_value(field: str, candidate: str) -> bool:
     value = candidate.strip()
     if field == "sex":
         return bool(SEX_VALUE.fullmatch(value))
-    if not NAME_VALUE.fullmatch(value):
+    if not (PLACE_VALUE if field in ('place_of_birth', 'place_of_issue') else NAME_VALUE).fullmatch(value):
         return False
     if re.search(r"\b(?:passport|date|surname|nationality|birth|issue|expiry|given|place|sex)\b", value, re.I):
         return False
@@ -142,6 +143,45 @@ def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
                                     "sourceText": source_line, "requiresConfirmation": True})
     return results
 
+# OCR often prepends untranslated script or decorative characters before
+# English passport labels. Anchor to the *end* of the line, not its start.
+OCR_IDENTITY_SUFFIX = {
+    "surname": re.compile(r"\b(?:surname|family\s+name)\s*[:/-]?\s*$", re.I),
+    "given_names": re.compile(r"\b(?:given\s+name\s*\(s\)|given\s+names?|first\s+names?)\s*[:/-]?\s*$", re.I),
+    "nationality": re.compile(r"\bnationality\s*[:/-]?\s*$", re.I),
+    "place_of_birth": re.compile(r"\bplace\s+of\s+birth\s*[:/-]?\s*$", re.I),
+    "place_of_issue": re.compile(r"\bplace\s+of\s+issue\s*[:/-]?\s*$", re.I),
+    "sex": re.compile(r"\b(?:sex|gender)\s*[:/-]?\s*$", re.I),
+}
+OCR_DATE_SUFFIX = {
+    "date_of_birth": re.compile(r"\bdate\s+of\s+birth\s*[:/-]?\s*$", re.I),
+    "issue_date": re.compile(r"\bdate\s+of\s+issue\s*[:/-]?\s*$", re.I),
+    "expiry_date": re.compile(r"\bdate\s+of\s+expiry\s*[:/-]?\s*$", re.I),
+}
+
+
+def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
+    """Use source-grounded OCR label suffixes; never infer missing values."""
+    if page != 1 or not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+        return []
+    results = []
+    for index, line in enumerate(lines[:-1]):
+        if len(line) > 130:
+            continue
+        candidate = lines[index + 1].strip()
+        for field, pattern in OCR_IDENTITY_SUFFIX.items():
+            if pattern.search(line) and _identity_value(field, candidate):
+                results.append({"field": field, "value": candidate, "page": page,
+                                "sourceText": lines[index + 1], "requiresConfirmation": True})
+        for field, pattern in OCR_DATE_SUFFIX.items():
+            if pattern.search(line):
+                match = DATE_VALUE.match(candidate)
+                if match and candidate[match.end():].strip() in ("", "M", "F", "X"):
+                    results.append({"field": field, "value": match.group(0), "page": page,
+                                    "sourceText": lines[index + 1], "requiresConfirmation": True})
+    return results
+
+
 def _passport_spatial_fields(page: Page) -> list[dict]:
     """Recover label/value pairs from OCR geometry, never arbitrary nearby text."""
     if page.page != 1 or page.extraction != "ocr" or not page.blocks:
@@ -190,7 +230,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_spatial_fields(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_spatial_fields(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
