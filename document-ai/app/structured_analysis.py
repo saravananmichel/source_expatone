@@ -37,6 +37,19 @@ HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canc
 
 # Strict label-grounded identity extraction. These are suggestions, never verified data.
 PASSPORT_CONTEXT = re.compile(r"\b(?:passport|republic\s+of\s+india)\b", re.I)
+# Header OCR is often fragmented by security printing. This hint is only used
+# to attempt evidence-backed extraction; it never verifies a document category.
+PASSPORT_HEADER_FRAGMENT = re.compile(
+    r"\\brepublic\\s+of\\s*[|:/-]?\\s*india\\b|\\bpassport\\s*(?:no|number)\\b", re.I)
+
+
+def _passport_context(lines: list[str]) -> bool:
+    text = " ".join(lines[:35])
+    if re.search(r"\\b(?:e\\s*-?\\s*pass|employment\\s+pass|electronic\\s+pass)\\b", text, re.I):
+        return False
+    return bool(PASSPORT_CONTEXT.search(text) or PASSPORT_HEADER_FRAGMENT.search(text))
+
+
 IDENTITY_LABELS = {
     "surname": re.compile(r"^(?:surname|family\s+name)\s*[:/-]?\s*$", re.I),
     "given_names": re.compile(r"^(?:given\s+names?|first\s+names?)\s*[:/-]?\s*$", re.I),
@@ -66,7 +79,7 @@ def _identity_value(field: str, candidate: str) -> bool:
 
 
 def _passport_identity_fields(lines: list[str], page: int) -> list[dict]:
-    if not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+    if not _passport_context(lines):
         return []
     found = []
     for index, raw in enumerate(lines):
@@ -103,9 +116,14 @@ def passport_category(pages: list[Page], fields: list[dict]) -> bool:
         r"\bdate\s+of\s+issue\b", r"\bdate\s+of\s+expiry\b"))
     names = {f["field"] for f in fields if f["page"] == pages[0].page} if pages else set()
     dated = len(names.intersection({"date_of_birth", "issue_date", "expiry_date", "passport_number"}))
+    # OCR may break the country header or the word PASSPORT. Require several
+    # independent passport-specific labels before suggesting the category.
+    header_fragment = bool(PASSPORT_HEADER_FRAGMENT.search(header))
+    passport_number_label = bool(PASSPORT_LABEL.search(first_page))
     return ((explicit and (dated >= 2 or identity_labels >= 3))
             or (mrz_prefix and identity_labels >= 2)
-            or (identity_labels >= 4 and dated >= 1))
+            or (identity_labels >= 4 and dated >= 1)
+            or (header_fragment and passport_number_label and identity_labels >= 2))
 
 
 def _passport_neighbour_fields(lines: list[str], page: int) -> list[dict]:
@@ -170,7 +188,7 @@ OCR_DATE_SUFFIX = {
 
 def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
     """Use source-grounded OCR label suffixes; never infer missing values."""
-    if page != 1 or not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+    if page != 1 or not _passport_context(lines):
         return []
     results = []
     for index, line in enumerate(lines[:-1]):
@@ -193,7 +211,7 @@ def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
 
 def _passport_ocr_additional_fields(lines: list[str], page: int) -> list[dict]:
     """Conservative first-page passport recovery, without guessed identity."""
-    if page != 1 or not PASSPORT_CONTEXT.search(" ".join(lines[:30])):
+    if page != 1 or not _passport_context(lines):
         return []
     found = []
     for index, line in enumerate(lines):
@@ -224,7 +242,7 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
     """Recover label/value pairs from OCR geometry, never arbitrary nearby text."""
     if page.page != 1 or page.extraction != "ocr" or not page.blocks:
         return []
-    if not PASSPORT_CONTEXT.search(page.text[:600]):
+    if not _passport_context(page.text.splitlines()):
         return []
     found = []
     for label_block in page.blocks:
