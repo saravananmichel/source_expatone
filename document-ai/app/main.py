@@ -45,6 +45,24 @@ slots = asyncio.Semaphore(1)
 logger = logging.getLogger("uvicorn.error")
 
 
+def _fallback_reason(error):
+    """Bounded diagnostic code; never expose exception text or source values."""
+    if isinstance(error, asyncio.TimeoutError):
+        return 'deadline_exceeded'
+    if isinstance(error, httpx.TimeoutException):
+        return 'model_http_timeout'
+    if isinstance(error, httpx.HTTPStatusError):
+        return 'model_http_status'
+    if isinstance(error, httpx.RequestError):
+        return 'model_transport_error'
+    if isinstance(error, InferenceOutputError):
+        return 'incomplete_or_invalid_inference'
+    if isinstance(error, ValueError):
+        return 'model_unavailable' if str(error) == 'model_unavailable' else 'validation_error'
+    return 'unexpected_model_error'
+
+
+
 # Independent text extraction: deliberately separate from Ollama analysis.
 extraction_busy = False
 
@@ -222,11 +240,12 @@ async def _analyze_impl(file, x_service_key):
                 except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError) as error:
                     # Log only the exception class: model errors may include source text.
                     logger.warning(
-                        'document_ai stage=reasoning event=fallback reason_type=%s',
-                        type(error).__name__,
+                        'document_ai stage=reasoning event=fallback reason_type=%s reason_code=%s',
+                        type(error).__name__, _fallback_reason(error),
                     )
                     semantic, model = source_fallback(pages), 'source-only-private-fallback'
-                    semantic._quality = {'reasoningStatus':'skipped: fallback', 'supportMethod':'exact-source-only', 'verdictCoverage':0.0}
+                    semantic._quality = {'reasoningStatus':'skipped: fallback', 'fallbackReason': _fallback_reason(error),
+                                         'supportMethod':'exact-source-only', 'verdictCoverage':0.0}
             else:
                 semantic, model = await reason(pages)
             logger.info("Understanding completed duration_ms=%d",int((time.monotonic()-stage_started)*1000))
