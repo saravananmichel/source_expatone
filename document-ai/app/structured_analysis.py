@@ -77,7 +77,14 @@ def structured_fields(pages: list[Page]) -> list[dict]:
             line = raw.strip()
             if not line or len(line) > 300:
                 continue
+            # Paired issue/expiry dates are handled together above; running
+            # single-label rules here would mislabel the first date as expiry.
+            paired_dates = (DATE_LABELS["issue_date"].search(line)
+                            and DATE_LABELS["expiry_date"].search(line)
+                            and len(DATE_VALUE.findall(line)) == 2)
             for field, pattern in RULES:
+                if paired_dates and field in ("issue_date", "expiry_date"):
+                    continue
                 match = pattern.search(line)
                 if not match:
                     continue
