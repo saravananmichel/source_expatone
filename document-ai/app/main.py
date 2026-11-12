@@ -262,6 +262,8 @@ async def _analyze_impl(file, x_service_key):
             # A weak suggestion must never override a model's document category.
             from .passport_reconciliation import reconcile_passport_result
             reconcile_passport_result(result, pages, suggestions, model)
+            from .passport_date_guard import guard_passport_response
+            guard_passport_response(result, pages)
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
                         result.get('documentCategory', 'Unknown'), len(suggestions),
