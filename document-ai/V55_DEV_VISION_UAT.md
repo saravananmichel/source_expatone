@@ -16,12 +16,12 @@ $env:DOCUMENT_AI_V55_VISION_MODEL = "<separately-deployed-private-vision-model>"
 python -m app.vision_preflight_cli_v55
 ```
 
-Configure the existing authenticated `OLLAMA_BASE_URL` and service identity using the established DEV deployment mechanism. Do not paste credentials into tickets or commit environment secrets. The CLI only requests `GET /api/tags` and prints bounded status flags; it does **not** change deployment settings.
+Configure `VISION_OLLAMA_BASE_URL` and `VISION_OLLAMA_CLOUD_RUN_AUDIENCE` to the **same dedicated private Vision Cloud Run origin**, using the established DEV deployment mechanism. Never reuse the existing text `OLLAMA_BASE_URL` or its audience. Grant the Document AI DEV service account `roles/run.invoker` on the new Vision service only. Do not paste credentials into tickets or commit environment secrets. The CLI only requests `GET /api/tags` and prints bounded status flags; it does **not** change deployment settings.
 
 A `model_listed` response proves only that the exact model name appears in the inventory; it does not establish vision capability, successful inference, model memory sufficiency, or latency.
 
 ## Required DEV acceptance gates
-1. Confirm private/authenticated network access to Ollama, selected model tag, and explicit image capability. Keep the production text model unchanged.
+1. Confirm private/authenticated network access to the dedicated Vision Ollama service, selected model tag, and explicit image capability. Keep the production text model unchanged.
 2. Measure memory and CPU/GPU capacity, concurrency, timeout, image payload sizes and per-request costs; set a cost ceiling.
 3. With synthetic PNG/JPEG files under 2 MB, test correct matching passport number/DOB/expiry, mismatched values, missing labels, unreadable image and model timeout.
 4. Confirm no raw identity values appear in `qualityDiagnostics.visionReview` or logs.
