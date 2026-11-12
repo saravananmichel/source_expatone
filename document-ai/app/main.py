@@ -264,6 +264,17 @@ async def _analyze_impl(file, x_service_key):
             reconcile_passport_result(result, pages, suggestions, model)
             from .passport_date_guard import guard_passport_response
             guard_passport_response(result, pages)
+            # V5.5 opt-in MRZ diagnostics: expose only validation status, never
+            # raw MRZ, passport number, nationality or dates in diagnostics.
+            # Disabled by default until end-to-end DEV UAT is complete.
+            if os.getenv('DOCUMENT_AI_V55_MRZ_AUDIT', 'false').lower() == 'true':
+                from .mrz_audit_v55 import audit_td3
+                audit = audit_td3(pages)
+                result.setdefault('qualityDiagnostics', {})['mrzAudit'] = {
+                    'status': audit['status'],
+                    'requiresConfirmation': True,
+                    'checks': audit.get('checks', {}),
+                }
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
                         result.get('documentCategory', 'Unknown'), len(suggestions),
