@@ -26,7 +26,7 @@ async def optional_vision_diagnostic(data: bytes, content_type: str, pages) -> d
         diagnostic = reconcile_ocr_vision(ocr_text, vision_text)
         # Passport identity review uses first-page label-grounded evidence only.
         # Never include the source values in API diagnostics.
-        first_page = next((page.text for page in pages if page.page == 1), '')
+        first_page = next((page.text for page in pages if getattr(page, 'page', 1) == 1), '')
         diagnostic['passportFieldReview'] = field_review(first_page, vision_text)
         return diagnostic
     except VisionUnavailable:
