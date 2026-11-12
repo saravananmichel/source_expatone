@@ -9,8 +9,7 @@ import re
 
 import httpx
 
-from .config import ollama_base_url, ollama_timeout
-from .cloud_run_auth import ollama_auth_headers
+from .config import ollama_timeout
 from .ollama import check_completion
 
 _ALLOWED_MODELS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:/-]{0,100}$")
@@ -60,14 +59,16 @@ def vision_payload(image: bytes, mime_type: str, model: str):
 
 async def probe_image(image: bytes, mime_type: str) -> str:
     """Return untrusted vision OCR text for review; never use as verified identity."""
+    from .vision_transport_v55 import vision_endpoint, vision_auth_headers
     model = vision_model()
+    endpoint, _ = vision_endpoint()
     payload = vision_payload(image, mime_type, model)
     try:
         async with httpx.AsyncClient(timeout=ollama_timeout(35)) as client:
             response = await client.post(
-                ollama_base_url() + "/api/chat",
+                endpoint + "/api/chat",
                 json=payload,
-                headers=await ollama_auth_headers(),
+                headers=await vision_auth_headers(),
             )
             response.raise_for_status()
             raw = response.json()

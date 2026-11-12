@@ -14,6 +14,9 @@ def test_disabled_does_not_make_network_call(monkeypatch):
 
 def test_listed_model_does_not_claim_inference(monkeypatch):
     monkeypatch.setenv("DOCUMENT_AI_V55_VISION_ENABLED", "true")
+    monkeypatch.setenv("VISION_OLLAMA_BASE_URL", "https://expatone-vision-dev.asia-southeast1.run.app")
+    monkeypatch.setenv("VISION_OLLAMA_CLOUD_RUN_AUDIENCE", "https://expatone-vision-dev.asia-southeast1.run.app")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "https://expatone-text-dev.asia-southeast1.run.app")
     monkeypatch.setenv("DOCUMENT_AI_V55_VISION_MODEL", "llava:latest")
     monkeypatch.setenv("OLLAMA_MODEL", "qwen3:4b")
     class Response:
@@ -26,13 +29,16 @@ def test_listed_model_does_not_claim_inference(monkeypatch):
             assert url.endswith("/api/tags")
             return Response()
     monkeypatch.setattr(module.httpx, "AsyncClient", lambda **kwargs: Client())
-    monkeypatch.setattr(module, "ollama_auth_headers", AsyncMock(return_value={}))
+    monkeypatch.setattr(module, "vision_auth_headers", AsyncMock(return_value={}))
     result = asyncio.run(module.vision_preflight())
     assert result == {"status": "model_listed", "modelAvailable": True, "inferenceVerified": False}
 
 
 def test_unlisted_model_is_not_ready(monkeypatch):
     monkeypatch.setenv("DOCUMENT_AI_V55_VISION_ENABLED", "true")
+    monkeypatch.setenv("VISION_OLLAMA_BASE_URL", "https://expatone-vision-dev.asia-southeast1.run.app")
+    monkeypatch.setenv("VISION_OLLAMA_CLOUD_RUN_AUDIENCE", "https://expatone-vision-dev.asia-southeast1.run.app")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "https://expatone-text-dev.asia-southeast1.run.app")
     monkeypatch.setenv("DOCUMENT_AI_V55_VISION_MODEL", "llava:latest")
     monkeypatch.setenv("OLLAMA_MODEL", "qwen3:4b")
     class Response:
@@ -43,6 +49,6 @@ def test_unlisted_model_is_not_ready(monkeypatch):
         async def __aexit__(self, *args): pass
         async def get(self, url, headers): return Response()
     monkeypatch.setattr(module.httpx, "AsyncClient", lambda **kwargs: Client())
-    monkeypatch.setattr(module, "ollama_auth_headers", AsyncMock(return_value={}))
+    monkeypatch.setattr(module, "vision_auth_headers", AsyncMock(return_value={}))
     result = asyncio.run(module.vision_preflight())
     assert result["status"] == "model_not_listed"

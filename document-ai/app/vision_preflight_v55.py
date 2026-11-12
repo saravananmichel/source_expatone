@@ -1,8 +1,8 @@
 """V5.5 private Vision model preflight (no documents or images transmitted)."""
 import httpx
 
-from .cloud_run_auth import ollama_auth_headers
-from .config import ollama_base_url, ollama_timeout
+from .config import ollama_timeout
+from .vision_transport_v55 import vision_endpoint, vision_auth_headers
 from .vision_v55 import VisionUnavailable, vision_model
 
 
@@ -13,13 +13,14 @@ async def vision_preflight() -> dict:
     """
     try:
         model = vision_model()
+        endpoint, _ = vision_endpoint()
     except VisionUnavailable as exc:
         return {"status": str(exc), "modelAvailable": False, "inferenceVerified": False}
     try:
         async with httpx.AsyncClient(timeout=ollama_timeout(5)) as client:
             response = await client.get(
-                ollama_base_url() + "/api/tags",
-                headers=await ollama_auth_headers(),
+                endpoint + "/api/tags",
+                headers=await vision_auth_headers(),
             )
             response.raise_for_status()
             models = response.json().get("models", [])
