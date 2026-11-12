@@ -275,6 +275,16 @@ async def _analyze_impl(file, x_service_key):
                     'requiresConfirmation': True,
                     'checks': audit.get('checks', {}),
                 }
+            # V5.5 experimental image-only vision diagnostic. Never changes
+            # extracted text, classification, passport fields, or date guards.
+            # Disabled by default and failures remain review-only diagnostics.
+            if os.getenv('DOCUMENT_AI_V55_VISION_ENABLED', 'false').lower() == 'true':
+                from .vision_diagnostic_v55 import optional_vision_diagnostic
+                vision_diagnostic = await optional_vision_diagnostic(
+                    data, file.content_type or '', pages
+                )
+                if vision_diagnostic is not None:
+                    result.setdefault('qualityDiagnostics', {})['visionReview'] = vision_diagnostic
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
                         result.get('documentCategory', 'Unknown'), len(suggestions),
