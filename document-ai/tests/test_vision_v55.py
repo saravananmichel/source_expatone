@@ -40,3 +40,23 @@ def test_payload_is_private_and_bounded():
 def test_rejects_invalid_or_oversized_images(data, mime):
     with pytest.raises(VisionUnavailable, match="invalid_vision_image"):
         vision_payload(data, mime, "llava:7b")
+
+
+@pytest.mark.parametrize("value,expected", [
+    (None, 120), ("35", 35), ("120", 120), ("180", 180),
+])
+def test_vision_timeout_valid(monkeypatch, value, expected):
+    from app.vision_v55 import vision_timeout_seconds
+    if value is None:
+        monkeypatch.delenv("DOCUMENT_AI_V55_VISION_TIMEOUT_SECONDS", raising=False)
+    else:
+        monkeypatch.setenv("DOCUMENT_AI_V55_VISION_TIMEOUT_SECONDS", value)
+    assert vision_timeout_seconds() == expected
+
+
+@pytest.mark.parametrize("value", ["", "abc", "34", "181", "12.5", "-1"])
+def test_vision_timeout_rejects_invalid_values(monkeypatch, value):
+    from app.vision_v55 import vision_timeout_seconds
+    monkeypatch.setenv("DOCUMENT_AI_V55_VISION_TIMEOUT_SECONDS", value)
+    with pytest.raises(VisionUnavailable, match="invalid_vision_timeout"):
+        vision_timeout_seconds()
