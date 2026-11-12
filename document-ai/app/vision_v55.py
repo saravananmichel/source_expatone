@@ -21,6 +21,18 @@ class VisionUnavailable(ValueError):
     """Safe, bounded failure without source image or model output in the message."""
 
 
+def vision_timeout_seconds():
+    """Bounded Vision-only HTTP read timeout; does not affect text inference."""
+    raw = os.getenv("DOCUMENT_AI_V55_VISION_TIMEOUT_SECONDS", "120").strip()
+    try:
+        seconds = int(raw)
+    except ValueError:
+        raise VisionUnavailable("invalid_vision_timeout") from None
+    if not 35 <= seconds <= 180:
+        raise VisionUnavailable("invalid_vision_timeout")
+    return seconds
+
+
 def vision_model():
     if os.getenv("DOCUMENT_AI_V55_VISION_ENABLED", "false").lower() != "true":
         raise VisionUnavailable("vision_disabled")
@@ -64,7 +76,7 @@ async def probe_image(image: bytes, mime_type: str) -> str:
     endpoint, _ = vision_endpoint()
     payload = vision_payload(image, mime_type, model)
     try:
-        async with httpx.AsyncClient(timeout=ollama_timeout(35)) as client:
+        async with httpx.AsyncClient(timeout=ollama_timeout(vision_timeout_seconds())) as client:
             response = await client.post(
                 endpoint + "/api/chat",
                 json=payload,
