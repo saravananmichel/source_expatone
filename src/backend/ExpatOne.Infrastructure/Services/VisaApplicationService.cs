@@ -325,7 +325,17 @@ public class VisaApplicationService(ExpatOneDbContext db, HttpClient client, ICo
         if (!pack.IsSingaporeVisit) throw new ArgumentException("Official PDF export is not available for this template. Use the linked official filing portal.");
         var values=s.Values.Where(v=>pack.Fields.Any(f=>f.Key==v.Key && VisaRules.Active(f.When,s.Values,Today))).ToDictionary(x=>x.Key,x=>x.Value);
         var uri=new Uri(config["DocumentIntelligence:ServiceUrl"]??"http://localhost:8090/");
-        if(!uri.IsLoopback) throw new InvalidOperationException("Form export requires the private local document service.");
+        var audience = config["DocumentIntelligence:CloudRunAudience"];
+        var privateCloudRun = uri.Scheme == Uri.UriSchemeHttps &&
+            uri.Host.EndsWith(".run.app", StringComparison.OrdinalIgnoreCase) &&
+            uri.IsDefaultPort &&
+            string.IsNullOrEmpty(uri.UserInfo) &&
+            uri.AbsolutePath == "/" &&
+            string.IsNullOrEmpty(uri.Query) && string.IsNullOrEmpty(uri.Fragment) &&
+            !string.IsNullOrWhiteSpace(audience) &&
+            string.Equals(uri.GetLeftPart(UriPartial.Authority), audience.TrimEnd('/'), StringComparison.Ordinal);
+        if (!uri.IsLoopback && !privateCloudRun)
+            throw new InvalidOperationException("Form export requires loopback or the configured private Cloud Run document service.");
         using var timeout=CancellationTokenSource.CreateLinkedTokenSource(ct);timeout.CancelAfter(TimeSpan.FromSeconds(30));ct=timeout.Token;
         using var req=new HttpRequestMessage(HttpMethod.Post,new Uri(uri,"visa/forms/"+form));
         req.Headers.Add("X-Service-Key",config["DocumentIntelligence:ServiceKey"]);

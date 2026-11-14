@@ -38,6 +38,65 @@ public class VisaApplicationTests : IDisposable
             AllowVisaApplicationUse = true
         });
     }
+    [Theory]
+    [InlineData("http://localhost:8090/", "", true)]
+    [InlineData("https://document-test.run.app/", "https://document-test.run.app", true)]
+    [InlineData("https://document-test.run.app/", "", false)]
+    [InlineData("https://document-test.run.app/", "https://other.run.app", false)]
+    [InlineData("https://external.example/", "https://external.example", false)]
+    [InlineData("http://document-test.run.app/", "http://document-test.run.app", false)]
+    [InlineData("https://document-test.run.app/other/", "https://document-test.run.app", false)]
+    public async Task PdfExportRestrictsTransport(string url, string audience, bool allowed)
+    {
+        var a = await Create(owner);
+        var handler = new ExportHandler();
+        using var http = new HttpClient(handler);
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["DocumentIntelligence:ServiceUrl"] = url,
+            ["DocumentIntelligence:CloudRunAudience"] = audience,
+            ["DocumentIntelligence:ServiceKey"] = "synthetic-key"
+        }).Build();
+        var exporter = new VisaApplicationService(db, http, config);
+        var id = a.GetProperty("id").GetGuid();
+        var revision = a.GetProperty("revision").GetGuid();
+        if (allowed)
+        {
+            await exporter.ExportAsync(owner, id, revision, "14a", default);
+            Assert.Equal(new Uri(new Uri(url), "visa/forms/14a"), handler.Address);
+            Assert.True(handler.HasServiceKey);
+            a = J(await service.UpdateAsync(owner, id, new()
+            {
+                Revision = revision,
+                Values = new() { ["loiRequired"] = "Yes" }
+            }));
+            await exporter.ExportAsync(owner, id, a.GetProperty("revision").GetGuid(), "v39a", default);
+            Assert.Equal(new Uri(new Uri(url), "visa/forms/v39a"), handler.Address);
+        }
+        else
+        {
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                exporter.ExportAsync(owner, id, revision, "14a", default));
+            Assert.Null(handler.Address);
+        }
+    }
+
+    private sealed class ExportHandler : HttpMessageHandler
+    {
+        public Uri? Address { get; private set; }
+        public bool HasServiceKey { get; private set; }
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            Address = request.RequestUri;
+            HasServiceKey = request.Headers.TryGetValues("X-Service-Key", out var values) &&
+                values.Contains("synthetic-key");
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("{}", System.Text.Encoding.UTF8, "application/json")
+            });
+        }
+    }
+
     [Fact] public async Task PriorityCountryDraftsUseTheirOwnTemplateAndRejectSingaporeExport() {
         var templates = await db.VisaTemplates.Where(t => t.CountryCode != "SG").ToListAsync();
         Assert.Equal(12, templates.Count);
