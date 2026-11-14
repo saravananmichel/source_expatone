@@ -171,7 +171,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<FamilyService>();
 builder.Services.AddScoped<CorporateMobilityService>();
 builder.Services.AddScoped<CorporateOfferPdfStorage>();
-builder.Services.AddHttpClient<VisaApplicationService>();
+builder.Services.AddHttpClient<VisaApplicationService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false })
+    .AddHttpMessageHandler(sp => new DocumentAiCloudRunAuthHandler(
+        sp.GetRequiredService<IConfiguration>(), "DocumentIntelligence:CloudRunAudience"));
 builder.Services.AddScoped<IProfileService, ProfileService>();
 
 var awsRegion = builder.Configuration["Aws:Region"];
