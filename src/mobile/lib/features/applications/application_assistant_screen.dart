@@ -718,6 +718,8 @@ class _VisaDraftScreenState extends State<VisaDraftScreen>
     }
 
     return Padding(
+      // Isolate editable scroll offsets from the ExpansionTile's stored bool.
+      key: PageStorageKey('visa-field-$key'),
       padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
