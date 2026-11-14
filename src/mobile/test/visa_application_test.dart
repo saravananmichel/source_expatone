@@ -53,6 +53,7 @@ void main() {
                 },
             ],
             'checks': [],
+            'sources': [],
           },
         ),
       ),
