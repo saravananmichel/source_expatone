@@ -10,6 +10,72 @@ import 'package:expatone_app/core/services/visa_service.dart';
 import 'package:expatone_app/features/applications/application_assistant_screen.dart';
 
 void main() {
+  testWidgets('Empty Residence fields render with bounded height', (
+    tester,
+  ) async {
+    final api = ApiClient(
+      httpClient: MockClient(
+        (_) async => http.Response(
+          jsonEncode({
+            'id': 'draft',
+            'revision': 'rev',
+            'accessBlocked': false,
+            'status': 'InProgress',
+            'values': {},
+            'checks': {},
+            'documents': [],
+            'assessment': {'blockers': []},
+          }),
+          200,
+        ),
+      ),
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: VisaDraftScreen(
+          documentService: DocumentService(api),
+          id: 'draft',
+          rules: {
+            'fields': [
+              for (final key in [
+                'residenceCountry',
+                'residenceProvince',
+                'residencePrefecture',
+                'residenceDistrict',
+                'residenceAddress',
+              ])
+                {
+                  'key': key,
+                  'label': key,
+                  'section': 'Residence',
+                  'type': 'text',
+                  'maxLength': key == 'residenceAddress' ? 120 : 25,
+                },
+            ],
+            'checks': [],
+            'sources': [],
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Residence'));
+    await tester.tap(find.text('Residence'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    for (final key in [
+      'residenceCountry',
+      'residenceProvince',
+      'residencePrefecture',
+      'residenceDistrict',
+      'residenceAddress',
+    ]) {
+      final field = find.byKey(ValueKey('rev-$key'));
+      expect(field, findsOneWidget);
+      expect(tester.getSize(field).height, lessThan(100));
+    }
+    await tester.pumpWidget(const SizedBox());
+  });
   test(
     'Selected own and shared IDs are sent without document content',
     () async {
