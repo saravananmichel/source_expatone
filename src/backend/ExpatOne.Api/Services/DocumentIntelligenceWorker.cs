@@ -19,7 +19,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
             }
             catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
             catch (Exception) { logger.LogWarning("Document worker could not access its queue."); }
-            await Task.Delay(TimeSpan.FromSeconds(3), stoppingToken);
+            await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
         }
     }
     public async Task<bool> ProcessOne(CancellationToken stoppingToken)
@@ -62,7 +62,7 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
             db.Documents.Any(d => d.Id == x.DocumentId && d.ExtractionStatus == "COMPLETED") &&
             ((x.Status == "QUEUED" && (x.LeaseUntil == null || x.LeaseUntil < now)) ||
              (x.Status == "PROCESSING" && x.LeaseUntil < now))).ExecuteUpdateAsync(set => set
-                .SetProperty(x => x.Status, "PROCESSING").SetProperty(x => x.Stage, "Extracting and understanding")
+                .SetProperty(x => x.Status, "PROCESSING").SetProperty(x => x.Stage, "Downloading document")
                 .SetProperty(x => x.LeaseUntil, now.AddMinutes(18)).SetProperty(x => x.LeaseToken, token).SetProperty(x => x.UpdatedAt, now)
                 .SetProperty(x => x.Attempts, x => x.Attempts + 1), stoppingToken);
         logger.LogInformation("Document analysis {AnalysisId} claim result: claimed={Claimed}, status={Status}, attempts={Attempts}", run.Id, claimed, run.Status, run.Attempts);
@@ -94,6 +94,8 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
                 var hash = Convert.ToHexString(await SHA256.HashDataAsync(temp, timeout.Token));
                 if (run.ContentHash != null && run.ContentHash != hash) throw new InvalidDataException("Document changed.");
                 var storageMs = duration.ElapsedMilliseconds;
+                await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && x.LeaseToken == token)
+                    .ExecuteUpdateAsync(set => set.SetProperty(x => x.Stage, "Analysing document"), stoppingToken);
                 temp.Position = 0;
                 var provider = scope.ServiceProvider.GetRequiredService<DocumentIntelligenceService>();
                 ExpatOne.Application.DTOs.DocumentAnalysisDto result;
@@ -113,6 +115,8 @@ public class DocumentIntelligenceWorker(IServiceScopeFactory scopes, ILogger<Doc
                 result.DocumentVersionId = run.DocumentVersionId;
                 result.AnalyzedAt = DateTime.UtcNow;
                 var json = JsonSerializer.Serialize(result);
+                await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && x.LeaseToken == token)
+                    .ExecuteUpdateAsync(set => set.SetProperty(x => x.Stage, "Saving results"), stoppingToken);
                 await using var transaction = await db.Database.BeginTransactionAsync(stoppingToken);
                 var saved = await db.DocumentAnalysisRuns.Where(x => x.Id == run.Id && x.LeaseToken == token).ExecuteUpdateAsync(set => set
                     .SetProperty(x => x.Status, result.RequiresReview ? "REQUIRES_REVIEW" : "COMPLETED")

@@ -70,18 +70,20 @@ class DocumentItem {
         isSharedWithMe: json['isSharedWithMe'] as bool? ?? false,
         ownerEmail: json['ownerEmail'] as String?,
         ownerDisplayName: json['ownerDisplayName'] as String?,
-        id: json['id'] as String,
-        name: json['name'] as String,
-        documentType: json['documentType'] as String,
-        documentTypeId: json['documentTypeId'] as String,
+        id: json['id'] as String? ?? '',
+        name: json['name'] as String? ?? 'Untitled Document',
+        documentType: json['documentType'] as String? ?? 'Document',
+        documentTypeId: json['documentTypeId'] as String? ?? '',
         originalFileName: json['originalFileName'] as String?,
         contentType: json['contentType'] as String?,
         fileSizeBytes: (json['fileSizeBytes'] as num?)?.toInt() ?? 0,
         status: json['status'] as String? ?? 'Active',
         expiryDate: json['expiryDate'] != null
-            ? DateTime.parse(json['expiryDate'] as String)
+            ? DateTime.tryParse(json['expiryDate'] as String)
             : null,
-        createdAt: DateTime.parse(json['createdAt'] as String),
+        createdAt: json['createdAt'] != null
+            ? (DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now())
+            : DateTime.now(),
         isAnalyzed: json['isAnalyzed'] as bool? ?? false,
         versionCount: (json['versionCount'] as num?)?.toInt() ?? 0,
         activeShareCount: (json['activeShareCount'] as num?)?.toInt() ?? 0,
@@ -392,18 +394,25 @@ class DocumentService {
   }
 
   Future<Map<String, dynamic>> analyzeDocument(String documentId, {bool forceReanalyze = false}) async {
-    // Text extraction is handled by a separate backend worker. Wait for it
-    // before enqueueing analysis so the analysis queue does not race extraction.
-    const extractionMaxAttempts = 240; // 20 minutes at 5-second intervals.
+    // If user explicitly asked to reanalyze, enqueue the reanalysis job first to reset backend state.
+    if (forceReanalyze) {
+      await enqueueDocumentAnalysis(
+        documentId,
+        forceReanalyze: true,
+      );
+    }
 
+    // 1. Text extraction is handled by a separate backend worker. Wait for it.
+    const extractionMaxAttempts = 240; // 20 minutes at 3-second intervals.
     var extractionReady = false;
+
     for (var attempt = 0; attempt < extractionMaxAttempts; attempt++) {
       final extraction = await getExtractedText(documentId);
       final status = extraction['status'] as String? ?? 'NOT_REQUESTED';
 
       if (status == 'FAILED') {
         throw const NetworkException(
-          "We couldn't extract text from this document. Please try again.",
+          "We couldn't extract text from this document. Please check the document quality and retry.",
         );
       }
 
@@ -412,20 +421,14 @@ class DocumentService {
         break;
       }
 
-      if (status != 'PENDING' && status != 'PROCESSING') {
-        throw const NetworkException(
-          'Text extraction has not started. Please reopen the document and try again.',
-        );
-      }
-
       _analysisProgress.add({
         'documentId': documentId,
         'status': 'PROCESSING',
-        'stage': 'Extracting document text',
+        'stage': 'Extracting text',
       });
 
       if (attempt < extractionMaxAttempts - 1) {
-        await Future<void>.delayed(const Duration(seconds: 5));
+        await Future<void>.delayed(const Duration(seconds: 3));
       }
     }
 
@@ -435,25 +438,42 @@ class DocumentService {
       );
     }
 
+    // 2. Enqueue document analysis (or get existing queued/running job)
     final response = await enqueueDocumentAnalysis(
       documentId,
       forceReanalyze: forceReanalyze,
     );
     if (response['analysisId'] == null) return response;
     final analysisId = response['analysisId'] as String;
-    // The backend analysis worker allows up to 17 minutes per attempt.
-    // Poll for up to 20 minutes so the UI does not give up prematurely.
+
+    _analysisProgress.add({
+      'documentId': documentId,
+      'status': response['status'] as String? ?? 'QUEUED',
+      'stage': response['stage'] as String? ?? 'Waiting for analysis',
+    });
+
+    // 3. Poll analysis job status
     const analysisMaxAttempts = 600; // 20 minutes at 2-second intervals.
     for (var attempt = 0; attempt < analysisMaxAttempts; attempt++) {
       final job = await getDocumentAnalysisStatus(documentId, analysisId);
       final status = job['status'];
-      _analysisProgress.add({'documentId': documentId, 'status': status as String? ?? 'PROCESSING',
-        'stage': job['stage'] as String? ?? 'Understanding document'});
+      final stage = job['stage'] as String? ?? 'Analysing document';
+
+      _analysisProgress.add({
+        'documentId': documentId,
+        'status': status as String? ?? 'PROCESSING',
+        'stage': stage,
+      });
+
       if (status == 'COMPLETED' || status == 'REQUIRES_REVIEW') {
         return Map<String, dynamic>.from(job['analysis'] as Map);
       }
       if (status == 'FAILED') {
-        throw const NetworkException("We couldn't fully analyze this document. You can retry.");
+        final category = job['errorCategory'] as String?;
+        final message = category == 'text_extraction_failed'
+            ? "We couldn't extract text from this document. Please check the document and tap Retry."
+            : "We couldn't fully analyze this document. You can retry.";
+        throw NetworkException(message);
       }
       if (attempt < analysisMaxAttempts - 1) {
         await Future<void>.delayed(const Duration(seconds: 2));

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:expatone_app/core/networking/api_client.dart';
+import 'package:expatone_app/core/error/app_exception.dart';
 import 'package:expatone_app/core/services/document_service.dart';
 import 'package:expatone_app/features/documents/document_analysis_screen.dart';
 import 'package:expatone_app/features/documents/document_qa_screen.dart';
@@ -9,7 +10,9 @@ class MockAnalysisDocumentService extends DocumentService {
   Map<String, dynamic>? mockAnalysis;
   Map<String, dynamic>? mockExtractedText;
   bool shouldFail = false;
+  AppException? failure;
   bool analyzeDocumentCalled = false;
+  bool lastForceReanalyze = false;
   DocumentAnswer? mockAnswer;
   bool askDocumentCalled = false;
 
@@ -18,12 +21,15 @@ class MockAnalysisDocumentService extends DocumentService {
   @override
   Future<Map<String, dynamic>> analyzeDocument(String documentId, {bool forceReanalyze = false}) async {
     analyzeDocumentCalled = true;
+    lastForceReanalyze = forceReanalyze;
+    if (failure != null) throw failure!;
     if (shouldFail) throw Exception('Failed');
     return mockAnalysis ?? {};
   }
 
   @override
   Future<Map<String, dynamic>> getDocumentAnalysis(String documentId) async {
+    if (failure != null) throw failure!;
     if (shouldFail) throw Exception('Failed');
     return mockAnalysis ?? {};
   }
@@ -107,6 +113,22 @@ void main() {
   });
 
   group('DocumentAnalysisScreen', () {
+    testWidgets('keeps the actionable service error visible on analysis and reload', (tester) async {
+      docService.failure = const NetworkException('Local document analysis is unavailable.', statusCode: 503);
+      for (final document in [unanalyzedDoc, analyzedDoc]) {
+        await tester.pumpWidget(MaterialApp(
+          home: DocumentAnalysisScreen(
+            key: ValueKey(document.id),
+            document: document,
+            documentService: docService,
+          ),
+        ));
+        await tester.pumpAndSettle();
+        expect(find.text('Local document analysis is unavailable.'), findsOneWidget);
+        expect(find.text('Retry analysis'), findsOneWidget);
+      }
+    });
+
     testWidgets('shows loading state for analyzed document', (tester) async {
       docService.mockAnalysis = fullAnalysis;
 
@@ -224,6 +246,30 @@ void main() {
 
       expect(find.text('Unable to analyze document. Please try again.'), findsOneWidget);
       expect(find.text('Retry analysis'), findsOneWidget);
+    });
+
+    testWidgets('retry analysis button passes forceReanalyze true', (tester) async {
+      docService.shouldFail = true;
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentAnalysisScreen(
+          document: unanalyzedDoc,
+          documentService: docService,
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Retry analysis'), findsOneWidget);
+      expect(docService.lastForceReanalyze, isFalse);
+
+      docService.shouldFail = false;
+      docService.mockAnalysis = fullAnalysis;
+
+      await tester.tap(find.text('Retry analysis'));
+      await tester.pumpAndSettle();
+
+      expect(docService.lastForceReanalyze, isTrue);
+      expect(find.text('AI analysis could not be completed'), findsNothing);
     });
 
     testWidgets('handles empty sections gracefully', (tester) async {

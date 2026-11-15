@@ -18,6 +18,15 @@ public class DocumentAnalysisJobs(ExpatOneDbContext db, IConfiguration config, I
             ?? throw new KeyNotFoundException("Document not found.");
         if (document.Status == DocumentStatus.PendingUpload || string.IsNullOrEmpty(document.S3ObjectKey))
             throw new InvalidOperationException("Complete the upload first.");
+
+        if (force || document.ExtractionStatus == "NOT_REQUESTED" || document.ExtractionStatus == "FAILED")
+        {
+            document.ExtractionStatus = "PENDING";
+            document.ExtractionAttempts = 0;
+            document.ExtractionLeaseUntil = null;
+            document.ExtractionLeaseToken = null;
+        }
+
         var fingerprint = DocumentAnalysisConfiguration.Fingerprint(config);
         string? contentHash = null;
         if (storage != null)
@@ -39,7 +48,14 @@ public class DocumentAnalysisJobs(ExpatOneDbContext db, IConfiguration config, I
             x.ObjectKey == document.S3ObjectKey && x.ConfigurationVersion == fingerprint && x.ContentHash == contentHash &&
             (x.Status == "QUEUED" || x.Status == "PROCESSING" || (!force && (x.Status == "COMPLETED" || x.Status == "REQUIRES_REVIEW"))))
             .OrderByDescending(x => x.CreatedAt).FirstOrDefaultAsync(ct);
-        if (prior != null) return Map(prior);
+        if (prior != null)
+        {
+            if (db.ChangeTracker.HasChanges())
+            {
+                await db.SaveChangesAsync(ct);
+            }
+            return Map(prior);
+        }
         var version = await db.DocumentVersions.FirstOrDefaultAsync(x => x.DocumentId == documentId && x.S3ObjectKey == document.S3ObjectKey && (x.Sha256Hash == contentHash || (x.IsCurrent && x.Sha256Hash == null)), ct);
         if (version != null && version.Sha256Hash == null) version.Sha256Hash = contentHash;
         DocumentVersion? snapshot = null;

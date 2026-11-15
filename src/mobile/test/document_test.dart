@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:expatone_app/core/error/app_exception.dart';
 import 'package:expatone_app/core/networking/api_client.dart';
 import 'package:expatone_app/core/services/document_service.dart';
 import 'package:expatone_app/features/documents/documents_screen.dart';
@@ -13,6 +15,8 @@ class MockDocumentService extends DocumentService {
     const DocumentType(id: '9', name: 'Other', category: 'General', hasExpiry: false),
   ];
   bool shouldFail = false;
+  Exception? errorToThrow;
+  int getDocumentsCallCount = 0;
   bool deleteDocumentCalled = false;
   bool deleteVersionCalled = false;
   bool deleteVersionShouldFail = false;
@@ -23,6 +27,8 @@ class MockDocumentService extends DocumentService {
 
   @override
   Future<List<DocumentItem>> getDocuments() async {
+    getDocumentsCallCount++;
+    if (errorToThrow != null) throw errorToThrow!;
     if (shouldFail) throw Exception('Failed');
     return mockDocuments;
   }
@@ -126,6 +132,97 @@ void main() {
 
       expect(find.text('Unable to load documents'), findsOneWidget);
       expect(find.text('Retry'), findsOneWidget);
+    });
+
+    testWidgets('distinguishes authentication failure', (tester) async {
+      docService.errorToThrow = const AuthException('Access denied');
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentsScreen(documentService: docService),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unable to load documents'), findsOneWidget);
+      expect(find.text('Authentication required. Please check your session and sign in again.'), findsOneWidget);
+      expect(find.byIcon(Icons.lock_outline), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+    });
+
+    testWidgets('distinguishes network/backend unavailable', (tester) async {
+      docService.errorToThrow = const SocketException('Connection refused');
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentsScreen(documentService: docService),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unable to load documents'), findsOneWidget);
+      expect(find.text('Backend server is unreachable. Please verify network connectivity and backend service status.'), findsOneWidget);
+      expect(find.byIcon(Icons.cloud_off_outlined), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+    });
+
+    testWidgets('distinguishes server error', (tester) async {
+      docService.errorToThrow = const NetworkException('Internal error', statusCode: 500);
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentsScreen(documentService: docService),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unable to load documents'), findsOneWidget);
+      expect(find.text('Server error (500). The service is temporarily unavailable. Please retry shortly.'), findsOneWidget);
+      expect(find.byIcon(Icons.dns_outlined), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+    });
+
+    testWidgets('distinguishes unexpected response format', (tester) async {
+      docService.errorToThrow = const FormatException('Invalid JSON payload');
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentsScreen(documentService: docService),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unable to load documents'), findsOneWidget);
+      expect(find.text('Unexpected response format received from the server.'), findsOneWidget);
+      expect(find.byIcon(Icons.data_object_outlined), findsOneWidget);
+      expect(find.text('Retry'), findsOneWidget);
+    });
+
+    testWidgets('Retry button retries request and displays documents on success', (tester) async {
+      docService.errorToThrow = const NetworkException('Server error', statusCode: 500);
+
+      await tester.pumpWidget(MaterialApp(
+        home: DocumentsScreen(documentService: docService),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unable to load documents'), findsOneWidget);
+      expect(docService.getDocumentsCallCount, 1);
+
+      // Now clear error and supply mock document
+      docService.errorToThrow = null;
+      docService.shouldFail = false;
+      docService.mockDocuments = [
+        DocumentItem(
+          id: '1',
+          name: 'My Passport',
+          documentType: 'Passport',
+          documentTypeId: '1',
+          fileSizeBytes: 500000,
+          status: 'Active',
+          createdAt: DateTime(2024, 1, 1),
+        ),
+      ];
+
+      // Tap Retry
+      await tester.tap(find.text('Retry'));
+      await tester.pumpAndSettle();
+
+      expect(docService.getDocumentsCallCount, 2);
+      expect(find.text('Unable to load documents'), findsNothing);
+      expect(find.text('My Passport'), findsOneWidget);
     });
 
     testWidgets('shows loading state', (tester) async {

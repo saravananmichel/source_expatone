@@ -53,5 +53,6 @@ def validate_config():
         key = os.getenv('DOCUMENT_AI_SERVICE_KEY', '')
         if len(key) < 32 or key.startswith(('YOUR_', 'REPLACE_')):
             raise ValueError('Production requires a strong service key')
-        if selected_profile().name == 'production' and (os.getenv('OLLAMA_MODEL') != 'qwen3:4b' or os.getenv('SUPPORT_MODEL', 'qwen3:4b') != 'qwen3:4b'):
-            raise ValueError('Production requires qwen3:4b')
+        allowed = {'qwen3:4b', 'gemma4:e4b'}
+        if selected_profile().name == 'production' and (os.getenv('OLLAMA_MODEL') not in allowed or os.getenv('SUPPORT_MODEL', 'qwen3:4b') not in allowed):
+            raise ValueError('Production requires an approved model (qwen3:4b or gemma4:e4b)')

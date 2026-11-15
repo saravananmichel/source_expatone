@@ -125,16 +125,25 @@ public class DocumentService : IDocumentService
     {
         var document = await ReadableDocuments(userId)
             .Where(d => d.Id == documentId && d.Status != DocumentStatus.PendingUpload)
-            .Select(d => new { d.ExtractionStatus, d.ExtractedText })
             .FirstOrDefaultAsync();
 
-        return document is null
-            ? null
-            : new DocumentExtractionDto
-            {
-                Status = document.ExtractionStatus,
-                ExtractedText = document.ExtractedText
-            };
+        if (document is null)
+            return null;
+
+        if (document.ExtractionStatus == "NOT_REQUESTED")
+        {
+            document.ExtractionStatus = "PENDING";
+            document.ExtractionAttempts = 0;
+            document.ExtractionLeaseUntil = null;
+            document.ExtractionLeaseToken = null;
+            await _dbContext.SaveChangesAsync();
+        }
+
+        return new DocumentExtractionDto
+        {
+            Status = document.ExtractionStatus,
+            ExtractedText = document.ExtractedText
+        };
     }
 
     public async Task<AccessUrlResponseDto> GetAccessUrlAsync(Guid userId, Guid documentId)
@@ -294,7 +303,7 @@ public class DocumentService : IDocumentService
     {
         Id = doc.Id,
         Name = doc.DocumentName,
-        DocumentType = doc.DocumentType.Name,
+        DocumentType = doc.DocumentType?.Name ?? "Document",
         DocumentTypeId = doc.DocumentTypeId,
         OriginalFileName = doc.OriginalFileName,
         ContentType = doc.ContentType,

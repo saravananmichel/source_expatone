@@ -1,5 +1,8 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 
+import '../../core/error/app_exception.dart';
 import '../../core/services/document_service.dart';
 import '../../core/services/reminder_service.dart';
 import '../../core/theme/app_theme.dart';
@@ -32,6 +35,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
   List<DocumentItem>? _documents;
   bool _isLoading = true;
   String? _error;
+  String? _errorSubtitle;
+  IconData _errorIcon = Icons.error_outline;
   int _walletTab = 0;
   List<SharedDocument>? _sharedWithMe;
   List<FamilyRequest>? _familyRequests;
@@ -188,6 +193,8 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
     setState(() {
       _isLoading = true;
       _error = null;
+      _errorSubtitle = null;
+      _errorIcon = Icons.error_outline;
       _shareRecipients.clear();
     });
 
@@ -200,10 +207,83 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } on AuthException catch (e) {
+      debugPrint('DocumentsScreen auth error: ${e.message}');
       if (mounted) {
         setState(() {
           _error = 'Unable to load documents';
+          _errorSubtitle = 'Authentication required. Please check your session and sign in again.';
+          _errorIcon = Icons.lock_outline;
+          _isLoading = false;
+        });
+      }
+    } on NetworkException catch (e) {
+      debugPrint('DocumentsScreen network error: status=${e.statusCode} message=${e.message}');
+      if (mounted) {
+        final isAuth = e.statusCode == 401 || e.statusCode == 403;
+        final isServer = e.statusCode != null && e.statusCode! >= 500 && e.statusCode! <= 504;
+        setState(() {
+          _error = 'Unable to load documents';
+          if (isAuth) {
+            _errorSubtitle = 'Authentication failed. Please sign in again.';
+            _errorIcon = Icons.lock_outline;
+          } else if (isServer) {
+            _errorSubtitle = 'Server error (${e.statusCode}). The service is temporarily unavailable. Please retry shortly.';
+            _errorIcon = Icons.dns_outlined;
+          } else {
+            _errorSubtitle = 'Cannot connect to ExpatOne server. Please verify your connection or API status.';
+            _errorIcon = Icons.cloud_off_outlined;
+          }
+          _isLoading = false;
+        });
+      }
+    } on SocketException catch (e) {
+      debugPrint('DocumentsScreen socket error: ${e.message}');
+      if (mounted) {
+        setState(() {
+          _error = 'Unable to load documents';
+          _errorSubtitle = 'Backend server is unreachable. Please verify network connectivity and backend service status.';
+          _errorIcon = Icons.cloud_off_outlined;
+          _isLoading = false;
+        });
+      }
+    } on TimeoutException catch (e) {
+      debugPrint('DocumentsScreen timeout: ${e.message}');
+      if (mounted) {
+        setState(() {
+          _error = 'Unable to load documents';
+          _errorSubtitle = 'Request timed out waiting for the server. Please tap Retry.';
+          _errorIcon = Icons.timer_outlined;
+          _isLoading = false;
+        });
+      }
+    } on FormatException catch (e) {
+      debugPrint('DocumentsScreen format exception: ${e.message}');
+      if (mounted) {
+        setState(() {
+          _error = 'Unable to load documents';
+          _errorSubtitle = 'Unexpected response format received from the server.';
+          _errorIcon = Icons.data_object_outlined;
+          _isLoading = false;
+        });
+      }
+    } on TypeError catch (e) {
+      debugPrint('DocumentsScreen type error during deserialization: $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Unable to load documents';
+          _errorSubtitle = 'Unexpected data structure received from the server.';
+          _errorIcon = Icons.data_object_outlined;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('DocumentsScreen unexpected error: ${e.runtimeType} $e');
+      if (mounted) {
+        setState(() {
+          _error = 'Unable to load documents';
+          _errorSubtitle = 'An unexpected error occurred while loading your documents.';
+          _errorIcon = Icons.error_outline;
           _isLoading = false;
         });
       }
@@ -860,15 +940,40 @@ class _DocumentsScreenState extends State<DocumentsScreen> {
 
   Widget _buildErrorState() {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 48, color: AppTheme.errorColor),
-          const SizedBox(height: 16),
-          Text(_error!, style: TextStyle(color: AppTheme.errorColor)),
-          const SizedBox(height: 12),
-          ElevatedButton(onPressed: _loadDocuments, child: const Text('Retry')),
-        ],
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(_errorIcon, size: 48, color: AppTheme.errorColor),
+            const SizedBox(height: 16),
+            Text(
+              _error!,
+              style: TextStyle(
+                color: AppTheme.errorColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            if (_errorSubtitle != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorSubtitle!,
+                style: TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontSize: 14,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadDocuments,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }

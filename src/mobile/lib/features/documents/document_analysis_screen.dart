@@ -112,10 +112,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
           _isLoading = false;
         });
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
-          _error = 'Unable to load analysis. Please try again.';
+          _error = error is AppException
+              ? error.message
+              : 'Unable to load analysis. Please try again.';
           _isLoading = false;
         });
       }
@@ -286,7 +288,7 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            '$_processingStage. Your extracted text remains available above.',
+                            '${_formatProcessingStage(_processingStage)}. Your extracted text remains available above.',
                             style: TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 13,
@@ -324,12 +326,14 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         _buildStructuredFieldsSection(),
         _buildKeyInformationSection(),
         _buildImportantDatesSection(),
-        _buildGroundedStatements(),
+        _buildWarningsSection(),
         _buildRequiredActionsSection(),
         _buildDeadlinesSection(),
-        _buildWarningsSection(),
-        _buildTerminologySection(),
+        _buildGroundedStatements(),
         _buildExplanationSection(),
+        _buildObligationsSection(),
+        _buildTerminologySection(),
+        _buildTakeawaySection(),
         _buildMissingInformation(),
         _buildConfidenceBadge(),
         if (kDebugMode) _buildQualityPanel(),
@@ -340,6 +344,37 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
         const SizedBox(height: 24),
       ],
     );
+  }
+
+  String _formatProcessingStage(String stage) {
+    switch (stage.toLowerCase()) {
+      case 'queued':
+      case 'waiting for analysis':
+        return 'Waiting for analysis';
+      case 'downloading document':
+        return 'Downloading document';
+      case 'extracting text':
+      case 'extracting document text':
+      case 'extracting and understanding':
+        return 'Extracting text';
+      case 'analysing document':
+      case 'analyzing document':
+      case 'understanding document':
+        return 'Analysing document';
+      case 'verifying evidence':
+        return 'Verifying evidence';
+      case 'saving results':
+        return 'Saving results';
+      case 'finished':
+      case 'completed':
+        return 'Analysis completed';
+      case 'retrying':
+        return 'Retrying attempt';
+      case 'failed':
+        return 'Analysis failed';
+      default:
+        return stage;
+    }
   }
 
   Widget _buildExtractedTextSection() {
@@ -613,7 +648,12 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: ElevatedButton(
-                onPressed: _isAnalyzing ? null : () => _analyzeDocument(),
+                onPressed: _isAnalyzing
+                    ? null
+                    : () {
+                        _loadExtractedText();
+                        _analyzeDocument(forceReanalyze: true);
+                      },
                 child: const Text('Retry analysis'),
               ),
             ),
@@ -1397,6 +1437,97 @@ class _DocumentAnalysisScreenState extends State<DocumentAnalysisScreen> {
       child: Text(
         explanation,
         style: const TextStyle(fontSize: 13, height: 1.5),
+      ),
+    );
+  }
+
+  Widget _buildObligationsSection() {
+    final items = _analysis!['obligations'] as List<dynamic>? ?? [];
+    if (items.isEmpty) return const SizedBox.shrink();
+    return _buildSection(
+      title: 'Obligations & Responsibilities',
+      icon: Icons.assignment_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: items.map<Widget>((raw) {
+          final item = raw as Map<String, dynamic>;
+          final label = item['label'] as String? ?? '';
+          final description = item['description'] as String? ?? '';
+          if (description.isEmpty) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.circle, size: 6, color: AppTheme.primaryColor),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (label.isNotEmpty)
+                        Text(
+                          label,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      if (label.isNotEmpty) const SizedBox(height: 2),
+                      Text(
+                        description,
+                        style: const TextStyle(fontSize: 13, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTakeawaySection() {
+    final takeaway = _analysis!['takeaway'] as String?;
+    if (takeaway == null || takeaway.isEmpty) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.primaryColor.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: AppTheme.primaryColor.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.flag_outlined, size: 18, color: AppTheme.primaryColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Key Takeaway',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  takeaway,
+                  style: const TextStyle(fontSize: 13, height: 1.5),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

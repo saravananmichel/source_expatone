@@ -50,4 +50,32 @@ public class DocumentAnalysisJobsTests
         doc.Status = DocumentStatus.PendingUpload; await db.SaveChangesAsync();
         await Assert.ThrowsAsync<InvalidOperationException>(() => service.EnqueueAsync(doc.UserId, doc.Id, false, default));
     }
+
+    [Fact]
+    public async Task EnqueueTransitionsNotRequestedExtractionToPending()
+    {
+        var (db, service, doc) = Create(); using var _ = db;
+        doc.ExtractionStatus = "NOT_REQUESTED";
+        await db.SaveChangesAsync();
+
+        var job = await service.EnqueueAsync(doc.UserId, doc.Id, false, default);
+        var updated = await db.Documents.FindAsync(doc.Id);
+
+        Assert.Equal("PENDING", updated!.ExtractionStatus);
+        Assert.Equal("QUEUED", job.Status);
+    }
+
+    [Fact]
+    public async Task ForceReanalysisResetsFailedExtractionToPending()
+    {
+        var (db, service, doc) = Create(); using var _ = db;
+        doc.ExtractionStatus = "FAILED";
+        await db.SaveChangesAsync();
+
+        var job = await service.EnqueueAsync(doc.UserId, doc.Id, true, default);
+        var updated = await db.Documents.FindAsync(doc.Id);
+
+        Assert.Equal("PENDING", updated!.ExtractionStatus);
+        Assert.Equal("QUEUED", job.Status);
+    }
 }

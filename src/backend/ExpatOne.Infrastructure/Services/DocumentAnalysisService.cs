@@ -34,8 +34,11 @@ public class DocumentAnalysisService(ExpatOneDbContext db, IDocumentAnalysisJobs
             try
             {
                 var result = JsonSerializer.Deserialize<DocumentAnalysisDto>(run.ResultJson ?? "null", new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var isSupportedModel = result.ModelVersion == "qwen3:4b" ||
+                                       result.ModelVersion?.StartsWith("qwen3:4b@", StringComparison.Ordinal) == true ||
+                                       result.ModelVersion?.StartsWith("gemma4:e4b", StringComparison.Ordinal) == true;
                 if (result?.Provider == "Local" &&
-                    ((result.ModelVersion == "qwen3:4b" || result.ModelVersion?.StartsWith("qwen3:4b@", StringComparison.Ordinal) == true) ||
+                    (isSupportedModel ||
                      (result.AnalyzerVersion == "document-engine-v2" && !string.IsNullOrWhiteSpace(result.ModelVersion))) &&
                     result.SemanticDocument is { ValueKind: JsonValueKind.Object } semantic && semantic.TryGetProperty("pages", out var pages) &&
                     pages.ValueKind == JsonValueKind.Array && pages.GetArrayLength() > 0) return result;
