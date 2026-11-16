@@ -36,4 +36,10 @@ def eligible_passport(pages, fields):
         if parsed is None:
             return False
         dates.append(parsed)
-    return dates[0] < dates[1] < dates[2]
+    if not dates[0] < dates[1] < dates[2]:
+        return False
+    # Cross-check visible dates against the same checksum-valid MRZ.
+    return any(f["value"] == values["passport_number"]
+               and f["sourceText"][13:19] == dates[0].strftime("%y%m%d")
+               and f["sourceText"][21:27] == dates[2].strftime("%y%m%d")
+               for f in mrz_fields([first]))
