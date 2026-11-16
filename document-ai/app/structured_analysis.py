@@ -101,6 +101,22 @@ def _passport_identity_fields(lines: list[str], page: int) -> list[dict]:
     return found
 
 
+def _compact_passport_identity_layout(page: Page) -> bool:
+    """Require independent identity labels, not nationality alone."""
+    if page.page != 1 or page.extraction != "ocr":
+        return False
+    text = page.text
+    if re.search(r"\b(?:e\s*-?\s*pass|employment\s+pass|electronic\s+pass|certificate|visa)\b", text, re.I):
+        return False
+    labels = set()
+    for block in page.blocks:
+        for field, pattern in (*SPATIAL_IDENTITY_SUFFIX.items(), *SPATIAL_DATE_SUFFIX.items()):
+            if pattern.search(block.text.strip()):
+                labels.add(field)
+    return {"surname", "given_names", "nationality", "date_of_birth",
+            "issue_date", "expiry_date"}.issubset(labels)
+
+
 def passport_category(pages: list[Page], fields: list[dict]) -> bool:
     """Conservative fallback hint; do not confuse immigration passes with passports."""
     text = " ".join(page.text for page in pages)
@@ -120,7 +136,9 @@ def passport_category(pages: list[Page], fields: list[dict]) -> bool:
     # independent passport-specific labels before suggesting the category.
     header_fragment = bool(PASSPORT_HEADER_FRAGMENT.search(header))
     passport_number_label = bool(PASSPORT_LABEL.search(first_page))
-    return ((explicit and (dated >= 2 or identity_labels >= 3))
+    compact_layout = bool(pages and _compact_passport_identity_layout(pages[0]))
+    return ((compact_layout and {"surname", "given_names", "date_of_birth", "issue_date", "expiry_date"}.issubset(names))
+            or (explicit and (dated >= 2 or identity_labels >= 3))
             or (mrz_prefix and identity_labels >= 2)
             or (identity_labels >= 4 and dated >= 1)
             or (header_fragment and passport_number_label and identity_labels >= 2))
@@ -257,7 +275,7 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
     """Recover unambiguous, source-grounded OCR values from nearby text blocks."""
     if page.page != 1 or page.extraction != "ocr" or not page.blocks:
         return []
-    if not _passport_context(page.text.splitlines()):
+    if not (_passport_context(page.text.splitlines()) or _compact_passport_identity_layout(page)):
         return []
     found = []
     for label_block in page.blocks:
