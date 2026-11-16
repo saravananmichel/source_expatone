@@ -68,3 +68,40 @@ assert 'PASSPORT' in pages[0].text.upper()
     pages = json.loads(result.stdout)
     assert 'PASSPORT' in pages[0]['text'].upper()
     assert pages[0]['blocks']
+
+
+@pytest.mark.parametrize("angle", [90, 180, 270])
+def test_rapid_page_orientation_osd(monkeypatch, angle):
+    monkeypatch.setattr(extraction.pytesseract, 'image_to_osd',
+                        lambda *a, **k: {'orientation_conf': 10, 'rotate': angle})
+    def engine(image):
+        assert image.shape[:2] == (100, 200)
+        return [
+            ([[20, 60], [100, 60], [100, 80], [20, 80]], 'PASSPORT', .99),
+            ([[10, 10], [90, 10], [90, 30], [10, 30]], 'SURNAME', .99),
+        ], None
+    monkeypatch.setattr(extraction, '_rapid_engine', lambda: engine)
+    source = Image.new('RGB', (200, 100)).rotate(angle, expand=True)
+    page = extraction.rapid_ocr(source, 1)
+    assert page.rotationDegrees == angle
+    assert (page.width, page.height) == (200, 100)
+    assert page.text.splitlines() == ['SURNAME', 'PASSPORT']
+    assert list(page.blocks[0].boundingBox) == [10, 10, 90, 30]
+
+
+def test_rapid_sideways_retry_without_osd(monkeypatch):
+    monkeypatch.setattr(extraction.pytesseract, 'image_to_osd',
+                        lambda *a, **k: {'orientation_conf': 0})
+    def engine(image):
+        vertical = image.shape[0] > image.shape[1]
+        result = []
+        for i, label in enumerate(['SURNAME', 'GIVEN NAME', 'PASSPORT']):
+            x, y = (10 + i*20, 10) if vertical else (10, 10 + i*20)
+            w, h = (10, 80) if vertical else (80, 10)
+            result.append(([[x,y],[x+w,y],[x+w,y+h],[x,y+h]], label, .9))
+        return result, None
+    monkeypatch.setattr(extraction, '_rapid_engine', lambda: engine)
+    page = extraction.rapid_ocr(Image.new('RGB', (100, 200)), 1)
+    assert page.rotationDegrees in (90, 270)
+    assert (page.width, page.height) == (200, 100)
+    assert page.text.splitlines() == ['SURNAME', 'GIVEN NAME', 'PASSPORT']
