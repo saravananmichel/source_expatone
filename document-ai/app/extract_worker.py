@@ -1,11 +1,14 @@
 """Bounded parser subprocess. Stdout is a private pipe consumed by the API, never a log."""
 import json
+import logging
+import os
 import sys
 from .extraction import extract
 
 MAX_OUTPUT_BYTES = 8 * 1024 * 1024
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, stream=sys.stderr)
     # resource is Unix-only. Keep Linux Cloud Run CPU/memory limits intact;
     # Windows local validation must not fail before document parsing begins.
     if sys.platform == 'linux':
@@ -25,5 +28,6 @@ if __name__ == '__main__':
             sys.exit(1)
 
         sys.stdout.buffer.write(output)
-    except Exception:
+    except Exception as exc:
+        logging.error('extraction_failed exception_type=%s', type(exc).__name__)
         sys.exit(1)
