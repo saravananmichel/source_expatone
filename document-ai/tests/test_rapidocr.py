@@ -45,7 +45,26 @@ def test_real_rapidocr_worker(monkeypatch):
     image.save(buf, format='PNG')
     result = subprocess.run([sys.executable, '-m', 'app.extract_worker', 'image/png'],
                             input=buf.getvalue(), capture_output=True, timeout=120)
-    assert result.returncode == 0, result.stderr.decode(errors='replace')
+    if result.returncode != 0:
+        # Synthetic fixture only: expose full inference exception for diagnosis.
+        probe = """
+import resource, sys
+from app.extraction import extract
+limit = int(sys.argv[1]) * 1024**3
+resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
+pages = extract(sys.stdin.buffer.read(), 'image/png')
+assert 'PASSPORT' in pages[0].text.upper()
+"""
+        diagnostics = []
+        for limit in (1, 4):
+            comparison = subprocess.run(
+                [sys.executable, '-c', probe, str(limit)],
+                input=buf.getvalue(), capture_output=True, timeout=120)
+            diagnostics.append(
+                f'{limit} GiB returncode={comparison.returncode}: '
+                + comparison.stderr.decode(errors='replace'))
+        pytest.fail(result.stderr.decode(errors='replace') + '\n'.join(diagnostics))
+
     pages = json.loads(result.stdout)
     assert 'PASSPORT' in pages[0]['text'].upper()
     assert pages[0]['blocks']
