@@ -40,7 +40,7 @@ PASSPORT_CONTEXT = re.compile(r"\b(?:passport|republic\s+of\s+india)\b", re.I)
 # Header OCR is often fragmented by security printing. This hint is only used
 # to attempt evidence-backed extraction; it never verifies a document category.
 PASSPORT_HEADER_FRAGMENT = re.compile(
-    r"\brepublic\s+of\s*[|:/-]?\s*india\b|\bpassport\s*(?:no|number)\b", re.I)
+    r"\brepublic\s*of\s*[|:/-]?\s*india\b|\bpassport\s*(?:no|number)\b", re.I)
 
 
 def _passport_context(lines: list[str]) -> bool:
@@ -186,6 +186,21 @@ OCR_DATE_SUFFIX = {
 }
 
 
+SPATIAL_IDENTITY_SUFFIX = {
+    "surname": re.compile(r"\b(?:surname|suname|family\s+name)\s*[:/-]?\s*$", re.I),
+    "given_names": re.compile(r"\b(?:given\s*name\s*\(s\)|given\s*names?|first\s+names?)\s*[:/-]?\s*$", re.I),
+    "nationality": re.compile(r"\bnationality\s*[:/-]?\s*$", re.I),
+    "place_of_birth": re.compile(r"\bplace\s*of\s*(?:birth|binh)\s*[:/-]?\s*$", re.I),
+    "place_of_issue": re.compile(r"\bplace\s*of\s*issue\s*[:/-]?\s*$", re.I),
+    "sex": re.compile(r"\b(?:sex|gender)\s*[:/-]?\s*$", re.I),
+}
+SPATIAL_DATE_SUFFIX = {
+    "date_of_birth": re.compile(r"\bdate\s*of\s*birth\s*[:/-]?\s*$", re.I),
+    "issue_date": re.compile(r"\bdate\s*of\s*[il]ssue\s*[:/-]?\s*$", re.I),
+    "expiry_date": re.compile(r"\bdate\s*of\s*expiry\s*[:/-]?\s*$", re.I),
+}
+
+
 def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
     """Use source-grounded OCR label suffixes; never infer missing values."""
     if page != 1 or not _passport_context(lines):
@@ -247,9 +262,9 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
     found = []
     for label_block in page.blocks:
         label_text = label_block.text.strip()
-        labels = [field for field, pattern in OCR_IDENTITY_SUFFIX.items()
+        labels = [field for field, pattern in SPATIAL_IDENTITY_SUFFIX.items()
                   if pattern.search(label_text)]
-        labels += [field for field, pattern in OCR_DATE_SUFFIX.items()
+        labels += [field for field, pattern in SPATIAL_DATE_SUFFIX.items()
                    if pattern.search(label_text)]
         if PASSPORT_LABEL.search(label_text) and not HISTORICAL_PASSPORT.search(label_text):
             labels.append("passport_number")
@@ -272,11 +287,14 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
             value = block.text.strip()
             if field == "passport_number":
                 valid = bool(PASSPORT_VALUE.fullmatch(value))
-            elif field in OCR_DATE_SUFFIX:
+            elif field in SPATIAL_DATE_SUFFIX:
                 valid = bool(DATE_VALUE.fullmatch(value))
             else:
                 valid = _identity_value(field, value)
             if not valid:
+                continue
+            # Never associate another recognised label as a value.
+            if any(p.search(value) for p in (*SPATIAL_IDENTITY_SUFFIX.values(), *SPATIAL_DATE_SUFFIX.values())):
                 continue
             distance = (max(0, y0 - ly1) + abs(x0 - lx0)) if below else (x0 - lx1)
             candidates.append((distance, block))
