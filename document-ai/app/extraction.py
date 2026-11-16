@@ -57,6 +57,36 @@ def _rapid_reading_order(blocks):
     return [b for _, _, row in rows for b in sorted(row, key=lambda b: b.boundingBox[0])]
 
 
+def _rapid_mrz_blocks(image, blocks, page_number):
+    """Bounded local MRZ recovery; retain only checksum-valid TD3 pairs."""
+    from .passport_mrz import mrz_fields
+    if page_number != 1 or image.width <= image.height:
+        return []
+    text = '\n'.join(b.text for b in blocks)
+    if not re.search(r'given\s*name', text, re.I) or not re.search(r'date\s*of\s*expiry', text, re.I):
+        return []
+    if mrz_fields([Page(page=page_number, text=text, width=image.width,
+                        height=image.height, extraction='ocr', blocks=blocks)]):
+        return []
+    y = int(image.height * 0.70)
+    crop = ImageOps.autocontrast(image.crop((0, y, image.width, image.height)).convert('L'))
+    try:
+        raw = pytesseract.image_to_string(crop, lang='eng',
+            config='--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
+            timeout=5)
+    except (pytesseract.TesseractError, RuntimeError):
+        return []
+    lines = [line.strip() for line in raw.splitlines() if line.strip()]
+    for first, second in zip(lines, lines[1:]):
+        pair = first + '\n' + second
+        if mrz_fields([Page(page=page_number, text=pair, width=image.width,
+                            height=image.height, extraction='ocr', blocks=[])]):
+            # Region-level evidence, not fabricated character coordinates.
+            return [Block(text=pair, boundingBox=[0, y, image.width, image.height],
+                          kind='paragraph')]
+    return []
+
+
 def rapid_ocr(image, page_number):
     # Lazy initialization keeps the existing Tesseract path independent.
     import numpy as np
@@ -119,6 +149,7 @@ def rapid_ocr(image, page_number):
         raise ValueError('no_readable_text')
     # Group nearby baselines, then order each row left to right.
     blocks = _rapid_reading_order(blocks)
+    blocks.extend(_rapid_mrz_blocks(image, blocks, page_number))
     return Page(page=page_number, text='\n'.join(b.text for b in blocks),
         width=image.width, height=image.height, extraction='ocr',
         rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels',
