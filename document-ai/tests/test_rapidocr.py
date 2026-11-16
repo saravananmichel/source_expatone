@@ -27,3 +27,25 @@ def test_fallback_opt_in(monkeypatch):
         extraction.ocr(None, 1)
     monkeypatch.setenv('RAPIDOCR_FALLBACK', '1')
     assert extraction.ocr(None, 1) == 'legacy'
+
+
+def test_real_rapidocr_worker(monkeypatch):
+    import io
+    import json
+    import subprocess
+    import sys
+    from PIL import ImageDraw, ImageFont
+    monkeypatch.setenv('DOCUMENT_OCR_ENGINE', 'rapidocr')
+    monkeypatch.setenv('RAPIDOCR_FALLBACK', '0')
+    image = Image.new('RGB', (1000, 300), 'white')
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf', 64)
+    draw.text((40, 50), 'PASSPORT SAMPLE', font=font, fill='black')
+    buf = io.BytesIO()
+    image.save(buf, format='PNG')
+    result = subprocess.run([sys.executable, '-m', 'app.extract_worker', 'image/png'],
+                            input=buf.getvalue(), capture_output=True, timeout=120)
+    assert result.returncode == 0, result.stderr.decode(errors='replace')
+    pages = json.loads(result.stdout)
+    assert 'PASSPORT' in pages[0]['text'].upper()
+    assert pages[0]['blocks']
