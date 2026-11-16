@@ -219,7 +219,7 @@ async def _analyze_impl(file, x_service_key):
             logger.info('document_ai stage=model_check available=%s profile=%s', model_available, profile.name)
             stage_started = time.monotonic()
             process = await asyncio.create_subprocess_exec(sys.executable, '-m', 'app.extract_worker', file.content_type,
-                stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=None)
+                stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
             try:
                 output, _ = await asyncio.wait_for(process.communicate(data), timeout=120)
                 if process.returncode != 0:
