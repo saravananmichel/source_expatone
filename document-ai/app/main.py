@@ -234,7 +234,18 @@ async def _analyze_impl(file, x_service_key):
             logger.info("Extraction completed pages=%d bytes=%d duration_ms=%d",len(pages),len(data),int((time.monotonic()-stage_started)*1000))
             extraction_ms=round((time.monotonic()-stage_started)*1000)
             stage_started=time.monotonic()
-            if profile.name == 'development':
+            suggestions = structured_fields(pages)
+            from .passport_fast_path import eligible_passport
+            fast_passport = (
+                profile.name == 'development'
+                and os.getenv('DOCUMENT_OCR_ENGINE', 'tesseract').lower() == 'rapidocr'
+                and os.getenv('PASSPORT_FAST_PATH', '0') == '1'
+                and eligible_passport(pages, suggestions)
+            )
+            if fast_passport:
+                from .passport_fast_path import passport_review_result
+                semantic, model = passport_review_result(pages, suggestions), 'passport-deterministic-review-v1'
+            elif profile.name == 'development':
                 try:
                     if not model_available:
                         raise ValueError('model_unavailable')
@@ -254,7 +265,6 @@ async def _analyze_impl(file, x_service_key):
             result=render(semantic,pages,model)
             # Independent, evidence-backed suggestions for the existing analysis
             # UI. Never silently overwrite model classification or persist fields.
-            suggestions = structured_fields(pages)
             result['structuredFields'] = suggestions
             result['suggestedDocumentCategory'] = (
                 'Utility Bill' if billing_category(pages, suggestions) else
