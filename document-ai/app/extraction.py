@@ -18,7 +18,69 @@ def block_kind(text):
     if len(text) < 100 and (text.isupper() or text.istitle()): return 'heading'
     return 'paragraph'
 
+def rapid_ocr(image, page_number):
+    # Lazy initialization keeps the existing Tesseract path independent.
+    import numpy as np
+    engine = _rapid_engine()
+    image = ImageOps.exif_transpose(image).convert('RGB')
+    image.thumbnail((2400, 3400))
+    result, _ = engine(np.asarray(image)[:, :, ::-1].copy())
+    blocks = []
+    weighted = total = 0
+    for polygon, value, score in result or []:
+        text = suppress_repetitive_ocr_noise(str(value)).strip()
+        if not text:
+            continue
+        confidence = float(score)
+        if not math.isfinite(confidence) or confidence < 0.35:
+            continue
+        xs, ys = zip(*polygon)
+        box = [max(0, float(min(xs))), max(0, float(min(ys))),
+               min(image.width, float(max(xs))), min(image.height, float(max(ys)))]
+        if box[2] <= box[0] or box[3] <= box[1]:
+            continue
+        blocks.append(Block(text=text, boundingBox=box, kind=block_kind(text)))
+        total += len(text)
+        weighted += len(text) * confidence
+    if not blocks:
+        raise ValueError('no_readable_text')
+    return Page(page=page_number, text='\n'.join(b.text for b in blocks),
+        width=image.width, height=image.height, extraction='ocr',
+        rotationDegrees=0, coordinateSpace='preprocessed_image_pixels',
+        extractionConfidence=max(0, min(1, weighted / max(1, total))), blocks=blocks)
+
+
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def _rapid_engine():
+    from rapidocr_onnxruntime import RapidOCR
+    return RapidOCR(intra_op_num_threads=2, inter_op_num_threads=1)
+
+
 def ocr(image, page_number):
+    import logging
+    import time
+    start = time.monotonic()
+    engine = os.getenv('DOCUMENT_OCR_ENGINE', 'tesseract').lower()
+    try:
+        if engine == 'rapidocr':
+            try:
+                page = rapid_ocr(image, page_number)
+                if page.extractionConfidence >= 0.65 or os.getenv('RAPIDOCR_FALLBACK', '0') != '1':
+                    return page
+            except Exception as exc:
+                logging.getLogger(__name__).warning('rapidocr_failed type=%s', type(exc).__name__)
+                if os.getenv('RAPIDOCR_FALLBACK', '0') != '1':
+                    raise
+            engine = 'tesseract_fallback'
+        return _tesseract_ocr(image, page_number)
+    finally:
+        logging.getLogger(__name__).info('ocr_engine=%s elapsed_ms=%d', engine,
+            int((time.monotonic() - start) * 1000))
+
+
+def _tesseract_ocr(image, page_number):
     image = ImageOps.exif_transpose(image).convert('RGB')
     image.thumbnail((2400, 3400))
     rotation=0
