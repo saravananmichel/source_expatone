@@ -127,6 +127,9 @@ def rapid_ocr(image, page_number):
             if rank[0] >= 0.65 and rank > best:
                 image, result, best = candidate, candidate_result, rank
                 rotation = (base_rotation + angle) % 360
+                # Skip the opposite quarter-turn only with strong readable label evidence.
+                if rank[0] >= 0.95 and rank[1] >= 4 and rank[2] >= 0.90:
+                    break
     logging.getLogger(__name__).info('rapidocr orientation_degrees=%d', rotation)
     blocks = []
     weighted = total = 0
