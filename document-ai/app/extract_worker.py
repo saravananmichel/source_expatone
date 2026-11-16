@@ -14,7 +14,10 @@ if __name__ == '__main__':
     if sys.platform == 'linux':
         import resource
         resource.setrlimit(resource.RLIMIT_CPU, (110, 110))
-        resource.setrlimit(resource.RLIMIT_AS, (1024**3, 1024**3))
+        # ONNX needs additional virtual address space; Cloud Run still
+        # enforces the container's physical memory limit.
+        limit = (4 if os.getenv('DOCUMENT_OCR_ENGINE', 'tesseract').lower() == 'rapidocr' else 1) * 1024**3
+        resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
     data = sys.stdin.buffer.read(10*1024*1024+1)
     if len(data)>10*1024*1024: sys.exit(1)
     try:
