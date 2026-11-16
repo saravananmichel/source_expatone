@@ -43,3 +43,32 @@ def eligible_passport(pages, fields):
                and f["sourceText"][13:19] == dates[0].strftime("%y%m%d")
                and f["sourceText"][21:27] == dates[2].strftime("%y%m%d")
                for f in mrz_fields([first]))
+
+
+def passport_review_result(pages, fields):
+    """Return review-only candidates without promoting identity to supported facts."""
+    from .schemas import Evidence, Statement, SemanticDocument
+    if not eligible_passport(pages, fields):
+        raise ValueError("passport_fast_path_ineligible")
+    evidence = []
+    statements = []
+    seen = set()
+    for field in fields:
+        if field["page"] != pages[0].page or field["field"] not in REQUIRED:
+            continue
+        if field["field"] in seen:
+            continue
+        seen.add(field["field"])
+        eid = f"e{len(evidence)}"
+        evidence.append(Evidence(id=eid, page=field["page"], sourceText=field["sourceText"]))
+        label = field["field"].replace("_", " ").capitalize()
+        statements.append(Statement(id=f"passport-{len(statements)}",
+            kind="fact", label=label, text=f"{label}: {field['value']}.",
+            originalValue=field["value"], confidence=0.7,
+            evidenceIds=[eid], supportStatus="UNCERTAIN",
+            supportReason="Source-grounded candidate; requires user confirmation."))
+    semantic = SemanticDocument(documentCategory="Passport", classificationConfidence=0.8,
+        classificationEvidenceIds=[e.id for e in evidence], statements=statements, evidence=evidence)
+    semantic._quality = {"reasoningStatus": "skipped: deterministic passport",
+        "supportMethod": "source-and-mrz-review-only", "verdictCoverage": 0.0}
+    return semantic
