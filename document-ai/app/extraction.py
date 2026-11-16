@@ -18,6 +18,45 @@ def block_kind(text):
     if len(text) < 100 and (text.isupper() or text.istitle()): return 'heading'
     return 'paragraph'
 
+def _rapid_horizontal_fraction(result):
+    horizontal = total = 0
+    for polygon, text, score in result:
+        if not math.isfinite(float(score)) or float(score) < 0.35:
+            continue
+        xs, ys = zip(*polygon)
+        width, height = max(xs)-min(xs), max(ys)-min(ys)
+        if min(width, height) <= 0 or len(str(text)) < 4:
+            continue
+        weight = len(str(text))
+        total += weight
+        if width >= height:
+            horizontal += weight
+    return horizontal / max(1, total)
+
+
+def _rapid_orientation_rank(result):
+    usable = [(str(t), float(s)) for _, t, s in result
+              if math.isfinite(float(s)) and float(s) >= 0.35]
+    text = ' '.join(t.upper() for t, _ in usable)
+    labels = sum(bool(re.search(pattern, text)) for pattern in (
+        r'PASSPORT', r'SURNAME', r'GIVEN\s*NAME', r'DATE\s*OF\s*BIRTH',
+        r'EXPIRY', r'NATIONALITY'))
+    quality = sum(len(t)*s for t, s in usable) / max(1, sum(len(t) for t, _ in usable))
+    return (_rapid_horizontal_fraction(result), labels, quality)
+
+
+def _rapid_reading_order(blocks):
+    rows = []
+    for block in sorted(blocks, key=lambda b: (b.boundingBox[1], b.boundingBox[0])):
+        x0, y0, x1, y1 = block.boundingBox
+        center = (y0+y1)/2
+        if rows and abs(center-rows[-1][0]) <= min(y1-y0, rows[-1][1])*0.5:
+            rows[-1][2].append(block)
+        else:
+            rows.append((center, y1-y0, [block]))
+    return [b for _, _, row in rows for b in sorted(row, key=lambda b: b.boundingBox[0])]
+
+
 def rapid_ocr(image, page_number):
     # Lazy initialization keeps the existing Tesseract path independent.
     import numpy as np
@@ -29,7 +68,36 @@ def rapid_ocr(image, page_number):
     logging.getLogger(__name__).info('rapidocr stage=inference init_ms=%d', int((time.monotonic()-started)*1000))
     image = ImageOps.exif_transpose(image).convert('RGB')
     image.thumbnail((2400, 3400))
-    result, _ = engine(np.asarray(image)[:, :, ::-1].copy())
+    rotation = 0
+    # OSD detects full-page orientation, unlike RapidOCR's crop classifier.
+    try:
+        orientation = pytesseract.image_to_osd(
+            image, output_type=pytesseract.Output.DICT, timeout=5)
+        if orientation.get('orientation_conf', 0) >= 5:
+            angle = int(orientation.get('rotate', 0))
+            if angle in (90, 180, 270):
+                image = image.rotate(-angle, expand=True, fillcolor='white')
+                rotation = angle
+    except (pytesseract.TesseractError, RuntimeError):
+        pass
+    def infer(candidate):
+        result, _ = engine(np.asarray(candidate)[:, :, ::-1].copy())
+        return result or []
+    result = infer(image)
+    # When OSD cannot orient a sparse scan, tall text polygons identify
+    # sideways pages. Compare both quarter turns without trusting text length.
+    if _rapid_horizontal_fraction(result) < 0.4 and len(result) >= 3:
+        original = image
+        base_rotation = rotation
+        best = _rapid_orientation_rank(result)
+        for angle in (90, 270):
+            candidate = original.rotate(-angle, expand=True, fillcolor='white')
+            candidate_result = infer(candidate)
+            rank = _rapid_orientation_rank(candidate_result)
+            if rank[0] >= 0.65 and rank > best:
+                image, result, best = candidate, candidate_result, rank
+                rotation = (base_rotation + angle) % 360
+    logging.getLogger(__name__).info('rapidocr orientation_degrees=%d', rotation)
     blocks = []
     weighted = total = 0
     for polygon, value, score in result or []:
@@ -49,9 +117,11 @@ def rapid_ocr(image, page_number):
         weighted += len(text) * confidence
     if not blocks:
         raise ValueError('no_readable_text')
+    # Group nearby baselines, then order each row left to right.
+    blocks = _rapid_reading_order(blocks)
     return Page(page=page_number, text='\n'.join(b.text for b in blocks),
         width=image.width, height=image.height, extraction='ocr',
-        rotationDegrees=0, coordinateSpace='preprocessed_image_pixels',
+        rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels',
         extractionConfidence=max(0, min(1, weighted / max(1, total))), blocks=blocks)
 
 
