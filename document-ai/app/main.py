@@ -93,7 +93,7 @@ async def extract_document(file: UploadFile = File(...),
                 sys.executable, '-m', 'app.extract_worker', content_type,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.DEVNULL
+                stderr=None
             )
             try:
                 output, _ = await asyncio.wait_for(
@@ -219,10 +219,12 @@ async def _analyze_impl(file, x_service_key):
             logger.info('document_ai stage=model_check available=%s profile=%s', model_available, profile.name)
             stage_started = time.monotonic()
             process = await asyncio.create_subprocess_exec(sys.executable, '-m', 'app.extract_worker', file.content_type,
-                stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+                stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=None)
             try:
                 output, _ = await asyncio.wait_for(process.communicate(data), timeout=120)
-                if process.returncode != 0: raise ValueError('extraction_failed')
+                if process.returncode != 0:
+                    logger.warning('extraction_worker_failed returncode=%d', process.returncode)
+                    raise ValueError('extraction_failed')
                 import json
                 pages = [Page.model_validate(value) for value in json.loads(output)]
             finally:
