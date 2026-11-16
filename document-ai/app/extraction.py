@@ -21,7 +21,12 @@ def block_kind(text):
 def rapid_ocr(image, page_number):
     # Lazy initialization keeps the existing Tesseract path independent.
     import numpy as np
+    import logging
+    import time
+    started = time.monotonic()
+    logging.getLogger(__name__).info('rapidocr stage=initialize')
     engine = _rapid_engine()
+    logging.getLogger(__name__).info('rapidocr stage=inference init_ms=%d', int((time.monotonic()-started)*1000))
     image = ImageOps.exif_transpose(image).convert('RGB')
     image.thumbnail((2400, 3400))
     result, _ = engine(np.asarray(image)[:, :, ::-1].copy())
