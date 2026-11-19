@@ -32,7 +32,7 @@ DATE_LABELS = {
     "expiry_date": re.compile(r"(?:date\s+of\s+expiry|date\s+of\s+expiration|tarikh\s+luput)", re.I),
 }
 DATE_VALUE = re.compile(DATE, re.I)
-HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canceled)\s+passport\b", re.I)
+HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canceled)\s*passport\b", re.I)
 
 
 # Strict label-grounded identity extraction. These are suggestions, never verified data.
@@ -296,13 +296,15 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
             if block is label_block:
                 continue
             x0, y0, x1, y1 = block.boundingBox
-            below = (y0 >= ly1 - height * 0.2 and y0 <= ly1 + height * 2
+            below = (y0 >= ly1 - height * 0.35 and y0 <= ly1 + height * 2
                      and abs(x0 - lx0) <= height * 2)
             right = (x0 >= lx1 and x0 - lx1 <= height * 7
                      and abs(y0 - ly0) <= height * 0.6)
             if not (below or right):
                 continue
             value = block.text.strip()
+            if field == "nationality" and "/" in value:
+                value = value.rsplit("/", 1)[-1].strip()
             if field == "passport_number":
                 valid = bool(PASSPORT_VALUE.fullmatch(value))
             elif field in SPATIAL_DATE_SUFFIX:
@@ -316,11 +318,21 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
                 continue
             distance = (max(0, y0 - ly1) + abs(x0 - lx0)) if below else (x0 - lx1)
             candidates.append((distance, block))
+        # Prefer the directly aligned column over a different-column date.
+        if field in SPATIAL_DATE_SUFFIX:
+            aligned = [(d, b) for d, b in candidates
+                       if abs(b.boundingBox[0] - lx0) <= height
+                       and b.boundingBox[1] >= ly1 - height * 0.35]
+            if aligned:
+                candidates = aligned
         # A competing plausible value must be shown as missing, not guessed.
         if len(candidates) != 1:
             continue
         block = candidates[0][1]
-        found.append({"field": field, "value": block.text.strip(),
+        extracted = block.text.strip()
+        if field == "nationality" and "/" in extracted:
+            extracted = extracted.rsplit("/", 1)[-1].strip()
+        found.append({"field": field, "value": extracted,
                       "page": page.page, "sourceText": block.text,
                       "requiresConfirmation": True})
     return found
