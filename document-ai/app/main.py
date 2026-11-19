@@ -247,6 +247,10 @@ async def _analyze_impl(file, x_service_key):
                            'mrz_review' if eligible_passport(pages, suggestions) else 'layout_review')
             universal_enabled = (profile.name == 'development'
                                  and os.getenv('DOCUMENT_AI_UNIVERSAL_REVIEW', '0') == '1')
+            v2_enabled = universal_enabled and os.getenv('DOCUMENT_AI_UNIVERSAL_V2', '0') == '1'
+            v2_route = None
+            v2_fields = []
+            selected_sections = []
             immigration = None
             general_route = None
             general_fields = []
@@ -256,6 +260,15 @@ async def _analyze_impl(file, x_service_key):
                 immigration = immigration_review(pages)
                 if immigration is None:
                     general_route, general_fields = general_document_hints(pages)
+                    if v2_enabled:
+                        from .general_classification import general_classification
+                        from .semantic_candidates import semantic_candidates
+                        from .section_selection import select_sections
+                        v2_route = general_classification(pages)
+                        if v2_route and v2_route.subtype in {'employment_offer', 'employment_contract', 'designation_change', 'relieving_letter'}:
+                            v2_fields = semantic_candidates(pages)
+                        if v2_route:
+                            selected_sections = select_sections(pages)
             if fast_passport:
                 from .passport_fast_path import passport_review_result
                 semantic, model = passport_review_result(pages, suggestions, allow_layout=allow_layout), 'passport-deterministic-review-v1'
@@ -270,7 +283,16 @@ async def _analyze_impl(file, x_service_key):
                     budget = reasoning_budget(profile, extraction_ms / 1000 + time.monotonic() - stage_started)
                     if budget < 1:
                         raise asyncio.TimeoutError()
-                    semantic, model = await asyncio.wait_for(reason(pages), timeout=budget)
+                    if selected_sections:
+                        from .pipeline import reason_batch
+                        semantic, model = await asyncio.wait_for(
+                            reason_batch(pages, passages=selected_sections), timeout=budget)
+                        from .private_fallback import exact_support
+                        semantic = exact_support(semantic)
+                        semantic._quality = {'reasoningStatus': 'partial: selected sections',
+                                             'supportMethod': 'exact-source-only', 'verdictCoverage': 0.0}
+                    else:
+                        semantic, model = await asyncio.wait_for(reason(pages), timeout=budget)
                 except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError) as error:
                     # Log only the exception class: model errors may include source text.
                     logger.warning(
@@ -310,6 +332,19 @@ async def _analyze_impl(file, x_service_key):
                 result['structuredFields'] = suggestions + [
                     f for f in general_fields if f['field'] not in existing
                 ]
+            if v2_route and not result.get('suggestedDocumentCategory'):
+                result['suggestedDocumentCategory'] = v2_route.category
+            if v2_route:
+                result['qualityDiagnostics']['generalSubtypeHint'] = v2_route.subtype
+                existing = {f['field'] for f in result['structuredFields']}
+                result['structuredFields'] += [f for f in v2_fields if f['field'] not in existing]
+                if model == 'source-only-private-fallback':
+                    result['summary'] = ('Possible ' + v2_route.subtype.replace('_', ' ') +
+                                         '. Review the extracted details against the original. '
+                                         'AI interpretation was incomplete.')
+            if v2_enabled:
+                result['qualityDiagnostics']['selectedSectionCount'] = len(selected_sections)
+                result['qualityDiagnostics']['partialSourceSelection'] = bool(selected_sections)
             result['qualityDiagnostics']['universalReviewStatus'] = (
                 'disabled' if not universal_enabled else 'passport_priority' if fast_passport
                 else 'immigration_review' if immigration is not None
