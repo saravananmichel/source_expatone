@@ -22,6 +22,16 @@ LABELS = {
     "continuing_terms": "Continuing employment terms",
 }
 
+SALARY_LABELS = {
+    "basic_salary": "Basic salary", "hra": "HRA",
+    "conveyance_allowance": "Conveyance allowance",
+    "medical_reimbursement": "Medical reimbursement",
+    "food_allowance": "Food allowance", "special_allowance": "Special allowance",
+    "cash_total": "Cash total", "employer_pf": "Employer provident fund",
+    "medical_insurance": "Medical insurance", "gratuity": "Gratuity",
+    "non_cash_total": "Non-cash total",
+}
+
 # Only closed, known phrases are expanded. Never segment names or IDs.
 DISPLAY_PHRASES = {
     "employment_restriction": {
@@ -56,6 +66,20 @@ def review_summary(route, fields, pages):
         if quote not in source.get(field.get("page"), ""):
             continue
         parts.append(f"{label} (review): {display_review_value(key, value)}.")
+    if route.subtype == "performance_appraisal":
+        for key, label in SALARY_LABELS.items():
+            amounts = []
+            for period in ("monthly", "annual"):
+                items = [f for f in fields if f.get("field") == key+"_"+period]
+                if len(items) != 1:
+                    continue
+                f = items[0]
+                value, quote = f.get("value"), f.get("sourceText")
+                if (isinstance(value, str) and isinstance(quote, str)
+                        and value and value in quote and quote in source.get(f.get("page"), "")):
+                    amounts.append(period+" "+value)
+            if amounts:
+                parts.append(label+" (review): "+", ".join(amounts)+".")
     parts.append("Confirm all details against the original. AI interpretation was incomplete.")
     return " ".join(parts)
 
@@ -65,7 +89,7 @@ def immigration_summary(category, fields, pages):
     labels = {"pass_category": "Pass category", "issue_date": "Issue date",
               "expiry_date": "Stay validity until", "employer": "Employer",
               "designation": "Designation", "employment_restriction": "Employment restriction",
-              "letter_validity": "Letter validity", "place_of_issue": "Place of issue"}
+              "employment_address": "Employment address", "letter_validity": "Letter validity", "place_of_issue": "Place of issue"}
     if category not in ("Employment Pass", "Dependant Pass", "Student Pass", "Work Permit"):
         labels["expiry_date"] = "Document expiry date"
     source = {p.page: p.text for p in pages if p.extractionConfidence >= .80}
