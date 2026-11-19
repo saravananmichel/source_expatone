@@ -135,10 +135,11 @@ def validate_grounding(semantic, pages):
 def extraction_schema():
     return CompactExtraction.model_json_schema()
 
-async def reason_batch(pages):
+async def reason_batch(pages, passages=None):
     profile = selected_profile()
     model = profile.model
-    passages = source_passages(pages)
+    if passages is None:
+        passages = source_passages(pages)
     per_page_s = int(os.getenv('OLLAMA_BATCH_TIMEOUT_SECONDS', '180'))
     batch_timeout = profile.inference_seconds if profile.name == 'development' else max(300, per_page_s * len(pages))
     num_predict = profile.output_tokens if profile.name == 'development' else min(2500, 2000 + max(0, len(pages) - 2) * 250)

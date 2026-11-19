@@ -87,6 +87,52 @@ def _rapid_mrz_blocks(image, blocks, page_number):
     return []
 
 
+def _rapid_sideways_region(image, result, infer):
+    """Recover one sideways identity region, retaining original-page coordinates."""
+    rank = _rapid_orientation_rank(result)
+    if not 0.20 <= rank[0] < 0.90:
+        return [], None
+    tall = []
+    for polygon, value, score in result:
+        xs, ys = zip(*polygon)
+        w, h = max(xs)-min(xs), max(ys)-min(ys)
+        if float(score) >= .35 and len(str(value)) >= 4 and h > 1.5*w:
+            tall.append((min(xs), min(ys), max(xs), max(ys)))
+    if len(tall) < 4:
+        return [], None
+    pad = max(12, int(min(image.size)*.04))
+    x0 = max(0, int(min(b[0] for b in tall))-pad)
+    y0 = max(0, int(min(b[1] for b in tall))-pad)
+    x1 = min(image.width, math.ceil(max(b[2] for b in tall))+pad)
+    y1 = min(image.height, math.ceil(max(b[3] for b in tall))+pad)
+    w, h = x1-x0, y1-y0
+    if min(w,h) < 80 or w*h > image.width*image.height*.85:
+        return [], None
+    crop = image.crop((x0,y0,x1,y1))
+    best = None
+    for angle in (90,270):
+        candidate = infer(crop.rotate(-angle, expand=True, fillcolor='white'))
+        quality = _rapid_orientation_rank(candidate)
+        if quality[0] >= .75 and quality[1] >= 4 and quality[2] >= .80:
+            if best is None or (quality[1],quality[2]) > (best[0][1],best[0][2]):
+                best = (quality,angle,candidate)
+            # Strong upright identity evidence makes the opposite crop retry redundant.
+            if quality[0] >= .95 and quality[1] >= 6 and quality[2] >= .90:
+                break
+    if best is None:
+        return [], None
+    _, angle, candidate = best
+    # Keep recovered text in its upright reading order; map evidence back
+    # to the existing page image (no change to whole-page rotation metadata).
+    recovered = []
+    for polygon, value, score in sorted(candidate, key=lambda item:
+            (min(p[1] for p in item[0]), min(p[0] for p in item[0]))):
+        points = [(x0+y, y0+h-x) if angle == 90 else (x0+w-y,y0+x)
+                  for x,y in polygon]
+        recovered.append((points,value,score))
+    return recovered, (x0,y0,x1,y1)
+
+
 def rapid_ocr(image, page_number):
     # Lazy initialization keeps the existing Tesseract path independent.
     import numpy as np
@@ -116,7 +162,13 @@ def rapid_ocr(image, page_number):
     result = infer(image)
     # When OSD cannot orient a sparse scan, tall text polygons identify
     # sideways pages. Compare both quarter turns without trusting text length.
-    if _rapid_horizontal_fraction(result) < 0.4 and len(result) >= 3:
+    initial_rank = _rapid_orientation_rank(result)
+    # Mixed passport spreads may contain horizontal headings and sideways
+    # identity labels. Retry only when passport cues exist but labels are sparse.
+    passport_retry = (os.getenv('DOCUMENT_AI_UNIVERSAL_V2', '0') == '1'
+                      and page_number == 1 and initial_rank[1] in (1, 2)
+                      and 0.4 <= initial_rank[0] < 0.85)
+    if len(result) >= 3 and (initial_rank[0] < 0.4 or passport_retry):
         original = image
         base_rotation = rotation
         best = _rapid_orientation_rank(result)
@@ -124,12 +176,28 @@ def rapid_ocr(image, page_number):
             candidate = original.rotate(-angle, expand=True, fillcolor='white')
             candidate_result = infer(candidate)
             rank = _rapid_orientation_rank(candidate_result)
-            if rank[0] >= 0.65 and rank > best:
+            improved = (rank[0] >= 0.65 and rank > best)
+            if passport_retry:
+                improved = (rank[0] >= 0.65 and rank[1] >= 4
+                            and rank[1] > best[1] and rank[2] >= 0.80)
+            if improved:
                 image, result, best = candidate, candidate_result, rank
                 rotation = (base_rotation + angle) % 360
                 # Skip the opposite quarter-turn only with strong readable label evidence.
                 if rank[0] >= 0.95 and rank[1] >= 4 and rank[2] >= 0.90:
                     break
+    recovered = []
+    if (page_number == 1 and os.getenv('DOCUMENT_AI_UNIVERSAL_V2', '0') == '1'
+            and time.monotonic()-started < 12):
+        recovered, region = _rapid_sideways_region(image, result, infer)
+        if region:
+            x0,y0,x1,y1 = region
+            # Replace only sideways detections wholly inside the recovered crop.
+            def replaced(item):
+                xs,ys = zip(*item[0])
+                return (x0 <= min(xs) and max(xs) <= x1 and y0 <= min(ys)
+                        and max(ys) <= y1 and max(ys)-min(ys) > 1.5*(max(xs)-min(xs)))
+            result = [item for item in result if not replaced(item)]
     logging.getLogger(__name__).info('rapidocr orientation_degrees=%d', rotation)
     blocks = []
     weighted = total = 0
@@ -148,10 +216,23 @@ def rapid_ocr(image, page_number):
         blocks.append(Block(text=text, boundingBox=box, kind=block_kind(text)))
         total += len(text)
         weighted += len(text) * confidence
-    if not blocks:
+    if not blocks and not recovered:
         raise ValueError('no_readable_text')
     # Group nearby baselines, then order each row left to right.
     blocks = _rapid_reading_order(blocks)
+    for polygon, value, score in recovered:
+        text = suppress_repetitive_ocr_noise(str(value)).strip()
+        confidence = float(score)
+        if not text or not math.isfinite(confidence) or confidence < .35:
+            continue
+        xs, ys = zip(*polygon)
+        box = [max(0,float(min(xs))),max(0,float(min(ys))),
+               min(image.width,float(max(xs))),min(image.height,float(max(ys)))]
+        if box[2] <= box[0] or box[3] <= box[1]:
+            continue
+        blocks.append(Block(text=text,boundingBox=box,kind=block_kind(text)))
+        weighted += len(text)*confidence
+        total += len(text)
     blocks.extend(_rapid_mrz_blocks(image, blocks, page_number))
     return Page(page=page_number, text='\n'.join(b.text for b in blocks),
         width=image.width, height=image.height, extraction='ocr',

@@ -245,14 +245,69 @@ async def _analyze_impl(file, x_service_key):
             fast_passport = fast_enabled and eligible_passport(pages, suggestions, allow_layout=allow_layout)
             fast_status = ('disabled' if not fast_enabled else 'ineligible' if not fast_passport else
                            'mrz_review' if eligible_passport(pages, suggestions) else 'layout_review')
+            universal_enabled = (profile.name == 'development'
+                                 and os.getenv('DOCUMENT_AI_UNIVERSAL_REVIEW', '0') == '1')
+            v2_enabled = universal_enabled and os.getenv('DOCUMENT_AI_UNIVERSAL_V2', '0') == '1'
+            v2_route = None
+            v2_fields = []
+            selected_sections = []
+            immigration = None
+            general_route = None
+            general_fields = []
+            if universal_enabled and not fast_passport:
+                from .immigration_review import immigration_review
+                from .general_document import general_document_hints
+                immigration = immigration_review(pages)
+                if immigration is None:
+                    general_route, general_fields = general_document_hints(pages)
+                    if v2_enabled:
+                        from .general_classification import general_classification
+                        from .semantic_candidates import semantic_candidates
+                        from .section_selection import select_sections
+                        v2_route = general_classification(pages)
+                        if v2_route and v2_route.subtype in {'employment_offer', 'employment_contract', 'designation_change', 'relieving_letter', 'performance_appraisal'}:
+                            v2_fields = semantic_candidates(pages)
+                        if v2_route:
+                            selected_sections = select_sections(pages)
+            from .review_reconciliation import employment_review_ready
+            if fast_passport and v2_enabled:
+                from .structured_analysis import passport_reverse_fields
+                suggestions = [f for f in suggestions if f["page"] == pages[0].page]
+                suggestions.extend(passport_reverse_fields(pages))
             if fast_passport:
                 from .passport_fast_path import passport_review_result
                 semantic, model = passport_review_result(pages, suggestions, allow_layout=allow_layout), 'passport-deterministic-review-v1'
+            elif immigration is not None:
+                semantic, suggestions = immigration
+                model = 'immigration-deterministic-review-v1'
+            elif (v2_enabled and v2_route is not None
+                  and v2_route.subtype in {'employment_offer', 'designation_change', 'performance_appraisal'}
+                  and len(pages) <= 3
+                  and employment_review_ready(v2_route, pages, suggestions, general_fields, v2_fields)):
+                # Explicitly partial review: avoid waiting for an LLM when key
+                # source-backed employment facts are already available.
+                semantic, model = source_fallback(pages), 'source-only-private-fallback'
+                semantic._quality = {'reasoningStatus': 'skipped: source review',
+                                     'fallbackReason': 'deterministic_employment_review',
+                                     'supportMethod': 'exact-source-only', 'verdictCoverage': 0.0}
             elif profile.name == 'development':
                 try:
                     if not model_available:
                         raise ValueError('model_unavailable')
-                    semantic, model = await asyncio.wait_for(reason(pages), timeout=profile.inference_seconds + 2)
+                    from .reasoning_budget import reasoning_budget
+                    budget = reasoning_budget(profile, extraction_ms / 1000 + time.monotonic() - stage_started)
+                    if budget < 1:
+                        raise asyncio.TimeoutError()
+                    if selected_sections:
+                        from .pipeline import reason_batch
+                        semantic, model = await asyncio.wait_for(
+                            reason_batch(pages, passages=selected_sections), timeout=budget)
+                        from .private_fallback import exact_support
+                        semantic = exact_support(semantic)
+                        semantic._quality = {'reasoningStatus': 'partial: selected sections',
+                                             'supportMethod': 'exact-source-only', 'verdictCoverage': 0.0}
+                    else:
+                        semantic, model = await asyncio.wait_for(reason(pages), timeout=budget)
                 except (asyncio.TimeoutError, httpx.HTTPError, InferenceOutputError, ValueError, KeyError) as error:
                     # Log only the exception class: model errors may include source text.
                     logger.warning(
@@ -279,6 +334,49 @@ async def _analyze_impl(file, x_service_key):
             reconcile_passport_result(result, pages, suggestions, model)
             from .passport_date_guard import guard_passport_response
             guard_passport_response(result, pages)
+            if immigration is not None:
+                result['suggestedDocumentCategory'] = semantic.documentCategory
+                result['summary'] = (
+                    'Immigration document details extracted for review. '
+                    'Confirm all details against the original; this analysis does not establish legal status.'
+                )
+                if v2_enabled:
+                    from .review_summary import immigration_summary
+                    result['summary'] = immigration_summary(
+                        semantic.documentCategory, result['structuredFields'], pages)
+            elif general_route is not None and not result.get('suggestedDocumentCategory'):
+                # Keep independent hints separate from verified model output.
+                result['suggestedDocumentCategory'] = general_route.category
+                existing = {f['field'] for f in result['structuredFields']}
+                result['structuredFields'] = result['structuredFields'] + [
+                    f for f in general_fields if f['field'] not in existing
+                ]
+            if v2_route and not result.get('suggestedDocumentCategory'):
+                result['suggestedDocumentCategory'] = v2_route.category
+            if v2_route:
+                result['qualityDiagnostics']['generalSubtypeHint'] = v2_route.subtype
+                from .review_reconciliation import reconcile_review_fields
+                result['structuredFields'], conflicts = reconcile_review_fields(
+                    pages, result['structuredFields'], v2_fields)
+                result['qualityDiagnostics']['reviewFieldConflicts'] = conflicts
+                result['qualityDiagnostics']['structuredFieldCount'] = len(result['structuredFields'])
+                result['qualityDiagnostics']['generalClassificationConflict'] = (
+                    result.get('documentCategory') not in ('Unknown', 'Other', v2_route.category)
+                )
+                if model == 'source-only-private-fallback':
+                    from .review_summary import review_summary
+                    result['summary'] = review_summary(v2_route, result['structuredFields'], pages)
+            if v2_enabled:
+                if model == 'source-only-private-fallback' or fast_passport or immigration is not None:
+                    from .review_reconciliation import append_review_statements
+                    append_review_statements(result, pages)
+                result['qualityDiagnostics']['selectedSectionCount'] = len(selected_sections)
+                result['qualityDiagnostics']['partialSourceSelection'] = bool(selected_sections) and model != 'source-only-private-fallback'
+            result['qualityDiagnostics']['universalReviewStatus'] = (
+                'disabled' if not universal_enabled else 'passport_priority' if fast_passport
+                else 'immigration_review' if immigration is not None
+                else 'general_hint' if general_route is not None or v2_route is not None else 'abstained'
+            )
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
                         result.get('documentCategory', 'Unknown'), len(suggestions),

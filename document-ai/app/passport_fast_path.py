@@ -1,5 +1,7 @@
 """DEV-only eligibility gate; no inferred or automatically verified identities."""
 from datetime import datetime
+import os
+import re
 from .passport_mrz import mrz_fields
 from .structured_analysis import passport_category, _compact_passport_identity_layout, _passport_layout_number, _passport_spatial_fields
 
@@ -9,7 +11,8 @@ REQUIRED = {"passport_number", "surname", "given_names", "date_of_birth",
 OPTIONAL = {"nationality", "sex", "place_of_birth", "place_of_issue"}
 
 def eligible_passport(pages, fields, allow_layout=False):
-    if not pages or len(pages) > 2 or not passport_category(pages, fields):
+    v6 = os.getenv("DOCUMENT_AI_UNIVERSAL_V2", "0") == "1"
+    if not pages or len(pages) > (3 if v6 else 2) or not passport_category(pages, fields):
         return False
     first = pages[0]
     if first.extraction != "ocr" or first.extractionConfidence < 0.80:
@@ -18,7 +21,7 @@ def eligible_passport(pages, fields, allow_layout=False):
     for field in fields:
         if field["page"] != first.page or field["field"] not in REQUIRED:
             continue
-        if field["value"] not in field["sourceText"]:
+        if field["value"] not in field["sourceText"] or field["sourceText"] not in first.text:
             return False
         groups.setdefault(field["field"], set()).add(field["value"])
     if not REQUIRED.issubset(groups) or any(len(v) != 1 for v in groups.values()):
@@ -39,6 +42,12 @@ def eligible_passport(pages, fields, allow_layout=False):
     if not dates[0] < dates[1] < dates[2]:
         return False
     mrz = mrz_fields([first])
+    if len(pages) == 3:
+        # Extra pages may contain a different identity; require checksum-backed
+        # first-page evidence and reject competing current identity candidates.
+        if not mrz or any(f["page"] != first.page and f["field"] in REQUIRED
+                          and f["value"] != values[f["field"]] for f in fields):
+            return False
     if not mrz and allow_layout:
         if not _compact_passport_identity_layout(first):
             return False
@@ -48,8 +57,8 @@ def eligible_passport(pages, fields, allow_layout=False):
                    for key in REQUIRED)
     # Cross-check visible dates against the same checksum-valid MRZ.
     return any(f["value"] == values["passport_number"]
-               and f["sourceText"][13:19] == dates[0].strftime("%y%m%d")
-               and f["sourceText"][21:27] == dates[2].strftime("%y%m%d")
+               and re.sub(r"[ \t]+", "", f["sourceText"])[13:19] == dates[0].strftime("%y%m%d")
+               and re.sub(r"[ \t]+", "", f["sourceText"])[21:27] == dates[2].strftime("%y%m%d")
                for f in mrz_fields([first]))
 
 

@@ -4,6 +4,7 @@ Never turn a suggestion into a verified fact, reminder or persisted identity.
 All values must be literal substrings of their source line.
 """
 import re
+from datetime import datetime
 from .schemas import Page
 from .passport_mrz import mrz_fields
 
@@ -376,12 +377,61 @@ def _passport_layout_number(page: Page) -> list[dict]:
              "requiresConfirmation": True}]
 
 
+def _passport_grouped_rows(page: Page) -> list[dict]:
+    """Recover explicit label runs followed by equally ordered value runs."""
+    if page.page != 1 or page.extraction != "ocr" or page.extractionConfidence < .80:
+        return []
+    lines = page.text.splitlines()
+    if not re.search(r"(?im)^\s*P<[A-Z]{3}", page.text) or not any(PASSPORT_LABEL.search(l) for l in lines):
+        return []
+    labels = {
+        "date_of_birth": r"date\s*of\s*birth",
+        "sex": r"sex",
+        "nationality": r"national(?:i)?ty",
+        "issue_date": r"date\s*of\s*[il]ssue",
+        "expiry_date": r"date\s*of\s*expiry",
+    }
+    found = []
+    for fields in (("date_of_birth", "sex", "nationality"), ("issue_date", "expiry_date")):
+        size = len(fields)
+        matches = []
+        for i in range(len(lines)-2*size+1):
+            if not all(re.search(r"\b"+labels[f]+r"\s*$", lines[i+j], re.I) for j,f in enumerate(fields)):
+                continue
+            values = [l.strip() for l in lines[i+size:i+2*size]]
+            valid = True
+            dates = []
+            for field, value in zip(fields, values):
+                if field.endswith("_date") or field == "date_of_birth":
+                    parsed = None
+                    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d"):
+                        try:
+                            parsed = datetime.strptime(value, fmt)
+                            break
+                        except ValueError:
+                            pass
+                    valid &= parsed is not None
+                    dates.append(parsed)
+                elif field == "sex":
+                    valid &= bool(SEX_VALUE.fullmatch(value))
+                else:
+                    valid &= bool(re.fullmatch(r"[A-Z]{3,35}", value))
+            if not valid or (len(dates)==2 and dates[0]>=dates[1]):
+                continue
+            matches.append((values, "\n".join(lines[i:i+2*size])))
+        if len(matches)==1:
+            values, quote = matches[0]
+            found.extend({"field": f, "value": v, "page": 1, "sourceText": quote,
+                          "requiresConfirmation": True} for f,v in zip(fields,values))
+    return found
+
+
 def structured_fields(pages: list[Page]) -> list[dict]:
     results = []
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page) + _passport_grouped_rows(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
@@ -426,3 +476,120 @@ def billing_category(pages: list[Page], fields: list[dict]) -> bool:
     has_bill_title = bool(re.search(r"\b(?:invoice|billing statement|utility bill|broadband bill|internet bill|bil internet|bil bulanan|bil utiliti)\b", text))
     has_payment_field = any(f["field"] in ("amount_due","due_date") for f in fields)
     return has_bill_title and has_payment_field
+
+
+def passport_reverse_fields(pages):
+    """Review-only, explicitly labelled reverse-page fields after identity gating."""
+    if len(pages) != 2 or pages[1].extractionConfidence < .80:
+        return []
+    from datetime import datetime
+    page = pages[1]
+    labels = {
+        "father_name": r"name of father(?:\s*/\s*legal guardian)?",
+        "mother_name": r"name of mother",
+        "spouse_name": r"name of spouse",
+        "previous_passport_number": r"(?:old|previous) passport (?:no\.?|number)",
+        "previous_passport_issue_date": r"(?:old|previous) passport (?:date of issue|issue date)",
+        "previous_passport_place_of_issue": r"(?:old|previous) passport place of issue",
+    }
+    result = []
+    for field, label in labels.items():
+        matches = list(re.finditer(r"(?im)^[ \t]*(?:" + label +
+                                   r")[ \t]*(?:[:：][ \t]*|\r?\n[ \t]*)([^\r\n]+)$", page.text))
+        if len(matches) != 1:
+            continue
+        match = matches[0]
+        value = match.group(1).strip()
+        if field == "previous_passport_number":
+            valid = PASSPORT_VALUE.fullmatch(value)
+        elif field == "previous_passport_issue_date":
+            valid = False
+            for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d.%m.%Y"):
+                try:
+                    datetime.strptime(value, fmt)
+                    valid = True
+                    break
+                except ValueError:
+                    continue
+        elif field == "previous_passport_place_of_issue":
+            valid = _identity_value("place_of_issue", value)
+        else:
+            valid = _identity_value("surname", value) and not re.search(
+                r"\b(?:name|father|mother|spouse|guardian|address|none|nil)\b", value, re.I)
+        if valid:
+            result.append({"field": field, "value": value, "page": page.page,
+                           "sourceText": match.group(), "requiresConfirmation": True})
+    # Accept address only between explicit labels, never arbitrary trailing lines.
+    addresses = list(re.finditer(
+        r"(?im)^[ \t]*Address[ \t]*(?:[:：][ \t]*|\r?\n)(?P<value>[^\r\n]+(?:\r?\n[^\r\n]+){0,4}?)(?=\r?\n[ \t]*(?:Old passport|Previous passport|File no\.?|File number)\b)",
+        page.text))
+    if len(addresses) == 1:
+        match = addresses[0]
+        value = match.group("value").strip()
+        if (8 <= len(value) <= 300 and re.search(r"\d", value)
+                and re.search(r"[A-Za-z]", value)
+                and not re.search(r"\b(?:passport|date of issue|name of|file number|file no)\b", value, re.I)):
+            result.append({"field": "residential_address", "value": value,
+                           "page": page.page, "sourceText": match.group(),
+                           "requiresConfirmation": True})
+    # OCR suffixes may omit spaces and contain bilingual prefixes.
+    lines = page.text.splitlines()
+    suffixes = {
+        "father_name": r"nameoffathe(?:r)?(?:/?(?:l)?egalguardian)?",
+        "mother_name": r"(?:name|hame)ofmother",
+        "spouse_name": r"nameofspouse",
+        "residential_address": r"address",
+        "historical_group": r"(?:old|previous)passportno\.?withdateandplaceofissue",
+        "passport_file_number": r"f(?:i)?leno\.?",
+    }
+    anchors = []
+    for index, line in enumerate(lines):
+        compact = re.sub(r"\s+", "", line).casefold()
+        for field, pattern in suffixes.items():
+            if re.search(r"(?:^|/)" + pattern + r"$", compact):
+                anchors.append((index, field))
+    def append(field, value, quote):
+        if not any(f["field"] == field for f in result):
+            result.append({"field": field, "value": value, "page": page.page,
+                           "sourceText": quote, "requiresConfirmation": True})
+    for pos, (start, field) in enumerate(anchors):
+        if sum(f == field for _, f in anchors) != 1:
+            continue
+        end = anchors[pos+1][0] if pos+1 < len(anchors) else len(lines)
+        if end-start > 6:
+            continue
+        values = [v.strip() for v in lines[start+1:end] if v.strip()]
+        quote = "\n".join(lines[start:end])
+        if quote not in page.text:
+            continue
+        if field in ("father_name", "mother_name", "spouse_name"):
+            names = [v for v in values if _identity_value("surname", v)
+                     and not re.search(r"address|guardian|passport|mother|father|spouse|none|nil", v, re.I)]
+            if len(names) == 1:
+                append(field, names[0], quote)
+        elif field == "residential_address" and pos+1 < len(anchors):
+            value = "\n".join(lines[start+1:end]).strip()
+            if (8 <= len(value) <= 300 and re.search(r"\d", value)
+                    and re.search(r"[A-Za-z]", value)
+                    and not re.search(r"passport|name\s*of|file\s*no", value, re.I)):
+                append(field, value, quote)
+        elif field == "historical_group" and len(values) == 3:
+            numbers = [v for v in values if PASSPORT_VALUE.fullmatch(v)]
+            places = [v for v in values if _identity_value("place_of_issue", v)]
+            dates = []
+            for v in values:
+                for fmt in ("%d/%m/%Y", "%d-%m-%Y"):
+                    try:
+                        datetime.strptime(v, fmt)
+                        dates.append(v)
+                        break
+                    except ValueError:
+                        pass
+            if len(numbers) == len(places) == len(dates) == 1:
+                append("previous_passport_number", numbers[0], quote)
+                append("previous_passport_issue_date", dates[0], quote)
+                append("previous_passport_place_of_issue", places[0], quote)
+        elif field == "passport_file_number" and len(values) == 1:
+            if re.fullmatch(r"[A-Z]{2,4}[0-9]{8,18}", values[0]):
+                append(field, values[0], quote)
+    return result

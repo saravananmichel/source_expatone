@@ -3,6 +3,7 @@
 Never relabel DOB as expiry, split ambiguous source values, or guess identity.
 """
 import re
+import os
 
 DATE = re.compile(r"(?<!\d)(?:\d{1,2}[-/.]\d{1,2}[-/.]\d{4}|\d{4}[-/]\d{1,2}[-/]\d{1,2})(?!\d)")
 PASSPORT = re.compile(r"\bpassport\b|\brepublic\s+of\s+india\b", re.I)
@@ -28,6 +29,23 @@ def guard_passport_response(result, pages):
         return result
     text = pages[0].text
     passport_context = bool(PASSPORT.search(text[:1200]) and not PASS.search(text))
+    # In experimental DEV review, do not expose a bare date as expiry
+    # when the document type itself could not be established.
+    if (os.getenv("DOCUMENT_AI_UNIVERSAL_V2", "0") == "1"
+            and result.get("documentCategory") == "Unknown"
+            and result.get("suggestedDocumentCategory") in (None, "Passport")
+            and not PASS.search(text)):
+        fields = result.get("structuredFields", [])
+        retained = [f for f in fields if f.get("field") != "expiry_date"]
+        if len(retained) != len(fields):
+            result["structuredFields"] = retained
+            result["expiryDate"] = None
+            diagnostics["structuredFieldCount"] = len(retained)
+            diagnostics["dateGuardRemovedCount"] = len(fields) - len(retained)
+            diagnostics["categoryGuard"] = "unclassified_expiry_suppressed"
+            result["summary"] = ("Document type and expiry date could not be reliably "
+                                 "established. Verify the original document.")
+            return result
     if not passport_context:
         return result
     # A passport is not a financial document merely because OCR or the model
