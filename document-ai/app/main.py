@@ -336,8 +336,14 @@ async def _analyze_impl(file, x_service_key):
                 result['suggestedDocumentCategory'] = v2_route.category
             if v2_route:
                 result['qualityDiagnostics']['generalSubtypeHint'] = v2_route.subtype
-                existing = {f['field'] for f in result['structuredFields']}
-                result['structuredFields'] += [f for f in v2_fields if f['field'] not in existing]
+                from .review_reconciliation import reconcile_review_fields
+                result['structuredFields'], conflicts = reconcile_review_fields(
+                    pages, result['structuredFields'], v2_fields)
+                result['qualityDiagnostics']['reviewFieldConflicts'] = conflicts
+                result['qualityDiagnostics']['structuredFieldCount'] = len(result['structuredFields'])
+                result['qualityDiagnostics']['generalClassificationConflict'] = (
+                    result.get('documentCategory') not in ('Unknown', 'Other', v2_route.category)
+                )
                 if model == 'source-only-private-fallback':
                     result['summary'] = ('Possible ' + v2_route.subtype.replace('_', ' ') +
                                          '. Review the extracted details against the original. '
