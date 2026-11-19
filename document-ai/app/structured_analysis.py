@@ -426,3 +426,33 @@ def billing_category(pages: list[Page], fields: list[dict]) -> bool:
     has_bill_title = bool(re.search(r"\b(?:invoice|billing statement|utility bill|broadband bill|internet bill|bil internet|bil bulanan|bil utiliti)\b", text))
     has_payment_field = any(f["field"] in ("amount_due","due_date") for f in fields)
     return has_bill_title and has_payment_field
+
+
+def passport_reverse_fields(pages):
+    """Review-only, explicitly labelled reverse-page fields after identity gating."""
+    if len(pages) != 2 or pages[1].extractionConfidence < .80:
+        return []
+    page = pages[1]
+    labels = {
+        "father_name": r"name of father(?:\s*/\s*legal guardian)?",
+        "mother_name": r"name of mother",
+        "spouse_name": r"name of spouse",
+        "previous_passport_number": r"(?:old|previous) passport (?:no\.?|number)",
+    }
+    result = []
+    for field, label in labels.items():
+        matches = list(re.finditer(r"(?im)^[ \t]*(?:" + label +
+                                   r")[ \t]*(?:[:：][ \t]*|\r?\n[ \t]*)([^\r\n]+)$", page.text))
+        if len(matches) != 1:
+            continue
+        match = matches[0]
+        value = match.group(1).strip()
+        if field == "previous_passport_number":
+            valid = PASSPORT_VALUE.fullmatch(value)
+        else:
+            valid = _identity_value("surname", value) and not re.search(
+                r"\b(?:name|father|mother|spouse|guardian|address|none|nil)\b", value, re.I)
+        if valid:
+            result.append({"field": field, "value": value, "page": page.page,
+                           "sourceText": match.group(), "requiresConfirmation": True})
+    return result
