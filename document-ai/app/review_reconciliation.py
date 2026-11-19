@@ -56,3 +56,20 @@ def append_review_statements(result, pages):
     diagnostics = result.setdefault("qualityDiagnostics", {})
     diagnostics["reviewStatementsAdded"] = added
     diagnostics["uncertainClaims"] = sum(s.get("supportStatus") == "UNCERTAIN" for s in statements)
+
+
+def employment_review_ready(route, pages, *groups):
+    """Permit partial review only for independently grounded, unambiguous facts."""
+    if not pages or any(p.extractionConfidence < .80 for p in pages):
+        return False
+    required = {
+        "employment_offer": {"effective_date", "annual_compensation"},
+        "designation_change": {"effective_date", "revised_designation"},
+        "performance_appraisal": {"effective_date", "revised_annual_ctc"},
+    }.get(route.subtype)
+    if required is None:
+        return False
+    fields, conflicts = reconcile_review_fields(pages, [], [
+        f for group in groups for f in group if f.get("requiresConfirmation")
+    ])
+    return not conflicts and required <= {f["field"] for f in fields}
