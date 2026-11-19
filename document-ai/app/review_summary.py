@@ -28,3 +28,25 @@ def review_summary(route, fields, pages):
         parts.append(f"{label} (review): {' '.join(value.split())}.")
     parts.append("Confirm all details against the original. AI interpretation was incomplete.")
     return " ".join(parts)
+
+
+def immigration_summary(category, fields, pages):
+    """Summarize only explicit, non-conflicting stay details for review."""
+    labels = {"pass_category": "Pass category", "issue_date": "Issue date",
+              "expiry_date": "Stay validity until", "employer": "Employer",
+              "designation": "Designation", "employment_restriction": "Employment restriction",
+              "letter_validity": "Letter validity"}
+    source = {p.page: p.text for p in pages if p.extractionConfidence >= .80}
+    parts = [category + " details extracted for review."]
+    for key, label in labels.items():
+        items = [f for f in fields if f.get("field") == key]
+        if len(items) != 1:
+            continue
+        f = items[0]
+        value, quote = f.get("value"), f.get("sourceText")
+        if (isinstance(value, str) and isinstance(quote, str)
+                and 0 < len(value.strip()) <= 200 and value in quote
+                and quote in source.get(f.get("page"), "")):
+            parts.append(f"{label} (review): {' '.join(value.split())}.")
+    parts.append("Confirm against the original. This analysis does not establish legal status.")
+    return " ".join(parts)
