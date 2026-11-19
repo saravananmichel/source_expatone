@@ -90,7 +90,7 @@ def _rapid_mrz_blocks(image, blocks, page_number):
 def _rapid_sideways_region(image, result, infer):
     """Recover one sideways identity region, retaining original-page coordinates."""
     rank = _rapid_orientation_rank(result)
-    if rank[1] >= 4 or not 0.20 <= rank[0] < 0.90:
+    if not 0.20 <= rank[0] < 0.90:
         return [], None
     tall = []
     for polygon, value, score in result:
@@ -213,7 +213,7 @@ def rapid_ocr(image, page_number):
         blocks.append(Block(text=text, boundingBox=box, kind=block_kind(text)))
         total += len(text)
         weighted += len(text) * confidence
-    if not blocks:
+    if not blocks and not recovered:
         raise ValueError('no_readable_text')
     # Group nearby baselines, then order each row left to right.
     blocks = _rapid_reading_order(blocks)
