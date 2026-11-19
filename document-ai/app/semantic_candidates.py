@@ -9,7 +9,9 @@ RULES = {
     "joining_date": r"\b(?:date of joining|joining date)\s*(?:is\s+|:\s*)(?P<value>"+DATE+r")\b",
     "start_date": r"\b(?:employment|appointment)\s+(?:will\s+)?(?:commence[s]?|begin[s]?)\s+(?:on\s+)?(?P<value>"+DATE+r")\b",
     "effective_date": r"\b(?:with effect from|effective from|effective on)\s+(?P<value>"+DATE+r")\b",
-    "notice_period": r"\bnotice period\s+(?:of\s+|is\s+|shall be\s+)(?P<value>\d{1,3}\s+(?:days?|months?|weeks?))\b",
+    "notice_period": r"\b(?:notice period\s+(?:of\s+|is\s+|shall be\s+)|(?:written\s+)?notice\s+for\s+a\s+period\s+of\s+)(?P<value>(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|thirty|sixty|ninety)\s+(?:days?|months?|weeks?))\b",
+    "working_hours": r"\b(?:required to work|shall work|will work)\s+(?:for\s+)?(?P<value>(?:a minimum of\s+)?(?:\d{1,2}|six|seven|eight|nine|ten|twelve)\s+hours\s+(?:a|per)\s+day)\b",
+    "medical_condition": r"\b(?P<value>(?:your\s+)?appointment\s+(?:will be|is)\s+subject to\s+(?:your\s+)?medical fitness)\b",
     "annual_compensation": r"\bannual\s+(?:compensation|salary)\s*(?:of\s+|is\s+|:\s*)(?P<value>(?:MYR|INR|USD|RM|Rs\.?)\s*\d[\d,]*(?:\.\d{2})?)\b",
 }
 def semantic_candidates(pages):
