@@ -41,6 +41,14 @@ DISPLAY_PHRASES = {
         "YOURAPPOINTMENTISSUBJECTTOYOURMEDICALFITNESS": "Your appointment is subject to your medical fitness",
         "YOURAPPOINTMENTWILLBESUBJECTTOYOURMEDICALFITNESS": "Your appointment will be subject to your medical fitness",
     },
+    "place_of_issue": {
+        "UNITIMIGRESENPASPENGGAJIANDIMDEC": "Unit Imigresen Pas Penggajian di MDEC",
+    },
+    "designation": {
+        "SENIORSOLUTIONSDEVELOPER": "Senior Solutions Developer",
+        "SOFTWAREENGINEER": "Software Engineer",
+        "MODULELEAD": "Module Lead",
+    },
     "continuing_terms": {
         "ALLTHETERMSANDCONDITIONSASSETFORTHINYOURAPPOINTMENTLETTERWILLCONTINUETOBEINFORCE":
             "All the terms and conditions as set forth in your appointment letter will continue to be in force",
@@ -51,6 +59,12 @@ def display_review_value(field, value):
     display = " ".join(value.split())
     compact = re.sub(r"\s+", "", display).rstrip(".").upper()
     return DISPLAY_PHRASES.get(field, {}).get(compact, display)
+
+
+def _review_sentence(label, field, value):
+    display = display_review_value(field, value)
+    ending = "" if display.endswith((".", "!", "?")) else "."
+    return f"{label} (review): {display}{ending}"
 
 
 def review_summary(route, fields, pages):
@@ -69,7 +83,7 @@ def review_summary(route, fields, pages):
             continue
         if quote not in source.get(field.get("page"), ""):
             continue
-        parts.append(f"{label} (review): {display_review_value(key, value)}.")
+        parts.append(_review_sentence(label, key, value))
     if route.subtype == "performance_appraisal":
         for key, label in SALARY_LABELS.items():
             amounts = []
@@ -107,6 +121,6 @@ def immigration_summary(category, fields, pages):
         if (isinstance(value, str) and isinstance(quote, str)
                 and 0 < len(value.strip()) <= 200 and value in quote
                 and quote in source.get(f.get("page"), "")):
-            parts.append(f"{label} (review): {display_review_value(key, value)}.")
+            parts.append(_review_sentence(label, key, value))
     parts.append("Confirm against the original. This analysis does not establish legal status.")
     return " ".join(parts)
