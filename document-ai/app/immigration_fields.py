@@ -68,6 +68,14 @@ def immigration_fields(pages, route):
                     "pass_category": r"(?im)^EMPLOYMENT\s+PASS(?:\s*\[[^\]\n]*\])?\s+Category\s*\((?P<value>I{1,3})\)[ \t]*$",
                     "designation": r"(?im)^UNTIL[ \t]*\d{1,2}[ \t]*[A-Z]{3}[ \t]*\d{4}\.[ \t]*FOR[ \t]*EMPLOYMENT[ \t]*AS[ \t]*(?P<value>[A-Z][A-Z \t]*(?:\n[A-Z][A-Z \t]*){0,2})(?=\nWith[ \t]*\n?[ \t]*[:：])",
                 }
+                # Require an explicit address label and a bounded Malaysian postcode/state ending.
+                for match in re.finditer(r"(?im)^At[ \t]*\n?[ \t]*[:：][ \t]*(?P<value>[^\n]{1,180}(?:\n[^\n]{1,100}){0,2}?)\b\d{5}[ \t]*,?[ \t]*(?:SELANGOR|KUALA LUMPUR|PUTRAJAYA|JOHOR|PENANG|PULAU PINANG|PERAK|KEDAH|MELAKA|PAHANG|SABAH|SARAWAK|PERLIS|KELANTAN|TERENGGANU|NEGERI SEMBILAN|LABUAN)\.?[ \t]*$", page.text):
+                    value = match.group().split(":", 1)[-1] if ":" in match.group() else match.group().split("：", 1)[-1]
+                    groups.setdefault("employment_address", []).append({
+                        "field": "employment_address", "value": value.strip(),
+                        "page": page.page, "sourceText": match.group(),
+                        "requiresConfirmation": True,
+                    })
                 for field, pattern in patterns.items():
                     for match in re.finditer(pattern, page.text):
                         groups.setdefault(field, []).append({
