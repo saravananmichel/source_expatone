@@ -7,6 +7,7 @@ LABELS = {
     "relieving_date": "Relieving date",
     "effective_date": "Effective date",
     "annual_compensation": "Annual compensation",
+    "revised_annual_ctc": "Revised annual cost to company (CTC)",
     "notice_period": "Notice period",
     "working_hours": "Working hours",
     "medical_condition": "Medical condition",
