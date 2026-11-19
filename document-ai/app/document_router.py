@@ -37,9 +37,9 @@ def classify_document(pages) -> Route | None:
     # A reference to a pass in a letter is not an issued pass.
     if matching(r"\b(?:application|approval|supporting)\s+letter\b|^application\s+type\s*:"):
         return None
-    employment = matching(r"^employment\s+pass(?:\s*\([^)]*\))?\s*$")
+    employment = matching(r"^employment\s+pass(?:\s*\[[^\]]*\])?(?:\s*category\s*\([^)]*\)|\s*\([^)]*\))?\s*$")
     visa = matching(r"\bmultiple\s+entry\s+visa\b")
-    validity = matching(r"\b(?:valid\s+until|expiry\s+date|date\s+of\s+expiry)\b")
+    validity = matching(r"\b(?:valid\s+until|expiry\s+date|date\s+of\s+expiry|good for any number of journeys to malaysia until)\b")
     if employment and visa and validity:
         return Route("Employment Pass", "employment_pass_with_visa", page.page,
                      (employment, visa, validity))
