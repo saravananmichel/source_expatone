@@ -329,11 +329,15 @@ async def _analyze_impl(file, x_service_key):
                     'Immigration document details extracted for review. '
                     'Confirm all details against the original; this analysis does not establish legal status.'
                 )
+                if v2_enabled:
+                    from .review_summary import immigration_summary
+                    result['summary'] = immigration_summary(
+                        semantic.documentCategory, result['structuredFields'], pages)
             elif general_route is not None and not result.get('suggestedDocumentCategory'):
                 # Keep independent hints separate from verified model output.
                 result['suggestedDocumentCategory'] = general_route.category
-                existing = {f['field'] for f in suggestions}
-                result['structuredFields'] = suggestions + [
+                existing = {f['field'] for f in result['structuredFields']}
+                result['structuredFields'] = result['structuredFields'] + [
                     f for f in general_fields if f['field'] not in existing
                 ]
             if v2_route and not result.get('suggestedDocumentCategory'):
