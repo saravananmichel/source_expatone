@@ -432,12 +432,15 @@ def passport_reverse_fields(pages):
     """Review-only, explicitly labelled reverse-page fields after identity gating."""
     if len(pages) != 2 or pages[1].extractionConfidence < .80:
         return []
+    from datetime import datetime
     page = pages[1]
     labels = {
         "father_name": r"name of father(?:\s*/\s*legal guardian)?",
         "mother_name": r"name of mother",
         "spouse_name": r"name of spouse",
         "previous_passport_number": r"(?:old|previous) passport (?:no\.?|number)",
+        "previous_passport_issue_date": r"(?:old|previous) passport (?:date of issue|issue date)",
+        "previous_passport_place_of_issue": r"(?:old|previous) passport place of issue",
     }
     result = []
     for field, label in labels.items():
@@ -449,10 +452,34 @@ def passport_reverse_fields(pages):
         value = match.group(1).strip()
         if field == "previous_passport_number":
             valid = PASSPORT_VALUE.fullmatch(value)
+        elif field == "previous_passport_issue_date":
+            valid = False
+            for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d.%m.%Y"):
+                try:
+                    datetime.strptime(value, fmt)
+                    valid = True
+                    break
+                except ValueError:
+                    continue
+        elif field == "previous_passport_place_of_issue":
+            valid = _identity_value("place_of_issue", value)
         else:
             valid = _identity_value("surname", value) and not re.search(
                 r"\b(?:name|father|mother|spouse|guardian|address|none|nil)\b", value, re.I)
         if valid:
             result.append({"field": field, "value": value, "page": page.page,
                            "sourceText": match.group(), "requiresConfirmation": True})
+    # Accept address only between explicit labels, never arbitrary trailing lines.
+    addresses = list(re.finditer(
+        r"(?im)^[ \t]*Address[ \t]*(?:[:：][ \t]*|\r?\n)(?P<value>[^\r\n]+(?:\r?\n[^\r\n]+){0,4}?)(?=\r?\n[ \t]*(?:Old passport|Previous passport|File no\.?|File number)\b)",
+        page.text))
+    if len(addresses) == 1:
+        match = addresses[0]
+        value = match.group("value").strip()
+        if (8 <= len(value) <= 300 and re.search(r"\d", value)
+                and re.search(r"[A-Za-z]", value)
+                and not re.search(r"\b(?:passport|date of issue|name of|file number|file no)\b", value, re.I)):
+            result.append({"field": "residential_address", "value": value,
+                           "page": page.page, "sourceText": match.group(),
+                           "requiresConfirmation": True})
     return result
