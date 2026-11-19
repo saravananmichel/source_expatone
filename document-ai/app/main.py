@@ -236,15 +236,18 @@ async def _analyze_impl(file, x_service_key):
             stage_started=time.monotonic()
             suggestions = structured_fields(pages)
             from .passport_fast_path import eligible_passport
-            fast_passport = (
+            allow_layout = os.getenv('PASSPORT_LAYOUT_FAST_PATH', '0') == '1'
+            fast_enabled = (
                 profile.name == 'development'
                 and os.getenv('DOCUMENT_OCR_ENGINE', 'tesseract').lower() == 'rapidocr'
                 and os.getenv('PASSPORT_FAST_PATH', '0') == '1'
-                and eligible_passport(pages, suggestions)
             )
+            fast_passport = fast_enabled and eligible_passport(pages, suggestions, allow_layout=allow_layout)
+            fast_status = ('disabled' if not fast_enabled else 'ineligible' if not fast_passport else
+                           'mrz_review' if eligible_passport(pages, suggestions) else 'layout_review')
             if fast_passport:
                 from .passport_fast_path import passport_review_result
-                semantic, model = passport_review_result(pages, suggestions), 'passport-deterministic-review-v1'
+                semantic, model = passport_review_result(pages, suggestions, allow_layout=allow_layout), 'passport-deterministic-review-v1'
             elif profile.name == 'development':
                 try:
                     if not model_available:
@@ -281,6 +284,7 @@ async def _analyze_impl(file, x_service_key):
                         result.get('documentCategory', 'Unknown'), len(suggestions),
                         model == 'source-only-private-fallback')
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
+            result['qualityDiagnostics']['passportFastPathStatus'] = fast_status
             return result
         except HTTPException: raise
         except InferenceOutputError as error:
