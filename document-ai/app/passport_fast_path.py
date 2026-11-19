@@ -101,3 +101,59 @@ def passport_review_result(pages, fields, allow_layout=False):
     semantic._quality = {"reasoningStatus": "skipped: deterministic passport",
         "supportMethod": ("source-and-mrz-review-only" if eligible_passport(pages, fields) else "source-layout-review-only"), "verdictCoverage": 0.0}
     return semantic
+
+
+def grouped_passport_review_fields(pages, fields):
+    """Narrow partial route for explicitly grouped first-page identity dates."""
+    from .structured_analysis import _passport_grouped_rows
+    if not pages or len(pages) > 3 or not passport_category(pages, fields):
+        return []
+    first = pages[0]
+    grouped = _passport_grouped_rows(first)
+    dates = {f["field"]: f for f in grouped}
+    keys = ("date_of_birth", "issue_date", "expiry_date")
+    if not all(k in dates for k in keys):
+        return []
+    def parse(value):
+        for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(value, fmt).date()
+            except ValueError:
+                pass
+        return None
+    chronology = [parse(dates[k]["value"]) for k in keys]
+    if None in chronology or not chronology[0] < chronology[1] < chronology[2]:
+        return []
+    numbers = [f for f in fields if f["field"] == "passport_number"
+               and f["page"] == first.page and f["value"] in f["sourceText"]
+               and f["sourceText"] in first.text]
+    if len({f["value"] for f in numbers}) != 1:
+        return []
+    if any(f["page"] != first.page and f["field"] == "passport_number"
+           and f["value"] != numbers[0]["value"] for f in fields):
+        return []
+    if any(f["field"] in keys and f["page"] == first.page
+           and parse(f["value"]) != parse(dates[f["field"]]["value"]) for f in fields):
+        return []
+    if not all(f["sourceText"] in first.text and f["value"] in f["sourceText"] for f in grouped):
+        return []
+    return [numbers[0], *grouped]
+
+
+def grouped_passport_review_result(fields):
+    from .schemas import Evidence, Statement, SemanticDocument
+    evidence = []
+    statements = []
+    for field in fields:
+        eid = f"e{len(evidence)}"
+        label = field["field"].replace("_", " ").capitalize()
+        evidence.append(Evidence(id=eid, page=field["page"], sourceText=field["sourceText"]))
+        statements.append(Statement(id=f"passport-{len(statements)}", kind="fact",
+            label=label, text=f"{label}: {field['value']}.", originalValue=field["value"],
+            confidence=0.7, evidenceIds=[eid], supportStatus="UNCERTAIN",
+            supportReason="Partial grouped OCR review; verify against original."))
+    semantic = SemanticDocument(documentCategory="Passport", classificationConfidence=0.8,
+        classificationEvidenceIds=[e.id for e in evidence], statements=statements, evidence=evidence)
+    semantic._quality = {"reasoningStatus": "skipped: grouped partial passport review",
+                         "supportMethod": "exact-source-only", "verdictCoverage": 0.0}
+    return semantic

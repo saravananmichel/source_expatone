@@ -4,16 +4,16 @@ from datetime import datetime
 from .document_preprocessing import paragraph_candidates
 
 DATE = r"(?:[A-Za-z]{3,9}[ -]*\d{1,2}(?:st|nd|rd|th)?[ -]*\d{4}|\d{1,2}(?:st|nd|rd|th)?[ -]*[A-Za-z]{3,9}[ -]*\d{4}|\d{1,2}[/-]\d{1,2}[/-]\d{4})"
-MONEY = r"(?:MYR|INR|USD|RM|Rs\.?)\s*\d[\d,]*(?:\.\d{2})?"
+MONEY = r"(?:MYR|INR|USD|RM|Rs\.?)\s*(?:\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})+,\d{3}|\d+)(?:\.\d{2})?"
 DURATION = r"(?:\d{1,3}|one|two|three|four|five|six|twelve|thirty|sixty|ninety)\s+(?:days?|weeks?|months?|years?)"
 RULES = {
-    "monthly_compensation": r"\b(?:monthly\s+(?:basic\s+)?salary|basic\s+salary\s+per\s+month)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,.])",
+    "monthly_compensation": r"\b(?:monthly\s+(?:basic\s+)?salary|basic\s+salary\s+per\s+month)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,]|\.\d)",
     "probation_period": r"\b(?:probation\s+period\s*(?:of\s+|is\s+|:\s*)|on\s+probation\s+for\s+)(?P<value>"+DURATION+r")\b",
     "annual_leave": r"\b(?P<value>(?:you\s+(?:will\s+be|are)\s+entitled\s+to\s+)\d{1,2}\s+(?:working\s+|calendar\s+)?days?\s+of\s+(?:paid\s+)?annual\s+leave(?:\s+per\s+(?:year|annum))?)\b",
     "medical_benefits": r"\b(?P<value>you\s+(?:will\s+be|are)\s+entitled\s+to\s+(?:medical|health)\s+(?:insurance|coverage|benefits)[^\n.!?]{0,120})(?=[.!?\n]|$)",
     "confidentiality_clause": r"\b(?P<value>you\s+(?:shall|must)\s+(?:maintain|protect|keep)\s+(?:the\s+)?confidentiality\s+of\s+[^\n.!?]{1,180})(?=[.!?\n]|$)",
     "termination_clause": r"\b(?P<value>(?:either\s+party|the\s+company|the\s+employer)\s+may\s+terminate\s+(?:this|your|the)\s+(?:employment|appointment|agreement)[^\n.!?]{0,180})(?=[.!?\n]|$)",
-    "revised_annual_ctc": r"\byour\s*annual\s*CTC\s*as\s*of\s*(?:"+DATE+r")\s*is\s*(?P<value>"+MONEY+r")(?![\d,.])",
+    "revised_annual_ctc": r"\byour\s*annual\s*CTC\s*as\s*of\s*(?:"+DATE+r")\s*is\s*(?P<value>"+MONEY+r")(?![\d,]|\.\d)",
     "effective_date": r"\b(?:with\s*effect\s*from|effective\s+from|effective\s+on|annual\s*CTC\s*as\s*of)\s*(?P<value>"+DATE+r")\b",
     "relieving_date": r"\b(?:relieved from (?:your |the )?duties|relieved from (?:our |the )?services|last working day)\s+(?:with effect from\s+|on\s+|is\s+|was\s+)(?P<value>"+DATE+r")\b",
     "joining_date": r"\b(?:date of joining|joining date)\s*(?:is\s+|:\s*)(?P<value>"+DATE+r")\b",
@@ -24,7 +24,7 @@ RULES = {
     "notice_period": r"\b(?:notice period\s+(?:of\s+|is\s+|shall be\s+)|(?:written\s+)?notice\s+for\s+a\s+period\s+of\s+)(?P<value>(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|thirty|sixty|ninety)\s+(?:days?|months?|weeks?))\b",
     "working_hours": r"\b(?:required to work|shall work|will work)\s+(?:for\s+)?(?P<value>(?:a minimum of\s+)?(?:\d{1,2}|six|seven|eight|nine|ten|twelve)\s+hours\s+(?:a|per)\s+day)\b",
     "medical_condition": r"\b(?P<value>(?:your\s+)?appointment\s+(?:will be|is)\s+subject to\s+(?:your\s+)?medical fitness)\b",
-    "annual_compensation": r"\bannual\s+(?:compensation|salary)\s*(?:of\s+|is\s+|:\s*)(?P<value>(?:MYR|INR|USD|RM|Rs\.?)\s*\d[\d,]*(?:\.\d{2})?)\b",
+    "annual_compensation": r"\bannual\s+(?:compensation|salary)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,]|\.\d)",
 }
 def semantic_candidates(pages):
     found = {}
@@ -38,6 +38,14 @@ def semantic_candidates(pages):
                 prefix = item["text"][max(0, match.start()-120):match.start()]
                 if re.search(r"\b(?:not|never|unless|if|subject to|proposed|tentative)\b", re.split(r"[.!?\n]", prefix)[-1], re.I):
                     continue
+                # A short matched entitlement must not omit a condition
+                # in the remainder of the same sentence (including wrapped lines).
+                if field in {"annual_leave", "probation_period", "notice_period",
+                             "working_hours", "medical_benefits",
+                             "confidentiality_clause", "termination_clause"}:
+                    tail = re.split(r"[.!?]", item["text"][match.end():], maxsplit=1)[0]
+                    if tail.strip(" \t\r\n,;"):
+                        continue
                 value = match.group("value")
                 if field.endswith("_date"):
                     normalized = re.sub(r"^(\d{1,2})(?:st|nd|rd|th)?[ -]*([A-Za-z]{3,9})[ -]*(\d{4})$", r"\1 \2 \3", value, flags=re.I)
@@ -85,6 +93,9 @@ def appraisal_salary_rows(pages):
             continue
         i = headers[0]+5
         section = "cash"
+        page_rows = []
+        seen = set()
+        ambiguous = False
         while i < len(lines):
             key = compact(lines[i])
             if key == "non-cashcomponent":
@@ -96,6 +107,10 @@ def appraisal_salary_rows(pages):
                 field = section + "_total"
             if not field or i+2 >= len(lines):
                 break
+            if field in seen:
+                ambiguous = True
+                break
+            seen.add(field)
             values = [l.strip() for l in lines[i+1:i+3]]
             if not all(amount.fullmatch(v) for v in values):
                 break
@@ -103,10 +118,14 @@ def appraisal_salary_rows(pages):
             if quote not in page.text:
                 break
             for period, value in zip(("monthly", "annual"), values):
-                result.append({"field": field+"_"+period, "value": value,
+                page_rows.append({"field": field+"_"+period, "value": value,
                                "page": page.page, "sourceText": quote,
                                "requiresConfirmation": True})
             i += 3
             if field == "employer_pf" and i < len(lines) and compact(lines[i]) == "(includingadministrativecharges)":
                 i += 1
+        # Duplicate row labels make the table mapping ambiguous; do not
+        # silently select one of the competing amounts.
+        if not ambiguous:
+            result.extend(page_rows)
     return result

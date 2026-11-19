@@ -431,7 +431,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page) + _passport_grouped_rows(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
@@ -463,6 +463,15 @@ def structured_fields(pages: list[Page]) -> list[dict]:
                 seen.add(key)
                 results.append({"field":field, "value":value, "page":page.page,
                                 "sourceText":line, "requiresConfirmation":True})
+    # Grouped OCR labels take precedence over proximity guesses on that page.
+    # Keep the full label/value span as evidence, not just the date token.
+    for page in pages:
+        grouped = _passport_grouped_rows(page)
+        if grouped:
+            names = {item["field"] for item in grouped}
+            results = [item for item in results
+                       if not (item["page"] == page.page and item["field"] in names)]
+            results.extend(grouped)
     for suggestion in mrz_fields(pages[:1]):
         key = (suggestion['field'], suggestion['value'], suggestion['page'])
         if key not in seen:

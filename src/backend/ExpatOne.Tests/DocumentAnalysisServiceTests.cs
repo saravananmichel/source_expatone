@@ -125,6 +125,40 @@ public class DocumentAnalysisServiceTests
         local.VerifyNoOtherCalls();
     }
 
+    [Theory]
+    [InlineData("COMPLETED")]
+    [InlineData("REQUIRES_REVIEW")]
+    public async Task CompactV3SavedAnalysisIsReturnedWithoutReanalysis(string status)
+    {
+        var (db, doc, service, jobs, local) = Fixture();
+        var analysis = Analysis();
+        analysis.AnalyzerVersion = "document-engine-v3-compact1";
+        analysis.ModelVersion = "qwen3:0.6b";
+        var run = db.DocumentAnalysisRuns.Single();
+        run.Status = status;
+        run.ResultJson = JsonSerializer.Serialize(analysis);
+        db.SaveChanges();
+
+        var result = await service.GetDocumentAnalysisAsync(doc.UserId, doc.Id);
+        Assert.NotNull(result);
+        Assert.Equal(analysis.AnalyzerVersion, result.AnalyzerVersion);
+        Assert.Equal(analysis.ModelVersion, result.ModelVersion);
+        Assert.Equal(analysis.Summary, result.Summary);
+        jobs.VerifyNoOtherCalls();
+        local.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task NullPersistedResultIsNotReturned()
+    {
+        var (db, doc, service, jobs, local) = Fixture();
+        db.DocumentAnalysisRuns.Single().ResultJson = "null";
+        db.SaveChanges();
+        Assert.Null(await service.GetDocumentAnalysisAsync(doc.UserId, doc.Id));
+        jobs.VerifyNoOtherCalls();
+        local.VerifyNoOtherCalls();
+    }
+
     [Fact]
     public async Task V4AnalysisWithoutModelVersionIsNotReturned()
     {

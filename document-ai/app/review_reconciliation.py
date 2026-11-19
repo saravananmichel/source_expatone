@@ -61,6 +61,13 @@ def append_review_statements(result, pages):
                  all(eid in valid_ids for eid in s["evidenceIds"]) for s in statements)
     diagnostics["sourceLinkedClaims"] = linked
     diagnostics["sourceLinkedCoverage"] = linked / len(statements) if statements else 0.0
+    # Keep the nested representation aligned with the final review graph.
+    # Preserve classification and other semantic metadata.
+    semantic = result.get("semanticDocument")
+    if isinstance(semantic, dict) and statements and evidence:
+        from copy import deepcopy
+        semantic["statements"] = deepcopy(statements)
+        semantic["evidence"] = deepcopy(evidence)
     diagnostics["reviewStatementsAdded"] = added
     diagnostics["uncertainClaims"] = sum(s.get("supportStatus") == "UNCERTAIN" for s in statements)
 
@@ -79,4 +86,16 @@ def employment_review_ready(route, pages, *groups):
     fields, conflicts = reconcile_review_fields(pages, [], [
         f for group in groups for f in group if f.get("requiresConfirmation")
     ])
-    return not conflicts and required <= {f["field"] for f in fields}
+    names = {f["field"] for f in fields}
+    if conflicts:
+        return False
+    if route.subtype == "employment_offer":
+        # Offers often specify a joining or start date rather than an
+        # effective date, or monthly pay rather than annual compensation.
+        # Do not derive annual pay or silently reconcile competing dates.
+        dates = names & {"effective_date", "joining_date", "start_date"}
+        pay = names & {"annual_compensation", "monthly_compensation"}
+        date_values = {f["value"].strip().casefold() for f in fields
+                       if f["field"] in dates}
+        return bool(dates and pay and len(date_values) == 1)
+    return required <= names
