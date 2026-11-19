@@ -21,6 +21,14 @@ def reconcile_passport_result(result, pages, fields, model):
     diagnostics["passportSuggestionNeedsReview"] = bool(
         suggested == "Passport" and original != "Passport"
     )
+    if model == "passport-deterministic-review-v1" and original == "Passport":
+        diagnostics["classificationSource"] = "deterministic_review"
+        diagnostics["classificationReconciliation"] = "not_required"
+        result["summary"] = (
+            "Passport details extracted from the document. "
+            "Review all suggested fields against the original before confirming."
+        )
+        return result
     if not pages or suggested != "Passport":
         return result
     text = pages[0].text
