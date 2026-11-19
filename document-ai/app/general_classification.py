@@ -23,4 +23,11 @@ def general_classification(pages):
         for category, subtype, pattern in RULES:
             if re.fullmatch(pattern, title, re.I):
                 candidates.setdefault(subtype, Route(category, subtype, page.page, (line,)))
+    # Require two independent cues on the first page when no title matches.
+    # Keep exact source spans for review; do not infer acceptance of an offer.
+    body = page.text[:5000]
+    offer = re.search(r"\b(?:we are (?:pleased|happy|delighted) to offer you|we hereby offer you)\s+(?:the\s+)?(?:position|role|employment)\b", body, re.I)
+    terms = re.search(r"\bterms\s+and\s+conditions\s+of\s+(?:your\s+)?(?:appointment|employment)\b", body, re.I)
+    if offer and terms:
+        candidates.setdefault("employment_offer", Route("Offer Letter", "employment_offer", page.page, (offer.group(), terms.group())))
     return next(iter(candidates.values())) if len(candidates) == 1 else None
