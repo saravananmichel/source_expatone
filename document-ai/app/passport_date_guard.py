@@ -4,6 +4,7 @@ Never relabel DOB as expiry, split ambiguous source values, or guess identity.
 """
 import re
 import os
+from datetime import datetime
 
 DATE = re.compile(r"(?<!\d)(?:\d{1,2}[-/.]\d{1,2}[-/.]\d{4}|\d{4}[-/]\d{1,2}[-/]\d{1,2})(?!\d)")
 PASSPORT = re.compile(r"\bpassport\b|\brepublic\s+of\s+india\b", re.I)
@@ -57,11 +58,50 @@ def guard_passport_response(result, pages):
                              "text was detected, but the document requires review.")
         diagnostics["categoryGuard"] = "unsupported_financial_classification"
     removed = 0
+    # Experimental review: reject conflicting or chronologically impossible
+    # identity dates, regardless of whether their OCR tokens are well formed.
+    blocked = set()
+    if os.getenv("DOCUMENT_AI_UNIVERSAL_V2", "0") == "1":
+        keys = ("date_of_birth", "issue_date", "expiry_date")
+        groups = {key: set() for key in keys}
+        def parse(value):
+            for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d", "%Y/%m/%d"):
+                try:
+                    return datetime.strptime(str(value), fmt).date()
+                except ValueError:
+                    pass
+            return None
+        fields = result.get("structuredFields", [])
+        for field in fields:
+            key = field.get("field")
+            if key in groups:
+                groups[key].add(parse(field.get("value")))
+        for key, values in groups.items():
+            if None in values or len(values) > 1:
+                blocked.add(key)
+        for i, earlier in enumerate(keys):
+            for later in keys[i+1:]:
+                if len(groups[earlier]) == len(groups[later]) == 1:
+                    a, b = next(iter(groups[earlier])), next(iter(groups[later]))
+                    if a is not None and b is not None and a >= b:
+                        blocked.update((earlier, later))
+        retained = [f for f in fields if f.get("field") not in blocked]
+        removed += len(fields) - len(retained)
+        result["structuredFields"] = retained
+        diagnostics["structuredFieldCount"] = len(retained)
+        if "expiry_date" in blocked:
+            result["expiryDate"] = None
+    def blocked_label(label):
+        label = label.lower().replace("_", " ")
+        return any(key in blocked and re.search(pattern, label) for key, pattern in (
+            ("date_of_birth", r"birth|\\bdob\\b"),
+            ("issue_date", r"issue"),
+            ("expiry_date", r"expir|valid until")))
     def safe_entry(entry):
         nonlocal removed
         label = str(entry.get("label", ""))
         value = entry.get("value", entry.get("date", ""))
-        if "expiry" in label.lower() and _bad_expiry(value):
+        if blocked_label(label) or ("expiry" in label.lower() and _bad_expiry(value)):
             removed += 1
             return False
         return True
@@ -75,7 +115,7 @@ def guard_passport_response(result, pages):
         for statement in result["statements"]:
             label = str(statement.get("label", ""))
             value = statement.get("originalValue", "")
-            if "expiry" in label.lower() and _bad_expiry(value):
+            if blocked_label(label) or ("expiry" in label.lower() and _bad_expiry(value)):
                 removed += 1
                 continue
             retained.append(statement)
