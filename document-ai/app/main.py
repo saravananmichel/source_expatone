@@ -279,6 +279,17 @@ async def _analyze_impl(file, x_service_key):
             elif immigration is not None:
                 semantic, suggestions = immigration
                 model = 'immigration-deterministic-review-v1'
+            elif (v2_enabled and v2_route is not None
+                  and v2_route.subtype in {'employment_offer', 'designation_change'}
+                  and len(pages) <= 3 and all(p.extractionConfidence >= .80 for p in pages)
+                  and {'effective_date', 'annual_compensation' if v2_route.subtype == 'employment_offer' else 'revised_designation'}
+                      <= {f['field'] for f in v2_fields}):
+                # Explicitly partial review: avoid waiting for an LLM when key
+                # source-backed employment facts are already available.
+                semantic, model = source_fallback(pages), 'source-only-private-fallback'
+                semantic._quality = {'reasoningStatus': 'skipped: source review',
+                                     'fallbackReason': 'deterministic_employment_review',
+                                     'supportMethod': 'exact-source-only', 'verdictCoverage': 0.0}
             elif profile.name == 'development':
                 try:
                     if not model_available:
