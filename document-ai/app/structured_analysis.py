@@ -482,4 +482,64 @@ def passport_reverse_fields(pages):
             result.append({"field": "residential_address", "value": value,
                            "page": page.page, "sourceText": match.group(),
                            "requiresConfirmation": True})
+    # OCR suffixes may omit spaces and contain bilingual prefixes.
+    lines = page.text.splitlines()
+    suffixes = {
+        "father_name": r"nameoffathe(?:r)?(?:/?(?:l)?egalguardian)?",
+        "mother_name": r"(?:name|hame)ofmother",
+        "spouse_name": r"nameofspouse",
+        "residential_address": r"address",
+        "historical_group": r"(?:old|previous)passportno\.?withdateandplaceofissue",
+        "passport_file_number": r"f(?:i)?leno\.?",
+    }
+    anchors = []
+    for index, line in enumerate(lines):
+        compact = re.sub(r"\s+", "", line).casefold()
+        for field, pattern in suffixes.items():
+            if re.search(r"(?:^|/)" + pattern + r"$", compact):
+                anchors.append((index, field))
+    def append(field, value, quote):
+        if not any(f["field"] == field for f in result):
+            result.append({"field": field, "value": value, "page": page.page,
+                           "sourceText": quote, "requiresConfirmation": True})
+    for pos, (start, field) in enumerate(anchors):
+        if sum(f == field for _, f in anchors) != 1:
+            continue
+        end = anchors[pos+1][0] if pos+1 < len(anchors) else len(lines)
+        if end-start > 6:
+            continue
+        values = [v.strip() for v in lines[start+1:end] if v.strip()]
+        quote = "\n".join(lines[start:end])
+        if quote not in page.text:
+            continue
+        if field in ("father_name", "mother_name", "spouse_name"):
+            names = [v for v in values if _identity_value("surname", v)
+                     and not re.search(r"address|guardian|passport|mother|father|spouse|none|nil", v, re.I)]
+            if len(names) == 1:
+                append(field, names[0], quote)
+        elif field == "residential_address" and pos+1 < len(anchors):
+            value = "\n".join(lines[start+1:end]).strip()
+            if (8 <= len(value) <= 300 and re.search(r"\d", value)
+                    and re.search(r"[A-Za-z]", value)
+                    and not re.search(r"passport|name\s*of|file\s*no", value, re.I)):
+                append(field, value, quote)
+        elif field == "historical_group" and len(values) == 3:
+            numbers = [v for v in values if PASSPORT_VALUE.fullmatch(v)]
+            places = [v for v in values if _identity_value("place_of_issue", v)]
+            dates = []
+            for v in values:
+                for fmt in ("%d/%m/%Y", "%d-%m-%Y"):
+                    try:
+                        datetime.strptime(v, fmt)
+                        dates.append(v)
+                        break
+                    except ValueError:
+                        pass
+            if len(numbers) == len(places) == len(dates) == 1:
+                append("previous_passport_number", numbers[0], quote)
+                append("previous_passport_issue_date", dates[0], quote)
+                append("previous_passport_place_of_issue", places[0], quote)
+        elif field == "passport_file_number" and len(values) == 1:
+            if re.fullmatch(r"[A-Z]{2,4}[0-9]{8,18}", values[0]):
+                append(field, values[0], quote)
     return result
