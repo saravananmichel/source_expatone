@@ -32,7 +32,7 @@ DATE_LABELS = {
     "expiry_date": re.compile(r"(?:date\s+of\s+expiry|date\s+of\s+expiration|tarikh\s+luput)", re.I),
 }
 DATE_VALUE = re.compile(DATE, re.I)
-HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canceled)\s+passport\b", re.I)
+HISTORICAL_PASSPORT = re.compile(r"\b(?:old|previous|prior|former|cancelled|canceled)\s*passport\b", re.I)
 
 
 # Strict label-grounded identity extraction. These are suggestions, never verified data.
@@ -40,7 +40,7 @@ PASSPORT_CONTEXT = re.compile(r"\b(?:passport|republic\s+of\s+india)\b", re.I)
 # Header OCR is often fragmented by security printing. This hint is only used
 # to attempt evidence-backed extraction; it never verifies a document category.
 PASSPORT_HEADER_FRAGMENT = re.compile(
-    r"\brepublic\s+of\s*[|:/-]?\s*india\b|\bpassport\s*(?:no|number)\b", re.I)
+    r"\brepublic\s*of\s*[|:/-]?\s*india\b|\bpassport\s*(?:no|number)\b", re.I)
 
 
 def _passport_context(lines: list[str]) -> bool:
@@ -101,6 +101,22 @@ def _passport_identity_fields(lines: list[str], page: int) -> list[dict]:
     return found
 
 
+def _compact_passport_identity_layout(page: Page) -> bool:
+    """Require independent identity labels, not nationality alone."""
+    if page.page != 1 or page.extraction != "ocr":
+        return False
+    text = page.text
+    if re.search(r"\b(?:e\s*-?\s*pass|employment\s+pass|electronic\s+pass|certificate|visa)\b", text, re.I):
+        return False
+    labels = set()
+    for block in page.blocks:
+        for field, pattern in (*SPATIAL_IDENTITY_SUFFIX.items(), *SPATIAL_DATE_SUFFIX.items()):
+            if pattern.search(block.text.strip()):
+                labels.add(field)
+    return {"surname", "given_names", "nationality", "date_of_birth",
+            "issue_date", "expiry_date"}.issubset(labels)
+
+
 def passport_category(pages: list[Page], fields: list[dict]) -> bool:
     """Conservative fallback hint; do not confuse immigration passes with passports."""
     text = " ".join(page.text for page in pages)
@@ -120,7 +136,9 @@ def passport_category(pages: list[Page], fields: list[dict]) -> bool:
     # independent passport-specific labels before suggesting the category.
     header_fragment = bool(PASSPORT_HEADER_FRAGMENT.search(header))
     passport_number_label = bool(PASSPORT_LABEL.search(first_page))
-    return ((explicit and (dated >= 2 or identity_labels >= 3))
+    compact_layout = bool(pages and _compact_passport_identity_layout(pages[0]))
+    return ((compact_layout and {"surname", "given_names", "date_of_birth", "issue_date", "expiry_date"}.issubset(names))
+            or (explicit and (dated >= 2 or identity_labels >= 3))
             or (mrz_prefix and identity_labels >= 2)
             or (identity_labels >= 4 and dated >= 1)
             or (header_fragment and passport_number_label and identity_labels >= 2))
@@ -186,6 +204,21 @@ OCR_DATE_SUFFIX = {
 }
 
 
+SPATIAL_IDENTITY_SUFFIX = {
+    "surname": re.compile(r"\b(?:surname|suname|family\s+name)\s*[:/-]?\s*$", re.I),
+    "given_names": re.compile(r"\b(?:given\s*name\s*\(s\)|given\s*names?|first\s+names?)\s*[:/-]?\s*$", re.I),
+    "nationality": re.compile(r"\bnationality\s*[:/-]?\s*$", re.I),
+    "place_of_birth": re.compile(r"\bplace\s*of\s*(?:birth|binh)\s*[:/-]?\s*$", re.I),
+    "place_of_issue": re.compile(r"\bplace\s*of\s*issue\s*[:/-]?\s*$", re.I),
+    "sex": re.compile(r"\b(?:sex|gender)\s*[:/-]?\s*$", re.I),
+}
+SPATIAL_DATE_SUFFIX = {
+    "date_of_birth": re.compile(r"\bdate\s*of\s*birth\s*[:/-]?\s*$", re.I),
+    "issue_date": re.compile(r"\bdate\s*of\s*[il]ssue\s*[:/-]?\s*$", re.I),
+    "expiry_date": re.compile(r"\bdate\s*of\s*expiry\s*[:/-]?\s*$", re.I),
+}
+
+
 def _passport_ocr_suffix_fields(lines: list[str], page: int) -> list[dict]:
     """Use source-grounded OCR label suffixes; never infer missing values."""
     if page != 1 or not _passport_context(lines):
@@ -242,14 +275,14 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
     """Recover unambiguous, source-grounded OCR values from nearby text blocks."""
     if page.page != 1 or page.extraction != "ocr" or not page.blocks:
         return []
-    if not _passport_context(page.text.splitlines()):
+    if not (_passport_context(page.text.splitlines()) or _compact_passport_identity_layout(page)):
         return []
     found = []
     for label_block in page.blocks:
         label_text = label_block.text.strip()
-        labels = [field for field, pattern in OCR_IDENTITY_SUFFIX.items()
+        labels = [field for field, pattern in SPATIAL_IDENTITY_SUFFIX.items()
                   if pattern.search(label_text)]
-        labels += [field for field, pattern in OCR_DATE_SUFFIX.items()
+        labels += [field for field, pattern in SPATIAL_DATE_SUFFIX.items()
                    if pattern.search(label_text)]
         if PASSPORT_LABEL.search(label_text) and not HISTORICAL_PASSPORT.search(label_text):
             labels.append("passport_number")
@@ -263,31 +296,84 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
             if block is label_block:
                 continue
             x0, y0, x1, y1 = block.boundingBox
-            below = (y0 >= ly1 - height * 0.2 and y0 <= ly1 + height * 2
+            below = (y0 >= ly1 - height * 0.35 and y0 <= ly1 + height * 2
                      and abs(x0 - lx0) <= height * 2)
             right = (x0 >= lx1 and x0 - lx1 <= height * 7
                      and abs(y0 - ly0) <= height * 0.6)
             if not (below or right):
                 continue
             value = block.text.strip()
+            if field == "nationality" and "/" in value:
+                value = value.rsplit("/", 1)[-1].strip()
             if field == "passport_number":
                 valid = bool(PASSPORT_VALUE.fullmatch(value))
-            elif field in OCR_DATE_SUFFIX:
+            elif field in SPATIAL_DATE_SUFFIX:
                 valid = bool(DATE_VALUE.fullmatch(value))
             else:
                 valid = _identity_value(field, value)
             if not valid:
                 continue
+            # Never associate another recognised label as a value.
+            if any(p.search(value) for p in (*SPATIAL_IDENTITY_SUFFIX.values(), *SPATIAL_DATE_SUFFIX.values())):
+                continue
             distance = (max(0, y0 - ly1) + abs(x0 - lx0)) if below else (x0 - lx1)
             candidates.append((distance, block))
+        # Prefer the directly aligned column over a different-column date.
+        if field in SPATIAL_DATE_SUFFIX:
+            aligned = [(d, b) for d, b in candidates
+                       if abs(b.boundingBox[0] - lx0) <= height
+                       and b.boundingBox[1] >= ly1 - height * 0.35]
+            if aligned:
+                candidates = aligned
         # A competing plausible value must be shown as missing, not guessed.
         if len(candidates) != 1:
             continue
         block = candidates[0][1]
-        found.append({"field": field, "value": block.text.strip(),
+        extracted = block.text.strip()
+        if field == "nationality" and "/" in extracted:
+            extracted = extracted.rsplit("/", 1)[-1].strip()
+        found.append({"field": field, "value": extracted,
                       "page": page.page, "sourceText": block.text,
                       "requiresConfirmation": True})
     return found
+
+
+def _passport_layout_number(page: Page) -> list[dict]:
+    """Review-only number in the identity header row; never inspect reverse pages."""
+    if not _compact_passport_identity_layout(page):
+        return []
+    blocks = page.blocks
+    def header(pattern):
+        return [b for b in blocks if re.search(pattern, b.text.strip(), re.I)]
+    types = header(r"(?:^|/)\s*type$")
+    codes = header(r"(?:^|/)\s*code$")
+    nations = header(r"(?:^|/)\s*nationality$")
+    if any(len(group) != 1 for group in (types, codes, nations)):
+        return []
+    t, c, n = types[0], codes[0], nations[0]
+    tx, ty, _, tb = t.boundingBox
+    cx, cy, _, cb = c.boundingBox
+    nx, ny, nr, nb = n.boundingBox
+    h = max(1, nb - ny)
+    if not (tx < cx < nx and ny < page.height * .35
+            and abs(ty - ny) <= h and abs(cy - ny) <= h):
+        return []
+    def row_value(label, pattern):
+        x, y, right, bottom = label.boundingBox
+        return [b for b in blocks if x-h <= b.boundingBox[0] <= right
+                and bottom-h*.35 <= b.boundingBox[1] <= bottom+h*1.5
+                and re.fullmatch(pattern, b.text.strip())]
+    if len(row_value(t, r"P")) != 1 or len(row_value(c, r"[A-Z]{3}")) != 1:
+        return []
+    candidates = [b for b in blocks if b.boundingBox[0] >= nr
+                  and nb-h*.35 <= b.boundingBox[1] <= nb+h*1.5
+                  and PASSPORT_VALUE.fullmatch(b.text.strip())]
+    if len(candidates) != 1:
+        return []
+    b = candidates[0]
+    return [{"field": "passport_number", "value": b.text.strip(),
+             "page": page.page, "sourceText": b.text,
+             "requiresConfirmation": True}]
 
 
 def structured_fields(pages: list[Page]) -> list[dict]:
@@ -295,7 +381,7 @@ def structured_fields(pages: list[Page]) -> list[dict]:
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)

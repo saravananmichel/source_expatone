@@ -93,7 +93,7 @@ async def extract_document(file: UploadFile = File(...),
                 sys.executable, '-m', 'app.extract_worker', content_type,
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.DEVNULL
+                stderr=None
             )
             try:
                 output, _ = await asyncio.wait_for(
@@ -222,7 +222,9 @@ async def _analyze_impl(file, x_service_key):
                 stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
             try:
                 output, _ = await asyncio.wait_for(process.communicate(data), timeout=120)
-                if process.returncode != 0: raise ValueError('extraction_failed')
+                if process.returncode != 0:
+                    logger.warning('extraction_worker_failed returncode=%d', process.returncode)
+                    raise ValueError('extraction_failed')
                 import json
                 pages = [Page.model_validate(value) for value in json.loads(output)]
             finally:
@@ -232,7 +234,21 @@ async def _analyze_impl(file, x_service_key):
             logger.info("Extraction completed pages=%d bytes=%d duration_ms=%d",len(pages),len(data),int((time.monotonic()-stage_started)*1000))
             extraction_ms=round((time.monotonic()-stage_started)*1000)
             stage_started=time.monotonic()
-            if profile.name == 'development':
+            suggestions = structured_fields(pages)
+            from .passport_fast_path import eligible_passport
+            allow_layout = os.getenv('PASSPORT_LAYOUT_FAST_PATH', '0') == '1'
+            fast_enabled = (
+                profile.name == 'development'
+                and os.getenv('DOCUMENT_OCR_ENGINE', 'tesseract').lower() == 'rapidocr'
+                and os.getenv('PASSPORT_FAST_PATH', '0') == '1'
+            )
+            fast_passport = fast_enabled and eligible_passport(pages, suggestions, allow_layout=allow_layout)
+            fast_status = ('disabled' if not fast_enabled else 'ineligible' if not fast_passport else
+                           'mrz_review' if eligible_passport(pages, suggestions) else 'layout_review')
+            if fast_passport:
+                from .passport_fast_path import passport_review_result
+                semantic, model = passport_review_result(pages, suggestions, allow_layout=allow_layout), 'passport-deterministic-review-v1'
+            elif profile.name == 'development':
                 try:
                     if not model_available:
                         raise ValueError('model_unavailable')
@@ -252,7 +268,6 @@ async def _analyze_impl(file, x_service_key):
             result=render(semantic,pages,model)
             # Independent, evidence-backed suggestions for the existing analysis
             # UI. Never silently overwrite model classification or persist fields.
-            suggestions = structured_fields(pages)
             result['structuredFields'] = suggestions
             result['suggestedDocumentCategory'] = (
                 'Utility Bill' if billing_category(pages, suggestions) else
@@ -269,6 +284,7 @@ async def _analyze_impl(file, x_service_key):
                         result.get('documentCategory', 'Unknown'), len(suggestions),
                         model == 'source-only-private-fallback')
             result['qualityDiagnostics'].update({'extractionMs':extraction_ms,'understandingMs':round((time.monotonic()-stage_started)*1000)})
+            result['qualityDiagnostics']['passportFastPathStatus'] = fast_status
             return result
         except HTTPException: raise
         except InferenceOutputError as error:

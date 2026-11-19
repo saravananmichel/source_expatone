@@ -18,7 +18,178 @@ def block_kind(text):
     if len(text) < 100 and (text.isupper() or text.istitle()): return 'heading'
     return 'paragraph'
 
+def _rapid_horizontal_fraction(result):
+    horizontal = total = 0
+    for polygon, text, score in result:
+        if not math.isfinite(float(score)) or float(score) < 0.35:
+            continue
+        xs, ys = zip(*polygon)
+        width, height = max(xs)-min(xs), max(ys)-min(ys)
+        if min(width, height) <= 0 or len(str(text)) < 4:
+            continue
+        weight = len(str(text))
+        total += weight
+        if width >= height:
+            horizontal += weight
+    return horizontal / max(1, total)
+
+
+def _rapid_orientation_rank(result):
+    usable = [(str(t), float(s)) for _, t, s in result
+              if math.isfinite(float(s)) and float(s) >= 0.35]
+    text = ' '.join(t.upper() for t, _ in usable)
+    labels = sum(bool(re.search(pattern, text)) for pattern in (
+        r'PASSPORT', r'SURNAME', r'GIVEN\s*NAME', r'DATE\s*OF\s*BIRTH',
+        r'EXPIRY', r'NATIONALITY'))
+    quality = sum(len(t)*s for t, s in usable) / max(1, sum(len(t) for t, _ in usable))
+    return (_rapid_horizontal_fraction(result), labels, quality)
+
+
+def _rapid_reading_order(blocks):
+    rows = []
+    for block in sorted(blocks, key=lambda b: (b.boundingBox[1], b.boundingBox[0])):
+        x0, y0, x1, y1 = block.boundingBox
+        center = (y0+y1)/2
+        if rows and abs(center-rows[-1][0]) <= min(y1-y0, rows[-1][1])*0.5:
+            rows[-1][2].append(block)
+        else:
+            rows.append((center, y1-y0, [block]))
+    return [b for _, _, row in rows for b in sorted(row, key=lambda b: b.boundingBox[0])]
+
+
+def _rapid_mrz_blocks(image, blocks, page_number):
+    """Bounded local MRZ recovery; retain only checksum-valid TD3 pairs."""
+    from .passport_mrz import mrz_fields
+    if page_number != 1 or image.width <= image.height:
+        return []
+    text = '\n'.join(b.text for b in blocks)
+    if not re.search(r'given\s*name', text, re.I) or not re.search(r'date\s*of\s*expiry', text, re.I):
+        return []
+    if mrz_fields([Page(page=page_number, text=text, width=image.width,
+                        height=image.height, extraction='ocr', blocks=blocks)]):
+        return []
+    y = int(image.height * 0.70)
+    crop = ImageOps.autocontrast(image.crop((0, y, image.width, image.height)).convert('L'))
+    try:
+        raw = pytesseract.image_to_string(crop, lang='eng',
+            config='--psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
+            timeout=5)
+    except (pytesseract.TesseractError, RuntimeError):
+        return []
+    lines = [line.strip() for line in raw.splitlines() if line.strip()]
+    for first, second in zip(lines, lines[1:]):
+        pair = first + '\n' + second
+        if mrz_fields([Page(page=page_number, text=pair, width=image.width,
+                            height=image.height, extraction='ocr', blocks=[])]):
+            # Region-level evidence, not fabricated character coordinates.
+            return [Block(text=pair, boundingBox=[0, y, image.width, image.height],
+                          kind='paragraph')]
+    return []
+
+
+def rapid_ocr(image, page_number):
+    # Lazy initialization keeps the existing Tesseract path independent.
+    import numpy as np
+    import logging
+    import time
+    started = time.monotonic()
+    logging.getLogger(__name__).info('rapidocr stage=initialize')
+    engine = _rapid_engine()
+    logging.getLogger(__name__).info('rapidocr stage=inference init_ms=%d', int((time.monotonic()-started)*1000))
+    image = ImageOps.exif_transpose(image).convert('RGB')
+    image.thumbnail((2400, 3400))
+    rotation = 0
+    # OSD detects full-page orientation, unlike RapidOCR's crop classifier.
+    try:
+        orientation = pytesseract.image_to_osd(
+            image, output_type=pytesseract.Output.DICT, timeout=5)
+        if orientation.get('orientation_conf', 0) >= 5:
+            angle = int(orientation.get('rotate', 0))
+            if angle in (90, 180, 270):
+                image = image.rotate(-angle, expand=True, fillcolor='white')
+                rotation = angle
+    except (pytesseract.TesseractError, RuntimeError):
+        pass
+    def infer(candidate):
+        result, _ = engine(np.asarray(candidate)[:, :, ::-1].copy())
+        return result or []
+    result = infer(image)
+    # When OSD cannot orient a sparse scan, tall text polygons identify
+    # sideways pages. Compare both quarter turns without trusting text length.
+    if _rapid_horizontal_fraction(result) < 0.4 and len(result) >= 3:
+        original = image
+        base_rotation = rotation
+        best = _rapid_orientation_rank(result)
+        for angle in (90, 270):
+            candidate = original.rotate(-angle, expand=True, fillcolor='white')
+            candidate_result = infer(candidate)
+            rank = _rapid_orientation_rank(candidate_result)
+            if rank[0] >= 0.65 and rank > best:
+                image, result, best = candidate, candidate_result, rank
+                rotation = (base_rotation + angle) % 360
+                # Skip the opposite quarter-turn only with strong readable label evidence.
+                if rank[0] >= 0.95 and rank[1] >= 4 and rank[2] >= 0.90:
+                    break
+    logging.getLogger(__name__).info('rapidocr orientation_degrees=%d', rotation)
+    blocks = []
+    weighted = total = 0
+    for polygon, value, score in result or []:
+        text = suppress_repetitive_ocr_noise(str(value)).strip()
+        if not text:
+            continue
+        confidence = float(score)
+        if not math.isfinite(confidence) or confidence < 0.35:
+            continue
+        xs, ys = zip(*polygon)
+        box = [max(0, float(min(xs))), max(0, float(min(ys))),
+               min(image.width, float(max(xs))), min(image.height, float(max(ys)))]
+        if box[2] <= box[0] or box[3] <= box[1]:
+            continue
+        blocks.append(Block(text=text, boundingBox=box, kind=block_kind(text)))
+        total += len(text)
+        weighted += len(text) * confidence
+    if not blocks:
+        raise ValueError('no_readable_text')
+    # Group nearby baselines, then order each row left to right.
+    blocks = _rapid_reading_order(blocks)
+    blocks.extend(_rapid_mrz_blocks(image, blocks, page_number))
+    return Page(page=page_number, text='\n'.join(b.text for b in blocks),
+        width=image.width, height=image.height, extraction='ocr',
+        rotationDegrees=rotation, coordinateSpace='preprocessed_image_pixels',
+        extractionConfidence=max(0, min(1, weighted / max(1, total))), blocks=blocks)
+
+
+from functools import lru_cache
+
+@lru_cache(maxsize=1)
+def _rapid_engine():
+    from rapidocr_onnxruntime import RapidOCR
+    return RapidOCR(intra_op_num_threads=2, inter_op_num_threads=1)
+
+
 def ocr(image, page_number):
+    import logging
+    import time
+    start = time.monotonic()
+    engine = os.getenv('DOCUMENT_OCR_ENGINE', 'tesseract').lower()
+    try:
+        if engine == 'rapidocr':
+            try:
+                page = rapid_ocr(image, page_number)
+                if page.extractionConfidence >= 0.65 or os.getenv('RAPIDOCR_FALLBACK', '0') != '1':
+                    return page
+            except Exception as exc:
+                logging.getLogger(__name__).warning('rapidocr_failed type=%s', type(exc).__name__)
+                if os.getenv('RAPIDOCR_FALLBACK', '0') != '1':
+                    raise
+            engine = 'tesseract_fallback'
+        return _tesseract_ocr(image, page_number)
+    finally:
+        logging.getLogger(__name__).info('ocr_engine=%s elapsed_ms=%d', engine,
+            int((time.monotonic() - start) * 1000))
+
+
+def _tesseract_ocr(image, page_number):
     image = ImageOps.exif_transpose(image).convert('RGB')
     image.thumbnail((2400, 3400))
     rotation=0

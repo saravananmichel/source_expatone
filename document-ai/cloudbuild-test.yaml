@@ -10,12 +10,14 @@ steps:
         export DEBIAN_FRONTEND=noninteractive
         apt-get update
         apt-get install -y --no-install-recommends \
-          tesseract-ocr tesseract-ocr-eng tesseract-ocr-msa \
+          tesseract-ocr libgl1 libglib2.0-0t64 tesseract-ocr-eng tesseract-ocr-msa \
           tesseract-ocr-tam tesseract-ocr-chi-sim
         python -m pip install --no-cache-dir -r document-ai/requirements.txt
         tesseract --version
+        python -m pip check
+        python -c "from rapidocr_onnxruntime import RapidOCR; RapidOCR(intra_op_num_threads=2, inter_op_num_threads=1); print('RapidOCR model initialization passed')"
         cd document-ai
-        python -m pytest tests/test_ocr_cleanup.py tests/test_field_candidates.py tests/test_field_candidates_api.py tests/test_structured_analysis.py tests/test_passport_mrz.py tests/test_fallback_diagnostics.py tests/test_pipeline.py -q
+        python -m pytest tests -q
 timeout: 1200s
 options:
   logging: CLOUD_LOGGING_ONLY
