@@ -2,17 +2,17 @@
 import re
 
 LABELS = {
-    "person_name": r"(?:applicant(?:'s)? name|name of applicant|name)",
+    "person_name": r"(?:applicant(?:'s)? name|name of applicant(?:\s*/\s*dependant)?|name)",
     "passport_number": r"passport\s*(?:no\.?|number)",
     "nationality": r"nationality",
     "employer": r"(?:employer|company name)",
     "designation": r"(?:designation|position|job title)",
-    "sponsor": r"(?:sponsor|sponsor name)",
+    "sponsor": r"(?:sponsor|sponsor name|name of foreign knowledge worker)",
     "relationship": r"relationship",
     "application_type": r"application type",
     "application_category": r"application category",
-    "application_duration": r"(?:application duration|requested duration)",
-    "reference_number": r"(?:application|immigration|reference)\s*(?:no\.?|number)",
+    "application_duration": r"(?:application duration|requested duration|duration)",
+    "reference_number": r"(?:(?:application|immigration|reference|ref)\s*(?:no\.?|number)|our reference)",
     "pass_number": r"pass\s*(?:no\.?|number)",
     "issue_date": r"(?:date of issue|issue date)",
     "expiry_date": r"(?:date of expiry|expiry date|valid until)",
@@ -39,7 +39,7 @@ def immigration_fields(pages, route):
             for field, label in LABELS.items():
                 if field in excluded:
                     continue
-                match = re.fullmatch(r"(?:" + label + r")\s*:\s*(.{1,200})", source, re.I)
+                match = re.fullmatch(r"(?:" + label + r")\s*[:：]\s*(.{1,200})", source, re.I)
                 if not match:
                     continue
                 value = match.group(1).strip()
