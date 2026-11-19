@@ -116,6 +116,9 @@ def _rapid_sideways_region(image, result, infer):
         if quality[0] >= .75 and quality[1] >= 4 and quality[2] >= .80:
             if best is None or (quality[1],quality[2]) > (best[0][1],best[0][2]):
                 best = (quality,angle,candidate)
+            # Strong upright identity evidence makes the opposite crop retry redundant.
+            if quality[0] >= .95 and quality[1] >= 6 and quality[2] >= .90:
+                break
     if best is None:
         return [], None
     _, angle, candidate = best
