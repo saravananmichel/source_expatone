@@ -7,13 +7,13 @@ DATE = r"(?:[A-Za-z]{3,9}[ -]*\d{1,2}(?:st|nd|rd|th)?[ -]*\d{4}|\d{1,2}(?:st|nd|
 MONEY = r"(?:MYR|INR|USD|RM|Rs\.?)\s*(?:\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})+,\d{3}|\d+)(?:\.\d{2})?"
 DURATION = r"(?:\d{1,3}|one|two|three|four|five|six|twelve|thirty|sixty|ninety)\s+(?:days?|weeks?|months?|years?)"
 RULES = {
-    "monthly_compensation": r"\b(?:monthly\s+(?:basic\s+)?salary|basic\s+salary\s+per\s+month)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,.])",
+    "monthly_compensation": r"\b(?:monthly\s+(?:basic\s+)?salary|basic\s+salary\s+per\s+month)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,]|\.\d)",
     "probation_period": r"\b(?:probation\s+period\s*(?:of\s+|is\s+|:\s*)|on\s+probation\s+for\s+)(?P<value>"+DURATION+r")\b",
     "annual_leave": r"\b(?P<value>(?:you\s+(?:will\s+be|are)\s+entitled\s+to\s+)\d{1,2}\s+(?:working\s+|calendar\s+)?days?\s+of\s+(?:paid\s+)?annual\s+leave(?:\s+per\s+(?:year|annum))?)\b",
     "medical_benefits": r"\b(?P<value>you\s+(?:will\s+be|are)\s+entitled\s+to\s+(?:medical|health)\s+(?:insurance|coverage|benefits)[^\n.!?]{0,120})(?=[.!?\n]|$)",
     "confidentiality_clause": r"\b(?P<value>you\s+(?:shall|must)\s+(?:maintain|protect|keep)\s+(?:the\s+)?confidentiality\s+of\s+[^\n.!?]{1,180})(?=[.!?\n]|$)",
     "termination_clause": r"\b(?P<value>(?:either\s+party|the\s+company|the\s+employer)\s+may\s+terminate\s+(?:this|your|the)\s+(?:employment|appointment|agreement)[^\n.!?]{0,180})(?=[.!?\n]|$)",
-    "revised_annual_ctc": r"\byour\s*annual\s*CTC\s*as\s*of\s*(?:"+DATE+r")\s*is\s*(?P<value>"+MONEY+r")(?![\d,.])",
+    "revised_annual_ctc": r"\byour\s*annual\s*CTC\s*as\s*of\s*(?:"+DATE+r")\s*is\s*(?P<value>"+MONEY+r")(?![\d,]|\.\d)",
     "effective_date": r"\b(?:with\s*effect\s*from|effective\s+from|effective\s+on|annual\s*CTC\s*as\s*of)\s*(?P<value>"+DATE+r")\b",
     "relieving_date": r"\b(?:relieved from (?:your |the )?duties|relieved from (?:our |the )?services|last working day)\s+(?:with effect from\s+|on\s+|is\s+|was\s+)(?P<value>"+DATE+r")\b",
     "joining_date": r"\b(?:date of joining|joining date)\s*(?:is\s+|:\s*)(?P<value>"+DATE+r")\b",
@@ -24,7 +24,7 @@ RULES = {
     "notice_period": r"\b(?:notice period\s+(?:of\s+|is\s+|shall be\s+)|(?:written\s+)?notice\s+for\s+a\s+period\s+of\s+)(?P<value>(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fifteen|thirty|sixty|ninety)\s+(?:days?|months?|weeks?))\b",
     "working_hours": r"\b(?:required to work|shall work|will work)\s+(?:for\s+)?(?P<value>(?:a minimum of\s+)?(?:\d{1,2}|six|seven|eight|nine|ten|twelve)\s+hours\s+(?:a|per)\s+day)\b",
     "medical_condition": r"\b(?P<value>(?:your\s+)?appointment\s+(?:will be|is)\s+subject to\s+(?:your\s+)?medical fitness)\b",
-    "annual_compensation": r"\bannual\s+(?:compensation|salary)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,.])",
+    "annual_compensation": r"\bannual\s+(?:compensation|salary)\s*(?:of\s+|is\s+|:\s*)(?P<value>"+MONEY+r")(?![\d,]|\.\d)",
 }
 def semantic_candidates(pages):
     found = {}
