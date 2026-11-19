@@ -40,6 +40,12 @@ def classify_document(pages) -> Route | None:
     employment = matching(r"^employment\s+pass(?:\s*\[[^\]]*\])?(?:\s*category\s*\([^)]*\)|\s*\([^)]*\))?\s*$")
     visa = matching(r"\bmultiple\s+entry\s+visa\b")
     validity = matching(r"\b(?:valid\s+until|expiry\s+date|date\s+of\s+expiry|good for any number of journeys to malaysia until)\b")
+    dependant = matching(r"^depend[ae]nt(?:['’]s)?\s+pass(?:\s*\[[^\]]*\])?\s*$")
+    if employment and dependant:
+        return None
+    if dependant and visa and validity:
+        return Route("Dependant Pass", "dependant_pass_with_visa", page.page,
+                     (dependant, visa, validity))
     if employment and visa and validity:
         return Route("Employment Pass", "employment_pass_with_visa", page.page,
                      (employment, visa, validity))
