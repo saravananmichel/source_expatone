@@ -4,6 +4,7 @@ Never turn a suggestion into a verified fact, reminder or persisted identity.
 All values must be literal substrings of their source line.
 """
 import re
+from datetime import datetime
 from .schemas import Page
 from .passport_mrz import mrz_fields
 
@@ -376,12 +377,61 @@ def _passport_layout_number(page: Page) -> list[dict]:
              "requiresConfirmation": True}]
 
 
+def _passport_grouped_rows(page: Page) -> list[dict]:
+    """Recover explicit label runs followed by equally ordered value runs."""
+    if page.page != 1 or page.extraction != "ocr" or page.extractionConfidence < .80:
+        return []
+    lines = page.text.splitlines()
+    if not re.search(r"(?im)^\s*P<[A-Z]{3}", page.text) or not any(PASSPORT_LABEL.search(l) for l in lines):
+        return []
+    labels = {
+        "date_of_birth": r"date\s*of\s*birth",
+        "sex": r"sex",
+        "nationality": r"national(?:i)?ty",
+        "issue_date": r"date\s*of\s*[il]ssue",
+        "expiry_date": r"date\s*of\s*expiry",
+    }
+    found = []
+    for fields in (("date_of_birth", "sex", "nationality"), ("issue_date", "expiry_date")):
+        size = len(fields)
+        matches = []
+        for i in range(len(lines)-2*size+1):
+            if not all(re.search(r"\b"+labels[f]+r"\s*$", lines[i+j], re.I) for j,f in enumerate(fields)):
+                continue
+            values = [l.strip() for l in lines[i+size:i+2*size]]
+            valid = True
+            dates = []
+            for field, value in zip(fields, values):
+                if field.endswith("_date") or field == "date_of_birth":
+                    parsed = None
+                    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d"):
+                        try:
+                            parsed = datetime.strptime(value, fmt)
+                            break
+                        except ValueError:
+                            pass
+                    valid &= parsed is not None
+                    dates.append(parsed)
+                elif field == "sex":
+                    valid &= bool(SEX_VALUE.fullmatch(value))
+                else:
+                    valid &= bool(re.fullmatch(r"[A-Z]{3,35}", value))
+            if not valid or (len(dates)==2 and dates[0]>=dates[1]):
+                continue
+            matches.append((values, "\n".join(lines[i:i+2*size])))
+        if len(matches)==1:
+            values, quote = matches[0]
+            found.extend({"field": f, "value": v, "page": 1, "sourceText": quote,
+                          "requiresConfirmation": True} for f,v in zip(fields,values))
+    return found
+
+
 def structured_fields(pages: list[Page]) -> list[dict]:
     results = []
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page) + _passport_grouped_rows(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
