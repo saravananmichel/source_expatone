@@ -8,6 +8,8 @@ LABELS = {
     "effective_date": "Effective date",
     "annual_compensation": "Annual compensation",
     "notice_period": "Notice period",
+    "working_hours": "Working hours",
+    "medical_condition": "Medical condition",
 }
 
 def review_summary(route, fields, pages):
