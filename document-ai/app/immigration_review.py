@@ -6,7 +6,7 @@ from .schemas import Evidence, Statement, SemanticDocument
 
 
 def _date(value):
-    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d"):
+    for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d%b%Y", "%d %b %Y", "%d %B %Y"):
         try:
             return datetime.strptime(value, fmt).date()
         except ValueError:
@@ -28,6 +28,8 @@ def immigration_review(pages):
     required = {"person_name", "passport_number"}
     if route.subtype == "employment_pass_with_visa":
         required |= {"expiry_date", "employer"}
+    elif route.subtype == "dependant_pass_with_visa":
+        required |= {"expiry_date", "employment_restriction"}
     else:
         required |= {"application_type", "application_category", "reference_number"}
     if not required <= values.keys():
