@@ -371,6 +371,9 @@ async def _analyze_impl(file, x_service_key):
                     from .review_summary import review_summary
                     result['summary'] = review_summary(v2_route, result['structuredFields'], pages)
             if v2_enabled:
+                if model == 'source-only-private-fallback' or fast_passport or immigration is not None:
+                    from .review_reconciliation import append_review_statements
+                    append_review_statements(result, pages)
                 result['qualityDiagnostics']['selectedSectionCount'] = len(selected_sections)
                 result['qualityDiagnostics']['partialSourceSelection'] = bool(selected_sections) and model != 'source-only-private-fallback'
             result['qualityDiagnostics']['universalReviewStatus'] = (
