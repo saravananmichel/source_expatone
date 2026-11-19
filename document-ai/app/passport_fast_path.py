@@ -1,12 +1,12 @@
 """DEV-only eligibility gate; no inferred or automatically verified identities."""
 from datetime import datetime
 from .passport_mrz import mrz_fields
-from .structured_analysis import passport_category
+from .structured_analysis import passport_category, _compact_passport_identity_layout, _passport_layout_number, _passport_spatial_fields
 
 REQUIRED = {"passport_number", "surname", "given_names", "date_of_birth",
             "issue_date", "expiry_date"}
 
-def eligible_passport(pages, fields):
+def eligible_passport(pages, fields, allow_layout=False):
     if not pages or len(pages) > 2 or not passport_category(pages, fields):
         return False
     first = pages[0]
@@ -22,8 +22,6 @@ def eligible_passport(pages, fields):
     if not REQUIRED.issubset(groups) or any(len(v) != 1 for v in groups.values()):
         return False
     values = {k: next(iter(v)) for k, v in groups.items()}
-    if not any(f["value"] == values["passport_number"] for f in mrz_fields([first])):
-        return False
     dates = []
     for key in ("date_of_birth", "issue_date", "expiry_date"):
         parsed = None
@@ -38,6 +36,14 @@ def eligible_passport(pages, fields):
         dates.append(parsed)
     if not dates[0] < dates[1] < dates[2]:
         return False
+    mrz = mrz_fields([first])
+    if not mrz and allow_layout:
+        if not _compact_passport_identity_layout(first):
+            return False
+        spatial = _passport_spatial_fields(first) + _passport_layout_number(first)
+        return all(any(f["field"] == key and f["value"] == values[key]
+                       and f["sourceText"] in first.text for f in spatial)
+                   for key in REQUIRED)
     # Cross-check visible dates against the same checksum-valid MRZ.
     return any(f["value"] == values["passport_number"]
                and f["sourceText"][13:19] == dates[0].strftime("%y%m%d")
@@ -45,10 +51,10 @@ def eligible_passport(pages, fields):
                for f in mrz_fields([first]))
 
 
-def passport_review_result(pages, fields):
+def passport_review_result(pages, fields, allow_layout=False):
     """Return review-only candidates without promoting identity to supported facts."""
     from .schemas import Evidence, Statement, SemanticDocument
-    if not eligible_passport(pages, fields):
+    if not eligible_passport(pages, fields, allow_layout=allow_layout):
         raise ValueError("passport_fast_path_ineligible")
     evidence = []
     statements = []
@@ -70,5 +76,5 @@ def passport_review_result(pages, fields):
     semantic = SemanticDocument(documentCategory="Passport", classificationConfidence=0.8,
         classificationEvidenceIds=[e.id for e in evidence], statements=statements, evidence=evidence)
     semantic._quality = {"reasoningStatus": "skipped: deterministic passport",
-        "supportMethod": "source-and-mrz-review-only", "verdictCoverage": 0.0}
+        "supportMethod": ("source-and-mrz-review-only" if eligible_passport(pages, fields) else "source-layout-review-only"), "verdictCoverage": 0.0}
     return semantic
