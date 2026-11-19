@@ -69,3 +69,39 @@ def test_nested_review_graph_sync():
     assert nested["documentCategory"] == "Employment"
     assert nested["statements"][0]["supportStatus"] == "UNCERTAIN"
     assert result["qualityDiagnostics"]["evidenceCoverage"] == 0.0
+
+
+def test_passport_guard_rejects_birth_as_expiry(monkeypatch):
+    from app.passport_date_guard import guard_passport_response
+    monkeypatch.setenv("DOCUMENT_AI_UNIVERSAL_V2", "1")
+    p = page("PASSPORT\nDate of Birth: 01/01/1990\nDate of Issue: 01/01/2020")
+    result = {"documentCategory": "Passport", "expiryDate": "01/01/1990",
+              "structuredFields": [
+                  candidate("date_of_birth", "01/01/1990", p.text),
+                  candidate("issue_date", "01/01/2020", p.text),
+                  candidate("expiry_date", "01/01/1990", p.text)],
+              "statements": [{"id": "date", "label": "Expiry date",
+                              "originalValue": "01/01/1990"}]}
+    guard_passport_response(result, [p])
+    assert result["expiryDate"] is None
+    assert not any(f["field"] == "expiry_date" for f in result["structuredFields"])
+    assert not result["statements"]
+
+
+def test_passport_guard_preserves_ordered_dates(monkeypatch):
+    from app.passport_date_guard import guard_passport_response
+    monkeypatch.setenv("DOCUMENT_AI_UNIVERSAL_V2", "1")
+    p = page("PASSPORT\n01/01/1990\n01/01/2020\n01/01/2030")
+    fields = [candidate("date_of_birth", "01/01/1990", p.text),
+              candidate("issue_date", "01/01/2020", p.text),
+              candidate("expiry_date", "01/01/2030", p.text)]
+    result = {"documentCategory": "Passport", "expiryDate": "01/01/2030",
+              "structuredFields": fields}
+    guard_passport_response(result, [p])
+    assert result["structuredFields"] == fields
+    assert result["expiryDate"] == "01/01/2030"
+
+
+def test_passport_grouped_route_rejects_empty_input():
+    from app.passport_fast_path import grouped_passport_review_fields
+    assert grouped_passport_review_fields([], []) == []
