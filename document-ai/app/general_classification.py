@@ -19,9 +19,12 @@ def general_classification(pages):
     lines = [line.strip() for line in page.text.splitlines() if line.strip()][:20]
     candidates = {}
     for line in lines:
-        title = re.sub(r"^subject\s*:\s*", "", line, flags=re.I)
+        title = re.sub(r"^subject\s*[:：–-]\s*", "", line, flags=re.I).rstrip(".").strip()
         for category, subtype, pattern in RULES:
-            if re.fullmatch(pattern, title, re.I):
+            # Match only known complete headings, allowing missing OCR spaces.
+            compact = re.sub(r"\s+", "", title)
+            compact_pattern = pattern.replace(r"\s+", "").replace(" ", "")
+            if re.fullmatch(pattern, title, re.I) or re.fullmatch(compact_pattern, compact, re.I):
                 candidates.setdefault(subtype, Route(category, subtype, page.page, (line,)))
     # Require two independent cues on the first page when no title matches.
     # Keep exact source spans for review; do not infer acceptance of an offer.
