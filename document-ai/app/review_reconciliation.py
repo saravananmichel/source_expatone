@@ -79,4 +79,16 @@ def employment_review_ready(route, pages, *groups):
     fields, conflicts = reconcile_review_fields(pages, [], [
         f for group in groups for f in group if f.get("requiresConfirmation")
     ])
-    return not conflicts and required <= {f["field"] for f in fields}
+    names = {f["field"] for f in fields}
+    if conflicts:
+        return False
+    if route.subtype == "employment_offer":
+        # Offers often specify a joining or start date rather than an
+        # effective date, or monthly pay rather than annual compensation.
+        # Do not derive annual pay or silently reconcile competing dates.
+        dates = names & {"effective_date", "joining_date", "start_date"}
+        pay = names & {"annual_compensation", "monthly_compensation"}
+        date_values = {f["value"].strip().casefold() for f in fields
+                       if f["field"] in dates}
+        return bool(dates and pay and len(date_values) == 1)
+    return required <= names
