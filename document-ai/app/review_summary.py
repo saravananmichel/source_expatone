@@ -16,6 +16,23 @@ LABELS = {
     "continuing_terms": "Continuing employment terms",
 }
 
+# Only closed, known phrases are expanded. Never segment names or IDs.
+DISPLAY_PHRASES = {
+    "employment_restriction": {
+        "ANYFORMOFEMPLOYMENTISSTRICTLYPROHIBITED": "Any form of employment is strictly prohibited",
+    },
+    "continuing_terms": {
+        "ALLTHETERMSANDCONDITIONSASSETFORTHINYOURAPPOINTMENTLETTERWILLCONTINUETOBEINFORCE":
+            "All the terms and conditions as set forth in your appointment letter will continue to be in force",
+    },
+}
+
+def display_review_value(field, value):
+    display = " ".join(value.split()).rstrip(".")
+    compact = re.sub(r"\s+", "", display).upper()
+    return DISPLAY_PHRASES.get(field, {}).get(compact, display)
+
+
 def review_summary(route, fields, pages):
     source = {p.page: p.text for p in pages if p.extractionConfidence >= .80}
     parts = ["Possible " + route.subtype.replace("_", " ") + "."]
@@ -32,7 +49,7 @@ def review_summary(route, fields, pages):
             continue
         if quote not in source.get(field.get("page"), ""):
             continue
-        parts.append(f"{label} (review): {' '.join(value.split())}.")
+        parts.append(f"{label} (review): {display_review_value(key, value)}.")
     parts.append("Confirm all details against the original. AI interpretation was incomplete.")
     return " ".join(parts)
 
@@ -42,7 +59,7 @@ def immigration_summary(category, fields, pages):
     labels = {"pass_category": "Pass category", "issue_date": "Issue date",
               "expiry_date": "Stay validity until", "employer": "Employer",
               "designation": "Designation", "employment_restriction": "Employment restriction",
-              "letter_validity": "Letter validity"}
+              "letter_validity": "Letter validity", "place_of_issue": "Place of issue"}
     if category not in ("Employment Pass", "Dependant Pass", "Student Pass", "Work Permit"):
         labels["expiry_date"] = "Document expiry date"
     source = {p.page: p.text for p in pages if p.extractionConfidence >= .80}
@@ -56,6 +73,6 @@ def immigration_summary(category, fields, pages):
         if (isinstance(value, str) and isinstance(quote, str)
                 and 0 < len(value.strip()) <= 200 and value in quote
                 and quote in source.get(f.get("page"), "")):
-            parts.append(f"{label} (review): {' '.join(value.split())}.")
+            parts.append(f"{label} (review): {display_review_value(key, value)}.")
     parts.append("Confirm against the original. This analysis does not establish legal status.")
     return " ".join(parts)
