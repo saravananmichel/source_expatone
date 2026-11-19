@@ -93,6 +93,9 @@ def appraisal_salary_rows(pages):
             continue
         i = headers[0]+5
         section = "cash"
+        page_rows = []
+        seen = set()
+        ambiguous = False
         while i < len(lines):
             key = compact(lines[i])
             if key == "non-cashcomponent":
@@ -104,6 +107,10 @@ def appraisal_salary_rows(pages):
                 field = section + "_total"
             if not field or i+2 >= len(lines):
                 break
+            if field in seen:
+                ambiguous = True
+                break
+            seen.add(field)
             values = [l.strip() for l in lines[i+1:i+3]]
             if not all(amount.fullmatch(v) for v in values):
                 break
@@ -111,10 +118,14 @@ def appraisal_salary_rows(pages):
             if quote not in page.text:
                 break
             for period, value in zip(("monthly", "annual"), values):
-                result.append({"field": field+"_"+period, "value": value,
+                page_rows.append({"field": field+"_"+period, "value": value,
                                "page": page.page, "sourceText": quote,
                                "requiresConfirmation": True})
             i += 3
             if field == "employer_pf" and i < len(lines) and compact(lines[i]) == "(includingadministrativecharges)":
                 i += 1
+        # Duplicate row labels make the table mapping ambiguous; do not
+        # silently select one of the competing amounts.
+        if not ambiguous:
+            result.extend(page_rows)
     return result
