@@ -116,7 +116,13 @@ def rapid_ocr(image, page_number):
     result = infer(image)
     # When OSD cannot orient a sparse scan, tall text polygons identify
     # sideways pages. Compare both quarter turns without trusting text length.
-    if _rapid_horizontal_fraction(result) < 0.4 and len(result) >= 3:
+    initial_rank = _rapid_orientation_rank(result)
+    # Mixed passport spreads may contain horizontal headings and sideways
+    # identity labels. Retry only when passport cues exist but labels are sparse.
+    passport_retry = (os.getenv('DOCUMENT_AI_UNIVERSAL_V2', '0') == '1'
+                      and page_number == 1 and initial_rank[1] in (1, 2)
+                      and initial_rank[0] < 0.85)
+    if len(result) >= 3 and (initial_rank[0] < 0.4 or passport_retry):
         original = image
         base_rotation = rotation
         best = _rapid_orientation_rank(result)
@@ -124,7 +130,11 @@ def rapid_ocr(image, page_number):
             candidate = original.rotate(-angle, expand=True, fillcolor='white')
             candidate_result = infer(candidate)
             rank = _rapid_orientation_rank(candidate_result)
-            if rank[0] >= 0.65 and rank > best:
+            improved = (rank[0] >= 0.65 and rank > best)
+            if passport_retry:
+                improved = (rank[0] >= 0.65 and rank[1] >= 4
+                            and rank[1] > best[1] and rank[2] >= 0.80)
+            if improved:
                 image, result, best = candidate, candidate_result, rank
                 rotation = (base_rotation + angle) % 360
                 # Skip the opposite quarter-turn only with strong readable label evidence.
