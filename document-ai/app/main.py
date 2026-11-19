@@ -245,9 +245,23 @@ async def _analyze_impl(file, x_service_key):
             fast_passport = fast_enabled and eligible_passport(pages, suggestions, allow_layout=allow_layout)
             fast_status = ('disabled' if not fast_enabled else 'ineligible' if not fast_passport else
                            'mrz_review' if eligible_passport(pages, suggestions) else 'layout_review')
+            universal_enabled = (profile.name == 'development'
+                                 and os.getenv('DOCUMENT_AI_UNIVERSAL_REVIEW', '0') == '1')
+            immigration = None
+            general_route = None
+            general_fields = []
+            if universal_enabled and not fast_passport:
+                from .immigration_review import immigration_review
+                from .general_document import general_document_hints
+                immigration = immigration_review(pages)
+                if immigration is None:
+                    general_route, general_fields = general_document_hints(pages)
             if fast_passport:
                 from .passport_fast_path import passport_review_result
                 semantic, model = passport_review_result(pages, suggestions, allow_layout=allow_layout), 'passport-deterministic-review-v1'
+            elif immigration is not None:
+                semantic, suggestions = immigration
+                model = 'immigration-deterministic-review-v1'
             elif profile.name == 'development':
                 try:
                     if not model_available:
@@ -283,6 +297,24 @@ async def _analyze_impl(file, x_service_key):
             reconcile_passport_result(result, pages, suggestions, model)
             from .passport_date_guard import guard_passport_response
             guard_passport_response(result, pages)
+            if immigration is not None:
+                result['suggestedDocumentCategory'] = semantic.documentCategory
+                result['summary'] = (
+                    'Immigration document details extracted for review. '
+                    'Confirm all details against the original; this analysis does not establish legal status.'
+                )
+            elif general_route is not None and not result.get('suggestedDocumentCategory'):
+                # Keep independent hints separate from verified model output.
+                result['suggestedDocumentCategory'] = general_route.category
+                existing = {f['field'] for f in suggestions}
+                result['structuredFields'] = suggestions + [
+                    f for f in general_fields if f['field'] not in existing
+                ]
+            result['qualityDiagnostics']['universalReviewStatus'] = (
+                'disabled' if not universal_enabled else 'passport_priority' if fast_passport
+                else 'immigration_review' if immigration is not None
+                else 'general_hint' if general_route is not None else 'abstained'
+            )
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
                         result.get('documentCategory', 'Unknown'), len(suggestions),
