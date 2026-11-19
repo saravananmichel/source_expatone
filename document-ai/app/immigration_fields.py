@@ -6,7 +6,7 @@ LABELS = {
     "passport_number": r"passport\s*(?:no\.?|number)",
     "nationality": r"nationality",
     "gender": r"gender",
-    "place_of_issue": r"place\\s*of\\s*issue",
+    "place_of_issue": r"place\s*of\s*issue",
     "employer": r"(?:employer|company name|with)",
     "designation": r"(?:designation|position|job title)",
     "sponsor": r"(?:sponsor|sponsor name|name of foreign knowledge worker)",
