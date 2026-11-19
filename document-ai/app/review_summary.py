@@ -10,18 +10,24 @@ LABELS = {
     "notice_period": "Notice period",
     "working_hours": "Working hours",
     "medical_condition": "Medical condition",
+    "revised_designation": "Revised designation",
+    "previous_designation": "Previous designation",
+    "continuing_terms": "Continuing employment terms",
 }
 
 def review_summary(route, fields, pages):
     source = {p.page: p.text for p in pages if p.extractionConfidence >= .80}
     parts = ["Possible " + route.subtype.replace("_", " ") + "."]
-    for field in fields:
-        label = LABELS.get(field.get("field"))
+    for key, label in LABELS.items():
+        items = [f for f in fields if f.get("field") == key]
+        if len(items) != 1:
+            continue
+        field = items[0]
         value = field.get("value")
         quote = field.get("sourceText")
         if not label or not isinstance(value, str) or not isinstance(quote, str):
             continue
-        if not value.strip() or len(value) > 100 or value not in quote:
+        if not value.strip() or len(value) > (250 if key == "continuing_terms" else 100) or value not in quote:
             continue
         if quote not in source.get(field.get("page"), ""):
             continue
@@ -36,6 +42,8 @@ def immigration_summary(category, fields, pages):
               "expiry_date": "Stay validity until", "employer": "Employer",
               "designation": "Designation", "employment_restriction": "Employment restriction",
               "letter_validity": "Letter validity"}
+    if category not in ("Employment Pass", "Dependant Pass", "Student Pass", "Work Permit"):
+        labels["expiry_date"] = "Document expiry date"
     source = {p.page: p.text for p in pages if p.extractionConfidence >= .80}
     parts = [category + " details extracted for review."]
     for key, label in labels.items():
