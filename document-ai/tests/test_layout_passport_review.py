@@ -74,3 +74,31 @@ def test_reverse_page_not_number_source():
     page = layout()
     page.page = 2
     assert not _passport_layout_number(page)
+
+
+def test_optional_review_candidates_and_safe_summary():
+    from app.passport_reconciliation import reconcile_passport_result
+    page = layout()
+    fields = structured_fields([page])
+    semantic = passport_review_result([page], fields, allow_layout=True)
+    labels = {s.label for s in semantic.statements}
+    assert {"Nationality", "Place of birth"} <= labels
+    assert all(s.supportStatus == "UNCERTAIN" for s in semantic.statements)
+    result = {"documentCategory": "Passport", "suggestedDocumentCategory": "Passport",
+              "requiresReview": True, "documentNumber": None, "importantDates": []}
+    reconcile_passport_result(result, [page], fields, "passport-deterministic-review-v1")
+    assert result["qualityDiagnostics"]["classificationSource"] == "deterministic_review"
+    assert result["qualityDiagnostics"]["classificationReconciliation"] == "not_required"
+    assert "A1234567" not in result["summary"]
+    assert "EXAMPLE" not in result["summary"]
+    assert result["requiresReview"] and result["documentNumber"] is None
+    assert result["importantDates"] == []
+
+
+def test_conflicting_optional_candidate_not_in_review_statements():
+    page = layout()
+    fields = structured_fields([page])
+    fields.append(dict(field="nationality", value="OTHER", sourceText="OTHER",
+                       page=1, requiresConfirmation=True))
+    result = passport_review_result([page], fields, allow_layout=True)
+    assert not any(s.label == "Nationality" for s in result.statements)
