@@ -54,6 +54,59 @@ def semantic_candidates(pages):
                     "field": field, "value": value, "page": item["page"],
                     "sourceText": match.group(), "requiresConfirmation": True,
                 })
+    for candidate in appraisal_salary_rows(pages):
+        found.setdefault(candidate["field"], []).append(candidate)
     return [items[0] for items in found.values()
             if items[0]["page"] in reliable
             and len({" ".join(i["value"].split()).casefold() for i in items}) == 1]
+
+
+def appraisal_salary_rows(pages):
+    """Extract explicit monthly/annual row pairs; never calculate missing amounts."""
+    labels = {
+        "basic": "basic_salary", "hra": "hra",
+        "conveyanceallowance": "conveyance_allowance",
+        "medicalreimbursement": "medical_reimbursement",
+        "foodallowance": "food_allowance", "specialallowance": "special_allowance",
+        "company'scontributiontop.f.": "employer_pf",
+        "medicalinsurance": "medical_insurance", "gratuity": "gratuity",
+    }
+    amount = re.compile(r"(?:\d+|\d{1,3}(?:,\d{3})+|\d{1,2}(?:,\d{2})*,\d{3})(?:\.\d{1,2})?")
+    compact = lambda s: re.sub(r"\s+", "", s).casefold().rstrip(":")
+    result = []
+    for page in pages:
+        if page.extractionConfidence < .80:
+            continue
+        lines = page.text.splitlines()
+        headers = [i for i in range(len(lines)-4)
+                   if [compact(l) for l in lines[i:i+5]] ==
+                   ["salarybreakup", "monthlysalary", "annualsalary", "inrupees", "inrupees"]]
+        if len(headers) != 1:
+            continue
+        i = headers[0]+5
+        section = "cash"
+        while i < len(lines):
+            key = compact(lines[i])
+            if key == "non-cashcomponent":
+                section = "non_cash"
+                i += 1
+                continue
+            field = labels.get(key)
+            if key == "total":
+                field = section + "_total"
+            if not field or i+2 >= len(lines):
+                break
+            values = [l.strip() for l in lines[i+1:i+3]]
+            if not all(amount.fullmatch(v) for v in values):
+                break
+            quote = "\n".join(lines[i:i+3])
+            if quote not in page.text:
+                break
+            for period, value in zip(("monthly", "annual"), values):
+                result.append({"field": field+"_"+period, "value": value,
+                               "page": page.page, "sourceText": quote,
+                               "requiresConfirmation": True})
+            i += 3
+            if field == "employer_pf" and i < len(lines) and compact(lines[i]) == "(includingadministrativecharges)":
+                i += 1
+    return result
