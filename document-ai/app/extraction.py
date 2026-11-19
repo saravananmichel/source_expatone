@@ -121,7 +121,7 @@ def rapid_ocr(image, page_number):
     # identity labels. Retry only when passport cues exist but labels are sparse.
     passport_retry = (os.getenv('DOCUMENT_AI_UNIVERSAL_V2', '0') == '1'
                       and page_number == 1 and initial_rank[1] in (1, 2)
-                      and initial_rank[0] < 0.85)
+                      and 0.4 <= initial_rank[0] < 0.85)
     if len(result) >= 3 and (initial_rank[0] < 0.4 or passport_retry):
         original = image
         base_rotation = rotation
