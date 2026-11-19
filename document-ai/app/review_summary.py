@@ -2,6 +2,12 @@
 import re
 
 LABELS = {
+    "monthly_compensation": "Monthly compensation",
+    "probation_period": "Probation period",
+    "annual_leave": "Annual leave entitlement",
+    "medical_benefits": "Medical benefits clause",
+    "confidentiality_clause": "Confidentiality clause",
+    "termination_clause": "Termination clause",
     "start_date": "Commencement date",
     "joining_date": "Joining date",
     "relieving_date": "Relieving date",
@@ -45,7 +51,7 @@ def review_summary(route, fields, pages):
         quote = field.get("sourceText")
         if not label or not isinstance(value, str) or not isinstance(quote, str):
             continue
-        if not value.strip() or len(value) > (250 if key == "continuing_terms" else 100) or value not in quote:
+        if not value.strip() or len(value) > (250 if key in {"continuing_terms", "annual_leave", "medical_benefits", "confidentiality_clause", "termination_clause"} else 100) or value not in quote:
             continue
         if quote not in source.get(field.get("page"), ""):
             continue
