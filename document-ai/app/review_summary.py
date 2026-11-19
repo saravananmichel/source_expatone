@@ -37,6 +37,10 @@ DISPLAY_PHRASES = {
     "employment_restriction": {
         "ANYFORMOFEMPLOYMENTISSTRICTLYPROHIBITED": "Any form of employment is strictly prohibited",
     },
+    "medical_condition": {
+        "YOURAPPOINTMENTISSUBJECTTOYOURMEDICALFITNESS": "Your appointment is subject to your medical fitness",
+        "YOURAPPOINTMENTWILLBESUBJECTTOYOURMEDICALFITNESS": "Your appointment will be subject to your medical fitness",
+    },
     "continuing_terms": {
         "ALLTHETERMSANDCONDITIONSASSETFORTHINYOURAPPOINTMENTLETTERWILLCONTINUETOBEINFORCE":
             "All the terms and conditions as set forth in your appointment letter will continue to be in force",
@@ -44,8 +48,8 @@ DISPLAY_PHRASES = {
 }
 
 def display_review_value(field, value):
-    display = " ".join(value.split()).rstrip(".")
-    compact = re.sub(r"\s+", "", display).upper()
+    display = " ".join(value.split())
+    compact = re.sub(r"\s+", "", display).rstrip(".").upper()
     return DISPLAY_PHRASES.get(field, {}).get(compact, display)
 
 
