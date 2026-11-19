@@ -345,16 +345,15 @@ async def _analyze_impl(file, x_service_key):
                     result.get('documentCategory') not in ('Unknown', 'Other', v2_route.category)
                 )
                 if model == 'source-only-private-fallback':
-                    result['summary'] = ('Possible ' + v2_route.subtype.replace('_', ' ') +
-                                         '. Review the extracted details against the original. '
-                                         'AI interpretation was incomplete.')
+                    from .review_summary import review_summary
+                    result['summary'] = review_summary(v2_route, result['structuredFields'], pages)
             if v2_enabled:
                 result['qualityDiagnostics']['selectedSectionCount'] = len(selected_sections)
-                result['qualityDiagnostics']['partialSourceSelection'] = bool(selected_sections)
+                result['qualityDiagnostics']['partialSourceSelection'] = bool(selected_sections) and model != 'source-only-private-fallback'
             result['qualityDiagnostics']['universalReviewStatus'] = (
                 'disabled' if not universal_enabled else 'passport_priority' if fast_passport
                 else 'immigration_review' if immigration is not None
-                else 'general_hint' if general_route is not None else 'abstained'
+                else 'general_hint' if general_route is not None or v2_route is not None else 'abstained'
             )
             # Log only counts and statuses; never log OCR text or document values.
             logger.info('document_ai stage=field_mapping category=%s field_count=%d fallback=%s',
