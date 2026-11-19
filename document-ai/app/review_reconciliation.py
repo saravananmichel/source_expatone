@@ -54,6 +54,13 @@ def append_review_statements(result, pages):
         existing.update((eid, sid))
         added += 1
     diagnostics = result.setdefault("qualityDiagnostics", {})
+    # Evidence linkage is distinct from verified semantic support.
+    valid_ids = {e.get("id") for e in evidence
+                 if e.get("sourceText") and e["sourceText"] in source.get(e.get("page"), "")}
+    linked = sum(bool(s.get("evidenceIds")) and
+                 all(eid in valid_ids for eid in s["evidenceIds"]) for s in statements)
+    diagnostics["sourceLinkedClaims"] = linked
+    diagnostics["sourceLinkedCoverage"] = linked / len(statements) if statements else 0.0
     diagnostics["reviewStatementsAdded"] = added
     diagnostics["uncertainClaims"] = sum(s.get("supportStatus") == "UNCERTAIN" for s in statements)
 
