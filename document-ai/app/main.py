@@ -269,6 +269,7 @@ async def _analyze_impl(file, x_service_key):
                             v2_fields = semantic_candidates(pages)
                         if v2_route:
                             selected_sections = select_sections(pages)
+            from .review_reconciliation import employment_review_ready
             if fast_passport and v2_enabled:
                 from .structured_analysis import passport_reverse_fields
                 suggestions = [f for f in suggestions if f["page"] == pages[0].page]
@@ -281,13 +282,8 @@ async def _analyze_impl(file, x_service_key):
                 model = 'immigration-deterministic-review-v1'
             elif (v2_enabled and v2_route is not None
                   and v2_route.subtype in {'employment_offer', 'designation_change', 'performance_appraisal'}
-                  and len(pages) <= 3 and all(p.extractionConfidence >= .80 for p in pages)
-                  and {'effective_date', {'employment_offer': 'annual_compensation',
-                                         'designation_change': 'revised_designation',
-                                         'performance_appraisal': 'revised_annual_ctc'}[v2_route.subtype]}
-                      <= {f['field'] for f in v2_fields if f['requiresConfirmation']
-                          and any(p.page == f['page'] and f['sourceText'] in p.text
-                                  and f['value'] in f['sourceText'] for p in pages)}):
+                  and len(pages) <= 3
+                  and employment_review_ready(v2_route, pages, suggestions, general_fields, v2_fields)):
                 # Explicitly partial review: avoid waiting for an LLM when key
                 # source-backed employment facts are already available.
                 semantic, model = source_fallback(pages), 'source-only-private-fallback'
