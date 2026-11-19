@@ -30,6 +30,24 @@ def exact_support(semantic):
 
 def _plausible_field(label, value):
     """Reject obvious OCR punctuation noise without inventing semantics."""
+    from datetime import datetime
+    normalized_label = label.strip().casefold()
+    if ":" in value:
+        return False
+    if normalized_label in {"date", "issue date", "expiry date", "effective date", "joining date"}:
+        for fmt in ("%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d", "%d %B %Y", "%d %b %Y", "%d.%m.%Y"):
+            try:
+                datetime.strptime(value.strip(), fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return False
+    if normalized_label in {"name", "employee name", "name of the employee", "applicant name"}:
+        if not all(c.isalpha() or c in " .'-’" for c in value):
+            return False
+        if re.search(r"\b(?:signature|date|designation)\b", value, re.I):
+            return False
     letters = sum(char.isalpha() for char in label)
     value_chars = sum(char.isalnum() for char in value)
     return (
@@ -86,12 +104,17 @@ def source_fallback(pages):
     """Exact source-only fallback. Classification remains Unknown."""
     evidence = []
     statements = []
+    seen = set()
     for page in pages:
         if not page.text.strip():
             continue
         for label, value, quote in _source_fields(page.text):
             if len(statements) >= 200:
                 break
+            key = (" ".join(label.casefold().split()), " ".join(value.split()))
+            if key in seen:
+                continue
+            seen.add(key)
             # A short source quote is more useful than an entire page of OCR.
             evidence_id = f'e{len(evidence)}'
             evidence.append(Evidence(id=evidence_id, page=page.page,
