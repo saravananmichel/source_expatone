@@ -61,6 +61,13 @@ def append_review_statements(result, pages):
                  all(eid in valid_ids for eid in s["evidenceIds"]) for s in statements)
     diagnostics["sourceLinkedClaims"] = linked
     diagnostics["sourceLinkedCoverage"] = linked / len(statements) if statements else 0.0
+    # Keep the nested representation aligned with the final review graph.
+    # Preserve classification and other semantic metadata.
+    semantic = result.get("semanticDocument")
+    if isinstance(semantic, dict) and statements and evidence:
+        from copy import deepcopy
+        semantic["statements"] = deepcopy(statements)
+        semantic["evidence"] = deepcopy(evidence)
     diagnostics["reviewStatementsAdded"] = added
     diagnostics["uncertainClaims"] = sum(s.get("supportStatus") == "UNCERTAIN" for s in statements)
 
