@@ -269,6 +269,10 @@ async def _analyze_impl(file, x_service_key):
                             v2_fields = semantic_candidates(pages)
                         if v2_route:
                             selected_sections = select_sections(pages)
+            if fast_passport and v2_enabled:
+                from .structured_analysis import passport_reverse_fields
+                suggestions = [f for f in suggestions if f["page"] == pages[0].page]
+                suggestions.extend(passport_reverse_fields(pages))
             if fast_passport:
                 from .passport_fast_path import passport_review_result
                 semantic, model = passport_review_result(pages, suggestions, allow_layout=allow_layout), 'passport-deterministic-review-v1'
