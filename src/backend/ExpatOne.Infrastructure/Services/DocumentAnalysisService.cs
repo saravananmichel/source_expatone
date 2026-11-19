@@ -34,12 +34,14 @@ public class DocumentAnalysisService(ExpatOneDbContext db, IDocumentAnalysisJobs
             try
             {
                 var result = JsonSerializer.Deserialize<DocumentAnalysisDto>(run.ResultJson ?? "null", new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                if (result is null) continue;
                 var isSupportedModel = result.ModelVersion == "qwen3:4b" ||
                                        result.ModelVersion?.StartsWith("qwen3:4b@", StringComparison.Ordinal) == true ||
                                        result.ModelVersion?.StartsWith("gemma4:e4b", StringComparison.Ordinal) == true;
                 if (result?.Provider == "Local" &&
                     (isSupportedModel ||
-                     (result.AnalyzerVersion == "document-engine-v2" && !string.IsNullOrWhiteSpace(result.ModelVersion))) &&
+                     ((result.AnalyzerVersion == "document-engine-v2" ||
+                       result.AnalyzerVersion == "document-engine-v3-compact1") && !string.IsNullOrWhiteSpace(result.ModelVersion))) &&
                     result.SemanticDocument is { ValueKind: JsonValueKind.Object } semantic && semantic.TryGetProperty("pages", out var pages) &&
                     pages.ValueKind == JsonValueKind.Array && pages.GetArrayLength() > 0) return result;
             }
