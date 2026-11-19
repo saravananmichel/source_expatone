@@ -55,6 +55,26 @@ def immigration_fields(pages, route):
                     "sourceText": source, "requiresConfirmation": True,
                 })
         if route.subtype.endswith("_with_visa"):
+            # Keep travel validity separate from stay expiry and retain
+            # the explicit passport-validity qualifier in the same evidence.
+            visa_pattern = (
+                r"(?im)^MULTIPLE[ \t]*ENTRY[ \t]*VISA[ \t]*\n"
+                r"(?P<value>Good[ \t]*for[ \t]*any[ \t]*number[ \t]*of[ \t]*journeys"
+                r"[ \t]*to[ \t]*Malaysia[ \t]*until[ \t]*"
+                r"(?P<date>\d{1,2}[ \t]*[A-Z]{3}[ \t]*\d{4})[ \t]*\n"
+                r"provided[ \t]*this[ \t]*passport[ \t]*remains[ \t]*valid\.?)[ \t]*$"
+            )
+            for match in re.finditer(visa_pattern, page.text):
+                from datetime import datetime
+                try:
+                    datetime.strptime(re.sub(r"\s+", "", match.group("date")), "%d%b%Y")
+                except ValueError:
+                    continue
+                groups.setdefault("visa_travel_condition", []).append({
+                    "field": "visa_travel_condition", "value": match.group("value"),
+                    "page": page.page, "sourceText": match.group(),
+                    "requiresConfirmation": True,
+                })
             # Only the explicit stay condition, not the multiple-entry visa line.
             pattern = r"(?im)^Condition[ \t]*\n(?:[：:]?[ \t]*PERMITTED[ \t]*TO[ \t]*ENTER[ \t]*AND[ \t]*REMAIN[^\n]*\n)?UNTIL[ \t\r\n]*(\d{1,2}[ \t]*[A-Z]{3}[ \t]*\d{4})\b"
             for match in re.finditer(pattern, page.text):
