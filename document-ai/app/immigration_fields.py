@@ -5,6 +5,8 @@ LABELS = {
     "person_name": r"(?:applicant(?:'s)? name|name of applicant(?:\s*/\s*dependant)?|name)",
     "passport_number": r"passport\s*(?:no\.?|number)",
     "nationality": r"nationality",
+    "gender": r"gender",
+    "place_of_issue": r"place\\s*of\\s*issue",
     "employer": r"(?:employer|company name|with)",
     "designation": r"(?:designation|position|job title)",
     "sponsor": r"(?:sponsor|sponsor name|name of foreign knowledge worker)",
@@ -61,6 +63,18 @@ def immigration_fields(pages, route):
                     "page": page.page, "sourceText": match.group(),
                     "requiresConfirmation": True,
                 })
+            if route.subtype == "employment_pass_with_visa":
+                patterns = {
+                    "pass_category": r"(?im)^EMPLOYMENT\s+PASS(?:\s*\[[^\]\n]*\])?\s+Category\s*\((?P<value>I{1,3})\)[ \t]*$",
+                    "designation": r"(?im)^UNTIL[ \t]*\d{1,2}[ \t]*[A-Z]{3}[ \t]*\d{4}\.[ \t]*FOR[ \t]*EMPLOYMENT[ \t]*AS[ \t]*(?P<value>[A-Z][A-Z \t]*(?:\n[A-Z][A-Z \t]*){0,2})(?=\nWith[ \t]*\n?[ \t]*[:：])",
+                }
+                for field, pattern in patterns.items():
+                    for match in re.finditer(pattern, page.text):
+                        groups.setdefault(field, []).append({
+                            "field": field, "value": match.group("value").strip(),
+                            "page": page.page, "sourceText": match.group(),
+                            "requiresConfirmation": True,
+                        })
             if route.subtype == "dependant_pass_with_visa":
                 for match in re.finditer(r"(?im)^ANY[ \t]*FORM[ \t]*OF[ \t]*EMPLOYMENT[ \t]*IS[ \t]*STRICTLY[ \t]*PROHIBITED\.?$", page.text):
                     groups.setdefault("employment_restriction", []).append({
