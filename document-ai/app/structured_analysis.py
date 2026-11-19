@@ -338,12 +338,50 @@ def _passport_spatial_fields(page: Page) -> list[dict]:
     return found
 
 
+def _passport_layout_number(page: Page) -> list[dict]:
+    """Review-only number in the identity header row; never inspect reverse pages."""
+    if not _compact_passport_identity_layout(page):
+        return []
+    blocks = page.blocks
+    def header(pattern):
+        return [b for b in blocks if re.search(pattern, b.text.strip(), re.I)]
+    types = header(r"(?:^|/)\s*type$")
+    codes = header(r"(?:^|/)\s*code$")
+    nations = header(r"(?:^|/)\s*nationality$")
+    if any(len(group) != 1 for group in (types, codes, nations)):
+        return []
+    t, c, n = types[0], codes[0], nations[0]
+    tx, ty, _, tb = t.boundingBox
+    cx, cy, _, cb = c.boundingBox
+    nx, ny, nr, nb = n.boundingBox
+    h = max(1, nb - ny)
+    if not (tx < cx < nx and ny < page.height * .35
+            and abs(ty - ny) <= h and abs(cy - ny) <= h):
+        return []
+    def row_value(label, pattern):
+        x, y, right, bottom = label.boundingBox
+        return [b for b in blocks if x-h <= b.boundingBox[0] <= right
+                and bottom-h*.35 <= b.boundingBox[1] <= bottom+h*1.5
+                and re.fullmatch(pattern, b.text.strip())]
+    if len(row_value(t, r"P")) != 1 or len(row_value(c, r"[A-Z]{3}")) != 1:
+        return []
+    candidates = [b for b in blocks if b.boundingBox[0] >= nr
+                  and nb-h*.35 <= b.boundingBox[1] <= nb+h*1.5
+                  and PASSPORT_VALUE.fullmatch(b.text.strip())]
+    if len(candidates) != 1:
+        return []
+    b = candidates[0]
+    return [{"field": "passport_number", "value": b.text.strip(),
+             "page": page.page, "sourceText": b.text,
+             "requiresConfirmation": True}]
+
+
 def structured_fields(pages: list[Page]) -> list[dict]:
     results = []
     seen = set()
     for page in pages:
         lines = page.text.splitlines()
-        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page):
+        for suggestion in _passport_neighbour_fields(lines, page.page) + _passport_identity_fields(lines, page.page) + _passport_ocr_suffix_fields(lines, page.page) + _passport_ocr_additional_fields(lines, page.page) + _passport_spatial_fields(page) + _passport_layout_number(page):
             key = (suggestion["field"], suggestion["value"], page.page)
             if key not in seen:
                 seen.add(key)
