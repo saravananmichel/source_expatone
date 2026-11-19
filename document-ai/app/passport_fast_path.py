@@ -6,6 +6,8 @@ from .structured_analysis import passport_category, _compact_passport_identity_l
 REQUIRED = {"passport_number", "surname", "given_names", "date_of_birth",
             "issue_date", "expiry_date"}
 
+OPTIONAL = {"nationality", "sex", "place_of_birth", "place_of_issue"}
+
 def eligible_passport(pages, fields, allow_layout=False):
     if not pages or len(pages) > 2 or not passport_category(pages, fields):
         return False
@@ -56,11 +58,23 @@ def passport_review_result(pages, fields, allow_layout=False):
     from .schemas import Evidence, Statement, SemanticDocument
     if not eligible_passport(pages, fields, allow_layout=allow_layout):
         raise ValueError("passport_fast_path_ineligible")
+    first = pages[0]
+    optional_values = {}
+    for f in fields:
+        if f["page"] == first.page and f["field"] in OPTIONAL:
+            optional_values.setdefault(f["field"], set()).add(f["value"])
+    spatial = _passport_spatial_fields(first)
+    optional = {f["field"] for f in spatial
+                if f["field"] in optional_values
+                and optional_values[f["field"]] == {f["value"]}
+                and f["value"] in f["sourceText"] and f["sourceText"] in first.text}
     evidence = []
     statements = []
     seen = set()
     for field in fields:
-        if field["page"] != pages[0].page or field["field"] not in REQUIRED:
+        if field["page"] != pages[0].page or field["field"] not in (REQUIRED | optional):
+            continue
+        if field["value"] not in field["sourceText"] or field["sourceText"] not in first.text:
             continue
         if field["field"] in seen:
             continue
