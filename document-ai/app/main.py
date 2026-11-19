@@ -265,7 +265,7 @@ async def _analyze_impl(file, x_service_key):
                         from .semantic_candidates import semantic_candidates
                         from .section_selection import select_sections
                         v2_route = general_classification(pages)
-                        if v2_route and v2_route.subtype in {'employment_offer', 'employment_contract', 'designation_change', 'relieving_letter'}:
+                        if v2_route and v2_route.subtype in {'employment_offer', 'employment_contract', 'designation_change', 'relieving_letter', 'performance_appraisal'}:
                             v2_fields = semantic_candidates(pages)
                         if v2_route:
                             selected_sections = select_sections(pages)
@@ -280,10 +280,14 @@ async def _analyze_impl(file, x_service_key):
                 semantic, suggestions = immigration
                 model = 'immigration-deterministic-review-v1'
             elif (v2_enabled and v2_route is not None
-                  and v2_route.subtype in {'employment_offer', 'designation_change'}
+                  and v2_route.subtype in {'employment_offer', 'designation_change', 'performance_appraisal'}
                   and len(pages) <= 3 and all(p.extractionConfidence >= .80 for p in pages)
-                  and {'effective_date', 'annual_compensation' if v2_route.subtype == 'employment_offer' else 'revised_designation'}
-                      <= {f['field'] for f in v2_fields}):
+                  and {'effective_date', {'employment_offer': 'annual_compensation',
+                                         'designation_change': 'revised_designation',
+                                         'performance_appraisal': 'revised_annual_ctc'}[v2_route.subtype]}
+                      <= {f['field'] for f in v2_fields if f['requiresConfirmation']
+                          and any(p.page == f['page'] and f['sourceText'] in p.text
+                                  and f['value'] in f['sourceText'] for p in pages)}):
                 # Explicitly partial review: avoid waiting for an LLM when key
                 # source-backed employment facts are already available.
                 semantic, model = source_fallback(pages), 'source-only-private-fallback'
